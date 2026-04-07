@@ -1,0 +1,9 @@
+.DS_Store
+.build/
+.vscode/
+logs/
+backend/.venv/
+backend/__pycache__/
+backend/*.pyc
+*.swp
+*.swo

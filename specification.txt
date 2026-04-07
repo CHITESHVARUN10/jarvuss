@@ -1,0 +1,212 @@
+🚀 1. PHASE 1 — MVP FEATURES
+🎯 Goal:
+
+A fully offline voice assistant for macOS that listens for “Jarvis” and executes basic commands.
+
+✅ Features in Phase 1
+🎙️ Voice System
+Continuous microphone listening
+Wake word detection: "Jarvis"
+After wake word → record command
+🗣️ Speech Processing
+Convert speech → text (offline)
+Handle basic noise
+🧠 Command Engine
+Parse commands like:
+“open chrome”
+“close vscode”
+“create file test.txt”
+“open folder downloads”
+💻 System Actions
+Open applications
+Close applications
+Create files/folders
+🤖 AI Integration (Ollama)
+For queries like:
+“Jarvis, explain recursion”
+Send to local LLM → get response
+📜 Logging (optional but recommended)
+Store:
+commands
+timestamps
+🧰 2. TECH STACK (FINAL DECISION)
+
+👉 Use Swift + Native macOS APIs (NOT Flutter)
+
+🧠 Core Stack
+Component	Tech
+Language	Swift
+UI (optional)	SwiftUI
+Audio	AVFoundation
+Wake Word	Porcupine (Picovoice)
+Speech-to-Text	Whisper.cpp
+AI	Ollama
+System Commands	AppleScript + Shell
+Database	SQLite
+📦 3. REQUIREMENTS (DEPENDENCIES)
+
+This is your real “requirements.txt equivalent”
+
+🔹 A. System Requirements
+
+Install:
+
+# Homebrew (if not installed)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+brew install cmake
+brew install ffmpeg
+brew install portaudio
+🔹 B. Ollama
+brew install ollama
+
+Run:
+
+ollama run llama3
+🔹 C. Whisper.cpp (Speech-to-Text)
+git clone https://github.com/ggerganov/whisper.cpp
+cd whisper.cpp
+make
+
+Download model:
+
+./models/download-ggml-model.sh base.en
+🔹 D. Porcupine (Wake Word)
+
+Download from:
+👉 https://picovoice.ai/
+
+Get:
+Porcupine SDK (macOS)
+"Jarvis" keyword file
+🔹 E. Swift Packages (SPM)
+
+In Xcode, add:
+
+.package(url: "https://github.com/ggerganov/whisper.cpp", from: "1.0.0")
+
+(Or call via CLI instead of embedding)
+
+🏗️ 4. SYSTEM ARCHITECTURE
+Mic Input
+   ↓
+Wake Word Engine (Porcupine)
+   ↓
+Audio Recorder (AVAudioEngine)
+   ↓
+Speech-to-Text (Whisper.cpp)
+   ↓
+Command Router
+   ↓
+ ┌───────────────┬───────────────┐
+ │ Rule Engine   │ Ollama API    │
+ └───────────────┴───────────────┘
+        ↓
+System Actions (Shell / AppleScript)
+📁 5. PROJECT STRUCTURE
+JarvisMacOS/
+│
+├── App/
+│   ├── MainApp.swift
+│   ├── ContentView.swift
+│
+├── Audio/
+│   ├── MicManager.swift
+│   ├── WakeWordManager.swift
+│   ├── Recorder.swift
+│
+├── Speech/
+│   ├── WhisperManager.swift
+│
+├── AI/
+│   ├── OllamaClient.swift
+│
+├── Commands/
+│   ├── CommandParser.swift
+│   ├── CommandExecutor.swift
+│
+├── System/
+│   ├── AppController.swift
+│   ├── FileManager.swift
+│
+├── Database/
+│   ├── DBManager.swift
+│
+├── Utils/
+│   ├── Logger.swift
+│
+└── Resources/
+    ├── jarvis.ppn
+    ├── models/
+🔄 6. EXECUTION FLOW
+🎤 Step-by-step runtime
+App starts
+Mic starts listening
+Porcupine detects “Jarvis”
+Start recording command
+Stop recording after silence
+Send audio → Whisper
+Get text
+Parse:
+🧠 Example
+"Jarvis open Chrome"
+→ wake word detected
+→ text: "open chrome"
+→ command engine
+→ shell: open -a "Google Chrome"
+🤖 AI Flow
+"Jarvis explain binary search"
+→ send to Ollama
+→ response returned
+→ (optional) speak/display
+🧪 7. DEVELOPMENT MILESTONES
+🟢 Step 1 — Mic Input
+Capture audio using AVAudioEngine
+🟢 Step 2 — Wake Word
+Integrate Porcupine
+Detect “Jarvis”
+🟢 Step 3 — Record Command
+Record audio after wake word
+🟢 Step 4 — Speech-to-Text
+Call Whisper.cpp
+Convert audio → text
+🟢 Step 5 — Command Engine
+Hardcode commands:
+open chrome
+open finder
+🟢 Step 6 — System Actions
+Execute shell commands
+🟢 Step 7 — Ollama
+Call:
+POST http://localhost:11434/api/generate
+🔮 8. PHASE 2 (NEXT FEATURES)
+Voice response (text → speech)
+Custom routines:
+“back to usual” → open apps bundle
+Better NLP parsing
+UI dashboard
+History view
+🔮 9. PHASE 3 (ADVANCED)
+Smart home integration
+Webcam detection
+Context awareness
+Multi-command chaining
+Personalization AI
+⚠️ IMPORTANT REALITY CHECK
+Performance challenges:
+Whisper can be slow → use smaller model
+Continuous listening → optimize CPU usage
+💡 FINAL ADVICE
+
+👉 Start VERY small
+
+First make this work:
+
+Wake word → print "Listening..."
+
+Then:
+
+Speech → print text
+
+Then:
+
+Text → open app
