@@ -69,6 +69,9 @@ enum SafetyGuard {
             return checkText(query)
         case .installPreview(let pkg, let source):
             return .installPreview(command: "install \(pkg)", source: source)
+        case .displayControl:
+            // Display brightness/contrast/resolution carry no safety risk.
+            return .allowed
         }
     }
 

@@ -2,6 +2,7 @@
 .build/
 .vscode/
 logs/
+.commandcode/
 backend/.venv/
 backend/__pycache__/
 backend/*.pyc

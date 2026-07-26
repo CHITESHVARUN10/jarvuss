@@ -79,6 +79,7 @@ final class ResponseEngine: ObservableObject {
             case .playPlaylist(let n):  return "Playing \(n)"
             }
         case .volumeControl(let a):     return a.responseText
+        case .displayControl(let a):    return a.responseText
         case .createFile(let n):        return "Created file \(n)"
         case .createFolder(let n):      return "Created folder \(n)"
         case .aiQuery:                  return result.message

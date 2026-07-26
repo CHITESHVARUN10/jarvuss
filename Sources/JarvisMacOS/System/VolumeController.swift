@@ -62,7 +62,17 @@ final class VolumeController {
         coreAudio.increase(by: delta)
         syncCurrentVolumeFromSystem()
         let after = coreAudio.getVolume().map { Float($0) }
-        lastOperationSucceeded = hasMeaningfulChange(before: before, after: after)
+        let changed = hasMeaningfulChange(before: before, after: after)
+        if changed {
+            lastOperationSucceeded = true
+            return
+        }
+        // CoreAudio failed (no BlackHole) — fall back to AudioGain software gain.
+        emit("[Volume][Debug] CoreAudio had no effect, falling back to AudioGain")
+        let gainBefore = audioGain.currentVolumeFactor()
+        let gainApplied = audioGain.increase(by: Int(round(Double(percent))))
+        if gainApplied { currentVolume = audioGain.currentVolumeFactor() }
+        lastOperationSucceeded = gainApplied
     }
 
     func decrease(by percent: Float) {
@@ -95,7 +105,17 @@ final class VolumeController {
         coreAudio.decrease(by: delta)
         syncCurrentVolumeFromSystem()
         let after = coreAudio.getVolume().map { Float($0) }
-        lastOperationSucceeded = hasMeaningfulChange(before: before, after: after)
+        let changed = hasMeaningfulChange(before: before, after: after)
+        if changed {
+            lastOperationSucceeded = true
+            return
+        }
+        // CoreAudio failed (no BlackHole) — fall back to AudioGain software gain.
+        emit("[Volume][Debug] CoreAudio had no effect, falling back to AudioGain")
+        let gainBefore = audioGain.currentVolumeFactor()
+        let gainApplied = audioGain.decrease(by: Int(round(Double(percent))))
+        if gainApplied { currentVolume = audioGain.currentVolumeFactor() }
+        lastOperationSucceeded = gainApplied
     }
 
     func setVolume(_ percent: Float) {
@@ -128,7 +148,17 @@ final class VolumeController {
         _ = coreAudio.setVolume(normalized)
         syncCurrentVolumeFromSystem()
         let after = coreAudio.getVolume().map { Float($0) }
-        lastOperationSucceeded = hasMeaningfulChange(before: before, after: after)
+        let changed = hasMeaningfulChange(before: before, after: after)
+        if changed {
+            lastOperationSucceeded = true
+            return
+        }
+        // CoreAudio failed (no BlackHole) — fall back to AudioGain software gain.
+        emit("[Volume][Debug] CoreAudio had no effect, falling back to AudioGain")
+        let target = Int(round(Double(normalized * 100.0)))
+        let gainApplied = audioGain.setVolume(target)
+        if gainApplied { currentVolume = audioGain.currentVolumeFactor() }
+        lastOperationSucceeded = gainApplied
     }
 
     func mute() {

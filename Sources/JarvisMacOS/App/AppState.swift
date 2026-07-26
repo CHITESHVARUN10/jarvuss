@@ -113,7 +113,7 @@ final class AppState: ObservableObject {
     private let enrollmentAcceptCooldown: TimeInterval = 1.4
     private let enrollmentAttemptThrottle: TimeInterval = 0.30
     private let voiceExecutionCooldown: TimeInterval = 0.45
-    private let voiceVerificationThreshold = 0.60
+    private let voiceVerificationThreshold = 0.70
 
     var voiceEnrollmentSampleTarget: Int {
         enrollmentPhrases.count * enrollmentRequiredMatchesPerPhrase
@@ -1317,6 +1317,7 @@ final class AppState: ObservableObject {
             case .systemInfo(let i):     appendLog("[Intent] INFO: \(i.description)")
             case .volumeControl(let a):  appendLog("[Intent] detected: \(a.description) → volume (ActionExecutor)")
             case .mediaControl(let a):   appendLog("[Intent] detected: \(a.description) → media (ActionExecutor)")
+            case .displayControl(let a): appendLog("[Intent] detected: \(a.description) → display (ActionExecutor)")
             case .aiQuery:               appendLog("[Intent] detected: ai_query → Ollama")
             case .openApp(let n):        appendLog("[Intent] detected: open_app(\(n))")
             case .closeApp(let n):       appendLog("[Intent] detected: close_app(\(n))")
@@ -1515,7 +1516,7 @@ final class AppState: ObservableObject {
             let result = try await attemptVerification()
 
             let wakeWordDetected = containsWakeWord(lastRecognizedSpeech)
-            let effectiveThreshold = wakeWordDetected ? 0.55 : voiceVerificationThreshold
+            let effectiveThreshold = wakeWordDetected ? 0.65 : voiceVerificationThreshold
             let isVerifiedByThreshold = result.similarity >= effectiveThreshold
 
             switch result.confidence {

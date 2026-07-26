@@ -15,25 +15,63 @@ USE_PYINSTALLER="${JARVIS_USE_PYINSTALLER:-0}"
 cd "$ROOT_DIR"
 swift build
 
-rm -rf "$APP_BUNDLE"
-mkdir -p "$APP_MACOS" "$BACKEND_DEST"
+# ── Only recreate the bundle skeleton if the binary has changed ──────────
+NEW_BIN="$BUILD_DIR/jarvis"
+EXISTING_BIN="$APP_MACOS/Jarvis"
 
-cp "$BUILD_DIR/jarvis" "$APP_MACOS/Jarvis"
-chmod +x "$APP_MACOS/Jarvis"
+BINARY_CHANGED=true
+if [[ -f "$EXISTING_BIN" ]] && cmp -s "$NEW_BIN" "$EXISTING_BIN"; then
+  BINARY_CHANGED=false
+fi
 
-cp "$ROOT_DIR/scripts/start_backend.sh" "$APP_MACOS/start_backend.sh"
-chmod +x "$APP_MACOS/start_backend.sh"
+if [[ "$BINARY_CHANGED" == true ]]; then
+  echo "[Package] Binary changed — rebuilding app bundle skeleton"
+  mkdir -p "$APP_MACOS" "$BACKEND_DEST"
 
-cp "$BACKEND_SRC/voice_auth_service.py" "$BACKEND_DEST/voice_auth_service.py"
-cp "$BACKEND_SRC/requirements.txt" "$BACKEND_DEST/requirements.txt"
+  cp "$NEW_BIN" "$APP_MACOS/Jarvis"
+  chmod +x "$APP_MACOS/Jarvis"
+
+  cp "$ROOT_DIR/scripts/start_backend.sh" "$APP_MACOS/start_backend.sh"
+  chmod +x "$APP_MACOS/start_backend.sh"
+
+  cp "$BACKEND_SRC/voice_auth_service.py" "$BACKEND_DEST/voice_auth_service.py"
+  cp "$BACKEND_SRC/requirements.txt"      "$BACKEND_DEST/requirements.txt"
+else
+  echo "[Package] Binary unchanged — skipping binary copy"
+  # Still sync the Python source and script in case they changed
+  cp "$ROOT_DIR/scripts/start_backend.sh" "$APP_MACOS/start_backend.sh"
+  chmod +x "$APP_MACOS/start_backend.sh"
+  cp "$BACKEND_SRC/voice_auth_service.py" "$BACKEND_DEST/voice_auth_service.py"
+  cp "$BACKEND_SRC/requirements.txt"      "$BACKEND_DEST/requirements.txt"
+fi
 
 if [[ -f "$BACKEND_SRC/embeddings.npy" ]]; then
   cp "$BACKEND_SRC/embeddings.npy" "$BACKEND_DEST/embeddings.npy"
 fi
 
-/usr/bin/python3 -m venv "$BACKEND_DEST/venv"
-"$BACKEND_DEST/venv/bin/python" -m pip install --upgrade pip
-"$BACKEND_DEST/venv/bin/python" -m pip install -r "$BACKEND_DEST/requirements.txt"
+# ── Python venv: create once, reinstall only if requirements changed ──────
+REQ_HASH_FILE="$BACKEND_DEST/venv/.req_hash"
+
+if [[ ! -x "$BACKEND_DEST/venv/bin/python" ]]; then
+  echo "[Package] Creating Python venv..."
+  /usr/bin/python3 -m venv "$BACKEND_DEST/venv"
+fi
+
+REQ_HASH="$(shasum -a 256 "$BACKEND_DEST/requirements.txt" | awk '{print $1}')"
+CACHED_HASH=""
+if [[ -f "$REQ_HASH_FILE" ]]; then
+  CACHED_HASH="$(cat "$REQ_HASH_FILE" 2>/dev/null || true)"
+fi
+
+if [[ "$REQ_HASH" != "$CACHED_HASH" ]]; then
+  echo "[Package] requirements.txt changed — running pip install (this takes a moment)..."
+  "$BACKEND_DEST/venv/bin/python" -m pip install --upgrade pip --quiet
+  "$BACKEND_DEST/venv/bin/python" -m pip install -r "$BACKEND_DEST/requirements.txt" --quiet
+  echo "$REQ_HASH" > "$REQ_HASH_FILE"
+  echo "[Package] pip install complete."
+else
+  echo "[Package] Dependencies unchanged — skipping pip install."
+fi
 
 cat > "$BACKEND_DEST/main.py" <<'PY'
 from uvicorn import run

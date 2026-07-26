@@ -17,6 +17,7 @@ enum PlannedAction: Equatable, CustomStringConvertible {
     case createFolder(String)
     case aiQuery(String)
     case installPreview(package: String, source: String)
+    case displayControl(DisplayAction)
 
     var description: String {
         switch self {
@@ -33,6 +34,7 @@ enum PlannedAction: Equatable, CustomStringConvertible {
         case .createFolder(let n):         return "Create folder '\(n)'"
         case .aiQuery(let q):              return "AI query: '\(q)'"
         case .installPreview(let p, _):    return "Install preview: '\(p)'"
+        case .displayControl(let a):       return "Display: \(a)"
         }
     }
 }
@@ -184,6 +186,8 @@ final class ActionPlanner {
         }
 
         // Volume remains before media and after system/info.
+        if let display = parseDisplayCommand(lower) { return [display] }
+
         if let volume = parseVolumeCommand(lower) {
             NSLog("[Block] prevented AI fallback → volume command")
             return [volume]
@@ -379,6 +383,12 @@ final class ActionPlanner {
         if trimmed.hasPrefix("open ") {
             let target = String(trimmed.dropFirst("open ".count)).trimmingCharacters(in: .whitespaces)
             if !target.isEmpty {
+                // Route known websites to openURL rather than openApp.
+                // parseSinglePhrase has the same map, but parseSystemCommand fires first,
+                // so we need the check here.
+                if let url = knownWebsiteURL(for: target) {
+                    return .openURL(url)
+                }
                 return .openApp(resolveApp(target))
             }
         }
@@ -386,6 +396,9 @@ final class ActionPlanner {
         if trimmed.hasPrefix("launch ") {
             let target = String(trimmed.dropFirst("launch ".count)).trimmingCharacters(in: .whitespaces)
             if !target.isEmpty {
+                if let url = knownWebsiteURL(for: target) {
+                    return .openURL(url)
+                }
                 return .openApp(resolveApp(target))
             }
         }
@@ -405,6 +418,25 @@ final class ActionPlanner {
         }
 
         return nil
+    }
+
+    /// Maps common spoken website names to their canonical URLs.
+    /// Add new sites here only — do NOT add native apps (Spotify, WhatsApp, etc.).
+    private func knownWebsiteURL(for target: String) -> String? {
+        let t = target.lowercased().trimmingCharacters(in: .whitespaces)
+        switch t {
+        case "youtube", "you tube":       return "https://www.youtube.com"
+        case "google":                    return "https://www.google.com"
+        case "netflix":                   return "https://www.netflix.com"
+        case "github", "git hub":         return "https://github.com"
+        case "twitter", "x", "twitter x": return "https://twitter.com"
+        case "reddit":                    return "https://www.reddit.com"
+        case "instagram":                 return "https://www.instagram.com"
+        case "linkedin":                  return "https://www.linkedin.com"
+        case "gmail":                     return "https://mail.google.com"
+        case "maps", "google maps":       return "https://maps.google.com"
+        default:                          return nil
+        }
     }
 
     private func parseInfoCommand(_ lower: String) -> SystemInfoAction? {
@@ -707,7 +739,9 @@ final class ActionPlanner {
 
         // ── Increase: volume, sound, audio ───────────────────────────
         let increasePatterns = [
-            "increase volume", "increase sound", "increase audio",
+            "increase volume",  "increase the volume",
+            "increase sound",   "increase the sound",
+            "increase audio",   "increase the audio",
             "volume up", "sound up", "audio up",
             "turn up the volume", "turn up the sound", "turn up",
             "raise volume", "raise the volume",
@@ -722,7 +756,9 @@ final class ActionPlanner {
 
         // ── Decrease: volume, sound, audio ───────────────────────────
         let decreasePatterns = [
-            "decrease volume", "decrease sound", "decrease audio",
+            "decrease volume",  "decrease the volume",
+            "decrease sound",   "decrease the sound",
+            "decrease audio",   "decrease the audio",
             "volume down", "sound down", "audio down",
             "turn down the volume", "turn down the sound", "turn down",
             "lower volume", "lower the volume", "lower sound",
@@ -736,6 +772,136 @@ final class ActionPlanner {
         }
 
         return nil
+    }
+
+    // MARK: - Display command parser
+
+    /// Parses brightness, contrast, and resolution commands.
+    /// Returns nil if the input doesn't match any display pattern.
+    private func parseDisplayCommand(_ lower: String) -> PlannedAction? {
+
+        // ── Brightness set ──────────────────────────────────────────
+        let brightnessSetPatterns = [
+            "set brightness to ", "brightness to ", "set the brightness to ",
+            "set screen brightness to ", "screen brightness to "
+        ]
+        for pattern in brightnessSetPatterns where lower.hasPrefix(pattern) {
+            if let pct = extractPercent(from: lower) {
+                NSLog("[Intent] detected: set_brightness(%d%%)", pct)
+                return .displayControl(.setBrightness(pct))
+            }
+        }
+        // Handle "set brightness 70" (no "to")
+        if lower.hasPrefix("set brightness ") || lower.hasPrefix("brightness ") {
+            if let pct = extractPercent(from: lower), pct >= 0, pct <= 100 {
+                return .displayControl(.setBrightness(pct))
+            }
+        }
+
+        // ── Brightness increase ──────────────────────────────────────
+        let brightnessUpPatterns = [
+            "increase brightness", "increase the brightness",
+            "brightness up", "brighter", "make it brighter",
+            "make the screen brighter", "turn up brightness", "turn up the brightness",
+            "raise brightness", "raise the brightness",
+            "dim up", "screen brighter"
+        ]
+        if brightnessUpPatterns.contains(where: { lower.contains($0) }) {
+            let amount = extractPercent(from: lower) ?? 10
+            NSLog("[Intent] detected: brightness_up(%d%%)", amount)
+            return .displayControl(.increaseBrightness(by: amount))
+        }
+
+        // ── Brightness decrease ──────────────────────────────────────
+        let brightnessDownPatterns = [
+            "decrease brightness", "decrease the brightness",
+            "brightness down", "dimmer", "dim the screen",
+            "make it dimmer", "make the screen dimmer",
+            "turn down brightness", "turn down the brightness",
+            "lower brightness", "lower the brightness",
+            "reduce brightness", "reduce the brightness",
+            "darker", "screen darker"
+        ]
+        if brightnessDownPatterns.contains(where: { lower.contains($0) }) {
+            let amount = extractPercent(from: lower) ?? 10
+            NSLog("[Intent] detected: brightness_down(%d%%)", amount)
+            return .displayControl(.decreaseBrightness(by: amount))
+        }
+
+        // ── Contrast set ────────────────────────────────────────────
+        let contrastSetPatterns = [
+            "set contrast to ", "contrast to ", "set the contrast to "
+        ]
+        for pattern in contrastSetPatterns where lower.hasPrefix(pattern) {
+            if let pct = extractPercent(from: lower) {
+                NSLog("[Intent] detected: set_contrast(%d%%)", pct)
+                return .displayControl(.setContrast(pct))
+            }
+        }
+
+        // ── Contrast increase ────────────────────────────────────────
+        let contrastUpPatterns = ["increase contrast", "contrast up", "more contrast"]
+        if contrastUpPatterns.contains(where: { lower.contains($0) }) {
+            let amount = extractPercent(from: lower) ?? 10
+            return .displayControl(.increaseContrast(by: amount))
+        }
+
+        // ── Contrast decrease ────────────────────────────────────────
+        let contrastDownPatterns = ["decrease contrast", "contrast down", "less contrast", "reduce contrast"]
+        if contrastDownPatterns.contains(where: { lower.contains($0) }) {
+            let amount = extractPercent(from: lower) ?? 10
+            return .displayControl(.decreaseContrast(by: amount))
+        }
+
+        // ── List resolutions ─────────────────────────────────────────
+        let listResPatterns = ["list resolutions", "list the resolutions",
+                               "show resolutions", "show the resolutions",
+                               "available resolutions",
+                               "what resolutions", "list display modes", "show display modes"]
+        if listResPatterns.contains(where: { lower.contains($0) }) {
+            return .displayControl(.listResolutions)
+        }
+
+        // ── Set resolution by shorthand ("4k", "1080p", "1440p") ────
+        let resolutionTriggers = ["resolution to ", "switch to ", "change to ",
+                                  "set display to ", "change resolution to ", "switch resolution to "]
+        for trigger in resolutionTriggers {
+            if lower.contains(trigger) {
+                if let range = lower.range(of: trigger),
+                   let resolved = DisplayModeController.resolveShorthand(String(lower[range.upperBound...])) {
+                    NSLog("[Intent] detected: set_resolution(%d×%d)", resolved.width, resolved.height)
+                    return .displayControl(.setResolution(width: resolved.width, height: resolved.height, refreshRate: nil))
+                }
+                if let parsed = parseExplicitResolution(from: lower) {
+                    return .displayControl(.setResolution(width: parsed.width, height: parsed.height, refreshRate: parsed.refresh))
+                }
+            }
+        }
+        if lower.contains("resolution") {
+            if let parsed = parseExplicitResolution(from: lower) {
+                return .displayControl(.setResolution(width: parsed.width, height: parsed.height, refreshRate: parsed.refresh))
+            }
+        }
+
+        return nil
+    }
+
+    /// Parses explicit resolution strings like "1920x1080", "1920 by 1080",
+    /// optionally followed by "at 60hz" or "60 hertz".
+    private func parseExplicitResolution(from lower: String) -> (width: Int, height: Int, refresh: Double?)? {
+        let pattern = #"(\d{3,4})\s*(?:x|by)\s*(\d{3,4})(?:\s*(?:@|at)\s*(\d+)\s*(?:hz|hertz))?"#
+        guard let regex = try? NSRegularExpression(pattern: pattern),
+              let match = regex.firstMatch(in: lower, range: NSRange(lower.startIndex..., in: lower)) else {
+            return nil
+        }
+        func group(_ i: Int) -> String? {
+            guard let range = Range(match.range(at: i), in: lower) else { return nil }
+            return String(lower[range])
+        }
+        guard let w = group(1).flatMap(Int.init),
+              let h = group(2).flatMap(Int.init) else { return nil }
+        let hz = group(3).flatMap(Double.init)
+        return (width: w, height: h, refresh: hz)
     }
 
     /// Extract a percentage/amount from spoken text.
@@ -792,13 +958,16 @@ final class ActionPlanner {
 
         let searchPatterns: [(pattern: String, engine: String, baseURL: String)] = [
             // YouTube-specific — MUST come before generic "search for"
-            (#"search youtube for (.+)"#,  "YouTube", "https://www.youtube.com/results?search_query="),
-            (#"youtube search for (.+)"#,  "YouTube", "https://www.youtube.com/results?search_query="),
-            (#"search google for (.+)"#,   "Google",  "https://www.google.com/search?q="),
-            (#"google (.+)"#,              "Google",  "https://www.google.com/search?q="),
-            (#"search for (.+)"#,          "Google",  "https://www.google.com/search?q="),
-            (#"search (.+?) on youtube"#,  "YouTube", "https://www.youtube.com/results?search_query="),
-            (#"search (.+?) on google"#,   "Google",  "https://www.google.com/search?q="),
+            (#"search youtube for (.+)"#,          "YouTube", "https://www.youtube.com/results?search_query="),
+            (#"youtube search for (.+)"#,          "YouTube", "https://www.youtube.com/results?search_query="),
+            (#"search google for (.+)"#,           "Google",  "https://www.google.com/search?q="),
+            (#"google (.+)"#,                      "Google",  "https://www.google.com/search?q="),
+            (#"search (?:on )?the web for (.+)"#,  "Google",  "https://www.google.com/search?q="),
+            (#"search (?:on )?(?:the )?web for (.+)"#, "Google", "https://www.google.com/search?q="),
+            (#"search for (.+)"#,                  "Google",  "https://www.google.com/search?q="),
+            (#"search (.+?) on youtube"#,          "YouTube", "https://www.youtube.com/results?search_query="),
+            (#"search (.+?) on google"#,           "Google",  "https://www.google.com/search?q="),
+            (#"search (.+?) on the web"#,          "Google",  "https://www.google.com/search?q="),
         ]
 
         for entry in searchPatterns {

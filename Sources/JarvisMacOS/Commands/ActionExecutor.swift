@@ -14,14 +14,16 @@ struct ActionResult {
 /// Each action is safety-checked immediately before execution.
 final class ActionExecutor {
 
-    private let appController   = AppController()
-    private let fileManager     = JarvisFileManager()
-    private let ollamaClient    = OllamaClient(model: "qwen2.5-coder:1.5b-base")
+    private let appController    = AppController()
+    private let fileManager      = JarvisFileManager()
+    private let ollamaClient     = OllamaClient(model: "qwen2.5-coder:1.5b-base")
     private let volumeController = VolumeController()
+    private let displayController = DisplayController()
 
     var onLog: ((String) -> Void)? {
         didSet {
             volumeController.onLog = onLog
+            displayController.onLog = onLog
         }
     }
 
@@ -91,8 +93,7 @@ final class ActionExecutor {
             return openURL(url)
 
         case .searchWeb(let engine, let query):
-            return ActionResult(action: action, success: true,
-                                message: "Searching \(engine) for '\(query)'.")
+            return executeSearchWeb(engine: engine, query: query, action: action)
 
         case .openFolder(let path):
             let msg = fileManager.openFolder(named: path)
@@ -135,6 +136,11 @@ final class ActionExecutor {
         case .installPreview(let pkg, let source):
             return ActionResult(action: action, success: false,
                                 message: "🔒 Install blocked: '\(pkg)'. Source: \(source).")
+
+        case .displayControl(let displayAction):
+            let msg = displayController.execute(displayAction)
+            let success = !msg.lowercased().contains("fail") && !msg.lowercased().contains("error")
+            return ActionResult(action: action, success: success, message: msg)
         }
     }
 
@@ -234,6 +240,51 @@ final class ActionExecutor {
         } catch {
             return ActionResult(action: .openURL(url), success: false,
                                 message: "URL open error: \(error.localizedDescription)")
+        }
+    }
+
+    // MARK: - Search URL builder + opener
+
+    private func executeSearchWeb(engine: String, query: String, action: PlannedAction) -> ActionResult {
+        // Map engine name → base search URL
+        let engineURLs: [String: String] = [
+            "google":      "https://www.google.com/search?q=",
+            "youtube":     "https://www.youtube.com/results?search_query=",
+            "reddit":      "https://www.reddit.com/search/?q=",
+            "twitter":     "https://twitter.com/search?q=",
+            "x":           "https://twitter.com/search?q=",
+            "bing":        "https://www.bing.com/search?q=",
+            "duckduckgo":  "https://duckduckgo.com/?q=",
+        ]
+
+        let key = engine.lowercased()
+        let baseURL = engineURLs[key] ?? "https://www.google.com/search?q="
+        let engineLabel = engineURLs[key] != nil ? engine : "Google (fallback)"
+
+        guard let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let url = URL(string: baseURL + encoded) else {
+            return ActionResult(action: action, success: false,
+                                message: "Could not build search URL for query: '\(query)'")
+        }
+
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+        process.arguments = [url.absoluteString]
+
+        do {
+            try process.run()
+            process.waitUntilExit()
+            let ok = process.terminationStatus == 0
+            return ActionResult(
+                action: action,
+                success: ok,
+                message: ok
+                    ? "Searching \(engineLabel) for '\(query)'"
+                    : "Failed to open search URL"
+            )
+        } catch {
+            return ActionResult(action: action, success: false,
+                                message: "Search open error: \(error.localizedDescription)")
         }
     }
 

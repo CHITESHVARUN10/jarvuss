@@ -5,6 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BACKEND_DIR="$(cd "$SCRIPT_DIR/../Resources/backend" && pwd)"
 VENV_DIR="$BACKEND_DIR/venv"
 REQ_FILE="$BACKEND_DIR/requirements.txt"
+REQ_HASH_FILE="$VENV_DIR/.req_hash"
 PID_DIR="$HOME/Library/Application Support/Jarvis"
 PID_FILE="$PID_DIR/backend.pid"
 LOG_DIR="$PID_DIR/logs"
@@ -49,9 +50,23 @@ if [[ ! -x "$VENV_DIR/bin/python" ]]; then
   /usr/bin/python3 -m venv "$VENV_DIR"
 fi
 
+# ── Dependency install: skip entirely if requirements.txt hasn't changed ──
 if [[ -f "$REQ_FILE" ]]; then
-  "$VENV_DIR/bin/python" -m pip install --upgrade pip >> "$PIP_LOG_FILE" 2>&1
-  "$VENV_DIR/bin/python" -m pip install -r "$REQ_FILE" >> "$PIP_LOG_FILE" 2>&1
+  REQ_HASH="$(shasum -a 256 "$REQ_FILE" | awk '{print $1}')"
+  CACHED_HASH=""
+  if [[ -f "$REQ_HASH_FILE" ]]; then
+    CACHED_HASH="$(cat "$REQ_HASH_FILE" 2>/dev/null || true)"
+  fi
+
+  if [[ "$REQ_HASH" != "$CACHED_HASH" ]]; then
+    echo "[Backend] requirements.txt changed — running pip install..." >> "$LOG_FILE"
+    "$VENV_DIR/bin/python" -m pip install --upgrade pip >> "$PIP_LOG_FILE" 2>&1
+    "$VENV_DIR/bin/python" -m pip install -r "$REQ_FILE" >> "$PIP_LOG_FILE" 2>&1
+    echo "$REQ_HASH" > "$REQ_HASH_FILE"
+    echo "[Backend] pip install complete." >> "$LOG_FILE"
+  else
+    echo "[Backend] Dependencies unchanged — skipping pip install." >> "$LOG_FILE"
+  fi
 fi
 
 cd "$BACKEND_DIR"

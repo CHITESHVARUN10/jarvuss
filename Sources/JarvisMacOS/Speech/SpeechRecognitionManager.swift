@@ -45,9 +45,15 @@ final class SpeechRecognitionManager {
     private let silenceDebounceInterval: TimeInterval = 0.85
     private var lastPartialTranscript: String = ""
 
-    // MARK: - Debug + fail-fast timers
+    // MARK: - Fail-fast "no speech" timer
+    //
+    // The timer fires only if we have received *zero* audio buffers AND zero
+    // STT partials within the timeout window.  Crucially, appendAudioBuffer
+    // cancels this timer as soon as the first PCM buffer arrives — because at
+    // that point audio *is* being captured; any delay before the first STT
+    // partial is Apple's on-device model latency, not genuine silence.
     private var noSpeechTimer: Timer?
-    private let noSpeechTimeout: TimeInterval = 4.0
+    private let noSpeechTimeout: TimeInterval = 6.0   // bumped from 4 s; STT model can be slow
     private var hasReceivedTranscript = false
     private var appendedBufferCount = 0
     private var loggedInputFormat = false
@@ -117,7 +123,6 @@ final class SpeechRecognitionManager {
         hasReceivedTranscript = false
         appendedBufferCount = 0
         loggedInputFormat = false
-        startNoSpeechTimer()
 
         NSLog("[Speech] NEW SESSION %d started", capturedID)
         emit("[Speech] Recognizing...")
@@ -125,15 +130,20 @@ final class SpeechRecognitionManager {
         recognitionTask = recognizer?.recognitionTask(with: request) { [weak self] result, error in
             guard let self else { return }
 
-            // Session ID guard — silently discard stale callbacks.
+            // Session ID guard — silently discard stale callbacks (prevents
+            // a cancelled session's error from surfacing under the new session).
             guard self.currentSessionID == capturedID else { return }
 
             if let result {
                 let transcript = result.bestTranscription.formattedString
-                self.hasReceivedTranscript = !transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                let nonEmpty   = !transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
 
-                if self.hasReceivedTranscript {
+                if nonEmpty && !self.hasReceivedTranscript {
+                    // First real transcript — audio is confirmed present.
+                    self.hasReceivedTranscript = true
                     self.cancelNoSpeechTimer()
+                    self.emit("[Speech] Transcript: \(transcript)")
+                } else if nonEmpty {
                     self.emit("[Speech] Transcript: \(transcript)")
                 }
 
@@ -158,10 +168,22 @@ final class SpeechRecognitionManager {
             if let error {
                 self.cancelDebounceTimer()
                 self.cancelNoSpeechTimer()
-                self.emit("[Speech][ERROR] \(error.localizedDescription)")
-                onError(error.localizedDescription)
+                // Distinguish cancellation (normal) from real STT failures.
+                let nsErr = error as NSError
+                if nsErr.domain == "kAFAssistantErrorDomain" && nsErr.code == 203 {
+                    self.emit("[Speech] Session ended (no speech / silence timeout from Apple STT)")
+                } else if nsErr.code == 301 {
+                    self.emit("[Speech] Session cancelled (new session started)")
+                } else {
+                    self.emit("[Speech][ERROR] STT error: \(error.localizedDescription) (domain=\(nsErr.domain) code=\(nsErr.code))")
+                    onError(error.localizedDescription)
+                }
             }
         }
+
+        // Start the fail-fast timer AFTER the task is live so the closure
+        // above can cancel it on first transcript receipt.
+        startNoSpeechTimer()
     }
 
     func appendAudioBuffer(_ buffer: AVAudioPCMBuffer) {
@@ -169,6 +191,10 @@ final class SpeechRecognitionManager {
 
         appendedBufferCount += 1
         if appendedBufferCount == 1 {
+            // First PCM buffer confirms audio is flowing from the mic.
+            // Cancel the fail-fast timer immediately — "no speech" would be wrong
+            // here because the mic level detector already declared voice present.
+            cancelNoSpeechTimer()
             emit("[Speech] Mic active")
         }
 
