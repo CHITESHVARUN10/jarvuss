@@ -17,7 +17,10 @@ struct MainApp: App {
                     await appState.bootstrap()
                 }
                 .onDisappear {
-                    appState.stopMicrophone()
+                    appState.shutdown()
+                }
+                .onReceive(NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)) { _ in
+                    appState.shutdown()
                 }
         }
     }

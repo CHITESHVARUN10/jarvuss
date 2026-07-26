@@ -46,6 +46,8 @@ enum SafetyGuard {
             return checkText(name)
         case .closeApp(let name):
             return checkText(name)
+        case .systemInfo:
+            return .allowed
         case .openURL(let url):
             return checkURL(url)
         case .searchWeb(let engine, let query):

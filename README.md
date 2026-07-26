@@ -117,3 +117,93 @@ This is a runnable MVP scaffold for milestone progression:
 - ✅ Logging
 - ⏳ Porcupine, Whisper.cpp, and SQLite remain placeholders for next implementation steps.
 # jarvuss
+
+## Bundled macOS App (No Terminal)
+
+Jarvis now supports a fully bundled app flow where backend startup is automatic.
+
+### Target bundle layout
+
+```text
+Jarvis.app/
+ ├── Contents/
+ │   ├── MacOS/
+ │   │   ├── Jarvis
+ │   │   └── start_backend.sh
+ │   ├── Resources/
+ │   │   └── backend/
+ │   │       ├── main (optional PyInstaller onefile binary)
+ │   │       ├── main.py
+ │   │       ├── voice_auth_service.py
+ │   │       ├── venv/
+ │   │       └── requirements.txt
+ │   └── Info.plist
+```
+
+### One-command local packaging
+
+```zsh
+cd /Users/chiteshvarun/D-drive/jarvis
+chmod +x scripts/start_backend.sh scripts/package_jarvis_app.zsh scripts/launch_jarvis_app.zsh
+./scripts/launch_jarvis_app.zsh
+```
+
+Optional backend compilation with PyInstaller:
+
+```zsh
+cd /Users/chiteshvarun/D-drive/jarvis
+JARVIS_USE_PYINSTALLER=1 ./scripts/package_jarvis_app.zsh
+```
+
+### Swift backend lifecycle integration
+
+- `AppState.bootstrap()` now starts bundled backend first.
+- Uses `BackendServiceManager` (`Sources/JarvisMacOS/App/BackendServiceManager.swift`) with:
+  - single-instance startup
+  - health check (`/health`)
+  - one retry on startup failure
+  - clean shutdown via PID file on app termination
+- UI status is visible in top bar via `backendStatus` and `backendStartupError`.
+
+### Permissions
+
+`Info.plist` includes:
+
+- `NSMicrophoneUsageDescription`
+- `NSSpeechRecognitionUsageDescription`
+- `NSAppleEventsUsageDescription`
+
+For stable permission persistence across launches:
+
+- keep a stable `CFBundleIdentifier`
+- sign the app consistently (same signing identity/team)
+
+Accessibility/Automation grants are managed by macOS TCC and become persistent for the signed bundle identity.
+
+### Xcode build phases (recommended)
+
+In your app target, set up:
+
+1. **Run Script: Copy backend resources**
+  - Copy `backend/voice_auth_service.py`, `backend/requirements.txt`, optional `backend/embeddings.npy` to:
+  - `$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Resources/backend/`
+
+2. **Run Script: Backend startup script**
+  - Copy `scripts/start_backend.sh` to:
+  - `$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/MacOS/start_backend.sh`
+  - `chmod +x` it.
+
+3. **Run Script: Prepare venv (optional in build)**
+  - Create venv under `Resources/backend/venv` and install from `requirements.txt`.
+  - Or let `start_backend.sh` perform first-run install automatically.
+
+4. **Info.plist**
+  - Ensure required usage descriptions are present as above.
+
+### Runtime behavior (double-click app)
+
+1. Launch `Jarvis.app`.
+2. Swift app starts backend via `start_backend.sh` automatically.
+3. Backend runs in background (`127.0.0.1:8000`).
+4. App retries startup once if health check fails.
+5. On app close, backend PID is terminated cleanly.

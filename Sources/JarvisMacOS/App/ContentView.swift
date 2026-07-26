@@ -141,25 +141,8 @@ struct ContentView: View {
 
             Spacer()
 
-            // Mic indicator
-            HStack(spacing: 5) {
-                Image(systemName: appState.micActive ? "mic.fill" : "mic.slash.fill")
-                    .font(.system(size: 11))
-                    .foregroundStyle(appState.micActive
-                        ? Color(red: 0.35, green: 0.90, blue: 0.65)
-                        : Color.white.opacity(0.25))
-                Text(appState.micActive ? "ACTIVE" : "OFFLINE")
-                    .font(.system(size: 9, weight: .bold, design: .monospaced))
-                    .tracking(1.5)
-                    .foregroundStyle(appState.micActive
-                        ? Color(red: 0.35, green: 0.90, blue: 0.65).opacity(0.8)
-                        : Color.white.opacity(0.25))
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
-            .background(Color.white.opacity(0.04))
-            .clipShape(Capsule())
-            .overlay(Capsule().strokeBorder(Color.white.opacity(0.08), lineWidth: 0.8))
+            micStatusBadge
+            backendStatusBadge
         }
         .padding(.horizontal, 24)
         .background(Color.black.opacity(0.20))
@@ -169,5 +152,49 @@ struct ContentView: View {
                 .foregroundStyle(Color.white.opacity(0.06)),
             alignment: .bottom
         )
+    }
+
+    private var micStatusBadge: some View {
+        HStack(spacing: 5) {
+            Image(systemName: appState.micActive ? "mic.fill" : "mic.slash.fill")
+                .font(.system(size: 11))
+                .foregroundStyle(appState.micActive
+                    ? Color(red: 0.35, green: 0.90, blue: 0.65)
+                    : Color.white.opacity(0.25))
+            Text(appState.micActive ? "ACTIVE" : "OFFLINE")
+                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                .tracking(1.5)
+                .foregroundStyle(appState.micActive
+                    ? Color(red: 0.35, green: 0.90, blue: 0.65).opacity(0.8)
+                    : Color.white.opacity(0.25))
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(Color.white.opacity(0.04))
+        .clipShape(Capsule())
+        .overlay(Capsule().strokeBorder(Color.white.opacity(0.08), lineWidth: 0.8))
+    }
+
+    private var backendStatusBadge: some View {
+        let isHealthy = appState.backendStartupError == nil
+
+        return HStack(spacing: 5) {
+            Image(systemName: isHealthy ? "network" : "network.slash")
+                .font(.system(size: 11))
+                .foregroundStyle(isHealthy
+                    ? Color(red: 0.55, green: 0.88, blue: 0.55)
+                    : Color(red: 1.0, green: 0.45, blue: 0.45))
+            Text(appState.backendStatus)
+                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                .tracking(1.2)
+                .foregroundStyle(isHealthy
+                    ? Color(red: 0.55, green: 0.88, blue: 0.55).opacity(0.8)
+                    : Color(red: 1.0, green: 0.45, blue: 0.45).opacity(0.9))
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(Color.white.opacity(0.04))
+        .clipShape(Capsule())
+        .overlay(Capsule().strokeBorder(Color.white.opacity(0.08), lineWidth: 0.8))
     }
 }

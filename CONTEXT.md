@@ -1,7 +1,9 @@
 # Jarvis Project Context (Current State)
 
 This file summarizes what has been implemented so far in this workspace, what features exist, and what commands Jarvis currently supports.
-
+cd /Users/chiteshvarun/D-drive/jarvis/backend
+source .venv/bin/activate
+python -m uvicorn voice_auth_service:app --host 127.0.0.1 --port 8000
 ## 1) Project Goal
 
 A local/offline-first macOS assistant built in Swift + SwiftUI that can:

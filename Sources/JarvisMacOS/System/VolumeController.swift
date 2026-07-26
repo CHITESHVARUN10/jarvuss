@@ -1,130 +1,302 @@
 import Foundation
+import CoreAudio
 
-/// Executes system-level volume changes via AppleScript.
-///
-/// macOS 'set volume output volume N' always targets the *current* default
-/// output device — the one selected in System Settings → Sound → Output.
-/// This includes external monitors, USB DACs, Bluetooth speakers, etc.
-/// No additional device detection is required; we log the active device
-/// name for debugging purposes only.
+enum AudioDeviceType: CustomStringConvertible {
+    case hdmi
+    case nonHDMI
+    case unknown
+
+    var description: String {
+        switch self {
+        case .hdmi: return "HDMI"
+        case .nonHDMI: return "Non-HDMI"
+        case .unknown: return "Unknown"
+        }
+    }
+}
+
 final class VolumeController {
+    private let coreAudio = CoreAudioVolumeController()
+    private let monitorVolume = MonitorVolumeController()
+    private let audioGain = AudioGainController()
 
-    // MARK: - Public API
+    var onLog: ((String) -> Void)? {
+        didSet {
+            coreAudio.onLog = onLog
+            monitorVolume.onLog = onLog
+            audioGain.onLog = onLog
+        }
+    }
+
+    private(set) var currentVolume: Float = 0.5
+    private var preMuteVolume: Float = 0.5
+    private var lastOperationSucceeded = false
+
+    func increase(by percent: Float) {
+        let delta = clamp01(percent / 100.0)
+        let device = getCurrentOutputDevice()
+        emit("[Volume][Debug] Requested change: +\(percent)")
+        emit("[Volume][Debug] Previous volume: \(currentVolume)")
+        if device == .hdmi {
+            emit("[Volume][Debug] Using method: ddc")
+            let step = max(1, Int(round(Double(delta * 100.0))))
+            let before = currentVolume
+            let ok = monitorVolume.setVolumeResult(monitorVolume.currentPercent + step)
+            if ok {
+                currentVolume = Float(monitorVolume.currentPercent) / 100.0
+                lastOperationSucceeded = hasMeaningfulChange(before: before, after: currentVolume)
+                return
+            }
+            emit("[Volume][Debug] DDC failed, falling back to audiogain")
+            let gainBefore = audioGain.currentVolumeFactor()
+            let gainApplied = audioGain.increase(by: step)
+            if gainApplied {
+                currentVolume = audioGain.currentVolumeFactor()
+            }
+            lastOperationSucceeded = gainApplied && hasMeaningfulChange(before: gainBefore, after: currentVolume)
+            return
+        }
+
+        emit("[Volume][Debug] Using method: coreaudio")
+        let before = coreAudio.getVolume().map { Float($0) }
+        coreAudio.increase(by: delta)
+        syncCurrentVolumeFromSystem()
+        let after = coreAudio.getVolume().map { Float($0) }
+        lastOperationSucceeded = hasMeaningfulChange(before: before, after: after)
+    }
+
+    func decrease(by percent: Float) {
+        let delta = clamp01(percent / 100.0)
+        let device = getCurrentOutputDevice()
+        emit("[Volume][Debug] Requested change: +\(-percent)")
+        emit("[Volume][Debug] Previous volume: \(currentVolume)")
+        if device == .hdmi {
+            emit("[Volume][Debug] Using method: ddc")
+            let step = max(1, Int(round(Double(delta * 100.0))))
+            let before = currentVolume
+            let ok = monitorVolume.setVolumeResult(monitorVolume.currentPercent - step)
+            if ok {
+                currentVolume = Float(monitorVolume.currentPercent) / 100.0
+                lastOperationSucceeded = hasMeaningfulChange(before: before, after: currentVolume)
+                return
+            }
+            emit("[Volume][Debug] DDC failed, falling back to audiogain")
+            let gainBefore = audioGain.currentVolumeFactor()
+            let gainApplied = audioGain.decrease(by: step)
+            if gainApplied {
+                currentVolume = audioGain.currentVolumeFactor()
+            }
+            lastOperationSucceeded = gainApplied && hasMeaningfulChange(before: gainBefore, after: currentVolume)
+            return
+        }
+
+        emit("[Volume][Debug] Using method: coreaudio")
+        let before = coreAudio.getVolume().map { Float($0) }
+        coreAudio.decrease(by: delta)
+        syncCurrentVolumeFromSystem()
+        let after = coreAudio.getVolume().map { Float($0) }
+        lastOperationSucceeded = hasMeaningfulChange(before: before, after: after)
+    }
+
+    func setVolume(_ percent: Float) {
+        let normalized = clamp01(percent / 100.0)
+        let device = getCurrentOutputDevice()
+        emit("[Volume][Debug] Requested change: +\(percent)")
+        emit("[Volume][Debug] Previous volume: \(currentVolume)")
+        if device == .hdmi {
+            emit("[Volume][Debug] Using method: ddc")
+            let target = Int(round(Double(normalized * 100.0)))
+            let before = currentVolume
+            let ok = monitorVolume.setVolumeResult(target)
+            if ok {
+                currentVolume = Float(monitorVolume.currentPercent) / 100.0
+                lastOperationSucceeded = hasMeaningfulChange(before: before, after: currentVolume)
+                return
+            }
+            emit("[Volume][Debug] DDC failed, falling back to audiogain")
+            let gainBefore = audioGain.currentVolumeFactor()
+            let gainApplied = audioGain.setVolume(target)
+            if gainApplied {
+                currentVolume = audioGain.currentVolumeFactor()
+            }
+            lastOperationSucceeded = gainApplied && hasMeaningfulChange(before: gainBefore, after: currentVolume)
+            return
+        }
+
+        emit("[Volume][Debug] Using method: coreaudio")
+        let before = coreAudio.getVolume().map { Float($0) }
+        _ = coreAudio.setVolume(normalized)
+        syncCurrentVolumeFromSystem()
+        let after = coreAudio.getVolume().map { Float($0) }
+        lastOperationSucceeded = hasMeaningfulChange(before: before, after: after)
+    }
+
+    func mute() {
+        preMuteVolume = currentVolume
+        setVolume(0)
+    }
+
+    func unmute() {
+        let restore = preMuteVolume > 0 ? preMuteVolume : 0.5
+        let device = getCurrentOutputDevice()
+        emit("[Volume][Debug] Requested change: +\(restore * 100.0)")
+        emit("[Volume][Debug] Previous volume: \(currentVolume)")
+        if device == .hdmi {
+            emit("[Volume][Debug] Using method: ddc")
+            let before = currentVolume
+            let ok = monitorVolume.setVolumeResult(Int(round(Double(restore * 100.0))))
+            if ok {
+                currentVolume = Float(monitorVolume.currentPercent) / 100.0
+                lastOperationSucceeded = hasMeaningfulChange(before: before, after: currentVolume)
+                return
+            }
+            emit("[Volume][Debug] DDC failed, falling back to audiogain")
+            let gainBefore = audioGain.currentVolumeFactor()
+            let gainApplied = audioGain.setVolume(Int(round(Double(restore * 100.0))))
+            if gainApplied {
+                currentVolume = audioGain.currentVolumeFactor()
+            }
+            lastOperationSucceeded = gainApplied && hasMeaningfulChange(before: gainBefore, after: currentVolume)
+            return
+        }
+
+        emit("[Volume][Debug] Using method: coreaudio")
+        let before = coreAudio.getVolume().map { Float($0) }
+        _ = coreAudio.setVolume(restore)
+        syncCurrentVolumeFromSystem()
+        let after = coreAudio.getVolume().map { Float($0) }
+        lastOperationSucceeded = hasMeaningfulChange(before: before, after: after)
+    }
 
     func execute(_ action: VolumeAction) -> String {
-        logCurrentOutputDevice()
+        emit("========== VOLUME DEBUG START ==========")
+
+        let device = getCurrentOutputDevice()
+        emit("[Volume][Debug] Detecting output device...")
+        emit("[Volume][Debug] Device detected: \(device)")
+
+        let beforeActual: Float?
+        if device == .hdmi {
+            beforeActual = currentVolume
+        } else {
+            beforeActual = coreAudio.getVolume().map { Float($0) }
+        }
+        if let beforeActual {
+            currentVolume = beforeActual
+        }
+
+        let resultText: String
         switch action {
         case .increase(let by):
-            return adjustRelative(delta: by)
+            increase(by: Float(by))
+            resultText = "Volume increased by \(by)%"
         case .decrease(let by):
-            return adjustRelative(delta: -by)
-        case .mute:
-            let err = runScript("set volume with output muted")
-            return err ?? "Muted"
-        case .unmute:
-            let err = runScript("set volume without output muted")
-            return err ?? "Unmuted"
+            decrease(by: Float(by))
+            resultText = "Volume decreased by \(by)%"
         case .setLevel(let level):
-            let safe = clamp(level)
-            let err = runScript("set volume output volume \(safe)")
-            return err ?? "Volume set to \(safe)%"
+            setVolume(Float(level))
+            resultText = "Volume set to \(Int(currentVolume * 100))%"
+        case .mute:
+            mute()
+            resultText = "Muted"
+        case .unmute:
+            unmute()
+            resultText = "Unmuted"
+        }
+
+        let afterActual: Float?
+        if device == .hdmi {
+            afterActual = currentVolume
+        } else {
+            afterActual = coreAudio.getVolume().map { Float($0) }
+        }
+        if let afterActual {
+            currentVolume = afterActual
+        }
+
+        let changed = lastOperationSucceeded && hasMeaningfulChange(before: beforeActual, after: afterActual)
+        if !changed {
+            if device == .hdmi {
+                emit("[Volume][ERROR] Monitor does not support DDC volume and audio gain fallback is unavailable")
+            }
+            emit("[Volume][ERROR] Volume change had NO EFFECT")
+        }
+
+        emit("[Volume][Result] Final volume level: \(currentVolume)")
+        emit("========== VOLUME DEBUG END ==========")
+
+        if changed {
+            return resultText
+        }
+        return "Volume command executed but no actual volume change was detected"
+    }
+
+    private func syncCurrentVolumeFromSystem() {
+        if let value = coreAudio.getVolume() {
+            currentVolume = Float(value)
         }
     }
 
-    // MARK: - Relative adjustment
-
-    private func adjustRelative(delta: Int) -> String {
-        let current = currentVolume() ?? 50
-        let target  = clamp(current + delta)
-        let direction = delta >= 0 ? "increased" : "decreased"
-        // 'set volume output volume' targets the active output device specifically
-        // (not input gain), ensuring external speakers/monitors are controlled.
-        _ = runScript("set volume output volume \(target)")
-        NSLog("[Volume] %@ to %d%% (was %d%%)", direction, target, current)
-        return "Volume \(direction) to \(target)%"
+    private func clamp01(_ value: Float) -> Float {
+        min(max(value, 0.0), 1.0)
     }
 
-    // MARK: - Current volume reader
-
-    private func currentVolume() -> Int? {
-        let result = runScriptWithOutput("output volume of (get volume settings)")
-        return result.flatMap { Int($0) }
+    private func hasMeaningfulChange(before: Float?, after: Float?) -> Bool {
+        guard let before, let after else { return false }
+        return abs(before - after) > 0.001
     }
 
-    // MARK: - Active output device logger (debug only)
-
-    private func logCurrentOutputDevice() {
-        // CoreAudio GetDefaultAudioOutputDevice via osascript is not trivially
-        // scriptable; we use the `SwitchAudioSource` info if available, else skip.
-        // This is a best-effort debug log — does NOT affect volume execution.
-        let script = """
-        set deviceName to ""
-        try
-            tell application "System Events"
-                tell its sound preferences
-                    set deviceName to name of current sound output
-                end tell
-            end tell
-        end try
-        return deviceName
-        """
-        if let device = runScriptWithOutput(script), !device.isEmpty {
-            NSLog("[Volume] Active output device: %@", device)
+    private func emit(_ message: String) {
+        if let onLog {
+            onLog(message)
+        } else {
+            print(message)
         }
     }
 
-    // MARK: - AppleScript runners
+    private func getCurrentOutputDevice() -> AudioDeviceType {
+        var deviceID = AudioDeviceID(0)
+        var size = UInt32(MemoryLayout<AudioDeviceID>.size)
+        var address = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwarePropertyDefaultOutputDevice,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
 
-    /// Run a script, returning nil on success or an error string on failure.
-    @discardableResult
-    private func runScript(_ script: String) -> String? {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
-        process.arguments = ["-e", script]
+        let deviceStatus = AudioObjectGetPropertyData(
+            AudioObjectID(kAudioObjectSystemObject),
+            &address,
+            0,
+            nil,
+            &size,
+            &deviceID
+        )
 
-        let errPipe = Pipe()
-        process.standardError = errPipe
-        // Suppress stdout (we don't need the output for set-volume commands)
-        process.standardOutput = Pipe()
+        guard deviceStatus == noErr else { return .unknown }
 
-        do {
-            try process.run()
-            process.waitUntilExit()
-            if process.terminationStatus == 0 { return nil }   // success
-            let errData = errPipe.fileHandleForReading.readDataToEndOfFile()
-            let errMsg  = String(data: errData, encoding: .utf8)?
-                            .trimmingCharacters(in: .whitespacesAndNewlines)
-            return "Volume control failed: \(errMsg ?? "unknown error")"
-        } catch {
-            return "Volume control error: \(error.localizedDescription)"
+        var transportType: UInt32 = 0
+        var transportSize = UInt32(MemoryLayout<UInt32>.size)
+        var transportAddress = AudioObjectPropertyAddress(
+            mSelector: kAudioDevicePropertyTransportType,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+
+        let typeStatus = AudioObjectGetPropertyData(
+            deviceID,
+            &transportAddress,
+            0,
+            nil,
+            &transportSize,
+            &transportType
+        )
+
+        guard typeStatus == noErr else { return .unknown }
+        switch transportType {
+        case kAudioDeviceTransportTypeHDMI, kAudioDeviceTransportTypeDisplayPort:
+            return .hdmi
+        default:
+            return .nonHDMI
         }
-    }
-
-    /// Run a script and return its stdout output string.
-    private func runScriptWithOutput(_ script: String) -> String? {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
-        process.arguments = ["-e", script]
-
-        let outPipe = Pipe()
-        process.standardOutput = outPipe
-        process.standardError  = Pipe()   // suppress stderr
-
-        do {
-            try process.run()
-            process.waitUntilExit()
-            let data   = outPipe.fileHandleForReading.readDataToEndOfFile()
-            let output = String(data: data, encoding: .utf8)?
-                           .trimmingCharacters(in: .whitespacesAndNewlines)
-            return output.flatMap { $0.isEmpty ? nil : $0 }
-        } catch {
-            return nil
-        }
-    }
-
-    // MARK: - Helpers
-
-    private func clamp(_ value: Int) -> Int {
-        min(100, max(0, value))
     }
 }

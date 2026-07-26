@@ -26,6 +26,9 @@ final class AppState: ObservableObject {
     @Published var voiceVerificationStatus = "Unknown Voice ❌"
     @Published var lastVoiceSimilarity = 0.0
     @Published var backendEnrollmentSampleCount = 0
+    @Published var automations: [VoiceAutomation] = []
+    @Published var backendStatus: String = "Not started"
+    @Published var backendStartupError: String?
     /// When true, Jarvis speaks its responses aloud via AVSpeechSynthesizer.
     @Published var voiceResponseEnabled: Bool = false
 
@@ -70,9 +73,11 @@ final class AppState: ObservableObject {
     private let parser = CommandParser()
     private let executor = CommandExecutor()
     private let actionExecutor = ActionExecutor()
+    private let automationStore = AutomationStore()
     private let commandNormalizer = CommandNormalizer(model: "qwen2.5-coder:1.5b-base")
     private let voiceAuthClient = VoiceAuthClient()
     private let actionPlanner = ActionPlanner()
+    private let backendServiceManager = BackendServiceManager()
     let commandQueue = CommandQueueManager()
 
     private var previousVoiceDetected = false
@@ -108,7 +113,7 @@ final class AppState: ObservableObject {
     private let enrollmentAcceptCooldown: TimeInterval = 1.4
     private let enrollmentAttemptThrottle: TimeInterval = 0.30
     private let voiceExecutionCooldown: TimeInterval = 0.45
-    private let voiceVerificationThreshold = 0.70
+    private let voiceVerificationThreshold = 0.60
 
     var voiceEnrollmentSampleTarget: Int {
         enrollmentPhrases.count * enrollmentRequiredMatchesPerPhrase
@@ -140,6 +145,12 @@ final class AppState: ObservableObject {
         commandQueue.onLog = { [weak self] msg in
             Task { @MainActor in self?.appendLog(msg) }
         }
+        actionExecutor.onLog = { [weak self] msg in
+            Task { @MainActor in self?.appendLog(msg) }
+        }
+        self.speechManager.onLog = { [weak self] msg in
+            Task { @MainActor in self?.appendLog(msg) }
+        }
         // Wire TTS echo suppression: track every text we speak so the mic
         // ignores transcripts that mirror our own output.
         // Also set isTTSSpeaking flag to block all command processing during speech.
@@ -155,6 +166,8 @@ final class AppState: ObservableObject {
                 self?.isTTSSpeaking = false
             }
         }
+
+        self.automations = automationStore.load()
     }
 
     // MARK: - Fix #1: Hard Reset Voice Pipeline
@@ -173,6 +186,8 @@ final class AppState: ObservableObject {
     }
 
     func bootstrap() async {
+        await startBundledBackendIfNeeded()
+
         dbManager.setup()
         if dbManager.isConfigured {
             appendLog("PostgreSQL logging is enabled.")
@@ -186,9 +201,44 @@ final class AppState: ObservableObject {
         await startMicrophone()
     }
 
+    func shutdown() {
+        stopMicrophone()
+        backendServiceManager.stopIfNeeded { [weak self] message in
+            Task { @MainActor in
+                self?.appendLog(message)
+            }
+        }
+    }
+
+    private func startBundledBackendIfNeeded() async {
+        backendStatus = "Starting backend..."
+
+        let result = await backendServiceManager.startIfNeeded { [weak self] message in
+            Task { @MainActor in
+                self?.appendLog(message)
+            }
+        }
+
+        if result.success {
+            backendStartupError = nil
+            backendStatus = "Backend running"
+            appendLog("[Backend] \(result.message)")
+        } else {
+            backendStartupError = result.message
+            backendStatus = "Backend failed"
+            appendLog("[Backend][ERROR] \(result.message)")
+            popupManager.show(message: "Backend start failed. Some features may be unavailable.", icon: "exclamationmark.triangle.fill", duration: 4)
+        }
+    }
+
     func startMicrophone() async {
         do {
             isStoppingMicrophone = false
+
+            // Hard reset speech + mic session state before reinitializing.
+            speechManager.stopRecognition()
+            micManager.stopListening()
+
             let speechPermission = await speechManager.requestPermission()
             guard speechPermission else {
                 let hasSpeechUsageKey = Bundle.main.object(forInfoDictionaryKey: "NSSpeechRecognitionUsageDescription") != nil
@@ -271,9 +321,6 @@ final class AppState: ObservableObject {
 
         appendLog("[Typed] Received: '\(command)'")
 
-        // Fast path for time/date — no queue needed
-        if tryHandleQuickInfoCommand(command) { return }
-
         let priority = CommandPriority.classify(command)
         commandQueue.enqueue(text: command, priority: priority) { [weak self] in
             await self?.runCommand(command)
@@ -282,6 +329,50 @@ final class AppState: ObservableObject {
 
     func clearEventLog() {
         logs.removeAll()
+    }
+
+    func saveAutomation(
+        keyword: String,
+        offKeyword: String?,
+        actions: [AutomationAction],
+        editingID: UUID? = nil
+    ) {
+        let trimmedKeyword = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedKeyword.isEmpty else { return }
+
+        let normalizedOffKeyword = offKeyword?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedActions = actions.filter { !$0.type.requiresValue || !$0.value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        guard !normalizedActions.isEmpty else { return }
+
+        if let editingID,
+           let index = automations.firstIndex(where: { $0.id == editingID }) {
+            automations[index].keyword = trimmedKeyword
+            automations[index].offKeyword = normalizedOffKeyword
+            automations[index].actions = normalizedActions
+        } else {
+            automations.append(
+                VoiceAutomation(
+                    keyword: trimmedKeyword,
+                    offKeyword: normalizedOffKeyword,
+                    actions: normalizedActions
+                )
+            )
+        }
+
+        persistAutomations()
+    }
+
+    func deleteAutomation(id: UUID) {
+        automations.removeAll { $0.id == id }
+        persistAutomations()
+    }
+
+    private func persistAutomations() {
+        do {
+            try automationStore.save(automations)
+        } catch {
+            appendLog("[Automation][ERROR] Failed to save automations: \(error.localizedDescription)")
+        }
     }
 
     private func handleTranscript(_ transcript: String, isFinal: Bool) {
@@ -401,7 +492,6 @@ final class AppState: ObservableObject {
         lastBatchHandledTranscript = Self.normalizeCompact(transcript)
 
         for validated in sanitized {
-            if tryHandleQuickInfoCommand(validated) { continue }
             let priority = CommandPriority.classify(validated)
             commandQueue.enqueue(text: validated, priority: priority) { [weak self] in
                 await self?.verifyThenRunCommand(validated)
@@ -804,6 +894,9 @@ final class AppState: ObservableObject {
         try speechManager.startRecognition(
             onResult: { [weak self] transcript, isFinal in
                 Task { @MainActor in
+                    if isFinal {
+                        self?.appendLog("[Speech][Live] FINAL: '\(transcript)'")
+                    }
                     self?.handleTranscript(transcript, isFinal: isFinal)
                 }
             },
@@ -908,9 +1001,6 @@ final class AppState: ObservableObject {
         }
 
         appendLog("[Voice] Accepted final: '\(validated)'")
-
-        // ── FAST PATH: time/date/day/month queries bypass queue entirely ──
-        if tryHandleQuickInfoCommand(validated) { return }
 
         // ── DEBOUNCED QUEUE PATH ──────────────────────────────────────
         // Cancel any previously pending command work item.
@@ -1036,8 +1126,138 @@ final class AppState: ObservableObject {
         return tokens.joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    private func matchedAutomation(for command: String) -> (automation: VoiceAutomation, isOffVariant: Bool)? {
+        let lower = command.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !lower.isEmpty else { return nil }
+
+        for automation in automations {
+            let keyword = automation.keyword.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !keyword.isEmpty else { continue }
+
+            let offKeyword = automation.offKeyword?.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+                ?? "\(keyword) off"
+
+            if !offKeyword.isEmpty, lower.contains(offKeyword) {
+                return (automation, true)
+            }
+
+            if lower.contains(keyword) {
+                return (automation, false)
+            }
+        }
+
+        return nil
+    }
+
+    private func executeAutomation(_ automation: VoiceAutomation, isOffVariant: Bool) async {
+        if isOffVariant {
+            appendLog("[Automation] Off variant matched for '\(automation.keyword)'.")
+            ResponseEngine.shared.respond(to: "Automation \(automation.keyword) turned off", speak: voiceResponseEnabled)
+            return
+        }
+
+        appendLog("[Automation] Executing \(automation.actions.count) actions for '\(automation.keyword)'")
+        assistantState = .executing
+
+        for action in automation.actions {
+            if action.type == .timer {
+                let timerText = action.value.trimmingCharacters(in: .whitespacesAndNewlines)
+                appendLog("[Automation] Timer started: \(timerText.isEmpty ? "custom" : timerText)")
+                continue
+            }
+
+            if action.type == .stopwatch {
+                appendLog("[Automation] Stopwatch started")
+                continue
+            }
+
+            if action.type == .openFile {
+                let result = openFilePath(action.value)
+                appendLog(result ? "[Automation] Opened file: \(action.value)" : "[Automation][ERROR] Failed opening file: \(action.value)")
+            } else if let planned = plannedAction(for: action) {
+                await actionExecutor.execute(
+                    plan: [planned],
+                    onStepStart: { [weak self] plannedAction in
+                        Task { @MainActor in
+                            self?.appendLog("[Automation] ▶ \(plannedAction.description)")
+                        }
+                    },
+                    onStepComplete: { [weak self] result in
+                        Task { @MainActor in
+                            let prefix = result.success ? "✓" : "✗"
+                            self?.appendLog("[Automation] \(prefix) \(result.message)")
+                        }
+                    }
+                )
+            }
+
+            let delayMs = UInt64(Int.random(in: 100...300))
+            try? await Task.sleep(nanoseconds: delayMs * 1_000_000)
+        }
+
+        assistantState = micActive ? .listening : .idle
+        ResponseEngine.shared.respond(to: "Automation \(automation.keyword) executed", speak: voiceResponseEnabled)
+    }
+
+    private func plannedAction(for action: AutomationAction) -> PlannedAction? {
+        let value = action.value.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        switch action.type {
+        case .openApp:
+            guard !value.isEmpty else { return nil }
+            return .openApp(value)
+        case .closeApp:
+            guard !value.isEmpty else { return nil }
+            return .closeApp(value)
+        case .playSong:
+            guard !value.isEmpty else { return nil }
+            return .mediaControl(.playSong(value))
+        case .playPlaylist:
+            guard !value.isEmpty else { return nil }
+            return .mediaControl(.playPlaylist(value))
+        case .playLiked:
+            return .mediaControl(.playLikedSongs)
+        case .pause:
+            return .mediaControl(.pause)
+        case .next:
+            return .mediaControl(.nextTrack)
+        case .previous:
+            return .mediaControl(.previousTrack)
+        case .openFolder:
+            guard !value.isEmpty else { return nil }
+            return .openFolder(value)
+        case .timer, .stopwatch, .openFile:
+            return nil
+        }
+    }
+
+    private func openFilePath(_ rawPath: String) -> Bool {
+        let path = rawPath.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !path.isEmpty else { return false }
+
+        let expanded = (path as NSString).expandingTildeInPath
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+        process.arguments = [expanded]
+
+        do {
+            try process.run()
+            process.waitUntilExit()
+            return process.terminationStatus == 0
+        } catch {
+            appendLog("[Automation][ERROR] Open file failed: \(error.localizedDescription)")
+            return false
+        }
+    }
+
     private func runCommand(_ command: String) async {
         guard !command.isEmpty else { return }
+
+        if let match = matchedAutomation(for: command) {
+            appendLog("[Automation] Triggered keyword: '\(match.automation.keyword)'")
+            await executeAutomation(match.automation, isOffVariant: match.isOffVariant)
+            return
+        }
 
         // --- Quick informational commands (time / date / month / day) ---
         if tryHandleQuickInfoCommand(command) { return }
@@ -1094,6 +1314,7 @@ final class AppState: ObservableObject {
         // ✅ Log the detected intent so the pipeline is fully traceable
         if let first = plan.first {
             switch first {
+            case .systemInfo(let i):     appendLog("[Intent] INFO: \(i.description)")
             case .volumeControl(let a):  appendLog("[Intent] detected: \(a.description) → volume (ActionExecutor)")
             case .mediaControl(let a):   appendLog("[Intent] detected: \(a.description) → media (ActionExecutor)")
             case .aiQuery:               appendLog("[Intent] detected: ai_query → Ollama")
@@ -1293,6 +1514,10 @@ final class AppState: ObservableObject {
             // Borderline retry and network retry have been removed per spec requirement.
             let result = try await attemptVerification()
 
+            let wakeWordDetected = containsWakeWord(lastRecognizedSpeech)
+            let effectiveThreshold = wakeWordDetected ? 0.55 : voiceVerificationThreshold
+            let isVerifiedByThreshold = result.similarity >= effectiveThreshold
+
             switch result.confidence {
             case .strong:
                 voiceVerificationStatus = "Verified (Strong) ✅"
@@ -1303,31 +1528,74 @@ final class AppState: ObservableObject {
                 await runCommand(command)
 
             case .low:
-                voiceVerificationStatus = "Verified (Low Confidence) ⚠️"
-                lastVoiceSimilarity = result.similarity
-                appendLog("[Voice] Verified (low confidence). Score: \(fmtScore(result.similarity)) " +
-                          "[max: \(fmtScore(result.maxSimilarity)), avg: \(fmtScore(result.avgSimilarity))]")
-                dbManager.saveEvent(
-                    eventType: "voice_low_confidence",
-                    transcript: command,
-                    score: result.similarity,
-                    matched: true,
-                    metadata: ["confidence": "low"]
-                )
-                await runCommand(command)
+                if isVerifiedByThreshold {
+                    voiceVerificationStatus = "Verified (Low Confidence) ⚠️"
+                    lastVoiceSimilarity = result.similarity
+                    appendLog("[Voice] Verified (low confidence). Score: \(fmtScore(result.similarity)) " +
+                              "[max: \(fmtScore(result.maxSimilarity)), avg: \(fmtScore(result.avgSimilarity)), threshold: \(fmtScore(effectiveThreshold))]")
+                    dbManager.saveEvent(
+                        eventType: "voice_low_confidence",
+                        transcript: command,
+                        score: result.similarity,
+                        matched: true,
+                        metadata: [
+                            "confidence": "low",
+                            "threshold": fmtScore(effectiveThreshold),
+                            "wake_word": wakeWordDetected ? "true" : "false"
+                        ]
+                    )
+                    await runCommand(command)
+                } else {
+                    voiceVerificationStatus = "Unknown Voice ❌"
+                    lastVoiceSimilarity = result.similarity
+                    appendLog("[Voice] Rejected by threshold. Score: \(fmtScore(result.similarity)) < \(fmtScore(effectiveThreshold))")
+                    dbManager.saveEvent(
+                        eventType: "voice_rejected",
+                        transcript: command,
+                        score: result.similarity,
+                        matched: false,
+                        normalizedCommand: command,
+                        metadata: [
+                            "threshold": fmtScore(effectiveThreshold),
+                            "wake_word": wakeWordDetected ? "true" : "false"
+                        ]
+                    )
+                }
 
             case .rejected:
-                voiceVerificationStatus = "Unknown Voice ❌"
-                lastVoiceSimilarity = result.similarity
-                appendLog("[Voice] Rejected. Score: \(fmtScore(result.similarity)) " +
-                          "[max: \(fmtScore(result.maxSimilarity)), avg: \(fmtScore(result.avgSimilarity))]")
-                dbManager.saveEvent(
-                    eventType: "voice_rejected",
-                    transcript: command,
-                    score: result.similarity,
-                    matched: false,
-                    normalizedCommand: command
-                )
+                if isVerifiedByThreshold {
+                    voiceVerificationStatus = "Verified (Wake Word Relaxed) ⚠️"
+                    lastVoiceSimilarity = result.similarity
+                    appendLog("[Voice] Wake-word threshold pass. Score: \(fmtScore(result.similarity)) >= \(fmtScore(effectiveThreshold))")
+                    dbManager.saveEvent(
+                        eventType: "voice_low_confidence",
+                        transcript: command,
+                        score: result.similarity,
+                        matched: true,
+                        metadata: [
+                            "confidence": "rejected_override",
+                            "threshold": fmtScore(effectiveThreshold),
+                            "wake_word": wakeWordDetected ? "true" : "false"
+                        ]
+                    )
+                    await runCommand(command)
+                } else {
+                    voiceVerificationStatus = "Unknown Voice ❌"
+                    lastVoiceSimilarity = result.similarity
+                    appendLog("[Voice] Rejected. Score: \(fmtScore(result.similarity)) " +
+                              "[max: \(fmtScore(result.maxSimilarity)), avg: \(fmtScore(result.avgSimilarity)), threshold: \(fmtScore(effectiveThreshold))]")
+                    dbManager.saveEvent(
+                        eventType: "voice_rejected",
+                        transcript: command,
+                        score: result.similarity,
+                        matched: false,
+                        normalizedCommand: command,
+                        metadata: [
+                            "threshold": fmtScore(effectiveThreshold),
+                            "wake_word": wakeWordDetected ? "true" : "false"
+                        ]
+                    )
+                }
 
             case .none:
                 voiceVerificationStatus = "No Voice Profile ❌"

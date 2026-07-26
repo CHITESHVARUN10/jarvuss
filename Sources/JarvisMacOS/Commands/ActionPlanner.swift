@@ -6,6 +6,7 @@ import Foundation
 enum PlannedAction: Equatable, CustomStringConvertible {
     case openApp(String)
     case closeApp(String)
+    case systemInfo(SystemInfoAction)
     case openURL(String)
     case searchWeb(engine: String, query: String)
     case openFolder(String)
@@ -21,6 +22,7 @@ enum PlannedAction: Equatable, CustomStringConvertible {
         switch self {
         case .openApp(let n):              return "Open '\(n)'"
         case .closeApp(let n):             return "Close '\(n)'"
+        case .systemInfo(let i):           return "Info: \(i)"
         case .openURL(let u):              return "Open URL: \(u)"
         case .searchWeb(let e, let q):     return "Search \(e) for '\(q)'"
         case .openFolder(let p):           return "Open folder '\(p)'"
@@ -35,8 +37,29 @@ enum PlannedAction: Equatable, CustomStringConvertible {
     }
 }
 
+enum SystemInfoAction: Equatable, CustomStringConvertible {
+    case currentTime
+    case currentDate
+    case wifiStatus
+    case bluetoothDevices
+    case batteryStatus
+    case systemVolume
+
+    var description: String {
+        switch self {
+        case .currentTime:         return "current time"
+        case .currentDate:         return "current date"
+        case .wifiStatus:          return "wifi status"
+        case .bluetoothDevices:    return "bluetooth devices"
+        case .batteryStatus:       return "battery status"
+        case .systemVolume:        return "system volume"
+        }
+    }
+}
+
 enum MediaAction: Equatable, CustomStringConvertible {
     case play
+    case playSong(String)
     case pause
     case nextTrack
     case previousTrack
@@ -46,6 +69,7 @@ enum MediaAction: Equatable, CustomStringConvertible {
     var description: String {
         switch self {
         case .play:                  return "play"
+        case .playSong(let n):       return "play song '\(n)'"
         case .pause:                 return "pause"
         case .nextTrack:             return "next track"
         case .previousTrack:         return "previous track"
@@ -111,13 +135,8 @@ final class ActionPlanner {
             break
         }
 
-        // 3. Try compound-media split first (e.g. "play liked songs pause")
-        if let compoundActions = splitCompoundMediaCommand(lower) {
-            NSLog("[Plan] Compound media split: %@", compoundActions.map(\.description).joined(separator: ", "))
-            return compoundActions
-        }
-
-        // 4. Try rule-based multi-action split
+        // 3. Strict priority router
+        // SYSTEM -> INFO -> MEDIA -> AI
         if let actions = ruleBasedPlan(cleaned: cleaned, lower: lower) {
             NSLog("[Plan] Rule-based: %@", actions.map(\.description).joined(separator: ", "))
             return actions
@@ -145,6 +164,7 @@ final class ActionPlanner {
             return [.aiQuery(cleaned)]
         }
 
+        NSLog("[Intent] AI: fallback")
         NSLog("[Plan] → Routing to Ollama: '%@'", cleaned)
         return await ollamaFallback(cleaned)
     }
@@ -153,26 +173,26 @@ final class ActionPlanner {
 
     private func ruleBasedPlan(cleaned: String, lower: String) -> [PlannedAction]? {
 
-        // ── Volume commands (HIGHEST priority — parse first) ─────────
+        if let system = parseSystemCommand(lower) {
+            NSLog("[Intent] SYSTEM: %@", lower)
+            return [system]
+        }
+
+        if let info = parseInfoCommand(lower) {
+            NSLog("[Intent] INFO: %@", info.description)
+            return [.systemInfo(info)]
+        }
+
+        // Volume remains before media and after system/info.
         if let volume = parseVolumeCommand(lower) {
             NSLog("[Block] prevented AI fallback → volume command")
             return [volume]
         }
 
-        // ── Media commands (HIGH priority) ───────────────────────────
+        // Media is lower priority than system + info.
         if let media = parseMediaCommand(lower) {
-            NSLog("[Block] prevented AI fallback → media command")
+            NSLog("[Intent] MEDIA: %@", media.description)
             return [media]
-        }
-
-        // ── Close app — ALWAYS handle before search to prevent misroute
-        // "close chrome" must NEVER route to search query
-        if lower.hasPrefix("close ") {
-            let target = String(lower.dropFirst("close ".count)).trimmingCharacters(in: .whitespaces)
-            let resolved = resolveApp(target)
-            NSLog("[Intent] detected: close_app(%@)", resolved)
-            NSLog("[Block] prevented AI fallback → close_app")
-            return [.closeApp(resolved)]
         }
 
         // ── Search commands (BEFORE app-open to avoid misrouting) ────
@@ -191,6 +211,10 @@ final class ActionPlanner {
                     actions.append(vol)
                     continue
                 }
+                if let info = parseInfoCommand(partTrimmed) {
+                    actions.append(.systemInfo(info))
+                    continue
+                }
                 // Try media on each part
                 if let media = parseMediaCommand(partTrimmed) {
                     actions.append(media)
@@ -205,6 +229,10 @@ final class ActionPlanner {
                 let subActions = parseSinglePhrase(partTrimmed, originalRaw: cleaned)
                 actions.append(contentsOf: subActions)
             }
+            if let controlOnly = preferredSingleControlAction(from: actions) {
+                NSLog("[Plan] Collapsing conjunction to single control action: %@", controlOnly.description)
+                return [controlOnly]
+            }
             if !actions.isEmpty {
                 NSLog("[Voice] split into %d commands via conjunction", actions.count)
             }
@@ -216,35 +244,9 @@ final class ActionPlanner {
         return single.isEmpty ? nil : single
     }
 
-    // MARK: - Compound media command splitter
-    // Handles: "play liked songs pause", "play music next song", etc.
-    // Strategy: look for a terminal media keyword at the end of a "play …" command.
-
     private func splitCompoundMediaCommand(_ lower: String) -> [PlannedAction]? {
-        // Only applies when input starts with "play"
-        guard lower.hasPrefix("play ") else { return nil }
-
-        // Terminal media action keywords that can trail a play command
-        let terminalKeywords: [(keyword: String, action: PlannedAction)] = [
-            (" pause",       .mediaControl(.pause)),
-            (" stop",        .mediaControl(.pause)),
-            (" next",        .mediaControl(.nextTrack)),
-            (" next song",   .mediaControl(.nextTrack)),
-            (" next track",  .mediaControl(.nextTrack)),
-            (" previous",    .mediaControl(.previousTrack)),
-            (" prev",        .mediaControl(.previousTrack)),
-        ]
-
-        for entry in terminalKeywords {
-            if lower.hasSuffix(entry.keyword) {
-                // Split: everything before the terminal keyword is the play command
-                let playPart = String(lower.dropLast(entry.keyword.count))
-                    .trimmingCharacters(in: .whitespaces)
-                guard !playPart.isEmpty, let playAction = parseMediaCommand(playPart) else { continue }
-                NSLog("[Plan] Compound split: '%@' + '%@'", playPart, entry.keyword.trimmingCharacters(in: .whitespaces))
-                return [playAction, entry.action]
-            }
-        }
+        _ = lower
+        // Disabled intentionally: control commands must execute as a single action.
         return nil
     }
 
@@ -366,124 +368,219 @@ final class ActionPlanner {
 
     // MARK: - Media command parser
 
-    /// Returns a PlannedAction for any media-related utterance, or nil if not media.
-    /// Must be called BEFORE parseSinglePhrase to prevent "play song" → openApp.
-    private func parseMediaCommand(_ lower: String) -> PlannedAction? {
+    private func parseSystemCommand(_ lower: String) -> PlannedAction? {
+        let trimmed = lower.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
 
-        // ── Liked Songs — explicit routing to Spotify Liked Songs ────
-        let likedPatterns = [
-            "liked songs", "my liked songs", "play liked songs",
-            "play my liked songs", "liked", "my liked",
-            "saved songs", "my saved songs", "favorites", "my favorites"
-        ]
-        if likedPatterns.contains(where: { lower == $0 || lower.hasSuffix(" \($0)") }) {
-            NSLog("[Intent] detected: liked_songs")
-            return .mediaControl(.playLikedSongs)
+        if let app = singleAppShortcut(for: trimmed) {
+            return .openApp(resolveApp(app))
         }
 
-        // ── Exact media commands ─────────────────────────────────────
-        let mediaExact: Set<String> = [
-            "play", "resume", "resume music", "resume playback",
-            "pause", "pause music", "pause the song", "pause playback",
-            "stop music", "stop playback",
-            "next", "next song", "next track", "skip", "skip song", "play next",
-            "previous", "prev", "previous song", "previous track", "go back",
-            "play music", "play a song", "play some music", "play something",
-        ]
-        if mediaExact.contains(lower) {
-            let action = resolvedMediaAction(for: lower)
-            NSLog("[Intent] detected: media_exact → %@", action.description)
-            return action
-        }
-
-        // ── Prefix: "play <X>" ───────────────────────────────────────
-        if lower.hasPrefix("play ") {
-            let rest = String(lower.dropFirst("play ".count)).trimmingCharacters(in: .whitespaces)
-
-            // Don't steal YouTube / site searches
-            let webKeywords = ["youtube", "netflix", "on youtube", "spotify web"]
-            if !webKeywords.contains(where: { rest.contains($0) }) {
-
-                // next/previous
-                if rest == "next" || rest == "next song" || rest == "next track" {
-                    NSLog("[Intent] detected: next_track")
-                    return .mediaControl(.nextTrack)
-                }
-                if rest == "previous" || rest == "prev" || rest == "previous song" || rest == "previous track" {
-                    NSLog("[Intent] detected: previous_track")
-                    return .mediaControl(.previousTrack)
-                }
-
-                // Generic play
-                let playGenericTerms = ["music", "a song", "something", "some music", "song", "songs"]
-                if playGenericTerms.contains(rest) {
-                    NSLog("[Intent] detected: play")
-                    return .mediaControl(.play)
-                }
-
-                // Liked songs via "play liked <...>"
-                if rest.hasPrefix("liked") || rest.hasPrefix("my liked") || rest == "favorites" {
-                    NSLog("[Intent] detected: liked_songs")
-                    return .mediaControl(.playLikedSongs)
-                }
-
-                // Named playlist — extract meaningful keyword only
-                let playlistName = extractPlaylistName(rest)
-                NSLog("[Intent] detected: play_playlist → '%@'", playlistName)
-                return .mediaControl(.playPlaylist(playlistName))
+        if trimmed.hasPrefix("open ") {
+            let target = String(trimmed.dropFirst("open ".count)).trimmingCharacters(in: .whitespaces)
+            if !target.isEmpty {
+                return .openApp(resolveApp(target))
             }
         }
 
-        // ── Standalone pause ─────────────────────────────────────────
-        if lower == "pause" || lower.hasPrefix("pause ") || lower == "stop music" || lower == "stop playback" {
-            NSLog("[Intent] detected: pause")
-            return .mediaControl(.pause)
+        if trimmed.hasPrefix("launch ") {
+            let target = String(trimmed.dropFirst("launch ".count)).trimmingCharacters(in: .whitespaces)
+            if !target.isEmpty {
+                return .openApp(resolveApp(target))
+            }
         }
 
-        // ── Next track ───────────────────────────────────────────────
-        if lower == "next" || lower == "skip" {
-            NSLog("[Intent] detected: next_track")
-            return .mediaControl(.nextTrack)
-        }
-        if lower.contains("next") &&
-            (lower.contains("song") || lower.contains("track") || lower.contains("skip")) {
-            NSLog("[Intent] detected: next_track")
-            return .mediaControl(.nextTrack)
+        if trimmed.hasPrefix("close ") {
+            let target = String(trimmed.dropFirst("close ".count)).trimmingCharacters(in: .whitespaces)
+            if !target.isEmpty {
+                return .closeApp(resolveApp(target))
+            }
         }
 
-        // ── Previous track ───────────────────────────────────────────
-        if lower == "previous" || lower == "prev" || lower == "go back" {
-            NSLog("[Intent] detected: previous_track")
-            return .mediaControl(.previousTrack)
-        }
-        if lower.contains("previous") || lower.contains("prev song") || lower.contains("last song") {
-            NSLog("[Intent] detected: previous_track")
-            return .mediaControl(.previousTrack)
-        }
-
-        // ── Resume ───────────────────────────────────────────────────
-        if lower == "resume" || lower.hasPrefix("resume ") {
-            NSLog("[Intent] detected: play (resume)")
-            return .mediaControl(.play)
+        if trimmed.hasPrefix("quit ") {
+            let target = String(trimmed.dropFirst("quit ".count)).trimmingCharacters(in: .whitespaces)
+            if !target.isEmpty {
+                return .closeApp(resolveApp(target))
+            }
         }
 
         return nil
     }
 
-    private func resolvedMediaAction(for lower: String) -> PlannedAction {
-        if lower.contains("next") || lower == "skip" || lower == "play next" {
+    private func parseInfoCommand(_ lower: String) -> SystemInfoAction? {
+        let trimmed = lower.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        if trimmed == "what time is it" || trimmed == "current time" || trimmed == "time now" {
+            return .currentTime
+        }
+
+        if trimmed == "what is today's date" || trimmed == "what is todays date" || trimmed == "today's date" || trimmed == "todays date" || trimmed == "current date" {
+            return .currentDate
+        }
+
+        if trimmed.contains("wifi") {
+            return .wifiStatus
+        }
+
+        if trimmed.contains("bluetooth") {
+            return .bluetoothDevices
+        }
+
+        if trimmed.contains("battery") {
+            return .batteryStatus
+        }
+
+        if trimmed == "system volume" || trimmed == "current volume" || trimmed == "volume level" {
+            return .systemVolume
+        }
+
+        return nil
+    }
+
+    private func singleAppShortcut(for lower: String) -> String? {
+        let appNames: Set<String> = ["chrome", "spotify", "whatsapp"]
+        return appNames.contains(lower) ? lower : nil
+    }
+
+    /// Returns a PlannedAction for any media-related utterance, or nil if not media.
+    /// Must be called BEFORE parseSinglePhrase to prevent "play song" → openApp.
+    private func parseMediaCommand(_ lower: String) -> PlannedAction? {
+        let compact = lower.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !compact.isEmpty else { return nil }
+
+        if containsAnyWord(compact, words: ["open", "close", "launch", "quit"]) {
+            return nil
+        }
+
+        let explicitMediaIntent = containsAnyWord(
+            compact,
+            words: ["play", "song", "songs", "music", "track", "liked", "playlist", "next", "previous", "prev", "pause", "resume", "skip", "back"]
+        )
+        guard explicitMediaIntent else { return nil }
+
+        if containsAnyWord(compact, words: ["next", "skip"]) {
+            NSLog("[Intent] detected: next_track")
             return .mediaControl(.nextTrack)
         }
-        if lower.contains("previous") || lower == "prev" || lower == "go back" {
+        if containsAnyWord(compact, words: ["previous", "prev", "back"]) {
+            NSLog("[Intent] detected: previous_track")
             return .mediaControl(.previousTrack)
         }
-        if lower.hasPrefix("pause") || lower.contains("stop music") {
+        if containsAnyWord(compact, words: ["pause", "stop"]) {
+            NSLog("[Intent] detected: pause")
             return .mediaControl(.pause)
         }
-        if lower.contains("liked") {
+
+        let normalizedIntent = normalizeMediaIntentText(compact)
+        let normalizedTokens = normalizedIntent
+            .split(whereSeparator: { $0 == " " || $0 == "\t" || $0 == "\n" })
+            .map(String.init)
+        let normalizedJoined = normalizedTokens.joined(separator: " ")
+
+        if containsAnyWord(normalizedJoined, words: ["next", "skip"]) {
+            NSLog("[Intent] detected: next_track")
+            return .mediaControl(.nextTrack)
+        }
+        if containsAnyWord(normalizedJoined, words: ["previous", "prev", "back"]) {
+            NSLog("[Intent] detected: previous_track")
+            return .mediaControl(.previousTrack)
+        }
+
+        if containsAnyWord(normalizedJoined, words: ["liked", "favorites", "favourites", "saved"]) || isLikedSongsQuery(compact) {
+            NSLog("[Intent] detected: liked_songs")
             return .mediaControl(.playLikedSongs)
         }
-        return .mediaControl(.play)
+
+        if normalizedJoined.isEmpty || normalizedJoined == "resume" || normalizedJoined == "playback" {
+            NSLog("[Intent] detected: play")
+            return .mediaControl(.play)
+        }
+
+        let webKeywords = ["youtube", "netflix", "on youtube", "spotify web"]
+        if webKeywords.contains(where: { compact.contains($0) }) {
+            return nil
+        }
+
+        if isPlaylistQuery(compact) || containsAnyWord(compact, words: ["playlist"]) {
+            let playlistName = extractPlaylistName(normalizedIntent)
+            NSLog("[Intent] detected: play_playlist → '%@'", playlistName)
+            return .mediaControl(.playPlaylist(playlistName))
+        }
+
+        let songName = extractSongName(normalizedIntent)
+        NSLog("[Intent] detected: play_song → '%@'", songName)
+        return .mediaControl(.playSong(songName))
+    }
+
+    private func normalizeMediaIntentText(_ text: String) -> String {
+        let removable: Set<String> = ["play", "music", "song", "songs", "track", "tracks", "from"]
+        let tokens = text
+            .split(whereSeparator: { $0 == " " || $0 == "\t" || $0 == "\n" })
+            .map(String.init)
+
+        let cleaned = tokens.filter { token in
+            let normalized = token
+                .trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+                .lowercased()
+            return !removable.contains(normalized)
+        }
+
+        return cleaned.joined(separator: " ")
+            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func containsAnyWord(_ text: String, words: [String]) -> Bool {
+        let tokenSet = Set(
+            text.lowercased()
+                .split(whereSeparator: { $0 == " " || $0 == "\t" || $0 == "\n" })
+                .map { $0.trimmingCharacters(in: CharacterSet.alphanumerics.inverted) }
+                .filter { !$0.isEmpty }
+        )
+        return words.contains(where: { tokenSet.contains($0) })
+    }
+
+    private func preferredSingleControlAction(from actions: [PlannedAction]) -> PlannedAction? {
+        let controlOrder: [MediaAction] = [.nextTrack, .previousTrack, .pause, .play]
+        let mediaActions = actions.compactMap { action -> MediaAction? in
+            if case .mediaControl(let media) = action { return media }
+            return nil
+        }
+
+        for control in controlOrder where mediaActions.contains(control) {
+            return .mediaControl(control)
+        }
+        return nil
+    }
+
+    func commandCheatSheet() -> String {
+        """
+        SYSTEM:
+        - open chrome
+        - open spotify
+        - close spotify
+        - open whatsapp
+        - chrome / spotify / whatsapp
+
+        MEDIA:
+        - play song <name>
+        - play liked songs
+        - play <playlist>
+        - next track
+        - previous track
+
+        INFO:
+        - what time is it
+        - what is today's date
+        - which wifi am I connected to
+        - which bluetooth devices are connected
+        - battery status
+        - system volume
+
+        GENERAL:
+        - ask anything (AI fallback)
+        """
     }
 
     /// Extracts a meaningful playlist name from speech.
@@ -493,30 +590,85 @@ final class ActionPlanner {
     ///   "music from chill vibes"  → "chill vibes"
     ///   "workout songs"           → "workout"
     private func extractPlaylistName(_ raw: String) -> String {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return raw }
+
+        let fillerWords: Set<String> = ["play", "from", "playlist", "my", "the", "some"]
+        let playlistSuffixes: Set<String> = ["songs", "tracks", "music", "station", "mix"]
+
+        let tokens = trimmed
+            .split(whereSeparator: { $0 == " " || $0 == "\t" || $0 == "\n" })
+            .map(String.init)
+
+        var cleaned: [String] = []
+        for token in tokens {
+            let normalized = token
+                .trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+                .lowercased()
+            guard !normalized.isEmpty else { continue }
+            if fillerWords.contains(normalized) { continue }
+            cleaned.append(token)
+        }
+
+        while let last = cleaned.last {
+            let normalized = last
+                .trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+                .lowercased()
+            if playlistSuffixes.contains(normalized) {
+                cleaned.removeLast()
+            } else {
+                break
+            }
+        }
+
+        let leadingNoise: Set<String> = ["play", "music", "song", "songs", "track", "tracks", "some"]
+        while cleaned.count > 1, let first = cleaned.first {
+            let normalized = first
+                .trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+                .lowercased()
+            if leadingNoise.contains(normalized) {
+                cleaned.removeFirst()
+            } else {
+                break
+            }
+        }
+
+        let extracted = cleaned.joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
+        return extracted.isEmpty ? trimmed : extracted
+    }
+
+    private func extractSongName(_ raw: String) -> String {
         var name = raw.trimmingCharacters(in: .whitespaces)
         let lower = name.lowercased()
 
-        // Strip leading conjunctions: "some songs from X" → "X"
-        let sourceKeywords = [" from ", " by ", " called ", " named "]
-        for keyword in sourceKeywords {
-            if let range = lower.range(of: keyword) {
-                name = String(name[range.upperBound...])
-                    .trimmingCharacters(in: .whitespaces)
-                break
-            }
+        let leadingFillers = ["play song ", "play track ", "play ", "song ", "track ", "the song ", "the track ", "music "]
+        for filler in leadingFillers where lower.hasPrefix(filler) {
+            name = String(name.dropFirst(filler.count)).trimmingCharacters(in: .whitespaces)
+            break
         }
 
-        // Strip trailing filler suffixes (do ONE pass, don't loop)
-        let fillerSuffixes = [" playlist", " songs", " tracks", " music", " station", " mix"]
-        for suffix in fillerSuffixes {
-            if name.lowercased().hasSuffix(suffix) {
-                name = String(name.dropLast(suffix.count))
-                    .trimmingCharacters(in: .whitespaces)
-                break
-            }
+        let trailingFillers = [" song", " track", " music", " playlist"]
+        for suffix in trailingFillers where name.lowercased().hasSuffix(suffix) {
+            name = String(name.dropLast(suffix.count)).trimmingCharacters(in: .whitespaces)
+            break
         }
 
         return name.isEmpty ? raw : name
+    }
+
+    private func isPlaylistQuery(_ text: String) -> Bool {
+        let lower = text.lowercased()
+        let playlistKeywords = ["playlist", "my playlist", "from playlist", "playlist called", "playlist named"]
+        return playlistKeywords.contains(where: { lower.contains($0) })
+    }
+
+    private func isLikedSongsQuery(_ text: String) -> Bool {
+        let lower = text.lowercased()
+        let likedKeywords = [
+            "liked songs", "my liked songs", "liked", "my liked",
+            "saved songs", "my saved songs", "favorites", "my favorites"
+        ]
+        return likedKeywords.contains(where: { lower == $0 || lower.hasPrefix("\($0) ") || lower.hasSuffix(" \($0)") })
     }
 
     // MARK: - Volume command parser

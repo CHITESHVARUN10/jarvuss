@@ -19,6 +19,12 @@ final class ActionExecutor {
     private let ollamaClient    = OllamaClient(model: "qwen2.5-coder:1.5b-base")
     private let volumeController = VolumeController()
 
+    var onLog: ((String) -> Void)? {
+        didSet {
+            volumeController.onLog = onLog
+        }
+    }
+
     // ── Delays between steps so macOS has time to open apps ─────────
     private let interStepDelay: TimeInterval = 0.8
 
@@ -31,13 +37,12 @@ final class ActionExecutor {
         onStepComplete: @escaping (ActionResult) -> Void
     ) async {
         for action in plan {
-            // Safety check before each action
             switch SafetyGuard.validate(action: action) {
             case .blocked(let reason):
                 let result = ActionResult(action: action, success: false,
                                           message: "⛔ Blocked — \(reason)")
                 onStepComplete(result)
-                continue   // skip this step, continue with rest
+                continue
 
             case .installPreview(let cmd, let source):
                 let result = ActionResult(
@@ -56,7 +61,6 @@ final class ActionExecutor {
             let result = await runSingleAction(action)
             onStepComplete(result)
 
-            // Small pause between steps so apps can launch fully
             if result.success && plan.count > 1 {
                 try? await Task.sleep(nanoseconds: UInt64(interStepDelay * 1_000_000_000))
             }
@@ -80,11 +84,13 @@ final class ActionExecutor {
                                 !msg.lowercased().contains("error"),
                                 message: msg)
 
+        case .systemInfo(let infoAction):
+            return executeSystemInfo(infoAction)
+
         case .openURL(let url):
             return openURL(url)
 
         case .searchWeb(let engine, let query):
-            // The URL action handles actual navigation; this just logs the intent
             return ActionResult(action: action, success: true,
                                 message: "Searching \(engine) for '\(query)'.")
 
@@ -98,13 +104,13 @@ final class ActionExecutor {
             return openLatestFile(inFolder: folder)
 
         case .mediaControl(let mediaAction):
-            return executeMediaAction(mediaAction)
+            return await executeMediaAction(mediaAction)
 
         case .volumeControl(let volumeAction):
             let msg = volumeController.execute(volumeAction)
-            // An empty msg means success with no error text
             let displayMsg = msg.isEmpty ? volumeAction.responseText : msg
-            return ActionResult(action: action, success: true, message: displayMsg)
+            let success = !displayMsg.lowercased().contains("no actual volume change")
+            return ActionResult(action: action, success: success, message: displayMsg)
 
         case .createFile(let name):
             let msg = fileManager.createFile(named: name)
@@ -127,9 +133,82 @@ final class ActionExecutor {
             return ActionResult(action: action, success: true, message: response)
 
         case .installPreview(let pkg, let source):
-            // Double-guarded — should never reach here (SafetyGuard intercepts first)
             return ActionResult(action: action, success: false,
                                 message: "🔒 Install blocked: '\(pkg)'. Source: \(source).")
+        }
+    }
+
+    private func executeSystemInfo(_ action: SystemInfoAction) -> ActionResult {
+        switch action {
+        case .currentTime:
+            let formatter = DateFormatter()
+            formatter.dateStyle = .none
+            formatter.timeStyle = .medium
+            return ActionResult(action: .systemInfo(action), success: true, message: "Current time: \(formatter.string(from: Date()))")
+
+        case .currentDate:
+            let formatter = DateFormatter()
+            formatter.dateStyle = .full
+            formatter.timeStyle = .none
+            return ActionResult(action: .systemInfo(action), success: true, message: "Today's date: \(formatter.string(from: Date()))")
+
+        case .wifiStatus:
+            let wifi = runShell("/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -I | awk -F': ' '/ SSID/ {print $2}'")
+            if wifi.success, let ssid = wifi.output, !ssid.isEmpty {
+                return ActionResult(action: .systemInfo(action), success: true, message: "Wi-Fi connected: \(ssid)")
+            }
+            return ActionResult(action: .systemInfo(action), success: false, message: "Unable to determine Wi-Fi network")
+
+        case .bluetoothDevices:
+            let bt = runShell("system_profiler SPBluetoothDataType 2>/dev/null | awk '/Device Name:/{name=$3} /Connected: Yes/{print name}'")
+            if bt.success, let output = bt.output, !output.isEmpty {
+                return ActionResult(action: .systemInfo(action), success: true, message: "Connected Bluetooth devices: \(output)")
+            }
+            return ActionResult(action: .systemInfo(action), success: true, message: "No connected Bluetooth devices found")
+
+        case .batteryStatus:
+            let batt = runShell("pmset -g batt | head -n 1; pmset -g batt | tail -n +2 | head -n 1")
+            if batt.success, let output = batt.output, !output.isEmpty {
+                return ActionResult(action: .systemInfo(action), success: true, message: "Battery status: \(output)")
+            }
+            return ActionResult(action: .systemInfo(action), success: false, message: "Unable to read battery status")
+
+        case .systemVolume:
+            let vol = runShell("osascript -e 'output volume of (get volume settings)'")
+            if vol.success, let output = vol.output, let level = Int(output) {
+                return ActionResult(action: .systemInfo(action), success: true, message: "System volume: \(level)%")
+            }
+            return ActionResult(action: .systemInfo(action), success: false, message: "Unable to read system volume")
+        }
+    }
+
+    private func runShell(_ command: String) -> (success: Bool, output: String?) {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/bin/zsh")
+        process.arguments = ["-lc", command]
+
+        let outPipe = Pipe()
+        let errPipe = Pipe()
+        process.standardOutput = outPipe
+        process.standardError = errPipe
+
+        do {
+            try process.run()
+            process.waitUntilExit()
+
+            let outData = outPipe.fileHandleForReading.readDataToEndOfFile()
+            let errData = errPipe.fileHandleForReading.readDataToEndOfFile()
+            let stdout = String(data: outData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+            let stderr = String(data: errData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+
+            if process.terminationStatus == 0 {
+                return (true, stdout)
+            }
+
+            let merged = [stdout, stderr].compactMap { $0 }.joined(separator: " ")
+            return (false, merged.isEmpty ? nil : merged)
+        } catch {
+            return (false, error.localizedDescription)
         }
     }
 
@@ -202,96 +281,210 @@ final class ActionExecutor {
         }
     }
 
-    // MARK: - Spotify / media control via AppleScript
+    // MARK: - Spotify / media control (backend-only)
 
-    private func executeMediaAction(_ action: MediaAction) -> ActionResult {
-        NSLog("[Media] Routing to Spotify: \(action.description)")
-        let script: String
+    private enum SpotifyBackendResult {
+        case success(status: Int, message: String)
+        case failure(status: Int?, message: String)
+    }
+
+    private struct SpotifyBackendEnvelope: Decodable {
+        let status: String?
+        let actionConfirmed: Bool?
+        let message: String?
+        let playbackState: PlaybackState?
+
+        struct PlaybackState: Decodable {
+            let isPlaying: Bool?
+
+            enum CodingKeys: String, CodingKey {
+                case isPlaying = "is_playing"
+            }
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case status
+            case actionConfirmed = "action_confirmed"
+            case message
+            case playbackState = "playback_state"
+        }
+    }
+
+    private func executeMediaAction(_ action: MediaAction) async -> ActionResult {
+        emitSpotify("[Media] Routing to backend Spotify: \(action.description)")
+
+        let backendResult: SpotifyBackendResult
         switch action {
         case .play:
-            script = """
-            tell application "Spotify"
-                activate
-                play
-            end tell
-            """
+            backendResult = await callBackendSpotify(path: "/spotify/play")
         case .pause:
-            script = """
-            tell application "Spotify"
-                if it is running then pause
-            end tell
-            """
+            backendResult = await callBackendSpotify(path: "/spotify/pause")
         case .nextTrack:
-            script = """
-            tell application "Spotify"
-                activate
-                next track
-            end tell
-            """
+            backendResult = await callBackendSpotify(path: "/spotify/next")
         case .previousTrack:
-            script = """
-            tell application "Spotify"
-                activate
-                previous track
-            end tell
-            """
+            backendResult = await callBackendSpotify(path: "/spotify/previous")
         case .playLikedSongs:
-            // Open Spotify and navigate to Liked Songs collection
-            // "spotify:user::collection" is the liked songs URI on desktop
-            script = """
-            tell application "Spotify"
-                activate
-                play track "spotify:user::collection"
-            end tell
-            """
-
+            backendResult = await callBackendSpotify(path: "/spotify/play-liked")
+        case .playSong(let name):
+            backendResult = await callBackendSpotify(path: "/spotify/play-song", query: [
+                URLQueryItem(name: "name", value: name)
+            ])
         case .playPlaylist(let name):
-            // Open Spotify and search via URI — never use browser
-            let encoded = name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? name
-            script = """
-            tell application "Spotify"
-                activate
-                play track "spotify:search:\(encoded)"
-            end tell
-            """
+            backendResult = await callBackendSpotify(path: "/spotify/play-playlist", query: [
+                URLQueryItem(name: "name", value: name)
+            ])
         }
 
-        let result = runAppleScript(script)
-        return ActionResult(
-            action: .mediaControl(action),
-            success: result.success,
-            message: result.success
-                ? "Spotify: \(action.description)"
-                : "Spotify control failed: \(result.error ?? "unknown")"
-        )
+        switch backendResult {
+        case .success(let status, let message):
+            return ActionResult(
+                action: .mediaControl(action),
+                success: true,
+                message: "Spotify backend success (\(status)): \(message)"
+            )
+        case .failure(let status, let message):
+            let prefix = status.map { "Spotify backend failed (\($0))" } ?? "Spotify backend failed"
+            return ActionResult(
+                action: .mediaControl(action),
+                success: false,
+                message: "\(prefix): \(message)"
+            )
+        }
     }
 
-    // MARK: - AppleScript runner
+    private func callBackendSpotify(
+        path: String,
+        query: [URLQueryItem] = []
+    ) async -> SpotifyBackendResult {
+        let baseURL = backendBaseURL()
+        guard var components = URLComponents(string: baseURL) else {
+            return .failure(status: nil, message: "Invalid backend URL: \(baseURL)")
+        }
 
-    private struct AppleScriptResult {
-        let success: Bool
-        let error: String?
-    }
+        let normalizedPath = path.hasPrefix("/") ? path : "/\(path)"
+        components.path = normalizedPath
+        components.queryItems = query.isEmpty ? nil : query
 
-    private func runAppleScript(_ script: String) -> AppleScriptResult {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
-        process.arguments = ["-e", script]
+        guard let url = components.url else {
+            return .failure(status: nil, message: "Failed to build backend URL for \(path)")
+        }
 
-        let errPipe = Pipe()
-        process.standardError = errPipe
+        emitSpotify("[Spotify][Backend] Request: POST \(url.absoluteString)")
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = Data("{}".utf8)
 
         do {
-            try process.run()
-            process.waitUntilExit()
-            if process.terminationStatus == 0 {
-                return AppleScriptResult(success: true, error: nil)
+            let (data, response) = try await URLSession.shared.data(for: request)
+            let status = (response as? HTTPURLResponse)?.statusCode ?? -1
+            let raw = String(data: data, encoding: .utf8) ?? ""
+            emitSpotify("[Spotify][Backend] Response status: \(status)")
+            emitSpotify("[Spotify][Backend] Response body: \(raw)")
+
+            let decoded = try? JSONDecoder().decode(SpotifyBackendEnvelope.self, from: data)
+            let actionConfirmed = decoded?.actionConfirmed == true
+            let isPlaying = decoded?.playbackState?.isPlaying == true
+            let explicitOK = decoded?.status?.lowercased() == "ok"
+            let successConfirmed = explicitOK && (actionConfirmed || isPlaying)
+
+            if (200..<300).contains(status), successConfirmed {
+                let backendMessage = decoded?.message ?? (raw.isEmpty ? "ok" : raw)
+                return .success(status: status, message: backendMessage)
             }
-            let errData = errPipe.fileHandleForReading.readDataToEndOfFile()
-            let errMsg  = String(data: errData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
-            return AppleScriptResult(success: false, error: errMsg)
+
+            let interpretedReason: String = {
+                if status == 403 { return "403 restriction/premium/device limitation" }
+                if raw.lowercased().contains("no active spotify device") { return "no active device" }
+                if (200..<300).contains(status) { return "action not confirmed by playback state" }
+                if raw.isEmpty { return "unknown backend error" }
+                return "backend returned error payload"
+            }()
+
+            emitSpotify("[Spotify][Backend] Interpreted reason: \(interpretedReason)")
+
+            if (200..<300).contains(status) {
+                return .failure(status: status, message: interpretedReason)
+            }
+            return .failure(status: status, message: raw.isEmpty ? "unknown error" : raw)
         } catch {
-            return AppleScriptResult(success: false, error: error.localizedDescription)
+            emitSpotify("[Spotify][Backend][ERROR] Request failed: \(error.localizedDescription)")
+            return .failure(status: nil, message: error.localizedDescription)
         }
+    }
+
+    private func backendBaseURL() -> String {
+        let configured = envValue("JARVIS_BACKEND_URL")
+            ?? envValue("BACKEND_BASE_URL")
+            ?? "http://127.0.0.1:8000"
+        return configured.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func envValue(_ key: String) -> String? {
+        if let value = ProcessInfo.processInfo.environment[key], !value.isEmpty {
+            return value
+        }
+        let dotEnv = parseDotEnv()
+        if let value = dotEnv[key], !value.isEmpty {
+            return value
+        }
+        return nil
+    }
+
+    private func parseDotEnv() -> [String: String] {
+        let candidates = dotEnvCandidates()
+
+        for fileURL in candidates {
+            guard let data = try? Data(contentsOf: fileURL),
+                  let text = String(data: data, encoding: .utf8) else { continue }
+            var values: [String: String] = [:]
+            for line in text.components(separatedBy: .newlines) {
+                let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+                if trimmed.isEmpty || trimmed.hasPrefix("#") { continue }
+                let parts = trimmed.split(separator: "=", maxSplits: 1).map(String.init)
+                guard parts.count == 2 else { continue }
+                values[parts[0]] = parts[1]
+            }
+            if !values.isEmpty { return values }
+        }
+        return [:]
+    }
+
+    private func dotEnvCandidates() -> [URL] {
+        let fm = FileManager.default
+        var candidates: [URL] = []
+
+        var seen = Set<String>()
+        func appendUnique(_ url: URL) {
+            let normalized = url.standardizedFileURL.path
+            if seen.contains(normalized) { return }
+            seen.insert(normalized)
+            candidates.append(url)
+        }
+
+        var cwdURL = URL(fileURLWithPath: fm.currentDirectoryPath)
+        for _ in 0..<10 {
+            appendUnique(cwdURL.appendingPathComponent(".env"))
+            let parent = cwdURL.deletingLastPathComponent()
+            if parent.path == cwdURL.path { break }
+            cwdURL = parent
+        }
+
+        let sourceURL = URL(fileURLWithPath: #filePath)
+        var sourceDir = sourceURL.deletingLastPathComponent()
+        for _ in 0..<10 {
+            appendUnique(sourceDir.appendingPathComponent(".env"))
+            let parent = sourceDir.deletingLastPathComponent()
+            if parent.path == sourceDir.path { break }
+            sourceDir = parent
+        }
+
+        return candidates
+    }
+
+    private func emitSpotify(_ message: String) {
+        onLog?(message)
+        NSLog("%@", message)
     }
 }

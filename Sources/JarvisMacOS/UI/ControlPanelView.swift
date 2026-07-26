@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ControlPanelView: View {
     @ObservedObject var appState: AppState
+    @State private var isAutomationModalOpen = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -53,6 +54,10 @@ struct ControlPanelView: View {
 
                     // Manual input
                     manualInputSection
+
+                    Divider().background(Color.white.opacity(0.06))
+
+                    automationSection
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 14)
@@ -72,6 +77,9 @@ struct ControlPanelView: View {
                 .foregroundStyle(Color.white.opacity(0.06)),
             alignment: .trailing
         )
+        .sheet(isPresented: $isAutomationModalOpen) {
+            AutomationManagerView(appState: appState, isModalOpen: $isAutomationModalOpen)
+        }
     }
 
     // MARK: - Mic controls section
@@ -231,6 +239,33 @@ struct ControlPanelView: View {
     }
 
     // MARK: - Helpers
+    private var automationSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            sectionLabel("AUTOMATIONS", icon: "bolt.fill")
+
+            Button {
+                isAutomationModalOpen = true
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "slider.horizontal.3")
+                    Text("Manage Automations")
+                        .font(.system(size: 11, weight: .semibold))
+                    Spacer()
+                    Text("\(appState.automations.count)")
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                        .foregroundStyle(Color.white.opacity(0.70))
+                }
+            }
+            .buttonStyle(JarvisButtonStyle(color: Color(red: 0.95, green: 0.75, blue: 0.30), compact: true))
+
+            if let first = appState.automations.first {
+                Text("Example: \(first.keyword)")
+                    .font(.system(size: 9))
+                    .foregroundStyle(Color.white.opacity(0.30))
+            }
+        }
+    }
+
     private func sectionLabel(_ text: String, icon: String) -> some View {
         HStack(spacing: 5) {
             Image(systemName: icon)

@@ -1,0 +1,320 @@
+{
+  "generatedAt" : "2026-04-10T13:23:33Z",
+  "retryPolicy" : "1 retry on failure (max 2 attempts per scenario)",
+  "scenarios" : [
+    {
+      "attempts" : [
+        {
+          "attempt" : 1,
+          "durationMs" : 45,
+          "planDescriptions" : [
+            "Open 'textedit'"
+          ],
+          "stepMessages" : [
+            "✓ Opened textedit."
+          ],
+          "success" : true
+        }
+      ],
+      "attemptsUsed" : 1,
+      "command" : "open TextEdit",
+      "expectedIntent" : "system",
+      "id" : "app-open",
+      "success" : true,
+      "suite" : "app_discovery"
+    },
+    {
+      "attempts" : [
+        {
+          "attempt" : 1,
+          "durationMs" : 816,
+          "planDescriptions" : [
+            "Close 'textedit'"
+          ],
+          "stepMessages" : [
+            "✓ Closed textedit."
+          ],
+          "success" : true
+        }
+      ],
+      "attemptsUsed" : 1,
+      "command" : "close TextEdit",
+      "expectedIntent" : "system",
+      "id" : "app-close",
+      "success" : true,
+      "suite" : "app_discovery"
+    },
+    {
+      "attempts" : [
+        {
+          "attempt" : 1,
+          "durationMs" : 0,
+          "planDescriptions" : [
+            "Info: current time"
+          ],
+          "stepMessages" : [
+            "✓ Current time: 6:53:23 PM"
+          ],
+          "success" : true
+        }
+      ],
+      "attemptsUsed" : 1,
+      "command" : "what time is it",
+      "expectedIntent" : "info",
+      "id" : "info-time",
+      "success" : true,
+      "suite" : "info"
+    },
+    {
+      "attempts" : [
+        {
+          "attempt" : 1,
+          "durationMs" : 35,
+          "planDescriptions" : [
+            "Info: battery status"
+          ],
+          "stepMessages" : [
+            "✓ Battery status: Now drawing from 'AC Power'"
+          ],
+          "success" : true
+        }
+      ],
+      "attemptsUsed" : 1,
+      "command" : "battery status",
+      "expectedIntent" : "info",
+      "id" : "info-battery",
+      "success" : true,
+      "suite" : "info"
+    },
+    {
+      "attempts" : [
+        {
+          "attempt" : 1,
+          "durationMs" : 670,
+          "failureReason" : "One or more action steps failed",
+          "planDescriptions" : [
+            "Media: pause"
+          ],
+          "stepMessages" : [
+            "✗ Spotify backend failed (400): {\"detail\":\"Spotify pause failed: network\/request failure\"}"
+          ],
+          "success" : false
+        },
+        {
+          "attempt" : 2,
+          "durationMs" : 1622,
+          "failureReason" : "One or more action steps failed",
+          "planDescriptions" : [
+            "Media: pause"
+          ],
+          "stepMessages" : [
+            "✗ Spotify backend failed (400): {\"detail\":\"Spotify pause failed: 403 restriction\/premium or device limitation\"}"
+          ],
+          "success" : false
+        }
+      ],
+      "attemptsUsed" : 2,
+      "command" : "pause",
+      "expectedIntent" : "media",
+      "id" : "spotify-pause",
+      "success" : false,
+      "suite" : "spotify"
+    },
+    {
+      "attempts" : [
+        {
+          "attempt" : 1,
+          "durationMs" : 688,
+          "failureReason" : "One or more action steps failed",
+          "planDescriptions" : [
+            "Media: next track"
+          ],
+          "stepMessages" : [
+            "✗ Spotify backend failed (400): {\"detail\":\"Spotify next failed: network\/request failure\"}"
+          ],
+          "success" : false
+        },
+        {
+          "attempt" : 2,
+          "durationMs" : 1302,
+          "failureReason" : "One or more action steps failed",
+          "planDescriptions" : [
+            "Media: next track"
+          ],
+          "stepMessages" : [
+            "✗ Spotify backend failed (400): {\"detail\":\"Spotify next failed: network\/request failure\"}"
+          ],
+          "success" : false
+        }
+      ],
+      "attemptsUsed" : 2,
+      "command" : "next song",
+      "expectedIntent" : "media",
+      "id" : "spotify-next",
+      "success" : false,
+      "suite" : "spotify"
+    },
+    {
+      "attempts" : [
+        {
+          "attempt" : 1,
+          "durationMs" : 1702,
+          "planDescriptions" : [
+            "Search YouTube for 'swift package manager'",
+            "Open URL: https:\/\/www.youtube.com\/results?search_query=swift%20package%20manager"
+          ],
+          "stepMessages" : [
+            "✓ Searching YouTube for 'swift package manager'.",
+            "✓ Opened: https:\/\/www.youtube.com\/results?search_query=swift%20package%20manager"
+          ],
+          "success" : true
+        }
+      ],
+      "attemptsUsed" : 1,
+      "command" : "search youtube for swift package manager",
+      "expectedIntent" : "browser",
+      "id" : "browser-youtube-search",
+      "success" : true,
+      "suite" : "browser"
+    },
+    {
+      "attempts" : [
+        {
+          "attempt" : 1,
+          "durationMs" : 1695,
+          "planDescriptions" : [
+            "Search Google for 'swift concurrency'",
+            "Open URL: https:\/\/www.google.com\/search?q=swift%20concurrency"
+          ],
+          "stepMessages" : [
+            "✓ Searching Google for 'swift concurrency'.",
+            "✓ Opened: https:\/\/www.google.com\/search?q=swift%20concurrency"
+          ],
+          "success" : true
+        }
+      ],
+      "attemptsUsed" : 1,
+      "command" : "search google for swift concurrency",
+      "expectedIntent" : "browser",
+      "id" : "browser-search",
+      "success" : true,
+      "suite" : "browser"
+    },
+    {
+      "attempts" : [
+        {
+          "attempt" : 1,
+          "durationMs" : 1,
+          "planDescriptions" : [
+            "Create folder 'e2e-folder-a8818c7f'"
+          ],
+          "stepMessages" : [
+            "✓ Created folder: \/Users\/chiteshvarun\/D-drive\/jarvis\/e2e-folder-a8818c7f"
+          ],
+          "success" : true
+        }
+      ],
+      "attemptsUsed" : 1,
+      "command" : "create folder e2e-folder-A8818C7F",
+      "expectedIntent" : "filesystem",
+      "id" : "fs-create-folder",
+      "success" : true,
+      "suite" : "filesystem"
+    },
+    {
+      "attempts" : [
+        {
+          "attempt" : 1,
+          "durationMs" : 0,
+          "planDescriptions" : [
+            "Create file 'e2e-file-a8818c7f.txt'"
+          ],
+          "stepMessages" : [
+            "✓ Created file: \/Users\/chiteshvarun\/D-drive\/jarvis\/e2e-file-a8818c7f.txt"
+          ],
+          "success" : true
+        }
+      ],
+      "attemptsUsed" : 1,
+      "command" : "create file e2e-file-A8818C7F.txt",
+      "expectedIntent" : "filesystem",
+      "id" : "fs-create-file",
+      "success" : true,
+      "suite" : "filesystem"
+    },
+    {
+      "attempts" : [
+        {
+          "attempt" : 1,
+          "durationMs" : 126,
+          "planDescriptions" : [
+            "Automation path via AppState.executeTypedCommand"
+          ],
+          "stepMessages" : [
+            "[2026-04-10T13:23:32Z] [Typed] Received: 'focus mode A8818C7F'",
+            "[2026-04-10T13:23:32Z] [Queue] Enqueued (normal): 'focus mode A8818C7F' [queue size: 1]",
+            "[2026-04-10T13:23:32Z] [Execution] started: 'focus mode A8818C7F'",
+            "[2026-04-10T13:23:32Z] [Automation] Triggered keyword: 'focus mode A8818C7F'",
+            "[2026-04-10T13:23:32Z] [Automation] Executing 1 actions for 'focus mode A8818C7F'",
+            "[2026-04-10T13:23:32Z] [Automation] ▶ Open folder 'Downloads'",
+            "[2026-04-10T13:23:32Z] [Automation] ✓ Opened folder: \/Users\/chiteshvarun\/Downloads"
+          ],
+          "success" : true
+        }
+      ],
+      "attemptsUsed" : 1,
+      "command" : "focus mode A8818C7F",
+      "expectedIntent" : "automation",
+      "id" : "automation-on",
+      "success" : true,
+      "suite" : "automation"
+    },
+    {
+      "attempts" : [
+        {
+          "attempt" : 1,
+          "durationMs" : 255,
+          "planDescriptions" : [
+            "Automation path via AppState.executeTypedCommand"
+          ],
+          "stepMessages" : [
+            "[2026-04-10T13:23:32Z] [Execution] started: 'focus mode A8818C7F'",
+            "[2026-04-10T13:23:32Z] [Automation] Triggered keyword: 'focus mode A8818C7F'",
+            "[2026-04-10T13:23:32Z] [Automation] Executing 1 actions for 'focus mode A8818C7F'",
+            "[2026-04-10T13:23:32Z] [Automation] ▶ Open folder 'Downloads'",
+            "[2026-04-10T13:23:32Z] [Automation] ✓ Opened folder: \/Users\/chiteshvarun\/Downloads",
+            "[2026-04-10T13:23:32Z] [Typed] Received: 'focus mode off A8818C7F'",
+            "[2026-04-10T13:23:32Z] [Queue] Enqueued (normal): 'focus mode off A8818C7F' [queue size: 1]",
+            "[2026-04-10T13:23:32Z] [Execution] finished: 'focus mode A8818C7F'",
+            "[2026-04-10T13:23:32Z] [Execution] started: 'focus mode off A8818C7F'",
+            "[2026-04-10T13:23:32Z] [Automation] Triggered keyword: 'focus mode A8818C7F'",
+            "[2026-04-10T13:23:32Z] [Automation] Off variant matched for 'focus mode A8818C7F'.",
+            "[2026-04-10T13:23:32Z] [Execution] finished: 'focus mode off A8818C7F'"
+          ],
+          "success" : true
+        }
+      ],
+      "attemptsUsed" : 1,
+      "command" : "focus mode off A8818C7F",
+      "expectedIntent" : "automation",
+      "id" : "automation-off",
+      "success" : true,
+      "suite" : "automation"
+    }
+  ],
+  "suites" : [
+    "app_discovery",
+    "automation",
+    "browser",
+    "filesystem",
+    "info",
+    "spotify"
+  ],
+  "summary" : {
+    "averageDurationMs" : 639.7857142857143,
+    "failed" : 2,
+    "passed" : 10,
+    "successRate" : 83.33333333333334,
+    "total" : 12
+  }
+}

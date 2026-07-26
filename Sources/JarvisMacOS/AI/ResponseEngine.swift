@@ -59,6 +59,7 @@ final class ResponseEngine: ObservableObject {
         switch action {
         case .openApp(let name):        return "Opening \(name)"
         case .closeApp(let name):       return "Closing \(name)"
+        case .systemInfo:               return result.message
         case .openURL(let url):
             if let host = URL(string: url)?.host {
                 return "Opening \(host)"
@@ -70,6 +71,7 @@ final class ResponseEngine: ObservableObject {
         case .mediaControl(let a):
             switch a {
             case .play:                 return "Playing music"
+            case .playSong(let name):   return "Playing \(name)"
             case .pause:                return "Music paused"
             case .nextTrack:            return "Next track"
             case .previousTrack:        return "Previous track"
