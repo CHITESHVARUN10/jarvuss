@@ -4,12 +4,18 @@ struct MicOrbView: View {
     let assistantState: AppState.AssistantState
     let audioLevel: Double
     let micActive: Bool
+    var sessionState: AppState.VoiceSessionState = .idle
     let onTap: () -> Void
 
     @State private var pulseScale: CGFloat = 1.0
     @State private var iconOpacity: Double = 1.0
 
     private var orbColor: (Color, Color, Color) {
+        if sessionState == .active && assistantState == .listening {
+            return (Color(red: 0.35, green: 0.85, blue: 1.0),
+                    Color(red: 0.65, green: 0.40, blue: 1.0),
+                    Color(red: 0.20, green: 0.70, blue: 1.0))
+        }
         switch assistantState {
         case .idle:
             return (Color(red: 0.35, green: 0.35, blue: 0.55),
@@ -35,6 +41,9 @@ struct MicOrbView: View {
     }
 
     private var glowColor: Color {
+        if sessionState == .active && (assistantState == .listening || assistantState == .recording) {
+            return Color(red: 0.35, green: 0.85, blue: 1.0).opacity(0.45)
+        }
         switch assistantState {
         case .idle:       return Color(red: 0.4, green: 0.4, blue: 0.8).opacity(0.25)
         case .listening:  return Color(red: 0.6, green: 0.6, blue: 1.0).opacity(0.30)

@@ -3,12 +3,19 @@ import SwiftUI
 struct StatusBadge: View {
     let state: AppState.AssistantState
     let micActive: Bool
+    var sessionState: AppState.VoiceSessionState = .idle
 
     private var label: String {
-        state.rawValue.uppercased()
+        if sessionState == .active && state == .listening {
+            return "SESSION ACTIVE (FOLLOW-UP)"
+        }
+        return state.rawValue.uppercased()
     }
 
     private var dotColor: Color {
+        if sessionState == .active && (state == .listening || state == .recording) {
+            return Color(red: 0.35, green: 0.85, blue: 1.0)
+        }
         switch state {
         case .idle:       return Color(red: 0.55, green: 0.55, blue: 0.65)
         case .listening:  return Color(red: 0.55, green: 0.88, blue: 1.0)
@@ -24,7 +31,7 @@ struct StatusBadge: View {
                 .fill(dotColor)
                 .frame(width: 7, height: 7)
                 .shadow(color: dotColor.opacity(0.85), radius: 5)
-                .modifier(PulsingModifier(active: state == .listening || state == .recording))
+                .modifier(PulsingModifier(active: state == .listening || state == .recording || sessionState == .active))
 
             Text(label)
                 .font(.system(size: 10, weight: .bold, design: .monospaced))
@@ -33,9 +40,9 @@ struct StatusBadge: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
-        .background(dotColor.opacity(0.10))
+        .background(dotColor.opacity(0.12))
         .clipShape(Capsule())
-        .overlay(Capsule().strokeBorder(dotColor.opacity(0.25), lineWidth: 0.8))
+        .overlay(Capsule().strokeBorder(dotColor.opacity(0.35), lineWidth: 0.8))
     }
 }
 

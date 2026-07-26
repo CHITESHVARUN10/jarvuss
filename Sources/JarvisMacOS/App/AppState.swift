@@ -14,7 +14,23 @@ final class AppState: ObservableObject {
         case executing = "Executing"
     }
 
+    enum VoiceSessionState: String {
+        case idle = "Idle"
+        case active = "Session Active"
+    }
+
     @Published var assistantState: AssistantState = .idle
+    @Published var voiceSessionState: VoiceSessionState = .idle
+    @Published var sessionExpiresAt: Date? = nil
+    let sessionTimeout: TimeInterval = 10.0
+    private var sessionTimer: Timer? = nil
+
+    private static let sessionExitPhrases: [String] = [
+        "stop listening",
+        "go to sleep",
+        "that's all",
+        "goodbye jarvis"
+    ]
     @Published var micActive = false
     @Published var audioLevelDB: Float = -160.0
     @Published var audioLevelNormalized: Double = 0.0
@@ -33,6 +49,8 @@ final class AppState: ObservableObject {
     @Published var voiceResponseEnabled: Bool = false
     /// Current display brightness level (0-100) for UI display and controls.
     @Published var currentBrightness: Int = 50
+    /// Combined brightness level (0-100: Software Dimming + DDC Backlight + Contrast).
+    @Published var combinedBrightness: Int = 50
 
     let popupManager = PopupManager()
 
@@ -81,6 +99,7 @@ final class AppState: ObservableObject {
     private let actionPlanner = ActionPlanner()
     private let backendServiceManager = BackendServiceManager()
     private let displayController = DisplayController()
+    private let combinedBrightnessController = CombinedBrightnessController()
     let commandQueue = CommandQueueManager()
 
     private var previousVoiceDetected = false
@@ -154,6 +173,9 @@ final class AppState: ObservableObject {
         displayController.onLog = { [weak self] msg in
             Task { @MainActor in self?.appendLog(msg) }
         }
+        combinedBrightnessController.onLog = { [weak self] msg in
+            Task { @MainActor in self?.appendLog(msg) }
+        }
         self.speechManager.onLog = { [weak self] msg in
             Task { @MainActor in self?.appendLog(msg) }
         }
@@ -175,6 +197,12 @@ final class AppState: ObservableObject {
 
         self.automations = automationStore.load()
         refreshBrightness()
+
+        sessionTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.checkSessionExpiration()
+            }
+        }
     }
 
     // MARK: - Display Brightness UI Controls
@@ -201,6 +229,56 @@ final class AppState: ObservableObject {
         let msg = displayController.execute(.setBrightness(percent))
         appendLog("[UI] \(msg)")
         refreshBrightness()
+    }
+
+    // MARK: - Combined Brightness Test Controls (GUI Only)
+
+    func increaseCombinedBrightnessUI() {
+        let msg = combinedBrightnessController.increase(by: 10)
+        appendLog("[UI Combined] \(msg)")
+        combinedBrightness = combinedBrightnessController.currentCombinedLevel
+    }
+
+    func decreaseCombinedBrightnessUI() {
+        let msg = combinedBrightnessController.decrease(by: 10)
+        appendLog("[UI Combined] \(msg)")
+        combinedBrightness = combinedBrightnessController.currentCombinedLevel
+    }
+
+    func setCombinedBrightnessUI(_ percent: Int) {
+        let msg = combinedBrightnessController.setCombinedBrightness(percent)
+        appendLog("[UI Combined] \(msg)")
+        combinedBrightness = combinedBrightnessController.currentCombinedLevel
+    }
+
+    // MARK: - Voice Session State Management (Requirement 1 - 6, 8)
+
+    func checkSessionExpiration() {
+        guard voiceSessionState == .active, let expiresAt = sessionExpiresAt else { return }
+        if Date() > expiresAt {
+            transitionToSessionState(.idle, reason: "session expired after timeout (\(Int(sessionTimeout))s)")
+        }
+    }
+
+    func transitionToSessionState(_ newState: VoiceSessionState, reason: String) {
+        let oldState = voiceSessionState
+        guard oldState != newState else { return }
+        voiceSessionState = newState
+        if newState == .idle {
+            sessionExpiresAt = nil
+        }
+        appendLog("[VoiceSession] State transition: \(oldState.rawValue) → \(newState.rawValue) (\(reason))")
+    }
+
+    func extendSessionTimeout(forCommand command: String) {
+        let newExpiry = Date().addingTimeInterval(sessionTimeout)
+        sessionExpiresAt = newExpiry
+        let timeStr = newExpiry.formatted(date: .omitted, time: .standard)
+        if voiceSessionState != .active {
+            transitionToSessionState(.active, reason: "verified speaker command: '\(command)'")
+        } else {
+            appendLog("[VoiceSession] Session extended (+10s) by command: '\(command)'. Expires at \(timeStr)")
+        }
     }
 
     // MARK: - Fix #1: Hard Reset Voice Pipeline
@@ -457,6 +535,15 @@ final class AppState: ObservableObject {
 
         guard isFinal else { return }
 
+        // ── Explicit exit phrases check (Requirement 6) ───────────────
+        let lowerTranscript = transcript.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        if Self.sessionExitPhrases.contains(where: { lowerTranscript.contains($0) }) {
+            appendLog("[VoiceSession] Explicit exit phrase detected: '\(transcript)'")
+            transitionToSessionState(.idle, reason: "exit phrase detected")
+            restartSpeechSessionAfterFinal()
+            return
+        }
+
         // ── TTS feedback loop guard ──────────────────────────────────
         if isTTSSpeaking {
             appendLog("[Echo] Dropped transcript: TTS is speaking (feedback loop prevention)")
@@ -469,13 +556,16 @@ final class AppState: ObservableObject {
         guard now.timeIntervalSince(lastFinalTranscriptAt) > 0.7 else { return }
         lastFinalTranscriptAt = now
 
+        // Check session expiration before evaluating transcript
+        checkSessionExpiration()
+
+        let isSessionValid = (voiceSessionState == .active && sessionExpiresAt != nil && now <= sessionExpiresAt!)
+
         // ── [Voice] NEW SESSION START ─────────────────────────────────
         // Log every new voice session so the pipeline is fully traceable.
-        appendLog("[Voice] NEW SESSION START — transcript: '\(transcript)'")
+        appendLog("[Voice] NEW SESSION START — transcript: '\(transcript)' (session active: \(isSessionValid))")
 
-        // ── Deterministic wake-word split ─────────────────────────────
-        // Split ONLY on "jarvis" OR explicit "then"/"and then" separators.
-        // rawSegments is always built fresh from THIS transcript only.
+        // ── Deterministic wake-word split / Session follow-up ──────────
         let hasWakeWord = containsWakeWord(transcript)
         var rawSegments: [String] = []
 
@@ -488,6 +578,9 @@ final class AppState: ObservableObject {
                 .filter { !$0.isEmpty }
             appendLog("[Voice] segments count: \(rawSegments.count) (from wake-word split)")
             NSLog("[Voice] split into %d raw segments", rawSegments.count)
+        } else if isSessionValid {
+            rawSegments = [transcript]
+            appendLog("[VoiceSession] Processing in-session follow-up command: '\(transcript)'")
         } else if pendingWakeWordDetected && now.timeIntervalSince(pendingWakeWordDetectedAt) <= 4.0 {
             rawSegments = [transcript]
             appendLog("[Voice] segments count: 1 (pending wake-word fallback)")
@@ -1559,6 +1652,7 @@ final class AppState: ObservableObject {
                 appendLog("[Voice] Verified (strong). Score: \(fmtScore(result.similarity)) " +
                           "[max: \(fmtScore(result.maxSimilarity)), avg: \(fmtScore(result.avgSimilarity)), " +
                           "samples: \(result.samplesCompared)]")
+                extendSessionTimeout(forCommand: command)
                 await runCommand(command)
 
             case .low:
@@ -1578,11 +1672,15 @@ final class AppState: ObservableObject {
                             "wake_word": wakeWordDetected ? "true" : "false"
                         ]
                     )
+                    extendSessionTimeout(forCommand: command)
                     await runCommand(command)
                 } else {
                     voiceVerificationStatus = "Unknown Voice ❌"
                     lastVoiceSimilarity = result.similarity
                     appendLog("[Voice] Rejected by threshold. Score: \(fmtScore(result.similarity)) < \(fmtScore(effectiveThreshold))")
+                    if voiceSessionState == .active {
+                        appendLog("[VoiceSession] In-session command '\(command)' rejected due to failed verification. Session timer unchanged.")
+                    }
                     dbManager.saveEvent(
                         eventType: "voice_rejected",
                         transcript: command,
@@ -1612,12 +1710,16 @@ final class AppState: ObservableObject {
                             "wake_word": wakeWordDetected ? "true" : "false"
                         ]
                     )
+                    extendSessionTimeout(forCommand: command)
                     await runCommand(command)
                 } else {
                     voiceVerificationStatus = "Unknown Voice ❌"
                     lastVoiceSimilarity = result.similarity
                     appendLog("[Voice] Rejected. Score: \(fmtScore(result.similarity)) " +
                               "[max: \(fmtScore(result.maxSimilarity)), avg: \(fmtScore(result.avgSimilarity)), threshold: \(fmtScore(effectiveThreshold))]")
+                    if voiceSessionState == .active {
+                        appendLog("[VoiceSession] In-session command '\(command)' rejected due to failed verification. Session timer unchanged.")
+                    }
                     dbManager.saveEvent(
                         eventType: "voice_rejected",
                         transcript: command,

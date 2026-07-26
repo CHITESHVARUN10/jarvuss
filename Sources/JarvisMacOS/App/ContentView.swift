@@ -47,7 +47,8 @@ struct ContentView: View {
                         MicOrbView(
                             assistantState: appState.assistantState,
                             audioLevel: appState.audioLevelNormalized,
-                            micActive: appState.micActive
+                            micActive: appState.micActive,
+                            sessionState: appState.voiceSessionState
                         ) {
                             if appState.micActive {
                                 appState.stopMicrophone()
@@ -137,7 +138,7 @@ struct ContentView: View {
                 .frame(width: 1, height: 16)
                 .foregroundStyle(Color.white.opacity(0.10))
 
-            StatusBadge(state: appState.assistantState, micActive: appState.micActive)
+            StatusBadge(state: appState.assistantState, micActive: appState.micActive, sessionState: appState.voiceSessionState)
 
             Spacer()
 

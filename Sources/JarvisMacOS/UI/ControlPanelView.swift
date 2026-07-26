@@ -57,8 +57,13 @@ struct ControlPanelView: View {
 
                     Divider().background(Color.white.opacity(0.06))
 
-                    // Display brightness controls
+                    // Display brightness controls (hardware DDC)
                     displayControlSection
+
+                    Divider().background(Color.white.opacity(0.06))
+
+                    // Combined brightness controls (DDC + GPU Software Dimming)
+                    combinedDisplayControlSection
 
                     Divider().background(Color.white.opacity(0.06))
 
@@ -116,6 +121,24 @@ struct ControlPanelView: View {
                     }
                 }
                 .frame(height: 5)
+            }
+
+            // Voice Session state indicator
+            HStack {
+                Text("Voice Session")
+                    .font(.system(size: 10))
+                    .foregroundStyle(Color.white.opacity(0.35))
+                Spacer()
+                if appState.voiceSessionState == .active {
+                    let secondsLeft = max(0, Int((appState.sessionExpiresAt?.timeIntervalSinceNow ?? 0).rounded()))
+                    Text("ACTIVE (\(secondsLeft)s)")
+                        .font(.system(size: 9, weight: .bold, design: .monospaced))
+                        .foregroundStyle(Color(red: 0.35, green: 0.85, blue: 1.0))
+                } else {
+                    Text("IDLE")
+                        .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                        .foregroundStyle(Color.white.opacity(0.40))
+                }
             }
 
             // Mic start/stop
@@ -322,6 +345,61 @@ struct ControlPanelView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(JarvisButtonStyle(color: Color.yellow, compact: true))
+            }
+        }
+    }
+
+    // MARK: - Combined brightness control section (GUI test only)
+    private var combinedDisplayControlSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionLabel("COMBINED BRIGHTNESS TEST", icon: "sun.max.trianglebadge.exclamationmark.fill")
+
+            HStack {
+                Text("Combined Level")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(Color.white.opacity(0.60))
+                Spacer()
+                Text("\(appState.combinedBrightness)%")
+                    .font(.system(size: 13, weight: .bold, design: .monospaced))
+                    .foregroundStyle(Color(red: 0.50, green: 0.90, blue: 1.0))
+            }
+
+            HStack(spacing: 8) {
+                Button(action: { appState.decreaseCombinedBrightnessUI() }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "minus.circle.fill")
+                        Text("-10%")
+                    }
+                    .font(.system(size: 11, weight: .bold))
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(JarvisButtonStyle(color: Color.blue, compact: true))
+
+                Button(action: { appState.increaseCombinedBrightnessUI() }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "plus.circle.fill")
+                        Text("+10%")
+                    }
+                    .font(.system(size: 11, weight: .bold))
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(JarvisButtonStyle(color: Color.cyan, compact: true))
+            }
+
+            HStack(spacing: 8) {
+                Button(action: { appState.setCombinedBrightnessUI(0) }) {
+                    Text("0% (Pitch Black)")
+                        .font(.system(size: 10, weight: .medium))
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(JarvisButtonStyle(color: Color.indigo, compact: true))
+
+                Button(action: { appState.setCombinedBrightnessUI(100) }) {
+                    Text("100% (Max)")
+                        .font(.system(size: 10, weight: .medium))
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(JarvisButtonStyle(color: Color.cyan, compact: true))
             }
         }
     }
