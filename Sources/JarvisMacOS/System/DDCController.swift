@@ -100,42 +100,50 @@ final class DDCController {
         }
 
         // Build DDC/CI set-VCP packet per MCCS v2.2 §7.4.
-        // Packet layout (7 bytes + checksum):
-        //   [0] = kDDCHostAddress (0x51)     ← virtual host address
-        //   [1] = 0x84                        ← combined: type(0x80) | length(4 bytes follow)
-        //   [2] = 0x03                        ← DDC command: Set VCP Feature
-        //   [3] = vcpCode                     ← feature code
-        //   [4] = high byte of value
-        //   [5] = low byte of value
-        //   [6] = XOR checksum (kDDCReplyAddress ^ all preceding bytes)
+        // IOAVServiceWriteI2C passes dataAddress (0x51) as sub-address, so payload starts with length byte 0x84.
+        // Payload (6 bytes):
+        //   [0] = 0x84                        ← combined: type(0x80) | length(4 bytes follow)
+        //   [1] = 0x03                        ← DDC command: Set VCP Feature
+        //   [2] = vcpCode                     ← feature code
+        //   [3] = high byte of value
+        //   [4] = low byte of value
+        //   [5] = XOR checksum (0x6E ^ 0x51 ^ 0x84 ^ 0x03 ^ vcpCode ^ high ^ low)
         var packet: [UInt8] = [
-            kDDCHostAddress,
             0x84,                       // type 0x80 | length 0x04
             0x03,                       // Set VCP Feature opcode
             vcpCode,
             UInt8((value >> 8) & 0xFF), // value high byte
             UInt8(value & 0xFF)         // value low byte
         ]
-        var checksum: UInt8 = kDDCReplyAddress
+        // Standard DDC/CI checksum: 0x6E (dest) ^ 0x51 (source) ^ payload bytes
+        var checksum: UInt8 = 0x6E ^ kDDCDataAddress
         for b in packet { checksum ^= b }
         packet.append(checksum)
 
-        let result = packet.withUnsafeMutableBytes { buf -> IOReturn in
-            IOAVServiceWriteI2C(
-                service,
-                UInt32(kDDCChipAddress),
-                UInt32(kDDCDataAddress),
-                buf.baseAddress!,
-                UInt32(buf.count)
-            )
+        var success = false
+        // Try write up to 2 attempts with a short retry
+        for _ in 1...2 {
+            let result = packet.withUnsafeMutableBytes { buf -> IOReturn in
+                IOAVServiceWriteI2C(
+                    service,
+                    UInt32(kDDCChipAddress),
+                    UInt32(kDDCDataAddress),
+                    buf.baseAddress!,
+                    UInt32(buf.count)
+                )
+            }
+
+            if result == kIOReturnSuccess {
+                emit("[DDC] Write VCP 0x\(String(vcpCode, radix: 16)) = \(value) on display \(displayID): OK")
+                success = true
+                break
+            }
+            usleep(10_000)
         }
 
-        if result == kIOReturnSuccess {
-            emit("[DDC] Write VCP 0x\(String(vcpCode, radix: 16)) = \(value) on display \(displayID): OK")
-            return true
-        }
-        emit("[DDC] Write VCP 0x\(String(vcpCode, radix: 16)) = \(value) on display \(displayID): FAILED (0x\(String(result, radix: 16)))")
-        return false
+        // Allow 20ms for display hardware processing after write
+        usleep(20_000)
+        return success
     }
 
     // MARK: - DDC Read (get VCP value)
@@ -148,15 +156,14 @@ final class DDCController {
             return nil
         }
 
-        // Build DDC/CI get-VCP request packet (5 bytes).
+        // Build DDC/CI get-VCP request packet (4 bytes payload).
         // Layout:
-        //   [0] = kDDCHostAddress (0x51)
-        //   [1] = 0x82                   ← type 0x80 | length 0x02
-        //   [2] = 0x01                   ← Get VCP Feature opcode
-        //   [3] = vcpCode
-        //   [4] = XOR checksum
-        var request: [UInt8] = [kDDCHostAddress, 0x82, 0x01, vcpCode]
-        var checksum: UInt8 = kDDCReplyAddress
+        //   [0] = 0x82                   ← type 0x80 | length 0x02
+        //   [1] = 0x01                   ← Get VCP Feature opcode
+        //   [2] = vcpCode
+        //   [3] = XOR checksum
+        var request: [UInt8] = [0x82, 0x01, vcpCode]
+        var checksum: UInt8 = 0x6E ^ kDDCDataAddress
         for b in request { checksum ^= b }
         request.append(checksum)
 
@@ -175,22 +182,9 @@ final class DDCController {
             return nil
         }
 
-        // Per DDC/CI spec §7.6, wait ≥40ms after the request before reading reply.
-        usleep(40_000)
+        // Per DDC/CI spec §7.6, wait ≥40ms after request before reading reply.
+        usleep(50_000)
 
-        // Reply is 12 bytes:
-        //   [0]  = kDDCHostAddress (0x6E)
-        //   [1]  = 0x88  (type 0x80 | length 0x08)
-        //   [2]  = 0x02  (Get VCP Feature reply opcode)
-        //   [3]  = 0x00  (no error)
-        //   [4]  = vcpCode
-        //   [5]  = VCP type (0x00=set, 0x01=momentary)
-        //   [6]  = max high byte
-        //   [7]  = max low byte
-        //   [8]  = current high byte
-        //   [9]  = current low byte
-        //   [10] = (reserved)
-        //   [11] = XOR checksum
         var reply = [UInt8](repeating: 0, count: 12)
         let readResult = reply.withUnsafeMutableBytes { buf -> IOReturn in
             IOAVServiceReadI2C(
@@ -207,17 +201,22 @@ final class DDCController {
             return nil
         }
 
-        // Validate reply structure.
-        guard reply[0] == kDDCReplyAddress,   // source
-              reply[2] == 0x02,               // Get VCP reply opcode
-              reply[3] == 0x00,               // no error code
-              reply[4] == vcpCode else {       // echo of requested feature
+        // Flexible reply matching: find Get VCP reply opcode 0x02 followed by no-error (0x00) and vcpCode
+        var matchedIdx: Int? = nil
+        for i in 0..<(reply.count - 7) {
+            if reply[i] == 0x02 && reply[i + 1] == 0x00 && reply[i + 2] == vcpCode {
+                matchedIdx = i
+                break
+            }
+        }
+
+        guard let idx = matchedIdx else {
             emit("[DDC] Read reply malformed for VCP 0x\(String(vcpCode, radix: 16)): \(reply.map { String(format: "%02X", $0) }.joined(separator: " "))")
             return nil
         }
 
-        let maxValue     = (UInt16(reply[6]) << 8) | UInt16(reply[7])
-        let currentValue = (UInt16(reply[8]) << 8) | UInt16(reply[9])
+        let maxValue     = (UInt16(reply[idx + 4]) << 8) | UInt16(reply[idx + 5])
+        let currentValue = (UInt16(reply[idx + 6]) << 8) | UInt16(reply[idx + 7])
         emit("[DDC] Read VCP 0x\(String(vcpCode, radix: 16)): current=\(currentValue) max=\(maxValue) on display \(displayID)")
         return (current: currentValue, max: maxValue)
     }

@@ -57,6 +57,11 @@ struct ControlPanelView: View {
 
                     Divider().background(Color.white.opacity(0.06))
 
+                    // Display brightness controls
+                    displayControlSection
+
+                    Divider().background(Color.white.opacity(0.06))
+
                     automationSection
                 }
                 .padding(.horizontal, 16)
@@ -262,6 +267,61 @@ struct ControlPanelView: View {
                 Text("Example: \(first.keyword)")
                     .font(.system(size: 9))
                     .foregroundStyle(Color.white.opacity(0.30))
+            }
+        }
+    }
+
+    // MARK: - Display brightness control section
+    private var displayControlSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionLabel("BRIGHTNESS TEST", icon: "sun.max.fill")
+
+            HStack {
+                Text("Current Brightness")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(Color.white.opacity(0.60))
+                Spacer()
+                Text("\(appState.currentBrightness)%")
+                    .font(.system(size: 13, weight: .bold, design: .monospaced))
+                    .foregroundStyle(Color(red: 1.0, green: 0.85, blue: 0.40))
+            }
+
+            HStack(spacing: 8) {
+                Button(action: { appState.decreaseBrightnessUI() }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "minus.circle.fill")
+                        Text("-10%")
+                    }
+                    .font(.system(size: 11, weight: .bold))
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(JarvisButtonStyle(color: Color.orange, compact: true))
+
+                Button(action: { appState.increaseBrightnessUI() }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "plus.circle.fill")
+                        Text("+10%")
+                    }
+                    .font(.system(size: 11, weight: .bold))
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(JarvisButtonStyle(color: Color.yellow, compact: true))
+            }
+
+            HStack(spacing: 8) {
+                Button(action: { appState.setBrightnessUI(0) }) {
+                    Text("0% (Min)")
+                        .font(.system(size: 10, weight: .medium))
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(JarvisButtonStyle(color: Color.gray, compact: true))
+
+                Button(action: { appState.setBrightnessUI(100) }) {
+                    Text("100% (Max)")
+                        .font(.system(size: 10, weight: .medium))
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(JarvisButtonStyle(color: Color.yellow, compact: true))
             }
         }
     }

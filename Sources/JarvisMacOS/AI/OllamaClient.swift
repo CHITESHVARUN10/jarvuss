@@ -1,7 +1,7 @@
 import Foundation
 
 final class OllamaClient {
-    private let endpoint = URL(string: "http://localhost:11434/api/generate")!
+    private let endpoint = URL(string: "http://127.0.0.1:11434/api/generate")!
     private let model: String
 
     init(model: String = "mistral:7b") {

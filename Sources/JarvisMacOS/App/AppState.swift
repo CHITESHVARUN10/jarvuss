@@ -31,6 +31,8 @@ final class AppState: ObservableObject {
     @Published var backendStartupError: String?
     /// When true, Jarvis speaks its responses aloud via AVSpeechSynthesizer.
     @Published var voiceResponseEnabled: Bool = false
+    /// Current display brightness level (0-100) for UI display and controls.
+    @Published var currentBrightness: Int = 50
 
     let popupManager = PopupManager()
 
@@ -78,6 +80,7 @@ final class AppState: ObservableObject {
     private let voiceAuthClient = VoiceAuthClient()
     private let actionPlanner = ActionPlanner()
     private let backendServiceManager = BackendServiceManager()
+    private let displayController = DisplayController()
     let commandQueue = CommandQueueManager()
 
     private var previousVoiceDetected = false
@@ -148,6 +151,9 @@ final class AppState: ObservableObject {
         actionExecutor.onLog = { [weak self] msg in
             Task { @MainActor in self?.appendLog(msg) }
         }
+        displayController.onLog = { [weak self] msg in
+            Task { @MainActor in self?.appendLog(msg) }
+        }
         self.speechManager.onLog = { [weak self] msg in
             Task { @MainActor in self?.appendLog(msg) }
         }
@@ -168,6 +174,33 @@ final class AppState: ObservableObject {
         }
 
         self.automations = automationStore.load()
+        refreshBrightness()
+    }
+
+    // MARK: - Display Brightness UI Controls
+
+    func refreshBrightness() {
+        if let val = displayController.getCurrentBrightness() {
+            currentBrightness = val
+        }
+    }
+
+    func increaseBrightnessUI() {
+        let msg = displayController.execute(.increaseBrightness(by: 10))
+        appendLog("[UI] \(msg)")
+        refreshBrightness()
+    }
+
+    func decreaseBrightnessUI() {
+        let msg = displayController.execute(.decreaseBrightness(by: 10))
+        appendLog("[UI] \(msg)")
+        refreshBrightness()
+    }
+
+    func setBrightnessUI(_ percent: Int) {
+        let msg = displayController.execute(.setBrightness(percent))
+        appendLog("[UI] \(msg)")
+        refreshBrightness()
     }
 
     // MARK: - Fix #1: Hard Reset Voice Pipeline

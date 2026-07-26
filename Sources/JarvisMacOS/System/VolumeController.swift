@@ -69,7 +69,6 @@ final class VolumeController {
         }
         // CoreAudio failed (no BlackHole) — fall back to AudioGain software gain.
         emit("[Volume][Debug] CoreAudio had no effect, falling back to AudioGain")
-        let gainBefore = audioGain.currentVolumeFactor()
         let gainApplied = audioGain.increase(by: Int(round(Double(percent))))
         if gainApplied { currentVolume = audioGain.currentVolumeFactor() }
         lastOperationSucceeded = gainApplied
@@ -112,7 +111,6 @@ final class VolumeController {
         }
         // CoreAudio failed (no BlackHole) — fall back to AudioGain software gain.
         emit("[Volume][Debug] CoreAudio had no effect, falling back to AudioGain")
-        let gainBefore = audioGain.currentVolumeFactor()
         let gainApplied = audioGain.decrease(by: Int(round(Double(percent))))
         if gainApplied { currentVolume = audioGain.currentVolumeFactor() }
         lastOperationSucceeded = gainApplied

@@ -107,21 +107,43 @@ final class DisplayController {
 
     // MARK: - Brightness
 
+    /// Returns current display brightness (0-100), checking built-in first then external DDC.
+    func getCurrentBrightness() -> Int? {
+        if builtIn.canChangeBrightness(), let b = builtIn.getBrightness() {
+            return Int(round(b * 100))
+        }
+        for displayID in DDCController.externalDisplayIDs() {
+            ddc.onLog = onLog
+            if let cur = ddc.getBrightness(displayID: displayID) {
+                return Int(cur.current)
+            }
+        }
+        return nil
+    }
+
+    private var cachedBrightnessPct: Int = 50
+    private var cachedContrastPct: Int = 50
+
     private func setBrightness(_ percent: Int) -> String {
-        let level = Float(clamp(percent, 0, 100)) / 100.0
+        let safePct = clamp(percent, 0, 100)
+        let level = Float(safePct) / 100.0
 
         // Try built-in first.
         if builtIn.canChangeBrightness() {
             let ok = builtIn.setBrightness(level)
-            if ok { return "Brightness set to \(percent)%" }
+            if ok {
+                cachedBrightnessPct = safePct
+                return "Brightness set to \(safePct)%"
+            }
             emit("[Display] Built-in brightness failed, trying external DDC")
         }
 
         // Try external display via DDC.
         for displayID in DDCController.externalDisplayIDs() {
             ddc.onLog = onLog
-            if ddc.setBrightness(displayID: displayID, percent: percent) {
-                return "External display brightness set to \(percent)%"
+            if ddc.setBrightness(displayID: displayID, percent: safePct) {
+                cachedBrightnessPct = safePct
+                return "External display brightness set to \(safePct)%"
             }
         }
 
@@ -132,24 +154,25 @@ final class DisplayController {
 
     private func adjustBrightness(delta: Float, direction: Direction) -> String {
         if builtIn.canChangeBrightness() {
-            let current = builtIn.getBrightness() ?? 0.5
+            let current = builtIn.getBrightness() ?? Float(cachedBrightnessPct) / 100.0
             let newLevel = direction == .up ? current + delta : current - delta
             let ok = builtIn.setBrightness(newLevel)
             if ok {
                 let pct = Int(min(max(newLevel, 0), 1) * 100)
+                cachedBrightnessPct = pct
                 return "Brightness \(direction == .up ? "increased" : "decreased") to \(pct)%"
             }
         }
 
-        // External display: read current then set.
+        // External display: attempt DDC read, or fall back to cached value if DDC read is unsupported.
         for displayID in DDCController.externalDisplayIDs() {
             ddc.onLog = onLog
-            if let current = ddc.getBrightness(displayID: displayID) {
-                let step = Int(delta * 100)
-                let newPct = clamp(direction == .up ? current.current + step : current.current - step, 0, current.max)
-                if ddc.setBrightness(displayID: displayID, percent: newPct) {
-                    return "External display brightness \(direction == .up ? "increased" : "decreased") to \(newPct)%"
-                }
+            let step = Int(delta * 100)
+            let currentPct = ddc.getBrightness(displayID: displayID)?.current ?? clamp(cachedBrightnessPct, 0, 100)
+            let newPct = clamp(direction == .up ? currentPct + step : currentPct - step, 0, 100)
+            if ddc.setBrightness(displayID: displayID, percent: newPct) {
+                cachedBrightnessPct = newPct
+                return "External display brightness \(direction == .up ? "increased" : "decreased") to \(newPct)%"
             }
         }
 
