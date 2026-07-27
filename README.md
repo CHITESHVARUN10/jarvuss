@@ -1,209 +1,137 @@
-# JarvisMacOS (Phase 1 MVP Scaffold)
+# JarvisMacOS
 
-Offline-first macOS assistant scaffold in Swift with:
+Offline-first macOS assistant in Swift & Python with:
 
-- Wake-word style command entry (`Jarvis ...`) in CLI
-- Live microphone capture via `AVAudioEngine` (Step 1)
-- Rule-based command parsing and system actions
-- Local Ollama integration using `mistral:7b`
-- Command logging to `logs/commands.log`
+- **Local OCR & RAG Knowledge Base**: Extract text from images, PDFs, and scans locally, indexed in ChromaDB vector store.
+- **Document Upload UI**: Native UI panel for dropping/uploading PDFs, images, and text notes.
+- **Voice RAG Queries**: Query your local documents using natural voice triggers like *"Jarvis, ask document [question]"*.
+- **Local Ollama Integration**: Powered by `mistral:7b` for offline reasoning & answer synthesis.
+- **Voice Auth & Enrollment**: Resemblyzer speaker verification and 2-layer phrase enrollment.
+- **System Automation**: Open/close apps, create files/folders, and execute multi-action workflows.
 
-## 1) Install Dependencies (macOS)
+---
+
+## 🚀 Key Features
+
+### 1. Project-Local Models (Strict Isolation)
+All model weights are stored strictly inside the project tree in `./models/`:
+- `./models/ocr/`: Baidu Unlimited-OCR model weights
+- `./models/embeddings/`: `all-MiniLM-L6-v2` sentence-transformer model
+- `./rag_documents/`: Source documents (PDFs, images, notes) dropped by the user
+- `./rag_index/`: Persistent ChromaDB vector index
+
+*Nothing is downloaded to global system locations like `~/.cache`.*
+
+### 2. Document Upload & Ingestion UI
+Upload documents directly inside the Jarvis macOS GUI:
+1. Open Jarvis and scroll to **RAG DOCUMENTS** in the sidebar.
+2. Click **"+ Upload Document"** to choose any PDF, Image (PNG/JPG/TIFF), or Text file.
+3. Jarvis automatically copies the file to `./rag_documents/`, runs OCR on scanned pages, chunks text, and indexes vector embeddings.
+
+### 3. Voice RAG Retrieval Triggers
+Query your indexed documents directly via voice:
+- *"Jarvis, ask document what is my favorite color?"*
+- *"Jarvis, ask documents what are my project deadlines?"*
+- *"Jarvis, search notes for server setup instructions."*
+- *"Jarvis, search documents for meeting key points."*
+
+---
+
+## 🛠️ Installation & Setup
+
+### 1) Prerequisites (macOS)
 
 ```zsh
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-brew install cmake
-brew install ffmpeg
-brew install portaudio
-brew install ollama
-brew install postgresql@18
+brew install cmake ffmpeg portaudio ollama postgresql@18
 ```
 
-## 2) Pull and Start LLM
+### 2) Ollama Model Setup
 
 ```zsh
 ollama pull mistral:7b
-ollama run mistral:7b
+ollama serve
 ```
 
-Keep Ollama running in one terminal.
-
-## PostgreSQL (Recognition Storage)
-
-Jarvis now stores recognition/enrollment/command events in PostgreSQL if environment variables are set.
-
-Start PostgreSQL:
+### 3) Python Backend Environment
 
 ```zsh
-brew services start postgresql@18
+cd backend
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 ```
 
-Create user/database (example):
+### 4) Download Project-Local Models
+
+Run the automatic model downloader script to populate `./models/`:
 
 ```zsh
-createuser -s jarvis_user
-createdb jarvis_db -O jarvis_user
+python scripts/download_models.py
 ```
 
-Set connection variables before launching app:
+---
+
+## 🖥️ Launching Jarvis
+
+### Automated Single-Script Launcher (App + Backend):
 
 ```zsh
-export PGHOST=127.0.0.1
-export PGPORT=5432
-export PGDATABASE=jarvis_db
-export PGUSER=jarvis_user
-export PGPASSWORD=your_password_if_needed
-```
-
-On launch, Jarvis auto-creates table `jarvis_recognition_events`.
-
-## Microphone Permission (Important)
-
-On first run, macOS may require microphone permission for your terminal app.
-
-- If needed, enable it in:
-  - `System Settings` → `Privacy & Security` → `Microphone`
-  - Turn on access for your terminal (`Terminal`, `iTerm`, etc.)
-
-## 3) Build and Run Jarvis
-
-```zsh
-cd /Users/chiteshvarun/D-drive/jarvis
-swift build
 ./scripts/launch_jarvis_app.zsh
 ```
 
-## 4) Speaker Authentication Backend (Offline)
-
-Run this local Python service (Resemblyzer + FastAPI):
+Or manually start backend & app:
 
 ```zsh
-cd /Users/chiteshvarun/D-drive/jarvis/backend
-/opt/homebrew/bin/python3.11 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-python -m uvicorn voice_auth_service:app --host 127.0.0.1 --port 8000
+# Terminal 1: Backend
+python3 -m uvicorn voice_auth_service:app --app-dir backend --host 127.0.0.1 --port 8000
+
+# Terminal 2: Swift App
+swift build
+.build/debug/Jarvis
 ```
 
-Speaker profile training now uses the existing phrase enrollment flow:
+---
 
-- Start enrollment in app UI
-- Speak each of the 7 phrases, 3 times each
-- Jarvis stores each accepted repetition as a backend voice sample
-- Voice mode unlocks after all 21 samples are collected
+## 📂 API Reference
 
-## 5) Try Commands
+### Local Python Backend Endpoints (`http://127.0.0.1:8000`)
+
+| Endpoint | Method | Description |
+|:---|:---:|:---|
+| `/health` | `GET` | Backend health check |
+| `/ocr/scan` | `POST` | Perform OCR scan on a file in `./rag_documents/` |
+| `/rag/ingest` | `POST` | Chunk and index file(s) into ChromaDB `./rag_index/` |
+| `/rag/query` | `POST` | Vector similarity search for top-k document chunks |
+| `/bonsai/generate` | `POST` | Text generation delegated to local Ollama (`mistral:7b`) |
+| `/verify_voice` | `POST` | Resemblyzer speaker verification |
+
+---
+
+## 🎙️ Voice & Text Command Syntax
 
 ```text
-Jarvis open chrome
-Jarvis close vscode
+# RAG Document Search
+Jarvis ask document what is my favorite color?
+Jarvis search notes for project deadline
+
+# App Controls
+Jarvis open brave browser
+Jarvis close spotify
+
+# File Operations
 Jarvis create file test.txt
 Jarvis create folder demo
 Jarvis open folder downloads
-Jarvis explain recursion
+
+# General AI Queries
+Jarvis explain quantum computing
 ```
 
-Type `help` for examples or `quit` to exit.
+---
 
-## Current Scope
+## 🔒 Permissions & Security
 
-This is a runnable MVP scaffold for milestone progression:
+- **Microphone**: Require `NSMicrophoneUsageDescription` permission grant in macOS Settings.
+- **Offline First**: All OCR, embedding, vector store, and LLM operations run 100% locally on your Mac.
 
-- ✅ Wake-word-gated flow (text mode)
-- ✅ Mic input capture with `AVAudioEngine`
-- ✅ Command parser + executor
-- ✅ Ollama API call to local model
-- ✅ Logging
-- ⏳ Porcupine, Whisper.cpp, and SQLite remain placeholders for next implementation steps.
-# jarvuss
-
-## Bundled macOS App (No Terminal)
-
-Jarvis now supports a fully bundled app flow where backend startup is automatic.
-
-### Target bundle layout
-
-```text
-Jarvis.app/
- ├── Contents/
- │   ├── MacOS/
- │   │   ├── Jarvis
- │   │   └── start_backend.sh
- │   ├── Resources/
- │   │   └── backend/
- │   │       ├── main (optional PyInstaller onefile binary)
- │   │       ├── main.py
- │   │       ├── voice_auth_service.py
- │   │       ├── venv/
- │   │       └── requirements.txt
- │   └── Info.plist
-```
-
-### One-command local packaging
-
-```zsh
-cd /Users/chiteshvarun/D-drive/jarvis
-chmod +x scripts/start_backend.sh scripts/package_jarvis_app.zsh scripts/launch_jarvis_app.zsh
-./scripts/launch_jarvis_app.zsh
-```
-
-Optional backend compilation with PyInstaller:
-
-```zsh
-cd /Users/chiteshvarun/D-drive/jarvis
-JARVIS_USE_PYINSTALLER=1 ./scripts/package_jarvis_app.zsh
-```
-
-### Swift backend lifecycle integration
-
-- `AppState.bootstrap()` now starts bundled backend first.
-- Uses `BackendServiceManager` (`Sources/JarvisMacOS/App/BackendServiceManager.swift`) with:
-  - single-instance startup
-  - health check (`/health`)
-  - one retry on startup failure
-  - clean shutdown via PID file on app termination
-- UI status is visible in top bar via `backendStatus` and `backendStartupError`.
-
-### Permissions
-
-`Info.plist` includes:
-
-- `NSMicrophoneUsageDescription`
-- `NSSpeechRecognitionUsageDescription`
-- `NSAppleEventsUsageDescription`
-
-For stable permission persistence across launches:
-
-- keep a stable `CFBundleIdentifier`
-- sign the app consistently (same signing identity/team)
-
-Accessibility/Automation grants are managed by macOS TCC and become persistent for the signed bundle identity.
-
-### Xcode build phases (recommended)
-
-In your app target, set up:
-
-1. **Run Script: Copy backend resources**
-  - Copy `backend/voice_auth_service.py`, `backend/requirements.txt`, optional `backend/embeddings.npy` to:
-  - `$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Resources/backend/`
-
-2. **Run Script: Backend startup script**
-  - Copy `scripts/start_backend.sh` to:
-  - `$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/MacOS/start_backend.sh`
-  - `chmod +x` it.
-
-3. **Run Script: Prepare venv (optional in build)**
-  - Create venv under `Resources/backend/venv` and install from `requirements.txt`.
-  - Or let `start_backend.sh` perform first-run install automatically.
-
-4. **Info.plist**
-  - Ensure required usage descriptions are present as above.
-
-### Runtime behavior (double-click app)
-
-1. Launch `Jarvis.app`.
-2. Swift app starts backend via `start_backend.sh` automatically.
-3. Backend runs in background (`127.0.0.1:8000`).
-4. App retries startup once if health check fails.
-5. On app close, backend PID is terminated cleanly.

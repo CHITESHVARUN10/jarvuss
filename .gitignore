@@ -8,3 +8,8 @@ backend/__pycache__/
 backend/*.pyc
 *.swp
 *.swo
+
+# Project-local models, RAG documents, and vector index
+/models/
+/rag_documents/
+/rag_index/

@@ -2,7 +2,11 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-BACKEND_DIR="$(cd "$SCRIPT_DIR/../Resources/backend" && pwd)"
+if [[ -d "$SCRIPT_DIR/../Resources/backend" ]]; then
+  BACKEND_DIR="$(cd "$SCRIPT_DIR/../Resources/backend" && pwd)"
+else
+  BACKEND_DIR="$(cd "$SCRIPT_DIR/../backend" && pwd)"
+fi
 VENV_DIR="$BACKEND_DIR/venv"
 REQ_FILE="$BACKEND_DIR/requirements.txt"
 REQ_HASH_FILE="$VENV_DIR/.req_hash"
@@ -67,6 +71,11 @@ if [[ -f "$REQ_FILE" ]]; then
   else
     echo "[Backend] Dependencies unchanged — skipping pip install." >> "$LOG_FILE"
   fi
+fi
+
+if [[ -f "$SCRIPT_DIR/download_models.py" ]]; then
+  echo "[Backend] Running model downloader check..." >> "$LOG_FILE"
+  "$VENV_DIR/bin/python" "$SCRIPT_DIR/download_models.py" >> "$LOG_FILE" 2>&1 || true
 fi
 
 cd "$BACKEND_DIR"

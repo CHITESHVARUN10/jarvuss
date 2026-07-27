@@ -34,15 +34,15 @@ if [[ "$BINARY_CHANGED" == true ]]; then
   cp "$ROOT_DIR/scripts/start_backend.sh" "$APP_MACOS/start_backend.sh"
   chmod +x "$APP_MACOS/start_backend.sh"
 
-  cp "$BACKEND_SRC/voice_auth_service.py" "$BACKEND_DEST/voice_auth_service.py"
-  cp "$BACKEND_SRC/requirements.txt"      "$BACKEND_DEST/requirements.txt"
+  cp "$BACKEND_SRC"/*.py "$BACKEND_DEST/"
+  cp "$BACKEND_SRC/requirements.txt" "$BACKEND_DEST/requirements.txt"
 else
   echo "[Package] Binary unchanged — skipping binary copy"
   # Still sync the Python source and script in case they changed
   cp "$ROOT_DIR/scripts/start_backend.sh" "$APP_MACOS/start_backend.sh"
   chmod +x "$APP_MACOS/start_backend.sh"
-  cp "$BACKEND_SRC/voice_auth_service.py" "$BACKEND_DEST/voice_auth_service.py"
-  cp "$BACKEND_SRC/requirements.txt"      "$BACKEND_DEST/requirements.txt"
+  cp "$BACKEND_SRC"/*.py "$BACKEND_DEST/"
+  cp "$BACKEND_SRC/requirements.txt" "$BACKEND_DEST/requirements.txt"
 fi
 
 if [[ -f "$BACKEND_SRC/embeddings.npy" ]]; then

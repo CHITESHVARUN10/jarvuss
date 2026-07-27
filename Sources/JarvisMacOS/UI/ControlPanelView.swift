@@ -68,6 +68,11 @@ struct ControlPanelView: View {
                     Divider().background(Color.white.opacity(0.06))
 
                     automationSection
+
+                    Divider().background(Color.white.opacity(0.06))
+
+                    // RAG Document Upload
+                    ragDocumentsSection
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 14)
@@ -400,6 +405,49 @@ struct ControlPanelView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(JarvisButtonStyle(color: Color.cyan, compact: true))
+            }
+        }
+    }
+
+    // MARK: - RAG Documents section
+    private var ragDocumentsSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionLabel("RAG DOCUMENTS", icon: "doc.text.magnifyingglass")
+
+            Button(action: { appState.uploadDocumentForRAG() }) {
+                HStack(spacing: 6) {
+                    if appState.ragUploadInProgress {
+                        ProgressView()
+                            .scaleEffect(0.7)
+                            .frame(width: 12, height: 12)
+                    } else {
+                        Image(systemName: "plus.circle.fill")
+                    }
+                    Text(appState.ragUploadInProgress ? "Processing…" : "Upload Document")
+                        .font(.system(size: 11, weight: .semibold))
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(JarvisButtonStyle(
+                color: Color(red: 0.45, green: 0.75, blue: 0.55),
+                compact: true
+            ))
+            .disabled(appState.ragUploadInProgress)
+
+            if !appState.ragUploadStatus.isEmpty {
+                Text(appState.ragUploadStatus)
+                    .font(.system(size: 9, weight: .medium, design: .monospaced))
+                    .foregroundStyle(appState.ragUploadStatus.hasPrefix("✅")
+                        ? Color.green.opacity(0.80)
+                        : appState.ragUploadStatus.hasPrefix("❌")
+                            ? Color.red.opacity(0.80)
+                            : Color.white.opacity(0.45))
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                Text("PDF, image, or text → OCR → knowledge base")
+                    .font(.system(size: 9))
+                    .foregroundStyle(Color.white.opacity(0.25))
             }
         }
     }
