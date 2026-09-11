@@ -8,12 +8,11 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from urllib.parse import urlencode
 from urllib.error import HTTPError
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict
 
 import numpy as np
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.responses import RedirectResponse
-from pydantic import BaseModel
 from resemblyzer import VoiceEncoder, preprocess_wav
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -25,7 +24,7 @@ import sys
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
-app = FastAPI(title="Jarvis Voice Auth Service", version="2.0.0")
+app = FastAPI(title="Jarvis Voice Auth Service", version="2.1.0")
 
 # Encoder is initialised ONCE at startup — never reloaded.
 encoder = VoiceEncoder()
@@ -731,7 +730,7 @@ def spotify_login() -> RedirectResponse:
 
 
 @app.get("/spotify/callback")
-def spotify_callback(code: str = Query(...)) -> dict[str, str | int]:
+def spotify_callback(code: str = Query(...)) -> Dict[str, Any]:
     token_payload = _exchange_code_for_token(code)
 
     access_token = token_payload.get("access_token", "")
@@ -753,12 +752,12 @@ def spotify_callback(code: str = Query(...)) -> dict[str, str | int]:
 
 
 @app.get("/callback")
-def spotify_callback_alias(code: str = Query(...)) -> dict[str, str | int]:
+def spotify_callback_alias(code: str = Query(...)) -> Dict[str, Any]:
     return spotify_callback(code=code)
 
 
 @app.get("/spotify/token")
-def spotify_token() -> dict[str, str | int | bool]:
+def spotify_token() -> Dict[str, Any]:
     token = _get_valid_spotify_access_token()
     expires_at = int(spotify_tokens.get("expires_at") or 0)
     return {
@@ -891,97 +890,4 @@ async def verify(file: UploadFile = File(...)) -> dict:
 def reset() -> dict[str, int]:
     _save_embeddings(np.empty((0, 256), dtype=np.float32))
     return {"enrolled_count": 0}
-
-
-# ──────────────────────────────────────────────────────────────────────
-# OCR & RAG & Bonsai Endpoints
-# ──────────────────────────────────────────────────────────────────────
-
-class OCRScanRequest(BaseModel):
-    filename: Optional[str] = None
-    filepath: Optional[str] = None
-
-
-class RAGIngestRequest(BaseModel):
-    filename: Optional[str] = None
-
-
-class RAGQueryRequest(BaseModel):
-    query: str
-    top_k: int = 3
-
-
-class BonsaiGenerateRequest(BaseModel):
-    prompt: str
-    max_tokens: int = 256
-    temp: float = 0.7
-
-
-@app.post("/ocr/scan")
-def ocr_scan(req: OCRScanRequest) -> dict:
-    """
-    Scans a document/image in ./rag_documents/ or from a specific path.
-    Runs Baidu Unlimited-OCR for images/scanned PDFs.
-    """
-    from ocr_service import extract_text_from_file
-
-    target_path = None
-    if req.filepath:
-        target_path = Path(req.filepath)
-    elif req.filename:
-        target_path = PROJECT_ROOT / "rag_documents" / req.filename
-    else:
-        raise HTTPException(status_code=400, detail="Provide either filename or filepath.")
-
-    try:
-        return extract_text_from_file(target_path)
-    except FileNotFoundError:
-        raise HTTPException(status_code=404, detail=f"File not found: {target_path}")
-    except Exception as error:
-        raise HTTPException(status_code=500, detail=f"OCR scan failed: {error}")
-
-
-@app.post("/rag/ingest")
-def rag_ingest(req: RAGIngestRequest = RAGIngestRequest()) -> dict:
-    """
-    Ingests files from ./rag_documents/ into the persistent vector store in ./rag_index/.
-    Read-only on ./rag_documents/: never alters or deletes source files.
-    """
-    from rag_service import ingest_documents
-
-    try:
-        return ingest_documents(filename=req.filename)
-    except Exception as error:
-        raise HTTPException(status_code=500, detail=f"RAG ingestion failed: {error}")
-
-
-@app.post("/rag/query")
-def rag_query(req: RAGQueryRequest) -> dict:
-    """
-    Retrieves top-k relevant document chunks from ./rag_index/ for a question string.
-    """
-    from rag_service import query_rag
-
-    try:
-        return query_rag(question=req.query, top_k=req.top_k)
-    except Exception as error:
-        raise HTTPException(status_code=500, detail=f"RAG query failed: {error}")
-
-
-@app.post("/bonsai/generate")
-def bonsai_generate(req: BonsaiGenerateRequest) -> dict:
-    """
-    Generates completion using Apple Silicon native MLX low-bit kernel (Ternary-Bonsai-27B).
-    """
-    from bonsai_service import generate_bonsai
-
-    try:
-        res = generate_bonsai(prompt=req.prompt, max_tokens=req.max_tokens, temp=req.temp)
-        if "error" in res:
-            raise HTTPException(status_code=500, detail=res["error"])
-        return res
-    except HTTPException:
-        raise
-    except Exception as error:
-        raise HTTPException(status_code=500, detail=f"Bonsai generation failed: {error}")
 

@@ -50,8 +50,20 @@ if [[ -x "$BACKEND_DIR/main" && ! -f "$BACKEND_DIR/main.py" ]]; then
   exit 0
 fi
 
+# Prefer a modern Python (>=3.10) for the venv: /usr/bin/python3 on macOS
+# is Apple-shipped 3.9, which cannot evaluate `X | Y` type annotations.
+pick_python() {
+  for candidate in /opt/homebrew/bin/python3.11 /opt/homebrew/bin/python3 /usr/local/bin/python3 /usr/bin/python3; do
+    if [[ -x "$candidate" ]] && "$candidate" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then
+      echo "$candidate"
+      return 0
+    fi
+  done
+  echo "/usr/bin/python3"
+}
+
 if [[ ! -x "$VENV_DIR/bin/python" ]]; then
-  /usr/bin/python3 -m venv "$VENV_DIR"
+  "$(pick_python)" -m venv "$VENV_DIR"
 fi
 
 # ── Dependency install: skip entirely if requirements.txt hasn't changed ──
@@ -71,11 +83,6 @@ if [[ -f "$REQ_FILE" ]]; then
   else
     echo "[Backend] Dependencies unchanged — skipping pip install." >> "$LOG_FILE"
   fi
-fi
-
-if [[ -f "$SCRIPT_DIR/download_models.py" ]]; then
-  echo "[Backend] Running model downloader check..." >> "$LOG_FILE"
-  "$VENV_DIR/bin/python" "$SCRIPT_DIR/download_models.py" >> "$LOG_FILE" 2>&1 || true
 fi
 
 cd "$BACKEND_DIR"

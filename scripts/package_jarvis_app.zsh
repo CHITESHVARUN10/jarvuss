@@ -52,9 +52,23 @@ fi
 # ── Python venv: create once, reinstall only if requirements changed ──────
 REQ_HASH_FILE="$BACKEND_DEST/venv/.req_hash"
 
+if [[ -x "$BACKEND_DEST/venv/bin/python" ]] && ! "$BACKEND_DEST/venv/bin/python" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then
+  echo "[Package] Existing venv is Python < 3.10 — recreating..."
+  rm -rf "$BACKEND_DEST/venv"
+fi
+
 if [[ ! -x "$BACKEND_DEST/venv/bin/python" ]]; then
   echo "[Package] Creating Python venv..."
-  /usr/bin/python3 -m venv "$BACKEND_DEST/venv"
+  # Prefer Homebrew Python (>=3.10): /usr/bin/python3 is Apple-shipped 3.9,
+  # which cannot evaluate `X | Y` type annotations at runtime.
+  PYBIN=""
+  for candidate in /opt/homebrew/bin/python3.11 /opt/homebrew/bin/python3 /usr/local/bin/python3 /usr/bin/python3; do
+    if [[ -x "$candidate" ]] && "$candidate" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then
+      PYBIN="$candidate"
+      break
+    fi
+  done
+  "${PYBIN:-/usr/bin/python3}" -m venv "$BACKEND_DEST/venv"
 fi
 
 REQ_HASH="$(shasum -a 256 "$BACKEND_DEST/requirements.txt" | awk '{print $1}')"

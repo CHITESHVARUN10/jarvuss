@@ -7,7 +7,6 @@ enum ParsedCommand: Equatable {
     case createFolder(String)
     case openFolder(String)
     case aiQuery(String)
-    case ragQuery(String)
     case unknown(String)
     /// New: a resolved multi-step plan from ActionPlanner
     case multiAction([PlannedAction])
@@ -17,18 +16,6 @@ final class CommandParser {
     func parse(_ text: String) -> ParsedCommand {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         let lowercase = trimmed.lowercased()
-
-        if lowercase.hasPrefix("ask document ") || lowercase.hasPrefix("ask documents ") {
-            let prefix = lowercase.hasPrefix("ask document ") ? "ask document " : "ask documents "
-            let query = trimmed.dropFirst(prefix.count).trimmingCharacters(in: .whitespaces)
-            return .ragQuery(String(query))
-        }
-
-        if lowercase.hasPrefix("search notes ") || lowercase.hasPrefix("search documents ") || lowercase.hasPrefix("search document ") {
-            let prefix = lowercase.hasPrefix("search notes ") ? "search notes " : (lowercase.hasPrefix("search documents ") ? "search documents " : "search document ")
-            let query = trimmed.dropFirst(prefix.count).trimmingCharacters(in: .whitespaces)
-            return .ragQuery(String(query))
-        }
 
         if lowercase.hasPrefix("launch ") {
             let target = trimmed.dropFirst("launch ".count).trimmingCharacters(in: .whitespaces)

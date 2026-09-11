@@ -8,8 +8,10 @@ backend/__pycache__/
 backend/*.pyc
 *.swp
 *.swo
+rust-core/target/
 
-# Project-local models, RAG documents, and vector index
+# Removed RAG/OCR/Bonsai local dirs (kept ignored one release cycle
+# so stale checkouts can't reintroduce them)
 /models/
 /rag_documents/
 /rag_index/

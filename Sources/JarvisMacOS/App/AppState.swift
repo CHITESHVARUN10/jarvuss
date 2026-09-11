@@ -51,10 +51,6 @@ final class AppState: ObservableObject {
     @Published var currentBrightness: Int = 50
     /// Combined brightness level (0-100: Software Dimming + DDC Backlight + Contrast).
     @Published var combinedBrightness: Int = 50
-    /// Status message for the RAG document upload flow.
-    @Published var ragUploadStatus: String = ""
-    /// True while a document is being copied/OCR'd/ingested.
-    @Published var ragUploadInProgress: Bool = false
 
     let popupManager = PopupManager()
 
@@ -2073,104 +2069,5 @@ final class AppState: ObservableObject {
         }
 
         return Array(Set(tokens))
-    }
-
-    // MARK: - RAG Document Upload
-
-    /// Opens a native file picker, copies the selected file into ./rag_documents/,
-    /// then optionally runs OCR (images/PDFs) and triggers RAG ingestion.
-    /// All work is copy-only — the original file is never modified or moved.
-    func uploadDocumentForRAG() {
-        guard !ragUploadInProgress else { return }
-
-        // Resolve the project-local rag_documents directory.
-        // In development the executable sits inside .build/; we climb up to find
-        // the project root by looking for "rag_documents" relative to known anchors.
-        let fm = FileManager.default
-        // Guaranteed resolution: project root rag_documents
-        let projectRoot = URL(fileURLWithPath: "/Users/chiteshvarun/D-drive/jarvis_code")
-        let targetRagDir = projectRoot.appendingPathComponent("rag_documents", isDirectory: true)
-        
-        try? fm.createDirectory(at: targetRagDir, withIntermediateDirectories: true)
-        let ragDirectory = targetRagDir
-
-        // Open file picker on the main thread (NSOpenPanel must run on main thread).
-        let panel = NSOpenPanel()
-        panel.title = "Select a Document for Jarvis RAG"
-        panel.message = "Choose a PDF, image, or text file to add to the knowledge base"
-        panel.allowsMultipleSelection = false
-        panel.canChooseDirectories = false
-        panel.allowedContentTypes = [.pdf, .png, .jpeg, .tiff, .plainText]
-        panel.begin { [weak self] response in
-            guard let self = self, response == .OK, let sourceURL = panel.url else { return }
-            Task { @MainActor in
-                await self.performRAGUpload(sourceURL: sourceURL, ragDirectory: ragDirectory)
-            }
-        }
-    }
-
-    @MainActor
-    private func performRAGUpload(sourceURL: URL, ragDirectory: URL) async {
-        ragUploadInProgress = true
-        ragUploadStatus = "Copying file…"
-        appendLog("[RAG Upload] Starting upload for: \(sourceURL.lastPathComponent)")
-
-        let fm = FileManager.default
-
-        // Build a collision-safe destination filename.
-        let originalName = sourceURL.lastPathComponent
-        let baseName = sourceURL.deletingPathExtension().lastPathComponent
-        let ext = sourceURL.pathExtension
-        var destURL = ragDirectory.appendingPathComponent(originalName)
-        if fm.fileExists(atPath: destURL.path) {
-            let stamp = Int(Date().timeIntervalSince1970)
-            destURL = ragDirectory.appendingPathComponent("\(baseName)_\(stamp).\(ext)")
-        }
-
-        // Copy the file — never move.
-        do {
-            try fm.copyItem(at: sourceURL, to: destURL)
-            appendLog("[RAG Upload] Copied to: \(destURL.path)")
-        } catch {
-            ragUploadStatus = "❌ Copy failed: \(error.localizedDescription)"
-            ragUploadInProgress = false
-            popupManager.show(message: "Failed to copy file: \(error.localizedDescription)", icon: "exclamationmark.triangle.fill")
-            return
-        }
-
-        let filename = destURL.lastPathComponent
-        let imageExts: Set<String> = ["png", "jpg", "jpeg", "tiff", "bmp", "gif", "webp"]
-        let needsOCR = ext.lowercased() == "pdf" || imageExts.contains(ext.lowercased())
-
-        // Run OCR if applicable.
-        if needsOCR {
-            ragUploadStatus = "Running OCR…"
-            appendLog("[RAG Upload] Running OCR on \(filename)…")
-            do {
-                let result = try await voiceAuthClient.ocrScan(filename: filename)
-                let pages = result["pages"] as? Int ?? 0
-                let charCount = (result["text"] as? String)?.count ?? 0
-                appendLog("[RAG Upload] OCR complete: \(pages) page(s), \(charCount) chars extracted")
-            } catch {
-                appendLog("[RAG Upload][WARN] OCR failed (\(error.localizedDescription)) — continuing to RAG ingest with raw text fallback")
-            }
-        }
-
-        // Ingest into RAG vector store.
-        ragUploadStatus = "Ingesting into knowledge base…"
-        appendLog("[RAG Upload] Ingesting \(filename) into RAG index…")
-        do {
-            let result = try await voiceAuthClient.ragIngest(filename: filename)
-            let added = result["chunks_added"] as? Int ?? result["documents_added"] as? Int ?? 0
-            ragUploadStatus = "✅ \(filename) ingested (\(added) chunks)"
-            appendLog("[RAG Upload] Ingest complete: \(added) chunks added")
-            popupManager.show(message: "\(filename) added to Jarvis knowledge base (\(added) chunks)", icon: "checkmark.circle.fill")
-        } catch {
-            ragUploadStatus = "❌ Ingest failed: \(error.localizedDescription)"
-            appendLog("[RAG Upload][ERROR] Ingest failed: \(error.localizedDescription)")
-            popupManager.show(message: "RAG ingest failed: \(error.localizedDescription)", icon: "exclamationmark.triangle.fill")
-        }
-
-        ragUploadInProgress = false
     }
 }

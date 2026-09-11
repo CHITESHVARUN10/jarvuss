@@ -7,21 +7,6 @@ soundfile==0.12.1
 scipy>=1.10.0
 python-multipart==0.0.9
 setuptools<70.0.0
-
-# Hugging Face & Model Downloading (Strict Project-Local)
-huggingface-hub>=0.25.0
-transformers>=4.45.0
 torch>=2.5.0
-torchvision>=0.20.0
-pillow>=10.4.0
-pypdf>=5.0.0
-
-# Local Embeddings & Vector Index (RAG)
-sentence-transformers>=3.1.1
-chromadb>=0.5.12
-
-# Apple Silicon Native MLX (for Bonsai 27B ternary runtime)
-mlx>=0.29.0
-mlx-lm>=0.20.0
 
 
