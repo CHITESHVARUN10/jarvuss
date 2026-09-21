@@ -5,14 +5,10 @@ final class Logger {
     private let logURL: URL
 
     init() {
-        let root = URL(fileURLWithPath: fileManager.currentDirectoryPath)
-        let logsDir = root.appendingPathComponent("logs", isDirectory: true)
-
-        if !fileManager.fileExists(atPath: logsDir.path) {
-            try? fileManager.createDirectory(at: logsDir, withIntermediateDirectories: true)
-        }
-
-        logURL = logsDir.appendingPathComponent("commands.log")
+        let support = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Application Support/Jarvis/logs", isDirectory: true)
+        try? FileManager.default.createDirectory(at: support, withIntermediateDirectories: true)
+        logURL = support.appendingPathComponent("commands.log")
         if !fileManager.fileExists(atPath: logURL.path) {
             fileManager.createFile(atPath: logURL.path, contents: nil)
         }

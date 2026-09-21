@@ -4,6 +4,7 @@ import AppKit
 @main
 struct MainApp: App {
     @StateObject private var appState = AppState()
+    @NSApplicationDelegateAdaptor(DictationAppDelegate.self) private var dictationDelegate
 
     init() {
         NSApplication.shared.setActivationPolicy(.regular)

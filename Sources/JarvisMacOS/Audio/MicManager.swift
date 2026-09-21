@@ -32,8 +32,9 @@ final class MicManager {
     var voiceDetectionThresholdDB: Float = -35.0
 
     func requestPermission() async -> Bool {
-        guard Bundle.main.object(forInfoDictionaryKey: "NSMicrophoneUsageDescription") != nil else {
-            return false
+        if Bundle.main.object(forInfoDictionaryKey: "NSMicrophoneUsageDescription") == nil {
+            NSLog("[Jarvis][Mic] NSMicrophoneUsageDescription missing in Bundle.main (%@) — still requesting access (dev run?). Launch .build/Jarvis.app for the system prompt.",
+                  Bundle.main.bundlePath)
         }
 
         let status = AVCaptureDevice.authorizationStatus(for: .audio)
@@ -91,6 +92,7 @@ final class MicManager {
         }
 
         onAudioBuffer = nil
+        onLevelUpdate = nil
 
         isListening = false
     }
@@ -99,8 +101,9 @@ final class MicManager {
         onLevelUpdate: @escaping (Float) -> Void,
         onAudioBuffer: ((AVAudioPCMBuffer) -> Void)? = nil
     ) async throws {
-        guard Bundle.main.object(forInfoDictionaryKey: "NSMicrophoneUsageDescription") != nil else {
-            throw MicManagerError.missingUsageDescription
+        if Bundle.main.object(forInfoDictionaryKey: "NSMicrophoneUsageDescription") == nil {
+            NSLog("[Jarvis][Mic] NSMicrophoneUsageDescription missing in Bundle.main (%@). Continuing anyway — if the system prompt never appears, launch .build/Jarvis.app instead of `swift run`.",
+                  Bundle.main.bundlePath)
         }
 
         let granted = await requestPermission()

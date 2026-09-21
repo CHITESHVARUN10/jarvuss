@@ -87,7 +87,6 @@ final class AppState: ObservableObject {
     static let layer2PhraseCount = 7
 
     private let micManager: MicManager
-    private let speechManager: SpeechRecognitionManager
     private let logger: Logger
     private let dbManager: DBManager
     private let parser = CommandParser()
@@ -117,12 +116,8 @@ final class AppState: ObservableObject {
     private var lastBatchHandledTranscript: String = ""
     private static let maxBatchSize = 3
     private var pendingWakeWordDetected = false
-    /// Debounce: cancel a pending command work item when a newer final transcript arrives.
-    private var pendingCommandWorkItem: DispatchWorkItem?
     private var pendingWakeWordDetectedAt = Date.distantPast
     private var isStoppingMicrophone = false
-    private var lastVoiceExecutionAt = Date.distantPast
-    private var lastVoiceExecutionSignature = ""
     private var lastEnrollmentAcceptedAt = Date.distantPast
     private var lastEnrollmentAcceptedTranscript = ""
     private var lastEnrollmentAttemptAt = Date.distantPast
@@ -134,7 +129,6 @@ final class AppState: ObservableObject {
     private let smoothingFactor: Float = 0.22
     private let enrollmentAcceptCooldown: TimeInterval = 1.4
     private let enrollmentAttemptThrottle: TimeInterval = 0.30
-    private let voiceExecutionCooldown: TimeInterval = 0.45
     private let voiceVerificationThreshold = 0.70
 
     var voiceEnrollmentSampleTarget: Int {
@@ -156,12 +150,10 @@ final class AppState: ObservableObject {
 
     init(
         micManager: MicManager = MicManager(),
-        speechManager: SpeechRecognitionManager = SpeechRecognitionManager(),
         logger: Logger = Logger(),
         dbManager: DBManager = DBManager()
     ) {
         self.micManager = micManager
-        self.speechManager = speechManager
         self.logger = logger
         self.dbManager = dbManager
         commandQueue.onLog = { [weak self] msg in
@@ -176,7 +168,22 @@ final class AppState: ObservableObject {
         combinedBrightnessController.onLog = { [weak self] msg in
             Task { @MainActor in self?.appendLog(msg) }
         }
-        self.speechManager.onLog = { [weak self] msg in
+        // Wire Whisper command transcripts (VAD-segmented utterances from the
+        // Rust STT core) into the existing transcript pipeline.
+        STTRouter.shared.onCommandTranscript = { [weak self] text in
+            Task { @MainActor in
+                self?.appendLog("[Speech][Whisper] FINAL: '\(text)'")
+                self?.handleTranscript(text, isFinal: true)
+            }
+        }
+        // Live partials (per-chunk stitch, ~6 s cadence) drive the main
+        // window "LIVE TRANSCRIPT" card while the user is still talking.
+        STTRouter.shared.onCommandPartial = { [weak self] text in
+            Task { @MainActor in
+                self?.handleTranscript(text, isFinal: false)
+            }
+        }
+        STTRouter.shared.onLog = { [weak self] msg in
             Task { @MainActor in self?.appendLog(msg) }
         }
         // Wire TTS echo suppression: track every text we speak so the mic
@@ -288,11 +295,7 @@ final class AppState: ObservableObject {
         lastBatchHandledTranscript   = ""
         pendingWakeWordDetected      = false
         pendingWakeWordDetectedAt    = .distantPast
-        lastVoiceExecutionAt         = .distantPast
-        lastVoiceExecutionSignature  = ""
         lastFinalTranscriptAt        = .distantPast
-        pendingCommandWorkItem?.cancel()
-        pendingCommandWorkItem       = nil
         appendLog("[Voice] Pipeline state hard-reset.")
     }
 
@@ -303,8 +306,7 @@ final class AppState: ObservableObject {
         if dbManager.isConfigured {
             appendLog("PostgreSQL logging is enabled.")
         } else {
-            appendLog("PostgreSQL not configured. Export PGHOST/PGPORT/PGDATABASE/PGUSER (and optionally PGPASSWORD) before launch.")
-            appendLog("Example: export PGHOST=127.0.0.1 PGPORT=5432 PGDATABASE=jarvis_db PGUSER=jarvis_user")
+            appendLog("PostgreSQL logging disabled (optional). To enable: export PGHOST=127.0.0.1 PGPORT=5432 PGDATABASE=jarvis_db PGUSER=jarvis_user — missing: \(DBManager.missingEnvKeys.joined(separator: ","))")
         }
 
         restoreEnrollmentState()
@@ -346,24 +348,12 @@ final class AppState: ObservableObject {
         do {
             isStoppingMicrophone = false
 
-            // Hard reset speech + mic session state before reinitializing.
-            speechManager.stopRecognition()
+            // Hard reset mic session state before reinitializing.
+            // Speech recognition is fully offline (Whisper STT core) —
+            // no Speech permission needed, mic permission only.
+            resetVoicePipelineState()
+            WhisperCommandListener.shared.reset()
             micManager.stopListening()
-
-            let speechPermission = await speechManager.requestPermission()
-            guard speechPermission else {
-                let hasSpeechUsageKey = Bundle.main.object(forInfoDictionaryKey: "NSSpeechRecognitionUsageDescription") != nil
-                if hasSpeechUsageKey {
-                    appendLog("Speech recognition permission denied. Enable for Jarvis in System Settings > Privacy & Security > Speech Recognition.")
-                } else {
-                    appendLog("Speech usage key missing in current launch context. Use ./scripts/launch_jarvis_app.zsh (not swift run) so macOS can prompt permissions.")
-                }
-                micActive = false
-                assistantState = .idle
-                return
-            }
-
-            try startSpeechRecognitionSession()
 
             try await micManager.startListeningWithPermission(
                 onLevelUpdate: { [weak self] level in
@@ -371,16 +361,13 @@ final class AppState: ObservableObject {
                         self?.handleAudioLevel(level)
                     }
                 },
-                onAudioBuffer: { [weak self] buffer in
-                    self?.speechManager.appendAudioBuffer(buffer)
-                }
+                onAudioBuffer: nil
             )
 
             micActive = true
             assistantState = .listening
-            appendLog("Microphone + speech recognizer started.")
+            appendLog("Microphone + Whisper recognizer started.")
         } catch {
-            speechManager.stopRecognition()
             micActive = false
             assistantState = .idle
             appendLog("Microphone start failed: \(error.localizedDescription)")
@@ -390,8 +377,8 @@ final class AppState: ObservableObject {
     func stopMicrophone() {
         isStoppingMicrophone = true
         pendingWakeWordDetected = false
+        WhisperCommandListener.shared.reset()
         micManager.stopListening()
-        speechManager.stopRecognition()
         micActive = false
         assistantState = .idle
         appendLog("Microphone stopped.")
@@ -489,13 +476,18 @@ final class AppState: ObservableObject {
     private func handleTranscript(_ transcript: String, isFinal: Bool) {
         lastRecognizedSpeech = transcript
 
+        // Live partials update the on-screen card immediately (the user
+        // asked for visible speech→text while talking). Command execution
+        // still waits for the final below.
+        guard isFinal else { return }
+
         if voiceModeEnabled && containsWakeWord(transcript) {
             pendingWakeWordDetected = true
             pendingWakeWordDetectedAt = Date()
         }
 
         // ── TTS echo suppression ─────────────────────────────────────
-        if isFinal && !lastSpokenResponseText.isEmpty {
+        if !lastSpokenResponseText.isEmpty {
             let compactTranscript = Self.normalizeCompact(transcript)
             let compactSpoken    = Self.normalizeCompact(lastSpokenResponseText)
             let windowElapsed    = Date().timeIntervalSince(lastSpokenResponseAt)
@@ -507,40 +499,36 @@ final class AppState: ObservableObject {
             }
         }
 
-        // ── DUAL-PATH REMOVED ─────────────────────────────────────────
-        // maybeExecuteLiveVoiceCommand previously ran here in parallel with
-        // the batch path below, causing the same transcript to be enqueued
-        // twice (double-execution). The batch path is the SOLE entry point.
+        // ── Single entry point ───────────────────────────────────
+        // Whisper delivers discrete finals per VAD-segmented utterance.
+        // The batch path below is the SOLE command entry (the old Apple
+        // streaming dual-path was removed with SFSpeechRecognizer).
+        // (isFinal is guaranteed here by the early return above.)
 
-        if isFinal {
-            dbManager.saveEvent(
-                eventType: "speech_final",
-                transcript: transcript,
-                metadata: [
-                    "enrollment_active": String(enrollmentActive),
-                    "enrollment_completed": String(enrollmentCompleted)
-                ]
-            )
-        }
+        dbManager.saveEvent(
+            eventType: "speech_final",
+            transcript: transcript,
+            metadata: [
+                "enrollment_active": String(enrollmentActive),
+                "enrollment_completed": String(enrollmentCompleted)
+            ]
+        )
 
         if enrollmentActive {
-            handleEnrollmentTranscript(transcript, isFinal: isFinal)
+            handleEnrollmentTranscript(transcript, isFinal: true)
             return
         }
 
         guard enrollmentCompleted else {
-            if isFinal { appendLog("Enrollment required before voice command execution.") }
+            appendLog("Enrollment required before voice command execution.")
             return
         }
-
-        guard isFinal else { return }
 
         // ── Explicit exit phrases check (Requirement 6) ───────────────
         let lowerTranscript = transcript.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
         if Self.sessionExitPhrases.contains(where: { lowerTranscript.contains($0) }) {
             appendLog("[VoiceSession] Explicit exit phrase detected: '\(transcript)'")
             transitionToSessionState(.idle, reason: "exit phrase detected")
-            restartSpeechSessionAfterFinal()
             return
         }
 
@@ -590,8 +578,6 @@ final class AppState: ObservableObject {
 
         guard !rawSegments.isEmpty else {
             appendLog("[Voice] no segments — wake word not found, dropping transcript.")
-            // Restart speech session so next utterance starts clean.
-            restartSpeechSessionAfterFinal()
             return
         }
 
@@ -603,7 +589,6 @@ final class AppState: ObservableObject {
         }
 
         guard !cleanedCommands.isEmpty else {
-            restartSpeechSessionAfterFinal()
             return
         }
 
@@ -623,12 +608,6 @@ final class AppState: ObservableObject {
                 await self?.verifyThenRunCommand(validated)
             }
         }
-
-        // ── Restart speech session for fresh next utterance ───────────
-        // This clears the SFSpeechRecognizer's accumulated transcript buffer
-        // so the NEXT utterance starts from a blank slate.
-        // Root-cause fix for [Batch] sanitized: 12 → 3.
-        restartSpeechSessionAfterFinal()
     }
 
     // MARK: - Voice segment cleaner
@@ -979,32 +958,6 @@ final class AppState: ObservableObject {
         appendLog("Voice mode \(voiceModeEnabled ? "enabled" : "disabled").")
     }
 
-    private func extractCommandAfterWakeWord(_ transcript: String) -> String? {
-        let cleaned = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !cleaned.isEmpty else { return nil }
-
-        let lower = cleaned.lowercased()
-        guard let wakeRange = lower.range(of: "jarvis", options: .backwards) else {
-            return nil
-        }
-
-        let wakeStart = wakeRange.lowerBound
-        let wakeEnd = lower.index(wakeStart, offsetBy: "jarvis".count)
-        let originalWakeEnd = String.Index(
-            utf16Offset: wakeEnd.utf16Offset(in: lower),
-            in: cleaned
-        )
-
-        var command = sanitizeSpokenCommand(String(cleaned[originalWakeEnd...]))
-        command = removeTrailingWakeWordFragment(from: command)
-        guard !command.isEmpty else { return nil }
-
-        let tokenCount = Self.normalizedTokens(from: command).count
-        guard tokenCount >= 2 else { return nil }
-
-        return command
-    }
-
     private func sanitizeSpokenCommand(_ text: String) -> String {
         text
             .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -1016,215 +969,17 @@ final class AppState: ObservableObject {
         text.lowercased().range(of: "\\bjarvis\\b", options: .regularExpression) != nil
     }
 
-    private func startSpeechRecognitionSession() throws {
-        try speechManager.startRecognition(
-            onResult: { [weak self] transcript, isFinal in
-                Task { @MainActor in
-                    if isFinal {
-                        self?.appendLog("[Speech][Live] FINAL: '\(transcript)'")
-                    }
-                    self?.handleTranscript(transcript, isFinal: isFinal)
-                }
-            },
-            onError: { [weak self] error in
-                Task { @MainActor in
-                    self?.handleSpeechRecognizerError(error)
-                }
-            }
-        )
-    }
-
-    private func handleSpeechRecognizerError(_ message: String) {
-        let lowered = message.lowercased()
-        let canceled = lowered.contains("canceled") || lowered.contains("cancelled")
-
-        if canceled {
-            if isStoppingMicrophone {
-                return
-            }
-            appendLog("Speech recognizer canceled; restarting session.")
-            restartSpeechRecognitionIfNeeded()
-            return
-        }
-
-        appendLog("Speech recognizer error: \(message)")
-        restartSpeechRecognitionIfNeeded()
-    }
-
-    private func restartSpeechRecognitionIfNeeded() {
-        guard micActive, !isStoppingMicrophone else { return }
-        resetVoicePipelineState()
-        do {
-            try startSpeechRecognitionSession()
-            appendLog("Speech recognizer restarted.")
-        } catch {
-            appendLog("Speech recognizer restart failed: \(error.localizedDescription)")
-        }
-    }
-
-    /// Restart the speech recognition session after a final transcript is
-    /// fully processed. This clears SFSpeechRecognizer's cumulative buffer
-    /// so the NEXT utterance is a clean, isolated transcript.
-    /// Does NOT reset command pipeline state (dedup windows, etc.).
-    private func restartSpeechSessionAfterFinal() {
-        guard micActive, !isStoppingMicrophone else { return }
-        do {
-            try startSpeechRecognitionSession()
-            appendLog("[Voice] NEW SESSION START — fresh audio buffer for next utterance.")
-        } catch {
-            appendLog("[Voice] Session restart failed: \(error.localizedDescription)")
-        }
-    }
-
-    private func maybeExecuteLiveVoiceCommand(transcript: String, isFinal: Bool) {
-        // ── CRITICAL: Only process FINAL transcripts ─────────────────
-        guard isFinal else { return }
-        guard voiceModeEnabled else { return }
-        guard enrollmentCompleted else { return }
-        guard !enrollmentActive else { return }
-
-        // ── Batch-path guard ─────────────────────────────────────────
-        // handleTranscript's batch path already processed this transcript
-        // (splits on every "jarvis", deduplicates, sanitizes, enqueues).
-        // Prevent double-execution by bailing here when it did the work.
-        let compactCurrent = Self.normalizeCompact(transcript)
-        if compactCurrent == lastBatchHandledTranscript {
-            return
-        }
-
-
-        let now = Date()
-        guard now.timeIntervalSince(lastVoiceExecutionAt) > voiceExecutionCooldown else { return }
-
-        let command: String?
-        if let fromWake = extractCommandAfterWakeWord(transcript) {
-            command = fromWake
-        } else if pendingWakeWordDetected && now.timeIntervalSince(pendingWakeWordDetectedAt) <= 4.0 {
-            command = sanitizeSpokenCommand(transcript)
-        } else {
-            command = nil
-        }
-
-        guard let command, !command.isEmpty else { return }
-        guard let prepared = prepareVoiceCommandCandidate(command) else { return }
-        let normalized = prepared.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-        guard isActionableCommand(normalized) else { return }
-
-        let tokenCount = Self.normalizedTokens(from: normalized).count
-        guard tokenCount >= 2 else { return }
-
-        let signature = Self.normalizeCompact(normalized)
-        guard signature != lastVoiceExecutionSignature else { return }
-
-        lastVoiceExecutionAt = now
-        lastVoiceExecutionSignature = signature
-        pendingWakeWordDetected = false
-
-        // Validate before accepting (strips trailing 'and', 'jarvis', rejects incomplete)
-        guard let validated = CommandValidator.validate(prepared) else {
-            appendLog("[Validator] Invalid command skipped: '\(prepared)'")
-            return
-        }
-
-        appendLog("[Voice] Accepted final: '\(validated)'")
-
-        // ── DEBOUNCED QUEUE PATH ──────────────────────────────────────
-        // Cancel any previously pending command work item.
-        // This ensures that if two final transcripts arrive in quick succession,
-        // only the LAST one enters the queue (FIFO integrity preserved).
-        pendingCommandWorkItem?.cancel()
-        appendLog("[Voice] Debounce: scheduling command in 700ms")
-
-        let workItem = DispatchWorkItem { [weak self] in
-            guard let self else { return }
-            Task { @MainActor in
-                let priority = CommandPriority.classify(validated)
-                self.commandQueue.enqueue(text: validated, priority: priority) { [weak self] in
-                    await self?.verifyThenRunCommand(validated)
-                }
-            }
-        }
-        pendingCommandWorkItem = workItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.70, execute: workItem)
-    }
-
-    private func isActionableCommand(_ command: String) -> Bool {
-        let prefixes = [
-            "open ", "close ", "create ", "launch ", "start ", "run ",
-            // AI queries
-            "explain ", "what is ", "who is ", "why ", "how ", "tell me ", "describe ",
-            "open folder ",
-            // Media
-            "play ", "play", "pause", "next ", "next", "previous ", "prev", "resume", "skip",
-            // Volume — all variants
-            "increase volume", "increase sound", "increase audio",
-            "decrease volume", "decrease sound", "decrease audio",
-            "volume up", "volume down", "sound up", "sound down",
-            "turn up", "turn down", "louder", "quieter",
-            "lower volume", "lower sound", "reduce volume",
-            "set volume", "mute", "unmute", "sound off", "sound on",
-            // Search
-            "search ", "google ",
-        ]
-        let exactMatches: Set<String> = ["play", "pause", "next", "resume", "mute", "unmute", "skip", "prev"]
-        if exactMatches.contains(command) { return true }
-        return prefixes.contains { command.hasPrefix($0) }
-    }
-
-    private func prepareVoiceCommandCandidate(_ command: String) -> String? {
-        var cleaned = command
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
-
-        guard !cleaned.isEmpty else { return nil }
-
-        cleaned = truncateAtFillerBoundary(cleaned)
-        cleaned = normalizeMisheardTargets(in: cleaned)
-
-        let tokens = Self.normalizedTokens(from: cleaned)
-        guard tokens.count >= 2 else { return nil }
-
-        let verb = tokens[0]
-        let fillerTokens: Set<String> = ["i", "am", "trying", "to", "say", "that", "like", "so", "please", "you", "know"]
-
-        if tokens.contains(where: { fillerTokens.contains($0) }) {
-            return nil
-        }
-
-        if verb == "open" || verb == "close" || verb == "launch" || verb == "start" || verb == "run" {
-            let target = Array(tokens.dropFirst())
-            guard !target.isEmpty else { return nil }
-            guard target.count <= 3 else { return nil }
-        }
-
-        return cleaned
-    }
-
-    private func truncateAtFillerBoundary(_ command: String) -> String {
-        let lower = command.lowercased()
-        let boundaries = [
-            " i am ", " i'm ", " trying to ", " so that ", " so it ", " because ", " and then ",
-            " anything ", " like that ", " what i'm ", " what i am "
-        ]
-
-        var cutIndex: String.Index? = nil
-        for marker in boundaries {
-            if let range = lower.range(of: marker) {
-                if let current = cutIndex {
-                    if range.lowerBound < current {
-                        cutIndex = range.lowerBound
-                    }
-                } else {
-                    cutIndex = range.lowerBound
-                }
-            }
-        }
-
-        if let cutIndex {
-            return String(command[..<cutIndex]).trimmingCharacters(in: .whitespacesAndNewlines)
-        }
-        return command
-    }
+    // MARK: - Speech session helpers (Whisper era)
+    //
+    // Utterances are VAD-segmented and self-isolated: each silence boundary
+    // finishes one STT-core recording whose transcript arrives via STTRouter.
+    // No session restart is ever needed (that was an SFSpeechRecognizer
+    // cumulative-buffer workaround — retired with the Apple recognizer).
+    //
+    // NOTE: maybeExecuteLiveVoiceCommand (the old dual-path entry) was
+    // deleted here — the batch path in handleTranscript is the SOLE entry.
+    // isActionableCommand / prepareVoiceCommandCandidate /
+    // truncateAtFillerBoundary went with it (dual-path only).
 
     private func normalizeMisheardTargets(in command: String) -> String {
         let lower = command.lowercased()
@@ -1773,6 +1528,7 @@ final class AppState: ObservableObject {
     /// Single verification attempt — extracts audio sample and calls backend.
     private func attemptVerification() async throws -> VoiceVerificationResult {
         let sampleURL = try micManager.exportRecentAudioSample(durationSeconds: 2.0)
+        defer { try? FileManager.default.removeItem(at: sampleURL) }
         return try await voiceAuthClient.verifyDetailed(audioFileURL: sampleURL)
     }
 
@@ -1787,6 +1543,7 @@ final class AppState: ObservableObject {
     ) async {
         do {
             let sampleURL = try micManager.exportRecentAudioSample(durationSeconds: 2.2)
+            defer { try? FileManager.default.removeItem(at: sampleURL) }
             let enrolledCount = try await voiceAuthClient.enroll(audioFileURL: sampleURL)
             backendEnrollmentSampleCount = enrolledCount
             persistBackendSampleCount(enrolledCount)
@@ -1977,6 +1734,9 @@ final class AppState: ObservableObject {
                 recordingStartedAt = now
                 assistantState = .recording
                 appendLog("Recording started (voice detected).")
+                // Start a Whisper utterance on the STT core (no-op when the
+                // dictation pill owns the core).
+                WhisperCommandListener.shared.beginUtterance()
             }
             return
         }
@@ -1989,6 +1749,9 @@ final class AppState: ObservableObject {
                 previousVoiceDetected = false
                 assistantState = .processing
                 appendLog("Recording ended (silence detected).")
+                // Finish the Whisper utterance — its transcript arrives
+                // asynchronously via STTRouter → handleTranscript(isFinal:).
+                WhisperCommandListener.shared.endUtterance()
 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
                     guard let self else { return }

@@ -9,12 +9,12 @@ final class DBManager {
         let password: String?
 
         static func fromEnvironment() -> Config? {
-            let env = ProcessInfo.processInfo.environment
+            let env = mergedEnv()
             guard
-                let host = env["PGHOST"],
-                let port = env["PGPORT"],
-                let database = env["PGDATABASE"],
-                let user = env["PGUSER"]
+                let host = env["PGHOST"], !host.isEmpty,
+                let port = env["PGPORT"], !port.isEmpty,
+                let database = env["PGDATABASE"], !database.isEmpty,
+                let user = env["PGUSER"], !user.isEmpty
             else {
                 return nil
             }
@@ -27,7 +27,58 @@ final class DBManager {
                 password: env["PGPASSWORD"]
             )
         }
+
+        static var missingEnvKeys: [String] {
+            let env = mergedEnv()
+            return ["PGHOST", "PGPORT", "PGDATABASE", "PGUSER"].filter { env[$0]?.isEmpty ?? true }
+        }
+
+        private static func mergedEnv() -> [String: String] {
+            var merged = ProcessInfo.processInfo.environment
+            for (key, value) in dotEnvValues() where merged[key]?.isEmpty ?? true {
+                merged[key] = value
+            }
+            return merged
+        }
+
+        private static func dotEnvValues() -> [String: String] {
+            let fm = FileManager.default
+            var candidates: [URL] = []
+            if let resourcePath = Bundle.main.resourcePath {
+                candidates.append(URL(fileURLWithPath: resourcePath).appendingPathComponent("backend/.env"))
+                candidates.append(URL(fileURLWithPath: resourcePath).appendingPathComponent(".env"))
+            }
+            if let executableURL = Bundle.main.executableURL {
+                var dir = executableURL.deletingLastPathComponent()
+                for _ in 0..<4 {
+                    candidates.append(dir.appendingPathComponent(".env"))
+                    dir = dir.deletingLastPathComponent()
+                }
+            }
+            var cwdURL = URL(fileURLWithPath: fm.currentDirectoryPath)
+            for _ in 0..<10 {
+                candidates.append(cwdURL.appendingPathComponent(".env"))
+                let parent = cwdURL.deletingLastPathComponent()
+                if parent.path == cwdURL.path { break }
+                cwdURL = parent
+            }
+            for fileURL in candidates {
+                guard let text = try? String(contentsOf: fileURL, encoding: .utf8) else { continue }
+                var values: [String: String] = [:]
+                for line in text.components(separatedBy: .newlines) {
+                    let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if trimmed.isEmpty || trimmed.hasPrefix("#") { continue }
+                    let parts = trimmed.split(separator: "=", maxSplits: 1).map(String.init)
+                    guard parts.count == 2 else { continue }
+                    values[parts[0].trimmingCharacters(in: .whitespaces)] = parts[1].trimmingCharacters(in: .whitespaces)
+                }
+                if !values.isEmpty { return values }
+            }
+            return [:]
+        }
     }
+
+    static var missingEnvKeys: [String] { Config.missingEnvKeys }
 
     private let queue = DispatchQueue(label: "jarvis.postgres.queue")
     private let config = Config.fromEnvironment()

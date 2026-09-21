@@ -85,10 +85,34 @@ final class BackendServiceManager {
     // MARK: - Private helpers
 
     private func bundledStartScriptPath() -> String? {
+        let fm = FileManager.default
         if let executableDir = Bundle.main.executableURL?.deletingLastPathComponent() {
-            let scriptURL = executableDir.appendingPathComponent("start_backend.sh")
-            if FileManager.default.fileExists(atPath: scriptURL.path) {
-                return scriptURL.path
+            let macOSScript = executableDir.appendingPathComponent("start_backend.sh")
+            if fm.fileExists(atPath: macOSScript.path) {
+                return macOSScript.path
+            }
+            // Same bundle, Resources layout: Contents/Resources/backend/../start_backend.sh
+            let resourcesScript = executableDir
+                .deletingLastPathComponent()
+                .appendingPathComponent("Resources/backend/start_backend.sh")
+            if fm.fileExists(atPath: resourcesScript.path) {
+                return resourcesScript.path
+            }
+        }
+        if let resourceDir = Bundle.main.resourcePath {
+            let resScript = (resourceDir as NSString).appendingPathComponent("backend/start_backend.sh")
+            if fm.fileExists(atPath: resScript) {
+                return resScript
+            }
+        }
+        // Dev fallback: running via `swift run` — use the repo script.
+        for candidate in [
+            "scripts/start_backend.sh",
+            "../scripts/start_backend.sh",
+        ] {
+            let cwd = (fm.currentDirectoryPath as NSString).appendingPathComponent(candidate)
+            if fm.fileExists(atPath: cwd) {
+                return cwd
             }
         }
         return nil

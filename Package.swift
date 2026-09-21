@@ -23,13 +23,30 @@ let package = Package(
         ),
         .executableTarget(
             name: "JarvisMacOS",
-            dependencies: ["CDDCShim"],
-            path: "Sources/JarvisMacOS"
+            dependencies: ["CDDCShim", "STTCore"],
+            path: "Sources/JarvisMacOS",
+            linkerSettings: [
+                // Native frameworks required by the STT staticlib
+                // (whisper.cpp/Metal, cpal/CoreAudio, arboard) + Carbon hotkey.
+                .linkedFramework("Metal"),
+                .linkedFramework("Accelerate"),
+                .linkedFramework("AudioToolbox"),
+                .linkedFramework("CoreAudio"),
+                .linkedFramework("Carbon"),
+                // whisper.cpp is C++ — the static archive needs libc++.
+                .linkedLibrary("c++"),
+            ]
         ),
         .testTarget(
             name: "JarvisMacOSTests",
             dependencies: ["JarvisMacOS"],
             path: "Tests/JarvisMacOSTests"
-        )
+        ),
+        // Prebuilt Rust STT core (whisper.cpp + Metal). Rebuild via
+        // ./scripts/build_stt.sh [--release] — never checked in.
+        .binaryTarget(
+            name: "STTCore",
+            path: "STTCore.xcframework"
+        ),
     ]
 )

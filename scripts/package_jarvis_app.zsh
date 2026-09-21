@@ -13,36 +13,41 @@ BACKEND_DEST="$APP_RESOURCES/backend"
 USE_PYINSTALLER="${JARVIS_USE_PYINSTALLER:-0}"
 
 cd "$ROOT_DIR"
-swift build
 
-# ── Only recreate the bundle skeleton if the binary has changed ──────────
-NEW_BIN="$BUILD_DIR/jarvis"
-EXISTING_BIN="$APP_MACOS/Jarvis"
-
-BINARY_CHANGED=true
-if [[ -f "$EXISTING_BIN" ]] && cmp -s "$NEW_BIN" "$EXISTING_BIN"; then
-  BINARY_CHANGED=false
+# Load repo .env (PG*, Spotify) so the launched app inherits them.
+# (Finder-launched apps don't read shell dotfiles; `open` inherits this env.)
+if [[ -f "$ROOT_DIR/.env" ]]; then
+  set -a
+  source "$ROOT_DIR/.env"
+  set +a
 fi
 
-if [[ "$BINARY_CHANGED" == true ]]; then
-  echo "[Package] Binary changed — rebuilding app bundle skeleton"
-  mkdir -p "$APP_MACOS" "$BACKEND_DEST"
+# ── Rust STT core → STTCore.xcframework + Swift bridge (required by swift build) ──
+./scripts/build_stt.sh --release
 
-  cp "$NEW_BIN" "$APP_MACOS/Jarvis"
-  chmod +x "$APP_MACOS/Jarvis"
+swift build
 
-  cp "$ROOT_DIR/scripts/start_backend.sh" "$APP_MACOS/start_backend.sh"
-  chmod +x "$APP_MACOS/start_backend.sh"
+NEW_BIN="$BUILD_DIR/jarvis"
 
-  cp "$BACKEND_SRC"/*.py "$BACKEND_DEST/"
-  cp "$BACKEND_SRC/requirements.txt" "$BACKEND_DEST/requirements.txt"
-else
-  echo "[Package] Binary unchanged — skipping binary copy"
-  # Still sync the Python source and script in case they changed
-  cp "$ROOT_DIR/scripts/start_backend.sh" "$APP_MACOS/start_backend.sh"
-  chmod +x "$APP_MACOS/start_backend.sh"
-  cp "$BACKEND_SRC"/*.py "$BACKEND_DEST/"
-  cp "$BACKEND_SRC/requirements.txt" "$BACKEND_DEST/requirements.txt"
+# ── Always refresh the bundle binary — the cmp -s shortcut skips real
+# rebuilds when only non-Swift inputs changed (bridge regen, Info.plist,
+# embedded resources), leaving users on a stale binary that still logs
+# old errors like "Missing NSMicrophoneUsageDescription".
+mkdir -p "$APP_MACOS" "$BACKEND_DEST"
+cp "$NEW_BIN" "$APP_MACOS/Jarvis"
+chmod +x "$APP_MACOS/Jarvis"
+
+cp "$ROOT_DIR/scripts/start_backend.sh" "$APP_MACOS/start_backend.sh"
+chmod +x "$APP_MACOS/start_backend.sh"
+
+cp "$BACKEND_SRC"/*.py "$BACKEND_DEST/"
+cp "$BACKEND_SRC/requirements.txt" "$BACKEND_DEST/requirements.txt"
+# The Swift app + Python backend both fall back to a bundled .env when the
+# launch environment lacks PG*/Spotify keys (Finder/`open` doesn't inherit
+# shell exports). The backend resolves PROJECT_ROOT/.env in dev and the
+# bundled copy in the app; DBManager reads the same file.
+if [[ -f "$ROOT_DIR/.env" ]]; then
+  cp "$ROOT_DIR/.env" "$BACKEND_DEST/.env"
 fi
 
 if [[ -f "$BACKEND_SRC/embeddings.npy" ]]; then
@@ -104,6 +109,9 @@ if [[ "$USE_PYINSTALLER" == "1" ]]; then
   popd >/dev/null
 fi
 
+# Keep in sync with Sources/JarvisMacOS/Resources/Info.plist (source of truth).
+# The heredoc below regenerates it into the bundle; edit the source file, then
+# mirror the change here.
 cat > "$APP_CONTENTS/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -129,8 +137,6 @@ cat > "$APP_CONTENTS/Info.plist" <<'PLIST'
     <string>13.0</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>Jarvis needs microphone access to detect speech and execute voice commands.</string>
-    <key>NSSpeechRecognitionUsageDescription</key>
-    <string>Jarvis needs speech recognition access to transcribe your voice commands.</string>
     <key>NSAppleEventsUsageDescription</key>
     <string>Jarvis controls supported apps (for media and automation) using Apple Events.</string>
 </dict>

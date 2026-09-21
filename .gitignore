@@ -9,6 +9,10 @@ backend/*.pyc
 *.swp
 *.swo
 rust-core/target/
+stt-core/target/
+stt-core/generated/
+STTCore.xcframework/
+Sources/JarvisMacOS/Bridge/
 
 # Removed RAG/OCR/Bonsai local dirs (kept ignored one release cycle
 # so stale checkouts can't reintroduce them)

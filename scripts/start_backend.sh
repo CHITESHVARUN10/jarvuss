@@ -20,6 +20,14 @@ PORT="8000"
 
 mkdir -p "$PID_DIR" "$LOG_DIR"
 
+# Load bundled/repo .env so uvicorn inherits PG*/Spotify keys even when the
+# app was launched from Finder (no shell env). Order: bundle copy, then repo.
+if [[ -f "$BACKEND_DIR/.env" ]]; then
+  set -a
+  source "$BACKEND_DIR/.env"
+  set +a
+fi
+
 is_pid_running() {
   local pid="$1"
   if [[ -z "$pid" ]]; then

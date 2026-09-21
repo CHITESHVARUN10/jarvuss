@@ -18,7 +18,16 @@ from resemblyzer import VoiceEncoder, preprocess_wav
 BASE_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = BASE_DIR.parent
 EMBEDDINGS_FILE = BASE_DIR / "embeddings.npy"
-ENV_FILE = PROJECT_ROOT / ".env"
+
+
+def _repo_env_file() -> Path:
+    override = os.environ.get("JARVIS_ENV_FILE")
+    if override:
+        return Path(override).expanduser()
+    return PROJECT_ROOT / ".env"
+
+
+ENV_FILE = _repo_env_file()
 
 import sys
 if str(BASE_DIR) not in sys.path:
@@ -66,13 +75,22 @@ def _save_embeddings(embeddings: np.ndarray) -> None:
 
 def _load_env_values() -> dict[str, str]:
     values: dict[str, str] = {}
-    if ENV_FILE.exists():
-        for line in ENV_FILE.read_text(encoding="utf-8").splitlines():
-            stripped = line.strip()
-            if not stripped or stripped.startswith("#") or "=" not in stripped:
-                continue
-            key, value = stripped.split("=", 1)
-            values[key.strip()] = value.strip()
+    # Bundled copy first (app bundle: Contents/Resources/backend/.env),
+    # then repo root — either may exist depending on launch mode.
+    candidates = [BASE_DIR / ".env", _repo_env_file()]
+    seen: set[str] = set()
+    for env_file in candidates:
+        key = str(env_file)
+        if key in seen:
+            continue
+        seen.add(key)
+        if env_file.exists():
+            for line in env_file.read_text(encoding="utf-8").splitlines():
+                stripped = line.strip()
+                if not stripped or stripped.startswith("#") or "=" not in stripped:
+                    continue
+                env_key, env_value = stripped.split("=", 1)
+                values.setdefault(env_key.strip(), env_value.strip())
 
     for key, value in os.environ.items():
         values[key] = value
@@ -80,9 +98,13 @@ def _load_env_values() -> dict[str, str]:
 
 
 def _persist_env_updates(updates: dict[str, str]) -> None:
+    # Prefer the bundled copy when running inside the app so token refresh
+    # survives relaunch; fall back to the repo .env in dev.
+    bundled = BASE_DIR / ".env"
+    target = bundled if bundled.exists() or not _repo_env_file().exists() else _repo_env_file()
     lines = []
-    if ENV_FILE.exists():
-        lines = ENV_FILE.read_text(encoding="utf-8").splitlines()
+    if target.exists():
+        lines = target.read_text(encoding="utf-8").splitlines()
 
     line_index_by_key: dict[str, int] = {}
     for index, line in enumerate(lines):
@@ -99,7 +121,7 @@ def _persist_env_updates(updates: dict[str, str]) -> None:
         else:
             lines.append(new_line)
 
-    ENV_FILE.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    target.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def _spotify_config() -> dict[str, str]:

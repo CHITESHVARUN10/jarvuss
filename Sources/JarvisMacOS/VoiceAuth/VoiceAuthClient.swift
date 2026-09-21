@@ -115,6 +115,7 @@ final class VoiceAuthClient {
     func reset() async throws {
         var request = URLRequest(url: baseURL.appendingPathComponent("reset"))
         request.httpMethod = "POST"
+        request.timeoutInterval = 30
 
         do {
             let (_, response) = try await URLSession.shared.data(for: request)
@@ -129,6 +130,7 @@ final class VoiceAuthClient {
     func enrolledCount() async throws -> Int {
         var request = URLRequest(url: baseURL.appendingPathComponent("stats"))
         request.httpMethod = "GET"
+        request.timeoutInterval = 10
 
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
@@ -145,6 +147,7 @@ final class VoiceAuthClient {
     private func sendMultipartAudio(endpoint: String, audioFileURL: URL) async throws -> Data {
         var request = URLRequest(url: baseURL.appendingPathComponent(endpoint))
         request.httpMethod = "POST"
+        request.timeoutInterval = 60
 
         let boundary = "Boundary-\(UUID().uuidString)"
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
