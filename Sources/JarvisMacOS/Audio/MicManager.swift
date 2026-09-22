@@ -117,7 +117,12 @@ final class MicManager {
         decibelLevel > voiceDetectionThresholdDB
     }
 
-    func exportRecentAudioSample(durationSeconds: Double = 2.0) throws -> URL {
+    /// Exports the trailing `durationSeconds` of captured audio, resampled to
+    /// `targetSampleRate` (nil = native hardware rate). Resampling to a fixed
+    /// rate (16 kHz for voice-auth) keeps enroll-time and verify-time
+    /// embeddings comparable — the backend's preprocess_wav would resample
+    /// anyway, but at variable native rates that adds avoidable variance.
+    func exportRecentAudioSample(durationSeconds: Double = 2.0, targetSampleRate: Double? = nil) throws -> URL {
         let exported: (samples: [Float], sampleRate: Double) = recentAudioQueue.sync {
             let sampleRate = max(recentSampleRate, 8_000)
             let desiredCount = Int(sampleRate * durationSeconds)
@@ -131,11 +136,41 @@ final class MicManager {
             throw MicManagerError.insufficientAudio
         }
 
+        let outRate = targetSampleRate ?? exported.sampleRate
+        let outSamples: [Float]
+        if outRate != exported.sampleRate {
+            outSamples = Self.resampleLinear(exported.samples, from: exported.sampleRate, to: outRate)
+        } else {
+            outSamples = exported.samples
+        }
+
         let tempURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("jarvis-voice-sample-\(UUID().uuidString).wav")
 
-        try writeWav(samples: exported.samples, sampleRate: exported.sampleRate, to: tempURL)
+        try writeWav(samples: outSamples, sampleRate: outRate, to: tempURL)
         return tempURL
+    }
+
+    /// Minimal linear-interpolation resampler (mono). No dependency, no
+    /// allocation beyond the output — good enough for 48 kHz → 16 kHz
+    /// downsampling of short voice clips before WAV export.
+    private static func resampleLinear(_ samples: [Float], from sourceRate: Double, to targetRate: Double) -> [Float] {
+        guard !samples.isEmpty, sourceRate > 0, targetRate > 0, sourceRate != targetRate else {
+            return samples
+        }
+        let ratio = sourceRate / targetRate
+        let outCount = max(1, Int(Double(samples.count) / ratio))
+        var out = [Float]()
+        out.reserveCapacity(outCount)
+        for i in 0..<outCount {
+            let pos = Double(i) * ratio
+            let idx = Int(pos)
+            let frac = Float(pos - Double(idx))
+            let a = samples[min(idx, samples.count - 1)]
+            let b = samples[min(idx + 1, samples.count - 1)]
+            out.append(a + (b - a) * frac)
+        }
+        return out
     }
 
     deinit {

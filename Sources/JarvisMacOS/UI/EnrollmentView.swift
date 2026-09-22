@@ -173,6 +173,16 @@ struct EnrollmentView: View {
                     }
                     .disabled(!appState.enrollmentActive)
                     .buttonStyle(JarvisButtonStyle(color: Color(red: 0.75, green: 0.25, blue: 0.45), compact: true))
+
+                    Button {
+                        appState.resetVoiceProfile()
+                    } label: {
+                        Label("Reset", systemImage: "trash.fill")
+                            .font(.system(size: 11, weight: .semibold))
+                    }
+                    .disabled(appState.enrollmentActive)
+                    .buttonStyle(JarvisButtonStyle(color: Color(red: 0.55, green: 0.55, blue: 0.60), compact: true))
+                    .help("Clear stored voice embeddings (POST /reset) so the next enrollment starts from 0")
                 }
             }
         }

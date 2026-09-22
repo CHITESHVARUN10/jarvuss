@@ -1,12 +1,12 @@
 {
-  "generatedAt" : "2026-09-11T13:36:26Z",
+  "generatedAt" : "2026-09-22T03:21:29Z",
   "retryPolicy" : "1 retry on failure (max 2 attempts per scenario)",
   "scenarios" : [
     {
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 43,
+          "durationMs" : 47,
           "planDescriptions" : [
             "Open 'textedit'"
           ],
@@ -27,7 +27,7 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 717,
+          "durationMs" : 965,
           "planDescriptions" : [
             "Close 'textedit'"
           ],
@@ -53,7 +53,7 @@
             "Info: current time"
           ],
           "stepMessages" : [
-            "✓ Current time: 7:06:21 PM"
+            "✓ Current time: 8:51:24 AM"
           ],
           "success" : true
         }
@@ -69,7 +69,7 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 31,
+          "durationMs" : 28,
           "planDescriptions" : [
             "Info: battery status"
           ],
@@ -90,7 +90,7 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 12,
+          "durationMs" : 13,
           "failureReason" : "One or more action steps failed",
           "planDescriptions" : [
             "Media: pause"
@@ -102,7 +102,7 @@
         },
         {
           "attempt" : 2,
-          "durationMs" : 3,
+          "durationMs" : 5,
           "failureReason" : "One or more action steps failed",
           "planDescriptions" : [
             "Media: pause"
@@ -124,7 +124,7 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 1,
+          "durationMs" : 3,
           "failureReason" : "One or more action steps failed",
           "planDescriptions" : [
             "Media: next track"
@@ -136,7 +136,7 @@
         },
         {
           "attempt" : 2,
-          "durationMs" : 3,
+          "durationMs" : 2,
           "failureReason" : "One or more action steps failed",
           "planDescriptions" : [
             "Media: next track"
@@ -158,7 +158,7 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 1736,
+          "durationMs" : 1970,
           "planDescriptions" : [
             "Search YouTube for 'swift package manager'",
             "Open URL: https:\/\/www.youtube.com\/results?search_query=swift%20package%20manager"
@@ -181,7 +181,7 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 1799,
+          "durationMs" : 1776,
           "planDescriptions" : [
             "Search Google for 'swift concurrency'",
             "Open URL: https:\/\/www.google.com\/search?q=swift%20concurrency"
@@ -204,18 +204,18 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 0,
+          "durationMs" : 2,
           "planDescriptions" : [
-            "Create folder 'e2e-folder-3f85b849'"
+            "Create folder 'e2e-folder-8268356f'"
           ],
           "stepMessages" : [
-            "✓ Created folder: \/Users\/chiteshvarun\/D-drive\/jarvis_code\/e2e-folder-3f85b849"
+            "✓ Created folder: \/Users\/chiteshvarun\/D-drive\/jarvis_code\/e2e-folder-8268356f"
           ],
           "success" : true
         }
       ],
       "attemptsUsed" : 1,
-      "command" : "create folder e2e-folder-3F85B849",
+      "command" : "create folder e2e-folder-8268356F",
       "expectedIntent" : "filesystem",
       "id" : "fs-create-folder",
       "success" : true,
@@ -225,18 +225,18 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 0,
+          "durationMs" : 1,
           "planDescriptions" : [
-            "Create file 'e2e-file-3f85b849.txt'"
+            "Create file 'e2e-file-8268356f.txt'"
           ],
           "stepMessages" : [
-            "✓ Created file: \/Users\/chiteshvarun\/D-drive\/jarvis_code\/e2e-file-3f85b849.txt"
+            "✓ Created file: \/Users\/chiteshvarun\/D-drive\/jarvis_code\/e2e-file-8268356f.txt"
           ],
           "success" : true
         }
       ],
       "attemptsUsed" : 1,
-      "command" : "create file e2e-file-3F85B849.txt",
+      "command" : "create file e2e-file-8268356F.txt",
       "expectedIntent" : "filesystem",
       "id" : "fs-create-file",
       "success" : true,
@@ -246,27 +246,27 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 130,
+          "durationMs" : 246,
           "planDescriptions" : [
             "Automation path via AppState.executeTypedCommand"
           ],
           "stepMessages" : [
-            "[2026-09-11T13:36:26Z] [Typed] Received: 'focus mode 3F85B849'",
-            "[2026-09-11T13:36:26Z] [DDC] Discovered 1 DCPAVServiceProxy entries",
-            "[2026-09-11T13:36:26Z] [DDC] Matched display 3 → IOAVService (location: '')",
-            "[2026-09-11T13:36:26Z] [DDC] Read VCP 0x10: current=70 max=100 on display 3",
-            "[2026-09-11T13:36:26Z] [Queue] Enqueued (normal): 'focus mode 3F85B849' [queue size: 1]",
-            "[2026-09-11T13:36:26Z] [Execution] started: 'focus mode 3F85B849'",
-            "[2026-09-11T13:36:26Z] [Automation] Triggered keyword: 'focus mode 3F85B849'",
-            "[2026-09-11T13:36:26Z] [Automation] Executing 1 actions for 'focus mode 3F85B849'",
-            "[2026-09-11T13:36:26Z] [Automation] ▶ Open folder 'Downloads'",
-            "[2026-09-11T13:36:26Z] [Automation] ✓ Opened folder: \/Users\/chiteshvarun\/Downloads"
+            "[2026-09-22T03:21:28Z] [Typed] Received: 'focus mode 8268356F'",
+            "[2026-09-22T03:21:28Z] [DDC] Discovered 1 DCPAVServiceProxy entries",
+            "[2026-09-22T03:21:28Z] [DDC] Matched display 1 → IOAVService (location: '')",
+            "[2026-09-22T03:21:28Z] [DDC] Read VCP 0x10: current=38 max=100 on display 1",
+            "[2026-09-22T03:21:28Z] [Queue] Enqueued (normal): 'focus mode 8268356F' [queue size: 1]",
+            "[2026-09-22T03:21:28Z] [Execution] started: 'focus mode 8268356F'",
+            "[2026-09-22T03:21:28Z] [Automation] Triggered keyword: 'focus mode 8268356F'",
+            "[2026-09-22T03:21:28Z] [Automation] Executing 1 actions for 'focus mode 8268356F'",
+            "[2026-09-22T03:21:28Z] [Automation] ▶ Open folder 'Downloads'",
+            "[2026-09-22T03:21:29Z] [Automation] ✓ Opened folder: \/Users\/chiteshvarun\/Downloads"
           ],
           "success" : true
         }
       ],
       "attemptsUsed" : 1,
-      "command" : "focus mode 3F85B849",
+      "command" : "focus mode 8268356F",
       "expectedIntent" : "automation",
       "id" : "automation-on",
       "success" : true,
@@ -276,29 +276,29 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 254,
+          "durationMs" : 128,
           "planDescriptions" : [
             "Automation path via AppState.executeTypedCommand"
           ],
           "stepMessages" : [
-            "[2026-09-11T13:36:26Z] [Execution] started: 'focus mode 3F85B849'",
-            "[2026-09-11T13:36:26Z] [Automation] Triggered keyword: 'focus mode 3F85B849'",
-            "[2026-09-11T13:36:26Z] [Automation] Executing 1 actions for 'focus mode 3F85B849'",
-            "[2026-09-11T13:36:26Z] [Automation] ▶ Open folder 'Downloads'",
-            "[2026-09-11T13:36:26Z] [Automation] ✓ Opened folder: \/Users\/chiteshvarun\/Downloads",
-            "[2026-09-11T13:36:26Z] [Typed] Received: 'focus mode off 3F85B849'",
-            "[2026-09-11T13:36:26Z] [Queue] Enqueued (normal): 'focus mode off 3F85B849' [queue size: 1]",
-            "[2026-09-11T13:36:26Z] [Execution] finished: 'focus mode 3F85B849'",
-            "[2026-09-11T13:36:26Z] [Execution] started: 'focus mode off 3F85B849'",
-            "[2026-09-11T13:36:26Z] [Automation] Triggered keyword: 'focus mode 3F85B849'",
-            "[2026-09-11T13:36:26Z] [Automation] Off variant matched for 'focus mode 3F85B849'.",
-            "[2026-09-11T13:36:26Z] [Execution] finished: 'focus mode off 3F85B849'"
+            "[2026-09-22T03:21:28Z] [Execution] started: 'focus mode 8268356F'",
+            "[2026-09-22T03:21:28Z] [Automation] Triggered keyword: 'focus mode 8268356F'",
+            "[2026-09-22T03:21:28Z] [Automation] Executing 1 actions for 'focus mode 8268356F'",
+            "[2026-09-22T03:21:28Z] [Automation] ▶ Open folder 'Downloads'",
+            "[2026-09-22T03:21:29Z] [Automation] ✓ Opened folder: \/Users\/chiteshvarun\/Downloads",
+            "[2026-09-22T03:21:29Z] [Typed] Received: 'focus mode off 8268356F'",
+            "[2026-09-22T03:21:29Z] [Queue] Enqueued (normal): 'focus mode off 8268356F' [queue size: 1]",
+            "[2026-09-22T03:21:29Z] [Execution] finished: 'focus mode 8268356F'",
+            "[2026-09-22T03:21:29Z] [Execution] started: 'focus mode off 8268356F'",
+            "[2026-09-22T03:21:29Z] [Automation] Triggered keyword: 'focus mode 8268356F'",
+            "[2026-09-22T03:21:29Z] [Automation] Off variant matched for 'focus mode 8268356F'.",
+            "[2026-09-22T03:21:29Z] [Execution] finished: 'focus mode off 8268356F'"
           ],
           "success" : true
         }
       ],
       "attemptsUsed" : 1,
-      "command" : "focus mode off 3F85B849",
+      "command" : "focus mode off 8268356F",
       "expectedIntent" : "automation",
       "id" : "automation-off",
       "success" : true,
@@ -314,7 +314,7 @@
     "spotify"
   ],
   "summary" : {
-    "averageDurationMs" : 337.7857142857143,
+    "averageDurationMs" : 370.42857142857144,
     "failed" : 2,
     "passed" : 10,
     "successRate" : 83.33333333333334,

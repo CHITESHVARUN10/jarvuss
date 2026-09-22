@@ -109,39 +109,10 @@ if [[ "$USE_PYINSTALLER" == "1" ]]; then
   popd >/dev/null
 fi
 
-# Keep in sync with Sources/JarvisMacOS/Resources/Info.plist (source of truth).
-# The heredoc below regenerates it into the bundle; edit the source file, then
-# mirror the change here.
-cat > "$APP_CONTENTS/Info.plist" <<'PLIST'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>CFBundleDevelopmentRegion</key>
-    <string>en</string>
-    <key>CFBundleExecutable</key>
-    <string>Jarvis</string>
-    <key>CFBundleIdentifier</key>
-    <string>local.jarvis.macos</string>
-    <key>CFBundleInfoDictionaryVersion</key>
-    <string>6.0</string>
-    <key>CFBundleName</key>
-    <string>Jarvis</string>
-    <key>CFBundlePackageType</key>
-    <string>APPL</string>
-    <key>CFBundleShortVersionString</key>
-    <string>1.0</string>
-    <key>CFBundleVersion</key>
-    <string>1</string>
-    <key>LSMinimumSystemVersion</key>
-    <string>13.0</string>
-    <key>NSMicrophoneUsageDescription</key>
-    <string>Jarvis needs microphone access to detect speech and execute voice commands.</string>
-    <key>NSAppleEventsUsageDescription</key>
-    <string>Jarvis controls supported apps (for media and automation) using Apple Events.</string>
-</dict>
-</plist>
-PLIST
+# Copy the source-of-truth Info.plist into the bundle (mic usage string
+# is what unlocks the macOS permission prompt — never `swift run`).
+# Source: Sources/JarvisMacOS/Resources/Info.plist
+cp "$ROOT_DIR/Sources/JarvisMacOS/Resources/Info.plist" "$APP_CONTENTS/Info.plist"
 
 echo "Packaged app bundle: $APP_BUNDLE"
 open "$APP_BUNDLE"

@@ -47,6 +47,15 @@ struct DictationHUDView: View {
                 )
                 .frame(width: 300)
 
+            case .Idle, .Ready:
+                // Reloading after an idle-unload: session phase may still read
+                // Ready/Idle while the model itself is Loading/Unloading.
+                // Show a loading card instead of an invisible EmptyView.
+                if model.modelPhase == .Loading || model.modelPhase == .Unloading {
+                    DictationReloadingView()
+                        .frame(width: 300)
+                }
+
             default:
                 EmptyView()
             }
@@ -314,7 +323,32 @@ struct DictationTranscriptOverlayView: View {
     }
 }
 
-// MARK: - Error / Download states
+// MARK: - Error / Download / Reload states
+
+/// Shown when the model is reloading after an idle-unload (5 min rule):
+/// first use pays a multi-second mmap + warmup, and the pill must say so
+/// instead of hanging on "Transcribing" or rendering nothing.
+struct DictationReloadingView: View {
+    var body: some View {
+        HStack(spacing: 10) {
+            ProgressView()
+                .controlSize(.small)
+                .tint(.white.opacity(0.5))
+                .padding(.leading, 14)
+            Text("Reloading model…")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.white.opacity(0.7))
+            Spacer()
+        }
+        .padding(.vertical, 14)
+        .padding(.trailing, 14)
+        .background {
+            RoundedRectangle(cornerRadius: 14)
+                .fill(.ultraThinMaterial)
+                .environment(\.colorScheme, .dark)
+        }
+    }
+}
 
 struct DictationErrorView: View {
     let message: String

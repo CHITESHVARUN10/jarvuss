@@ -121,6 +121,11 @@ mod ffi {
         fn start_recording() -> bool;
         fn stop_recording();
         fn cancel_recording();
+        // True when the Whisper context is resident in RAM right now.
+        // Swift uses this to show "Reloading model…" instead of a fake
+        // Recording when the first use after an idle-unload pays the
+        // load + warmup cost.
+        fn is_model_loaded() -> bool;
         fn get_transcript() -> String;
         fn copy_to_clipboard();
         fn paste_into_frontmost_app();
@@ -327,7 +332,26 @@ fn inference_worker(rx: mpsc::Receiver<InferenceJob>) {
                         ));
                     }
                     let engine = cell.as_mut().expect("engine just created");
+                    // Honest reload signal: after an idle-unload the context
+                    // is gone, and load() blocks for seconds (mmap + warmup).
+                    // Tell Swift BEFORE so the pill shows Loading/Preparing
+                    // instead of hanging on "Transcribing". is_model_loaded()
+                    // (mirrored model_state) is the cross-thread source of
+                    // truth — ENGINE itself is thread-local here.
+                    let needs_load = !is_model_loaded();
+                    if needs_load {
+                        with_app(|app| {
+                            app.model_state = ModelState::Loading;
+                        });
+                        notify_state();
+                    }
                     engine.load()?;
+                    if needs_load {
+                        with_app(|app| {
+                            app.model_state = ModelState::Ready;
+                        });
+                        notify_state();
+                    }
                     engine.transcribe_chunk(&samples)
                 });
 
@@ -394,11 +418,21 @@ fn inference_worker(rx: mpsc::Receiver<InferenceJob>) {
             }
             InferenceJob::Unload => {
                 tracing::info!("Unload job received — freeing model RAM");
+                // Honest state first so Swift can show "Reloading…" instead
+                // of a stale Ready while RAM is actually free.
+                with_app(|app| {
+                    app.model_state = ModelState::Unloading;
+                });
+                notify_state();
                 ENGINE.with(|cell| {
                     if let Some(engine) = cell.borrow_mut().as_mut() {
                         engine.unload();
                     }
                 });
+                with_app(|app| {
+                    app.model_state = ModelState::NotInstalled;
+                });
+                notify_state();
             }
         }
     }
@@ -754,6 +788,10 @@ fn chunker_thread(stop_rx: mpsc::Receiver<()>, chunk_seconds: u64, overlap_secon
 }
 
 /// Polls LAST_ACTIVITY; sends Unload when the model has been idle too long.
+/// Contract: mic stop / cancel is NOT activity (cancel_recording deliberately
+/// does not bump), so toggling the mic never unloads — only 300 s (default)
+/// of no dictation unloads. Next use reloads via the TranscribeChunk path
+/// (engine.load() is a no-op when already resident).
 fn idle_watchdog(idle_seconds: u64) {
     if idle_seconds == 0 {
         tracing::info!("Idle watchdog disabled (idle_unload_seconds = 0)");
@@ -763,7 +801,7 @@ fn idle_watchdog(idle_seconds: u64) {
     tracing::info!(idle_seconds, "Idle watchdog started");
 
     loop {
-        thread::sleep(Duration::from_secs(30));
+        thread::sleep(Duration::from_secs(10));
 
         let idle_for = now_secs().saturating_sub(LAST_ACTIVITY.load(Ordering::SeqCst));
         if idle_for > idle_seconds {
@@ -944,15 +982,28 @@ fn cancel_recording() {
 
     // 4. Back to Ready (works from Recording AND Processing/Error —
     //    dismiss() unconditionally transitions to Ready).
+    //    NOTE: abandoning is NOT activity — no bump_activity() here, so a
+    //    mic stop never postpones the idle unload.
     with_app(|app| {
         app.dismiss();
     });
     notify_state();
-    bump_activity();
 }
 
 fn get_transcript() -> String {
     with_app(|app| app.transcript.clone().unwrap_or_default())
+}
+
+fn is_model_loaded() -> bool {
+    // ENGINE is thread-local to the inference worker; probing from the
+    // calling thread always sees None. The worker mirrors residency into
+    // model_state on every load/unload instead (Loading→Ready, Unloading).
+    with_app(|app| {
+        matches!(
+            app.model_state,
+            ModelState::Ready | ModelState::Inference | ModelState::Loading
+        )
+    })
 }
 
 fn copy_to_clipboard() {

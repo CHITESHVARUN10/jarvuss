@@ -1,8 +1,13 @@
 //! Static configuration for the Jarvis STT core.
 //!
 //! Deliberately simpler than a layered TOML setup: every tuning knob lives
-//! here with proven defaults. Only the model directory is overridable at
-//! runtime via `JARVIS_STT_MODEL_DIR`.
+//! here with proven defaults. Two runtime overrides:
+//! - `JARVIS_STT_MODEL_DIR` — model directory
+//! - `JARVIS_STT_IDLE_SECONDS` — idle unload timeout
+//!
+//! Model lifecycle contract (see lib.rs idle_watchdog):
+//! mic stop / cancel NEVER unloads — only `idle_unload_seconds` of no
+//! dictation activity unloads; the next use reloads transparently.
 //!
 //! The default model directory points at the already-installed AgentTalk
 //! model (`ggml-large-v3-turbo.bin`, ~1.5 GB) so Jarvis reuses it in place
@@ -49,13 +54,20 @@ pub struct FeaturesSection {
 
 impl AppConfig {
     /// Load config: compiled-in defaults, with the model directory
-    /// overridable via `JARVIS_STT_MODEL_DIR`.
+    /// overridable via `JARVIS_STT_MODEL_DIR` and the idle unload timeout
+    /// via `JARVIS_STT_IDLE_SECONDS`.
     pub fn load() -> Self {
         let mut cfg = Self::default();
         if let Ok(dir) = std::env::var("JARVIS_STT_MODEL_DIR") {
             if !dir.trim().is_empty() {
                 tracing::info!(dir = %dir, "Overriding STT model directory from JARVIS_STT_MODEL_DIR");
                 cfg.model.directory = dir;
+            }
+        }
+        if let Ok(secs) = std::env::var("JARVIS_STT_IDLE_SECONDS") {
+            if let Ok(parsed) = secs.trim().parse::<u64>() {
+                tracing::info!(parsed, "Overriding STT idle unload timeout from JARVIS_STT_IDLE_SECONDS");
+                cfg.model.idle_unload_seconds = parsed;
             }
         }
         cfg
@@ -74,7 +86,9 @@ impl AppConfig {
                 directory: Self::default_model_dir(),
                 filename: "ggml-large-v3-turbo.bin".into(),
                 auto_download: true,
-                idle_unload_seconds: 360,
+                // 5 min of no dictation activity → unload from RAM.
+                // Mic stop / cancel never unloads (see cancel_recording).
+                idle_unload_seconds: 300,
             },
             audio: AudioSection {
                 sample_rate: 16000,

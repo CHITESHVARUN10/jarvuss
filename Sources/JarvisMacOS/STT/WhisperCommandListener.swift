@@ -19,13 +19,18 @@ final class WhisperCommandListener {
     private var utteranceStartedAt: Date?
     /// Max seconds a command utterance may hold the core before it is
     /// force-finalized (prevents an abandoned claim wedging the pill).
-    private let maxUtteranceSeconds: TimeInterval = 30
+    /// 20 s > longest legit enrollment phrase, < Rust 300 s ring cap.
+    private let maxUtteranceSeconds: TimeInterval = 20
 
     private init() {}
 
     /// Voice detected. Starts a core recording unless the pill owns the core.
     /// Safe to call repeatedly: re-entrant while recording just extends the
     /// failsafe window check (no double-start, no wedge).
+    /// While DictationController holds the pill (⌘⇧D), VAD claims are muted
+    /// at the AppState.handleAudioLevel layer and never reach here — that
+    /// mute is what lets the pill win the core race. This guard is belt and
+    /// braces for any direct caller.
     func beginUtterance() {
         if utteranceActive {
             // Failsafe: a stuck utterance (VAD never saw silence) must not
@@ -39,6 +44,21 @@ final class WhisperCommandListener {
         }
         guard STTRouter.shared.claimForCommand() else {
             STTRouter.shared.logCommandDrop(reason: "core busy (owner: \(STTRouter.shared.owner), phase: \(get_app_phase()))")
+            return
+        }
+        // Pill owns the core (⌘⇧D active): never steal it back. The VAD mute
+        // in handleAudioLevel normally prevents reaching here.
+        guard STTRouter.shared.owner == .command else {
+            STTRouter.shared.releaseFromCommand()
+            return
+        }
+        // Reloading after an idle-unload (model Loading/Unloading): the core
+        // will be Ready in seconds — release and retry on the next VAD tick
+        // instead of logging a "not ready" drop.
+        let modelPhase = get_model_phase()
+        if modelPhase == .Loading || modelPhase == .Unloading {
+            STTRouter.shared.logCommandDrop(reason: "model reloading (phase: \(modelPhase)) — retrying")
+            STTRouter.shared.releaseFromCommand()
             return
         }
         let phase = get_app_phase()
@@ -57,6 +77,7 @@ final class WhisperCommandListener {
         utteranceActive = start_recording()
         utteranceStartedAt = utteranceActive ? Date() : nil
         if !utteranceActive {
+            STTRouter.shared.logCommandDrop(reason: "start_recording refused (phase: \(get_app_phase()))")
             STTRouter.shared.releaseFromCommand()
         }
     }

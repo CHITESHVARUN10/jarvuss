@@ -19,6 +19,14 @@ final class STTRouter {
 
     private(set) var owner: Owner = .none
 
+    /// While true, command-mode VAD must not claim the STT core — the
+    /// dictation pill owns it. Set by DictationController.startDictation,
+    /// cleared by dismissTranscript. Level metering keeps running; only
+    /// begin/endUtterance claims are suppressed. Lives here (not on the
+    /// @MainActor AppState) so the nonisolated DictationController can
+    /// flip it; all readers/writers already hop to main.
+    var pillSuppressesCommandVAD = false
+
     /// Set when the pill preempts a command utterance: the in-flight
     /// command audio is finished silently and its result is dropped.
     private var suppressCommandResult = false
@@ -87,6 +95,14 @@ final class STTRouter {
         WhisperCommandListener.shared.cancelUtterance()
         WhisperCommandListener.shared.endUtteranceSilently()
         onLog?("[STT] Pill preempted a command utterance — finishing it silently.")
+        // Fast path: short utterances produce NO final job (Rust empty-stop:
+        // `needs_inference=false` emits no TranscribeChunk), so the
+        // suppressed-result path below would never fire and the pill would
+        // wait on the 1 s watchdog. When Rust isn't even recording, skip the
+        // wait and start the pill immediately. Watchdog stays as backup.
+        if get_app_phase() != .Recording {
+            forceClearPreemption()
+        }
         return true
     }
 

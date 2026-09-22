@@ -29,8 +29,17 @@ func on_state_changed(phase: AppPhase, model: ModelPhase) {
             return
         }
 
-        if phase == .Processing || phase == .TranscriptReady {
+        // Reloading after an idle-unload surfaces as Loading/Unloading (see
+        // lib.rs TranscribeChunk + Unload arms) — show the panel so the user
+        // sees "Downloading/Loading…" instead of a hung Transcribing pill.
+        // Preparing/Loading/Error create (showPanel); Processing/TranscriptReady
+        // only resize an existing panel (showPanelIfNeeded).
+        if phase == .Preparing || model == .Loading || model == .Unloading || model == .Downloading {
+            controller.showPanel()
+        } else if phase == .Processing || phase == .TranscriptReady {
             controller.showPanelIfNeeded()
+        } else if phase == .Error {
+            controller.showPanel()
         }
 
         if phase == .TranscriptReady {
@@ -48,6 +57,9 @@ func on_transcript_ready(text: RustString) {
     let t = text.toString()
     DispatchQueue.main.async {
         // Router decides: pill transcript, command sink, or dropped.
+        // Pill path is pure STT (voice-to-text into the panel) — it never
+        // touches onCommandTranscript, so no AI/command execution can fire
+        // from a ⌘⇧D dictation. That separation is load-bearing; keep it.
         if let pillText = STTRouter.shared.routeTranscript(t) {
             DictationController.shared.transcript = pillText
             DictationController.shared.partialTranscript = ""
@@ -80,8 +92,13 @@ func on_error(message: RustString) {
     DispatchQueue.main.async {
         // Router decides: pill error card or command-mode log.
         if let pillMsg = STTRouter.shared.routeError(msg) {
-            DictationController.shared.errorMessage = pillMsg
-            DictationController.shared.phase = .Error
+            let controller = DictationController.shared
+            controller.errorMessage = pillMsg
+            controller.phase = .Error
+            // showPanel (create), not showPanelIfNeeded (nil-guard no-op):
+            // audio-start failures (permission, no device) must surface the
+            // Error card instead of leaving no visible pill at all.
+            controller.showPanel()
         }
     }
 }

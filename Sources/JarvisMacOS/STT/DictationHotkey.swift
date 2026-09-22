@@ -8,6 +8,7 @@ import Carbon.HIToolbox
 // key-UP only clears the held flag (auto-repeat suppression).
 
 private var gDictationHotKeyRef: EventHotKeyRef?
+private var gDictationEventHandlerRef: EventHandlerRef?
 private let gDictationHotKeySignature: OSType = OSType(0x4A565354) // "JVST"
 
 // Held-state tracking — suppress auto-repeat.
@@ -65,6 +66,10 @@ private func dictationHotkeyEventHandler(
 }
 
 func registerDictationHotkey() {
+    // Idempotent: re-registering without unregister leaks an EventHotKeyRef
+    // per call (app relaunch paths, tests). Tear down first.
+    unregisterDictationHotkey()
+
     var hotKeyID = EventHotKeyID(signature: gDictationHotKeySignature, id: 1)
 
     let status = RegisterEventHotKey(
@@ -102,6 +107,9 @@ func registerDictationHotkey() {
             &installed
         )
     }
+    // Retain the handler ref so it can be removed on terminate —
+    // otherwise each register leaks a Carbon event handler.
+    gDictationEventHandlerRef = installed
 
     if installErr == noErr {
         NSLog("[Jarvis][Hotkey] Carbon event handler installed")
@@ -113,5 +121,7 @@ func registerDictationHotkey() {
 func unregisterDictationHotkey() {
     if let ref = gDictationHotKeyRef { UnregisterEventHotKey(ref) }
     gDictationHotKeyRef = nil
+    if let handler = gDictationEventHandlerRef { RemoveEventHandler(handler) }
+    gDictationEventHandlerRef = nil
     gDictationHotkeyHeld = false
 }

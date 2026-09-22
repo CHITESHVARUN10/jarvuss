@@ -125,11 +125,21 @@ final class AppState: ObservableObject {
     private let voiceStartThresholdDB: Float = -42.0
     private let voiceContinueThresholdDB: Float = -50.0
     private let minimumRecordingDuration: TimeInterval = 0.8
-    private let requiredSilenceDuration: TimeInterval = 1.2
-    private let smoothingFactor: Float = 0.22
+    private let requiredSilenceDuration: TimeInterval = 0.6
+    private let smoothingFactor: Float = 0.35
+    /// Longest unbroken voiced run before the utterance is force-segmented
+    /// (see handleAudioLevel). Must sit well inside Rust chunk_seconds=6 so
+    /// each segment transcribes mid-speech instead of only at long pauses.
+    private static let maxContinuousSpeechSeconds: TimeInterval = 4.0
     private let enrollmentAcceptCooldown: TimeInterval = 1.4
     private let enrollmentAttemptThrottle: TimeInterval = 0.30
     private let voiceVerificationThreshold = 0.70
+    private static let verifyAudioSeconds = 3.5
+    private static let enrollAudioSeconds = 3.5
+    /// Resemblyzer embeds via preprocess_wav at 16 kHz. Exporting at the
+    /// same rate removes a resample-variance source between enroll-time
+    /// and verify-time embeddings and keeps clips comparable sample-for-sample.
+    private static let voiceSampleRate = 16_000.0
 
     var voiceEnrollmentSampleTarget: Int {
         enrollmentPhrases.count * enrollmentRequiredMatchesPerPhrase
@@ -400,6 +410,38 @@ final class AppState: ObservableObject {
         persistEnrollmentCompleted(false)
         appendLog("Voice enrollment started. Repeat each phrase \(enrollmentRequiredMatchesPerPhrase)x.")
         appendLog("Existing voice profile is preserved until new samples are collected.")
+        // Reset the backend store so re-enrollment starts from a clean slate —
+        // the store is append-only, so without this every re-run stacks on the
+        // old samples (the 63-vs-42 pollution) and drags similarity averages down.
+        // Runs detached: enrollment must not block on a cold backend.
+        Task {
+            do {
+                try await voiceAuthClient.reset()
+                await MainActor.run {
+                    backendEnrollmentSampleCount = 0
+                    persistBackendSampleCount(0)
+                    appendLog("Voice profile store reset — re-enrolling from 0/\(voiceEnrollmentSampleTarget).")
+                }
+            } catch {
+                await MainActor.run {
+                    appendLog("[Voice] Profile reset failed (\(error.localizedDescription)) — old samples preserved; scores may skew high-N. POST /reset manually to clear.")
+                }
+            }
+        }
+    }
+
+    func resetVoiceProfile() {
+        Task {
+            do {
+                try await voiceAuthClient.reset()
+                backendEnrollmentSampleCount = 0
+                persistBackendSampleCount(0)
+                voiceVerificationStatus = "No Voice Profile ❌"
+                appendLog("Voice profile cleared (0/\(voiceEnrollmentSampleTarget)). Re-enroll to rebuild.")
+            } catch {
+                appendLog("[Voice] Profile reset failed: \(error.localizedDescription)")
+            }
+        }
     }
 
     func stopEnrollment() {
@@ -538,10 +580,16 @@ final class AppState: ObservableObject {
             return
         }
 
-        guard voiceModeEnabled else { return }
+        guard voiceModeEnabled else {
+            appendLog("[Voice] dropped: voice mode off — transcript '\(transcript)' ignored.")
+            return
+        }
 
         let now = Date()
-        guard now.timeIntervalSince(lastFinalTranscriptAt) > 0.7 else { return }
+        guard now.timeIntervalSince(lastFinalTranscriptAt) > 0.7 else {
+            appendLog("[Voice] dropped: debounce (≤0.7 s since last final) — transcript '\(transcript)' ignored.")
+            return
+        }
         lastFinalTranscriptAt = now
 
         // Check session expiration before evaluating transcript
@@ -589,6 +637,7 @@ final class AppState: ObservableObject {
         }
 
         guard !cleanedCommands.isEmpty else {
+            appendLog("[Voice] dropped: no valid command after cleaning \(rawSegments.count) segment(s) — transcript '\(transcript)' ignored.")
             return
         }
 
@@ -604,8 +653,11 @@ final class AppState: ObservableObject {
 
         for validated in sanitized {
             let priority = CommandPriority.classify(validated)
-            commandQueue.enqueue(text: validated, priority: priority) { [weak self] in
+            let accepted = commandQueue.enqueue(text: validated, priority: priority) { [weak self] in
                 await self?.verifyThenRunCommand(validated)
+            }
+            if !accepted {
+                appendLog("[Voice] dropped: queue rejected '\(validated)' (see [Queue] line above).")
             }
         }
     }
@@ -1378,7 +1430,7 @@ final class AppState: ObservableObject {
     private func verifyThenRunCommand(_ command: String) async {
         guard voiceProfileReady else {
             voiceVerificationStatus = "Voice Profile Incomplete ⚠️"
-            appendLog("Voice profile not ready (\(backendEnrollmentSampleCount)/\(voiceEnrollmentSampleTarget)). Command rejected.")
+            appendLog("[Voice] dropped: profile not ready (\(backendEnrollmentSampleCount)/\(voiceEnrollmentSampleTarget)) — command '\(command)' rejected.")
             dbManager.saveEvent(
                 eventType: "voice_profile_incomplete",
                 transcript: command,
@@ -1392,13 +1444,19 @@ final class AppState: ObservableObject {
         }
 
         do {
-            // Fix #10: Single verification attempt only — NO retries.
+            // Single verification attempt only — NO retries.
             // Borderline retry and network retry have been removed per spec requirement.
             let result = try await attemptVerification()
 
             let wakeWordDetected = containsWakeWord(lastRecognizedSpeech)
             let effectiveThreshold = wakeWordDetected ? 0.65 : voiceVerificationThreshold
             let isVerifiedByThreshold = result.similarity >= effectiveThreshold
+
+            appendLog("[Voice] verify: sim=\(fmtScore(result.similarity)) " +
+                      "max=\(fmtScore(result.maxSimilarity)) avg=\(fmtScore(result.avgSimilarity)) " +
+                      "conf=\(result.confidence.rawValue) n=\(result.samplesCompared) " +
+                      "thr=\(fmtScore(effectiveThreshold)) wake=\(wakeWordDetected ? "yes" : "no") " +
+                      "cmd='\(command)'")
 
             switch result.confidence {
             case .strong:
@@ -1432,7 +1490,7 @@ final class AppState: ObservableObject {
                 } else {
                     voiceVerificationStatus = "Unknown Voice ❌"
                     lastVoiceSimilarity = result.similarity
-                    appendLog("[Voice] Rejected by threshold. Score: \(fmtScore(result.similarity)) < \(fmtScore(effectiveThreshold))")
+                    appendLog("[Voice] Rejected by threshold. Score: \(fmtScore(result.similarity)) < \(fmtScore(effectiveThreshold)) — need ≥ \(fmtScore(effectiveThreshold)) to run; re-enroll in a quiet room if this persists.")
                     if voiceSessionState == .active {
                         appendLog("[VoiceSession] In-session command '\(command)' rejected due to failed verification. Session timer unchanged.")
                     }
@@ -1471,7 +1529,7 @@ final class AppState: ObservableObject {
                     voiceVerificationStatus = "Unknown Voice ❌"
                     lastVoiceSimilarity = result.similarity
                     appendLog("[Voice] Rejected. Score: \(fmtScore(result.similarity)) " +
-                              "[max: \(fmtScore(result.maxSimilarity)), avg: \(fmtScore(result.avgSimilarity)), threshold: \(fmtScore(effectiveThreshold))]")
+                              "[max: \(fmtScore(result.maxSimilarity)), avg: \(fmtScore(result.avgSimilarity)), threshold: \(fmtScore(effectiveThreshold))] — need ≥ \(fmtScore(effectiveThreshold)) to run.")
                     if voiceSessionState == .active {
                         appendLog("[VoiceSession] In-session command '\(command)' rejected due to failed verification. Session timer unchanged.")
                     }
@@ -1525,9 +1583,13 @@ final class AppState: ObservableObject {
         }
     }
 
-    /// Single verification attempt — extracts audio sample and calls backend.
+    /// Single verification attempt — exports the most recent utterance-length
+    /// audio window at 16 kHz and calls backend.
     private func attemptVerification() async throws -> VoiceVerificationResult {
-        let sampleURL = try micManager.exportRecentAudioSample(durationSeconds: 2.0)
+        let sampleURL = try micManager.exportRecentAudioSample(
+            durationSeconds: Self.verifyAudioSeconds,
+            targetSampleRate: Self.voiceSampleRate
+        )
         defer { try? FileManager.default.removeItem(at: sampleURL) }
         return try await voiceAuthClient.verifyDetailed(audioFileURL: sampleURL)
     }
@@ -1542,7 +1604,10 @@ final class AppState: ObservableObject {
         transcript: String
     ) async {
         do {
-            let sampleURL = try micManager.exportRecentAudioSample(durationSeconds: 2.2)
+            let sampleURL = try micManager.exportRecentAudioSample(
+                durationSeconds: Self.enrollAudioSeconds,
+                targetSampleRate: Self.voiceSampleRate
+            )
             defer { try? FileManager.default.removeItem(at: sampleURL) }
             let enrolledCount = try await voiceAuthClient.enroll(audioFileURL: sampleURL)
             backendEnrollmentSampleCount = enrolledCount
@@ -1720,6 +1785,32 @@ final class AppState: ObservableObject {
 
         let now = Date()
 
+        // Whisper STT processes the utterance only when VAD sees silence.
+        // Continuous speech NEVER ends the utterance on its own — the end
+        // comes from the 20 s WhisperCommandListener failsafe, and by then
+        // the tail is cut, the embedding is garbage, and nothing executes.
+        // So: treat a long run of UNBROKEN voice as its own boundary.
+        // Mid-speech split (4.0 s voiced): end the current utterance so its
+        // transcript routes; the next voiced tick re-opens a fresh one.
+        // Short natural pauses still end via the silence rule below.
+        // All split/end claims are suppressed while the pill owns the core.
+        if previousVoiceDetected, !STTRouter.shared.pillSuppressesCommandVAD {
+            let voicedRun = now.timeIntervalSince(recordingStartedAt)
+            if voicedRun >= Self.maxContinuousSpeechSeconds {
+                previousVoiceDetected = false
+                assistantState = .processing
+                appendLog("Recording split (continuous speech \(String(format: "%.1f", voicedRun))s) — transcribing segment.")
+                WhisperCommandListener.shared.endUtterance()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+                    guard let self else { return }
+                    if self.assistantState != .executing {
+                        self.assistantState = self.micActive ? .listening : .idle
+                    }
+                }
+                return
+            }
+        }
+
         let voiceDetected: Bool
         if previousVoiceDetected {
             voiceDetected = smoothedAudioLevelDB > voiceContinueThresholdDB
@@ -1734,9 +1825,13 @@ final class AppState: ObservableObject {
                 recordingStartedAt = now
                 assistantState = .recording
                 appendLog("Recording started (voice detected).")
-                // Start a Whisper utterance on the STT core (no-op when the
-                // dictation pill owns the core).
-                WhisperCommandListener.shared.beginUtterance()
+                // Start a Whisper utterance on the STT core — unless the
+                // dictation pill owns it (⌘⇧D active): then VAD must not
+                // steal claims, or the next pill toggle loses the race.
+                // Level metering above keeps running regardless.
+                if !STTRouter.shared.pillSuppressesCommandVAD {
+                    WhisperCommandListener.shared.beginUtterance()
+                }
             }
             return
         }
@@ -1751,7 +1846,11 @@ final class AppState: ObservableObject {
                 appendLog("Recording ended (silence detected).")
                 // Finish the Whisper utterance — its transcript arrives
                 // asynchronously via STTRouter → handleTranscript(isFinal:).
-                WhisperCommandListener.shared.endUtterance()
+                // Suppressed while the pill owns the core (pill stops its
+                // own recording via toggleDictation, not via VAD).
+                if !STTRouter.shared.pillSuppressesCommandVAD {
+                    WhisperCommandListener.shared.endUtterance()
+                }
 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
                     guard let self else { return }
