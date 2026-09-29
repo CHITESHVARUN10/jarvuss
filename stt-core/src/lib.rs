@@ -40,7 +40,9 @@ static INITIALIZED: AtomicBool = AtomicBool::new(false);
 // A dedicated long-lived thread owns the Whisper engine (WhisperContext is !Send).
 // The watchdog thread sends Unload after idle; stop_recording sends Transcribe jobs.
 
-/// Monotonic seconds of the last dictation activity. Bumped on start/stop/transcribe.
+/// Wall-clock epoch seconds of the last dictation activity. Bumped on
+/// start/stop/transcribe. Zero until seeded at init — the watchdog must
+/// never compute idle time before the seed lands (see initialize_core).
 static LAST_ACTIVITY: AtomicU64 = AtomicU64::new(0);
 
 enum InferenceJob {
@@ -61,6 +63,17 @@ static CHUNK_FAILED: AtomicBool = AtomicBool::new(false);
 static LAST_CHUNK_END: AtomicU64 = AtomicU64::new(0);
 /// Samples-per-second (16 kHz) — used by the chunker to size windows.
 static SAMPLE_RATE: AtomicU64 = AtomicU64::new(16000);
+/// Silence gate: clips below this RMS with too few voiced 20 ms frames are
+/// breath/silence blips, not speech — skipping inference starves Whisper of
+/// the silence it hallucinates ("Thank you.") from. Conservative: quiet but
+/// real speech (~0.01+ RMS, many frames hot) passes easily; digital silence
+/// (~0.0005 RMS) never reaches the decoder. Tuned in Phase 4 from live logs.
+const SILENCE_RMS_FLOOR: f32 = 0.004;
+/// Minimum share of 20 ms frames above the floor for a clip to count as speech.
+const SILENCE_VOICED_MIN: f32 = 0.15;
+/// Minimum clip length for the whole-buffer (no-chunk) path — 0.5 s. Shorter
+/// is a tap/breath even if one frame is loud.
+const MIN_SPEECH_SAMPLES: usize = 8000;
 /// Model path + thread count for engine creation (resolved once at init).
 static MODEL_PATH: Mutex<Option<std::path::PathBuf>> = Mutex::new(None);
 static N_THREADS: AtomicU64 = AtomicU64::new(4);
@@ -71,8 +84,18 @@ fn with_app<F, R>(f: F) -> R
 where
     F: FnOnce(&mut AppStateMachine) -> R,
 {
-    let mut guard = APP.lock().unwrap();
-    let app = guard.as_mut().expect("Core not initialized");
+    // Poisoned-mutex / uninit must never abort the app (panic = abort in
+    // this crate): degrade by re-initializing from defaults so the UI shows
+    // Preparing/Error instead of the frontend vanishing.
+    let mut guard = APP.lock().unwrap_or_else(|poisoned| {
+        tracing::error!("APP mutex poisoned — recovering");
+        poisoned.into_inner()
+    });
+    if guard.is_none() {
+        tracing::error!("Core not initialized — creating default state");
+        *guard = Some(AppStateMachine::new(config::AppConfig::default()));
+    }
+    let app = guard.as_mut().expect("state just ensured");
     f(app)
 }
 
@@ -227,6 +250,13 @@ fn initialize_core() -> bool {
     INFERENCE_TX.set(tx).ok();
     thread::spawn(move || inference_worker(rx));
 
+    // Seed the idle clock BEFORE the watchdog can observe it: LAST_ACTIVITY
+    // starts at 0 (epoch), so an unseeded first tick computes
+    // now_secs() - 0 ≈ 1.79B > idle_seconds and false-unloads ~10 s after
+    // every boot. Seeding here (and again at watchdog start) keeps the
+    // first unload a full idle period out.
+    LAST_ACTIVITY.store(now_secs(), Ordering::SeqCst);
+
     // Idle watchdog — unloads the model after idle_unload_seconds of no activity.
     let idle_seconds = with_app(|app| app.config.model.idle_unload_seconds);
     thread::spawn(move || idle_watchdog(idle_seconds));
@@ -324,14 +354,19 @@ fn inference_worker(rx: mpsc::Receiver<InferenceJob>) {
                     let mut cell = cell.borrow_mut();
                     if cell.is_none() {
                         tracing::info!("Creating inference engine (first use)");
-                        let path = MODEL_PATH.lock().unwrap().clone();
+                        let path = MODEL_PATH
+                            .lock()
+                            .unwrap_or_else(|p| p.into_inner())
+                            .clone();
                         let threads = N_THREADS.load(Ordering::SeqCst) as i32;
                         *cell = Some(inference::engine::InferenceEngine::new(
                             path.unwrap_or_default(),
                             threads,
                         ));
                     }
-                    let engine = cell.as_mut().expect("engine just created");
+                    let Some(engine) = cell.as_mut() else {
+                        anyhow::bail!("Inference engine unavailable");
+                    };
                     // Honest reload signal: after an idle-unload the context
                     // is gone, and load() blocks for seconds (mmap + warmup).
                     // Tell Swift BEFORE so the pill shows Loading/Preparing
@@ -429,8 +464,23 @@ fn inference_worker(rx: mpsc::Receiver<InferenceJob>) {
                         engine.unload();
                     }
                 });
+                // Honest post-unload state: the model FILE is usually still
+                // on disk (is_installed) — only the RAM context is gone, and
+                // the next TranscribeChunk reloads transparently. Reporting
+                // NotInstalled here lied to Swift (looked like "no model,
+                // must download") and wedged start_recording. Report
+                // Ready-with-session-Idle when the file exists; NotInstalled
+                // only when it is truly gone.
+                let still_installed = ModelManager::new().map(|m| m.is_installed()).unwrap_or(false);
                 with_app(|app| {
-                    app.model_state = ModelState::NotInstalled;
+                    if still_installed {
+                        app.model_state = ModelState::Ready;
+                        if app.phase == SessionPhase::Processing {
+                            app.phase = SessionPhase::Ready;
+                        }
+                    } else {
+                        app.model_state = ModelState::NotInstalled;
+                    }
                 });
                 notify_state();
             }
@@ -617,6 +667,45 @@ fn last_words(text: &str, n: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::audio::AudioCapture;
+
+    fn speech_like(len: usize) -> Vec<f32> {
+        // Alternating voiced-strength frames: RMS ~0.02, all frames hot.
+        (0..len).map(|i| if i % 2 == 0 { 0.03 } else { -0.03 }).collect()
+    }
+
+    #[test]
+    fn silence_gate_helpers_silence_is_zero() {
+        let silence = vec![0.0f32; 16000];
+        assert!(AudioCapture::rms(&silence) < SILENCE_RMS_FLOOR);
+        assert!(AudioCapture::voiced_fraction(&silence, SILENCE_RMS_FLOOR) < SILENCE_VOICED_MIN);
+    }
+
+    #[test]
+    fn silence_gate_helpers_speech_passes() {
+        let speech = speech_like(16000);
+        assert!(AudioCapture::rms(&speech) >= SILENCE_RMS_FLOOR);
+        assert!(AudioCapture::voiced_fraction(&speech, SILENCE_RMS_FLOOR) >= SILENCE_VOICED_MIN);
+    }
+
+    #[test]
+    fn silence_gate_helpers_short_blip_fails_length() {
+        // Loud but only 0.25 s — below MIN_SPEECH_SAMPLES.
+        let blip = speech_like(4000);
+        assert!(blip.len() < MIN_SPEECH_SAMPLES);
+    }
+
+    #[test]
+    fn silence_gate_helpers_single_loud_tick_not_voiced() {
+        // One loud frame in a second of silence: RMS may pass, voiced must not.
+        let mut v = vec![0.0f32; 16000];
+        for i in 0..320 {
+            v[i] = 0.5;
+        }
+        assert!(AudioCapture::voiced_fraction(&v, SILENCE_RMS_FLOOR) < SILENCE_VOICED_MIN);
+    }
+
+    use super::*;
 
     #[test]
     fn dedupe_exact_prefix() {
@@ -774,6 +863,13 @@ fn chunker_thread(stop_rx: mpsc::Receiver<()>, chunk_seconds: u64, overlap_secon
             continue;
         }
 
+        // Silence gate: a silent 7 s window decodes to "Thank you." — skip it
+        // without bumping counters so the tail-final math is unaffected.
+        if audio::AudioCapture::rms(&chunk) < SILENCE_RMS_FLOOR {
+            tracing::debug!("Chunker: silent window, skipping");
+            continue;
+        }
+
         CHUNKS_SENT.fetch_add(1, Ordering::SeqCst);
         // The final chunk must start AFTER the audio this chunk covered.
         // `buf_len` is the buffer length at snapshot time = end of this window.
@@ -799,6 +895,11 @@ fn idle_watchdog(idle_seconds: u64) {
     }
 
     tracing::info!(idle_seconds, "Idle watchdog started");
+
+    // Belt and braces with the initialize_core seed: the watchdog thread may
+    // start before/after the init store lands — seeding here too guarantees
+    // no first-tick false-unload regardless of thread scheduling.
+    LAST_ACTIVITY.store(now_secs(), Ordering::SeqCst);
 
     loop {
         thread::sleep(Duration::from_secs(10));
@@ -864,7 +965,13 @@ fn start_recording() -> bool {
 
     // Spawn the chunker for live transcription during this recording.
     let (stop_tx, stop_rx) = mpsc::channel::<()>();
-    *CHUNKER_STOP_TX.lock().unwrap() = Some(stop_tx);
+    match CHUNKER_STOP_TX.lock() {
+        Ok(mut guard) => *guard = Some(stop_tx),
+        Err(poisoned) => {
+            tracing::error!("CHUNKER_STOP_TX mutex poisoned on store — recovering");
+            *poisoned.into_inner() = Some(stop_tx);
+        }
+    }
     let (chunk_seconds, overlap_seconds) = with_app(|app| {
         (app.config.audio.chunk_seconds as u64, app.config.audio.chunk_overlap_seconds as u64)
     });
@@ -875,7 +982,7 @@ fn start_recording() -> bool {
 
 fn stop_recording() {
     // 1. Stop the chunker first — no more mid-recording jobs after this point.
-    if let Some(stop_tx) = CHUNKER_STOP_TX.lock().unwrap().take() {
+    if let Some(stop_tx) = chunker_stop_tx_take() {
         let _ = stop_tx.send(());
     }
 
@@ -906,6 +1013,32 @@ fn stop_recording() {
         }
         notify_state();
         return;
+    }
+
+    // Silence gate (whole-buffer path only): a short/silent clip with no
+    // prior chunks would decode to "Thank you." — dismiss back to Ready
+    // without inference. Long sessions (chunks already sent) always proceed:
+    // their transcript lives in the stitched session text and the tail job
+    // decodes under the tuned no-speech threshold instead.
+    if CHUNKS_SENT.load(Ordering::SeqCst) == 0 {
+        let rms = audio::AudioCapture::rms(&samples);
+        let voiced = audio::AudioCapture::voiced_fraction(&samples, SILENCE_RMS_FLOOR);
+        if samples.len() < MIN_SPEECH_SAMPLES
+            || rms < SILENCE_RMS_FLOOR
+            || voiced < SILENCE_VOICED_MIN
+        {
+            tracing::info!(
+                samples = samples.len(),
+                rms,
+                voiced,
+                "Silence-gated stop — skipped inference"
+            );
+            with_app(|app| {
+                app.dismiss();
+            });
+            notify_state();
+            return;
+        }
     }
 
     // 3. Transition to Processing — Swift renders the Transcribing pill immediately
@@ -961,7 +1094,7 @@ fn stop_recording() {
 /// (mic stop, mode toggle) and no transcript must ever arrive for it.
 fn cancel_recording() {
     // 1. Stop the chunker — no more mid-recording jobs after this point.
-    if let Some(stop_tx) = CHUNKER_STOP_TX.lock().unwrap().take() {
+    if let Some(stop_tx) = chunker_stop_tx_take() {
         let _ = stop_tx.send(());
     }
 
@@ -992,6 +1125,18 @@ fn cancel_recording() {
 
 fn get_transcript() -> String {
     with_app(|app| app.transcript.clone().unwrap_or_default())
+}
+
+/// Takes the chunker stop-signal sender, recovering from a poisoned mutex
+/// instead of aborting the app (panic = abort in this crate).
+fn chunker_stop_tx_take() -> Option<mpsc::Sender<()>> {
+    match CHUNKER_STOP_TX.lock() {
+        Ok(mut guard) => guard.take(),
+        Err(poisoned) => {
+            tracing::error!("CHUNKER_STOP_TX mutex poisoned — recovering");
+            poisoned.into_inner().take()
+        }
+    }
 }
 
 fn is_model_loaded() -> bool {

@@ -39,18 +39,31 @@ final class AppState: ObservableObject {
     @Published var logs: [String] = []
     @Published var commandInput = ""
     @Published var voiceModeEnabled = false
+    /// Action-pill (⌘⇧A) verification policy. True = voiceprint-check the
+    /// transcript like voice mode; false = the keypress IS the intent, run
+    /// immediately. UserDefaults-backed so it survives relaunch; toggled
+    /// from the in-app Settings (no code change to flip it).
+    @Published var actionPillRequiresVerify: Bool = UserDefaults.standard.object(forKey: "jarvis.actionPillRequiresVerify") as? Bool ?? true {
+        didSet { UserDefaults.standard.set(actionPillRequiresVerify, forKey: "jarvis.actionPillRequiresVerify") }
+    }
     @Published var voiceVerificationStatus = "Unknown Voice ❌"
     @Published var lastVoiceSimilarity = 0.0
     @Published var backendEnrollmentSampleCount = 0
     @Published var automations: [VoiceAutomation] = []
     @Published var backendStatus: String = "Not started"
     @Published var backendStartupError: String?
+    // MARK: - Connectors (Spotify)
+    /// Presence-only Spotify link state — never holds secrets. Refreshed on
+    /// demand from GET /spotify/status.
+    @Published var spotifyLinked: Bool = false
+    @Published var spotifyExpired: Bool = true
+    @Published var spotifyStatusText: String = "Not connected"
     /// When true, Jarvis speaks its responses aloud via AVSpeechSynthesizer.
     @Published var voiceResponseEnabled: Bool = false
     /// Current display brightness level (0-100) for UI display and controls.
     @Published var currentBrightness: Int = 50
-    /// Combined brightness level (0-100: Software Dimming + DDC Backlight + Contrast).
-    @Published var combinedBrightness: Int = 50
+    /// Current display contrast level (0-100, external monitors via DDC/CI).
+    @Published var currentContrast: Int = 50
 
     let popupManager = PopupManager()
 
@@ -88,17 +101,17 @@ final class AppState: ObservableObject {
 
     private let micManager: MicManager
     private let logger: Logger
-    private let dbManager: DBManager
+    let dbManager: DBManager
     private let parser = CommandParser()
     private let executor = CommandExecutor()
     private let actionExecutor = ActionExecutor()
     private let automationStore = AutomationStore()
-    private let commandNormalizer = CommandNormalizer(model: "qwen2.5-coder:1.5b-base")
+    private let commandNormalizer = CommandNormalizer(model: JarvisModel.name)
     private let voiceAuthClient = VoiceAuthClient()
+    let spotifyClient = SpotifyClient()
     private let actionPlanner = ActionPlanner()
     private let backendServiceManager = BackendServiceManager()
     private let displayController = DisplayController()
-    private let combinedBrightnessController = CombinedBrightnessController()
     let commandQueue = CommandQueueManager()
 
     private var previousVoiceDetected = false
@@ -125,17 +138,29 @@ final class AppState: ObservableObject {
     private let voiceStartThresholdDB: Float = -42.0
     private let voiceContinueThresholdDB: Float = -50.0
     private let minimumRecordingDuration: TimeInterval = 0.8
-    private let requiredSilenceDuration: TimeInterval = 0.6
+    private let requiredSilenceDuration: TimeInterval = 1.2
     private let smoothingFactor: Float = 0.35
     /// Longest unbroken voiced run before the utterance is force-segmented
-    /// (see handleAudioLevel). Must sit well inside Rust chunk_seconds=6 so
-    /// each segment transcribes mid-speech instead of only at long pauses.
-    private static let maxContinuousSpeechSeconds: TimeInterval = 4.0
+    /// (see handleAudioLevel). Sits just past Rust chunk_seconds=6 so each
+    /// segment carries a live partial before the split fires.
+    private static let maxContinuousSpeechSeconds: TimeInterval = 8.0
     private let enrollmentAcceptCooldown: TimeInterval = 1.4
     private let enrollmentAttemptThrottle: TimeInterval = 0.30
     private let voiceVerificationThreshold = 0.70
     private static let verifyAudioSeconds = 3.5
     private static let enrollAudioSeconds = 3.5
+    /// Minimum RMS of the verify clip — below this the buffer is silence and
+    /// the backend would 400 (or Resemblyzer would embed noise). Skip the
+    /// POST and reject locally instead.
+    private static let verifyMinClipRMS: Float = 0.005
+    /// Whisper emits "thank you / thanks / you" on silence (well-known
+    /// hallucination). Such singleton finals without a wake word are never
+    /// commands — filter them before verify/enqueue.
+    private static let hallucinatedSingletons: Set<String> = [
+        "thankyou", "thanks", "you", "thankyouthankyou", "okay", "ok",
+        "thankyouforwatching", "thanksforwatching", "thankyouverymuch",
+        "subtitlesby", "blankaudio", "youyouyou",
+    ]
     /// Resemblyzer embeds via preprocess_wav at 16 kHz. Exporting at the
     /// same rate removes a resample-variance source between enroll-time
     /// and verify-time embeddings and keeps clips comparable sample-for-sample.
@@ -175,15 +200,20 @@ final class AppState: ObservableObject {
         displayController.onLog = { [weak self] msg in
             Task { @MainActor in self?.appendLog(msg) }
         }
-        combinedBrightnessController.onLog = { [weak self] msg in
-            Task { @MainActor in self?.appendLog(msg) }
-        }
         // Wire Whisper command transcripts (VAD-segmented utterances from the
         // Rust STT core) into the existing transcript pipeline.
         STTRouter.shared.onCommandTranscript = { [weak self] text in
             Task { @MainActor in
                 self?.appendLog("[Speech][Whisper] FINAL: '\(text)'")
                 self?.handleTranscript(text, isFinal: true)
+            }
+        }
+        // Action pill (⌘⇧A): the press is the intent — no wake word, no
+        // voice-mode gate. Runs through the SAME verify/execute path as
+        // typed commands (verify per the user setting above).
+        STTRouter.shared.onActionTranscript = { [weak self] text in
+            Task { @MainActor in
+                self?.handleActionPillCommand(text)
             }
         }
         // Live partials (per-chunk stitch, ~6 s cadence) drive the main
@@ -214,6 +244,21 @@ final class AppState: ObservableObject {
 
         self.automations = automationStore.load()
         refreshBrightness()
+        refreshContrast()
+        // Usage stats: Postgres primary, local JSON buffer when PG is off.
+        // Recorder always buffers; flush upserts deltas keyed by day.
+        StatsRecorder.shared.onFlush = { [weak self] snapshot in
+            guard let self else { return }
+            guard self.dbManager.isConfigured else { return }
+            let pending = StatsRecorder.shared.bufferedDays()
+            for bucket in pending {
+                self.dbManager.upsertDailyStats(bucket)
+            }
+            if !pending.isEmpty {
+                StatsRecorder.shared.markBackfilled(days: pending.map { $0.day })
+            }
+            _ = snapshot
+        }
 
         sessionTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             Task { @MainActor in
@@ -248,24 +293,30 @@ final class AppState: ObservableObject {
         refreshBrightness()
     }
 
-    // MARK: - Combined Brightness Test Controls (GUI Only)
+    // MARK: - Display Contrast UI Controls
 
-    func increaseCombinedBrightnessUI() {
-        let msg = combinedBrightnessController.increase(by: 10)
-        appendLog("[UI Combined] \(msg)")
-        combinedBrightness = combinedBrightnessController.currentCombinedLevel
+    func refreshContrast() {
+        if let val = displayController.getCurrentContrast() {
+            currentContrast = val
+        }
     }
 
-    func decreaseCombinedBrightnessUI() {
-        let msg = combinedBrightnessController.decrease(by: 10)
-        appendLog("[UI Combined] \(msg)")
-        combinedBrightness = combinedBrightnessController.currentCombinedLevel
+    func increaseContrastUI() {
+        let msg = displayController.execute(.increaseContrast(by: 10))
+        appendLog("[UI] \(msg)")
+        refreshContrast()
     }
 
-    func setCombinedBrightnessUI(_ percent: Int) {
-        let msg = combinedBrightnessController.setCombinedBrightness(percent)
-        appendLog("[UI Combined] \(msg)")
-        combinedBrightness = combinedBrightnessController.currentCombinedLevel
+    func decreaseContrastUI() {
+        let msg = displayController.execute(.decreaseContrast(by: 10))
+        appendLog("[UI] \(msg)")
+        refreshContrast()
+    }
+
+    func setContrastUI(_ percent: Int) {
+        let msg = displayController.execute(.setContrast(percent))
+        appendLog("[UI] \(msg)")
+        refreshContrast()
     }
 
     // MARK: - Voice Session State Management (Requirement 1 - 6, 8)
@@ -319,12 +370,14 @@ final class AppState: ObservableObject {
             appendLog("PostgreSQL logging disabled (optional). To enable: export PGHOST=127.0.0.1 PGPORT=5432 PGDATABASE=jarvis_db PGUSER=jarvis_user — missing: \(DBManager.missingEnvKeys.joined(separator: ","))")
         }
 
-        restoreEnrollmentState()
+        restoreEnrollmentStateFast()
+        await reconcileEnrollmentFromDB()
         await syncVoiceProfileStatusFromBackend()
         await startMicrophone()
     }
 
     func shutdown() {
+        StatsRecorder.shared.flush()
         stopMicrophone()
         backendServiceManager.stopIfNeeded { [weak self] message in
             Task { @MainActor in
@@ -346,6 +399,7 @@ final class AppState: ObservableObject {
             backendStartupError = nil
             backendStatus = "Backend running"
             appendLog("[Backend] \(result.message)")
+            await refreshSpotifyStatus()
         } else {
             backendStartupError = result.message
             backendStatus = "Backend failed"
@@ -449,6 +503,33 @@ final class AppState: ObservableObject {
         appendLog("Voice enrollment stopped.")
     }
 
+    /// Action-pill (⌘⇧A) command entry. Same shape as executeTypedCommand:
+    /// validate → classify → enqueue. No wake word (the keypress is the
+    /// intent). Verification is per `actionPillRequiresVerify`, changeable
+    /// in Settings without touching code.
+    func handleActionPillCommand(_ raw: String) {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            appendLog("[Action] dropped: empty transcript.")
+            return
+        }
+        guard let command = CommandValidator.validate(trimmed) else {
+            appendLog("[Action] Invalid command skipped: '\(trimmed)'")
+            return
+        }
+        appendLog("[Action] Received: '\(command)' (verify: \(actionPillRequiresVerify ? "on" : "off"))")
+        let priority = CommandPriority.classify(command)
+        if actionPillRequiresVerify {
+            commandQueue.enqueue(text: command, priority: priority) { [weak self] in
+                await self?.verifyThenRunCommand(command)
+            }
+        } else {
+            commandQueue.enqueue(text: command, priority: priority) { [weak self] in
+                await self?.runCommand(command)
+            }
+        }
+    }
+
     func executeTypedCommand() {
         let raw = commandInput.trimmingCharacters(in: .whitespacesAndNewlines)
         commandInput = ""
@@ -469,6 +550,25 @@ final class AppState: ObservableObject {
 
     func clearEventLog() {
         logs.removeAll()
+    }
+
+    // MARK: - Connectors (Spotify status)
+
+    /// Presence-only refresh: linked = keys saved + a usable token.
+    func refreshSpotifyStatus() async {
+        do {
+            let st = try await spotifyClient.status()
+            spotifyExpired = st.expired
+            spotifyLinked = st.clientPresent && st.accessPresent && !st.expired
+            spotifyStatusText = !st.clientPresent ? "Keys missing"
+                : st.expired ? "Token expired — reconnect"
+                : "Connected"
+            appendLog("[Spotify] Status: \(spotifyStatusText)")
+        } catch {
+            spotifyLinked = false
+            spotifyStatusText = "Backend unreachable"
+            appendLog("[Spotify] Status check failed: \(error.localizedDescription)")
+        }
     }
 
     func saveAutomation(
@@ -561,6 +661,19 @@ final class AppState: ObservableObject {
             return
         }
 
+        // Voice-mode app shortcut mishear guard: Whisper often returns a bare
+        // app name ("Spotify") when the user said "open Spotify". The typed
+        // box works because CommandValidator never sees the truncation, but
+        // voice drops single nouns as non-commands. Repair the obvious case:
+        // a bare known-app noun in voice mode becomes "open <app>".
+        let repairedTranscript: String = {
+            let t = transcript.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            let apps: Set<String> = ["spotify", "chrome", "whatsapp"]
+            if apps.contains(t) { return "open \(t)" }
+            return transcript
+        }()
+        let transcriptForCommand = repairedTranscript
+
         guard enrollmentCompleted else {
             appendLog("Enrollment required before voice command execution.")
             return
@@ -602,11 +715,24 @@ final class AppState: ObservableObject {
         appendLog("[Voice] NEW SESSION START — transcript: '\(transcript)' (session active: \(isSessionValid))")
 
         // ── Deterministic wake-word split / Session follow-up ──────────
-        let hasWakeWord = containsWakeWord(transcript)
+        // NOTE: everything below uses transcriptForCommand (the repaired
+        // text), not the raw transcript: a bare "Spotify" mishear was
+        // already repaired to "open spotify" above.
+        let hasWakeWord = containsWakeWord(transcriptForCommand)
         var rawSegments: [String] = []
 
+        // ── Whisper hallucination filter ──────────────────────────
+        // "Thank you." on silence is the classic whisper hallucination —
+        // never a command. Drop singleton fillers without a wake word BEFORE
+        // verify/enqueue so they can't hit /verify (400), Ollama, or the
+        // queue.
+        if !hasWakeWord, Self.hallucinatedSingletons.contains(Self.normalizeCompact(transcriptForCommand)) {
+            appendLog("[Voice] dropped: hallucination filter ('\(transcriptForCommand)' without wake word).")
+            return
+        }
+
         if hasWakeWord {
-            rawSegments = transcript
+            rawSegments = transcriptForCommand
                 .replacingOccurrences(of: "(?i)\\bjarvis\\b", with: "|",
                                        options: [.regularExpression, .caseInsensitive])
                 .split(separator: "|", omittingEmptySubsequences: true)
@@ -615,10 +741,10 @@ final class AppState: ObservableObject {
             appendLog("[Voice] segments count: \(rawSegments.count) (from wake-word split)")
             NSLog("[Voice] split into %d raw segments", rawSegments.count)
         } else if isSessionValid {
-            rawSegments = [transcript]
-            appendLog("[VoiceSession] Processing in-session follow-up command: '\(transcript)'")
+            rawSegments = [transcriptForCommand]
+            appendLog("[VoiceSession] Processing in-session follow-up command: '\(transcriptForCommand)'")
         } else if pendingWakeWordDetected && now.timeIntervalSince(pendingWakeWordDetectedAt) <= 4.0 {
-            rawSegments = [transcript]
+            rawSegments = [transcriptForCommand]
             appendLog("[Voice] segments count: 1 (pending wake-word fallback)")
         }
 
@@ -637,7 +763,7 @@ final class AppState: ObservableObject {
         }
 
         guard !cleanedCommands.isEmpty else {
-            appendLog("[Voice] dropped: no valid command after cleaning \(rawSegments.count) segment(s) — transcript '\(transcript)' ignored.")
+            appendLog("[Voice] dropped: no valid command after cleaning \(rawSegments.count) segment(s) — transcript '\(transcriptForCommand)' ignored.")
             return
         }
 
@@ -649,7 +775,7 @@ final class AppState: ObservableObject {
             appendLog("[Voice] cleaned: '\(cmd)'")
         }
 
-        lastBatchHandledTranscript = Self.normalizeCompact(transcript)
+        lastBatchHandledTranscript = Self.normalizeCompact(transcriptForCommand)
 
         for validated in sanitized {
             let priority = CommandPriority.classify(validated)
@@ -892,20 +1018,53 @@ final class AppState: ObservableObject {
         }
     }
 
-    private func restoreEnrollmentState() {
+    /// Boot fast-path: UserDefaults only, never touches the DB (sync psql
+    /// from @MainActor deadlocked boot in __DISPATCH_WAIT_FOR_QUEUE__).
+    /// The DB reconcile runs async right after (see reconcileEnrollmentFromDB).
+    private func restoreEnrollmentStateFast() {
         let defaultsFlag = UserDefaults.standard.bool(forKey: Self.enrollmentCompletedDefaultsKey)
-        let dbFlag = dbManager.hasEnrollmentCompletionEvent()
         let savedBackendCount = UserDefaults.standard.integer(forKey: Self.backendSampleCountDefaultsKey)
 
         backendEnrollmentSampleCount = savedBackendCount
 
-        if defaultsFlag || dbFlag {
+        if defaultsFlag {
             enrollmentCompleted = true
             enrollmentActive = false
             appendLog("Enrollment restored from saved state.")
-            if !defaultsFlag {
-                persistEnrollmentCompleted(true)
+            if savedBackendCount >= voiceEnrollmentSampleTarget {
+                voiceVerificationStatus = "Voice Enrolled ✅"
+            } else if savedBackendCount > 0 {
+                voiceVerificationStatus = "Finalizing Voice Profile..."
             }
+        }
+    }
+
+    /// Background reconcile: if the DB has an enrollment_completed event we
+    /// never persisted locally (fresh profile, wiped defaults), adopt it.
+    private func reconcileEnrollmentFromDB() async {
+        guard !enrollmentCompleted else { return }
+        guard dbManager.isConfigured else { return }
+        if await dbManager.hasEnrollmentCompletionEvent() {
+            enrollmentCompleted = true
+            enrollmentActive = false
+            persistEnrollmentCompleted(true)
+            appendLog("Enrollment restored from saved state.")
+        }
+    }
+
+    /// Legacy sync restore (kept for in-session callers like re-enroll
+    /// flows — never on the boot path; boot uses restoreEnrollmentStateFast
+    /// + reconcileEnrollmentFromDB so psql can never park the MainActor).
+    private func restoreEnrollmentState() {
+        let defaultsFlag = UserDefaults.standard.bool(forKey: Self.enrollmentCompletedDefaultsKey)
+        let savedBackendCount = UserDefaults.standard.integer(forKey: Self.backendSampleCountDefaultsKey)
+
+        backendEnrollmentSampleCount = savedBackendCount
+
+        if defaultsFlag {
+            enrollmentCompleted = true
+            enrollmentActive = false
+            appendLog("Enrollment restored from saved state.")
 
             if savedBackendCount >= voiceEnrollmentSampleTarget {
                 voiceVerificationStatus = "Voice Enrolled ✅"
@@ -1185,10 +1344,13 @@ final class AppState: ObservableObject {
 
     private func runCommand(_ command: String) async {
         guard !command.isEmpty else { return }
+        var succeeded = false
+        defer { StatsRecorder.shared.recordCommand(success: succeeded) }
 
         if let match = matchedAutomation(for: command) {
             appendLog("[Automation] Triggered keyword: '\(match.automation.keyword)'")
             await executeAutomation(match.automation, isOffVariant: match.isOffVariant)
+            succeeded = true
             return
         }
 
@@ -1218,6 +1380,7 @@ final class AppState: ObservableObject {
                 matched: false,
                 metadata: ["reason": reason]
             )
+            StatsRecorder.shared.recordCommand(success: false)
             currentCommand = ""
             assistantState = micActive ? .listening : .idle
             return
@@ -1229,6 +1392,7 @@ final class AppState: ObservableObject {
                 matched: false,
                 metadata: ["command": cmd, "source": source]
             )
+            StatsRecorder.shared.recordCommand(success: false)
             currentCommand = ""
             assistantState = micActive ? .listening : .idle
             return
@@ -1296,6 +1460,13 @@ final class AppState: ObservableObject {
                             result: result,
                             speak: speakResponses
                         )
+                        // Single-step informational answers (time/date via
+                        // planner, brightness/contrast reads, volume reads)
+                        // also surface in the floating panel so background
+                        // ⌘⇧A isn't log-only.
+                        if plan.count == 1, result.success, case .systemInfo = result.action {
+                            self.showFloatingResult(result.message, icon: "info.circle.fill")
+                        }
                     }
                 }
             )
@@ -1308,6 +1479,7 @@ final class AppState: ObservableObject {
             )
             currentCommand = ""
             assistantState = micActive ? .listening : .idle
+            succeeded = true
             return
         }
 
@@ -1324,6 +1496,7 @@ final class AppState: ObservableObject {
                 matched: false,
                 metadata: ["reason": reason]
             )
+            StatsRecorder.shared.recordCommand(success: false)
             currentCommand = ""
             assistantState = micActive ? .listening : .idle
             return
@@ -1344,6 +1517,7 @@ final class AppState: ObservableObject {
             )
             currentCommand = ""
             assistantState = micActive ? .listening : .idle
+            succeeded = true
             return
         }
 
@@ -1360,6 +1534,7 @@ final class AppState: ObservableObject {
                 normalizedCommand: normalizedString,
                 metadata: ["reason": blockedReason]
             )
+            StatsRecorder.shared.recordCommand(success: false)
             currentCommand = ""
             assistantState = micActive ? .listening : .idle
             return
@@ -1395,6 +1570,8 @@ final class AppState: ObservableObject {
         case .aiQuery:
             // AI query result → show full response + speak if enabled
             ResponseEngine.shared.respond(to: result, speak: speak)
+        case .searchWeb:
+            ResponseEngine.shared.respond(to: result, speak: speak)
         case .openApp(let n):
             ResponseEngine.shared.respond(to: "Opening \(n)", speak: speak)
         case .closeApp(let n):
@@ -1413,6 +1590,7 @@ final class AppState: ObservableObject {
         )
         currentCommand = ""
         assistantState = micActive ? .listening : .idle
+        succeeded = true
     }
 
     /// Returns true when the plan contains exactly one action that falls
@@ -1431,7 +1609,8 @@ final class AppState: ObservableObject {
         guard voiceProfileReady else {
             voiceVerificationStatus = "Voice Profile Incomplete ⚠️"
             appendLog("[Voice] dropped: profile not ready (\(backendEnrollmentSampleCount)/\(voiceEnrollmentSampleTarget)) — command '\(command)' rejected.")
-            dbManager.saveEvent(
+            StatsRecorder.shared.recordCommand(success: false)
+                    dbManager.saveEvent(
                 eventType: "voice_profile_incomplete",
                 transcript: command,
                 matched: false,
@@ -1494,6 +1673,7 @@ final class AppState: ObservableObject {
                     if voiceSessionState == .active {
                         appendLog("[VoiceSession] In-session command '\(command)' rejected due to failed verification. Session timer unchanged.")
                     }
+                    StatsRecorder.shared.recordCommand(success: false)
                     dbManager.saveEvent(
                         eventType: "voice_rejected",
                         transcript: command,
@@ -1533,6 +1713,7 @@ final class AppState: ObservableObject {
                     if voiceSessionState == .active {
                         appendLog("[VoiceSession] In-session command '\(command)' rejected due to failed verification. Session timer unchanged.")
                     }
+                    StatsRecorder.shared.recordCommand(success: false)
                     dbManager.saveEvent(
                         eventType: "voice_rejected",
                         transcript: command,
@@ -1553,13 +1734,30 @@ final class AppState: ObservableObject {
             }
         } catch let authError {
             // Fix #10: Auth failure — single attempt only.
-            // If the backend is unreachable, fall back silently (allow command).
-            // Do NOT retry; do NOT re-enqueue.
+            // Network-down fallback allows the command ONLY when it carries
+            // a wake word or arrives in an active session — a hallucinated
+            // singleton ("Thank you.") with no wake word must never execute
+            // just because the backend is offline. Do NOT retry; do NOT
+            // re-enqueue.
             let isNetworkError = authError.localizedDescription.lowercased().contains("unavailable")
                 || authError.localizedDescription.lowercased().contains("connect")
                 || authError.localizedDescription.lowercased().contains("url")
 
             if isNetworkError {
+                let hasWake = containsWakeWord(lastRecognizedSpeech)
+                    || voiceSessionState == .active
+                guard hasWake else {
+                    voiceVerificationStatus = "Unknown Voice ❌"
+                    appendLog("[Voice] dropped: auth fallback refused — no wake word in '\(command)' (backend offline).")
+                    StatsRecorder.shared.recordCommand(success: false)
+                    dbManager.saveEvent(
+                        eventType: "voice_auth_fallback_refused",
+                        transcript: command,
+                        matched: false,
+                        metadata: ["reason": "backend_offline_no_wake"]
+                    )
+                    return
+                }
                 appendLog("[Voice] ⚠️ Auth backend unreachable — allowing command with fallback (no retry).")
                 voiceVerificationStatus = "Auth Fallback ⚠️"
                 dbManager.saveEvent(
@@ -1573,7 +1771,8 @@ final class AppState: ObservableObject {
                 // Non-network error (e.g. audio capture failure) — hard reject, no retry.
                 voiceVerificationStatus = "Unknown Voice ❌"
                 appendLog("[Voice] Verification error: \(authError.localizedDescription). Command rejected.")
-                dbManager.saveEvent(
+                StatsRecorder.shared.recordCommand(success: false)
+                    dbManager.saveEvent(
                     eventType: "voice_verification_error",
                     transcript: command,
                     matched: false,
@@ -1584,14 +1783,36 @@ final class AppState: ObservableObject {
     }
 
     /// Single verification attempt — exports the most recent utterance-length
-    /// audio window at 16 kHz and calls backend.
+    /// audio window at 16 kHz and calls backend. Silence clips (RMS below
+    /// verifyMinClipRMS) are rejected locally: the backend would 400 them
+    /// and Resemblyzer would embed noise, so never POST them.
     private func attemptVerification() async throws -> VoiceVerificationResult {
         let sampleURL = try micManager.exportRecentAudioSample(
             durationSeconds: Self.verifyAudioSeconds,
             targetSampleRate: Self.voiceSampleRate
         )
         defer { try? FileManager.default.removeItem(at: sampleURL) }
+        let rms = Self.clipRMS(ofWavAt: sampleURL)
+        guard rms >= Self.verifyMinClipRMS else {
+            appendLog("[Voice] dropped: verify clip is silence (rms \(String(format: "%.4f", rms))) — backend skipped.")
+            throw MicManagerError.insufficientAudio
+        }
         return try await voiceAuthClient.verifyDetailed(audioFileURL: sampleURL)
+    }
+
+    /// RMS of a WAV file's samples (float32 mono written by MicManager).
+    /// Returns 0 when the file can't be read — treated as silence upstream.
+    private static func clipRMS(ofWavAt url: URL) -> Float {
+        guard let data = try? Data(contentsOf: url), data.count > 44 else { return 0 }
+        let samples = data.dropFirst(44)
+        let count = samples.count / MemoryLayout<Float>.size
+        guard count > 0 else { return 0 }
+        var squareSum: Float = 0
+        samples.withUnsafeBytes { raw in
+            let ptr = raw.bindMemory(to: Float.self)
+            for i in 0..<count { squareSum += ptr[i] * ptr[i] }
+        }
+        return sqrt(squareSum / Float(count))
     }
 
     private func fmtScore(_ value: Double) -> String {
@@ -1671,6 +1892,15 @@ final class AppState: ObservableObject {
         return nil
     }
 
+    /// Floating result panel: shows a short answer (time, date, brightness)
+    /// in a global NSPanel above ALL apps — the in-window PopupView only
+    /// renders when Jarvis is frontmost, so background ⌘⇧A answers were
+    /// invisible. Auto-dismisses after 3 s. Callers also mirror into
+    /// ResponseEngine so the main window shows it when frontmost.
+    private func showFloatingResult(_ text: String, icon: String) {
+        FloatPanel.show(text: text, icon: icon)
+    }
+
     // MARK: - Quick informational command handler
     @discardableResult
     private func tryHandleQuickInfoCommand(_ command: String) -> Bool {
@@ -1702,7 +1932,8 @@ final class AppState: ObservableObject {
             appendLog("[QuickInfo] Detected time query → \(timeStr)")
             currentCommand = ""
             assistantState = micActive ? .listening : .idle
-            popupManager.show(message: timeStr, icon: "clock.fill")
+            ResponseEngine.shared.respond(to: timeStr, speak: voiceResponseEnabled)
+            showFloatingResult(timeStr, icon: "clock.fill")
             return true
         }
 
@@ -1721,7 +1952,8 @@ final class AppState: ObservableObject {
             appendLog("[QuickInfo] Detected date query → \(dateStr)")
             currentCommand = ""
             assistantState = micActive ? .listening : .idle
-            popupManager.show(message: dateStr, icon: "calendar")
+            ResponseEngine.shared.respond(to: dateStr, speak: voiceResponseEnabled)
+            showFloatingResult(dateStr, icon: "calendar")
             return true
         }
 
@@ -1737,7 +1969,8 @@ final class AppState: ObservableObject {
             appendLog("[QuickInfo] Detected day query → \(dayStr)")
             currentCommand = ""
             assistantState = micActive ? .listening : .idle
-            popupManager.show(message: dayStr, icon: "calendar")
+            ResponseEngine.shared.respond(to: dayStr, speak: voiceResponseEnabled)
+            showFloatingResult(dayStr, icon: "calendar")
             return true
         }
 
@@ -1754,7 +1987,8 @@ final class AppState: ObservableObject {
             appendLog("[QuickInfo] Detected month query → \(monthStr)")
             currentCommand = ""
             assistantState = micActive ? .listening : .idle
-            popupManager.show(message: monthStr, icon: "calendar.badge.clock")
+            ResponseEngine.shared.respond(to: monthStr, speak: voiceResponseEnabled)
+            showFloatingResult(monthStr, icon: "calendar.badge.clock")
             return true
         }
 
@@ -1766,7 +2000,8 @@ final class AppState: ObservableObject {
             appendLog("[QuickInfo] Detected year query → \(yearStr)")
             currentCommand = ""
             assistantState = micActive ? .listening : .idle
-            popupManager.show(message: yearStr, icon: "calendar.badge.clock")
+            ResponseEngine.shared.respond(to: yearStr, speak: voiceResponseEnabled)
+            showFloatingResult(yearStr, icon: "calendar.badge.clock")
             return true
         }
 
@@ -1790,7 +2025,7 @@ final class AppState: ObservableObject {
         // comes from the 20 s WhisperCommandListener failsafe, and by then
         // the tail is cut, the embedding is garbage, and nothing executes.
         // So: treat a long run of UNBROKEN voice as its own boundary.
-        // Mid-speech split (4.0 s voiced): end the current utterance so its
+        // Mid-speech split (8.0 s voiced): end the current utterance so its
         // transcript routes; the next voiced tick re-opens a fresh one.
         // Short natural pauses still end via the silence rule below.
         // All split/end claims are suppressed while the pill owns the core.
@@ -1825,10 +2060,10 @@ final class AppState: ObservableObject {
                 recordingStartedAt = now
                 assistantState = .recording
                 appendLog("Recording started (voice detected).")
-                // Start a Whisper utterance on the STT core — unless the
-                // dictation pill owns it (⌘⇧D active): then VAD must not
-                // steal claims, or the next pill toggle loses the race.
-                // Level metering above keeps running regardless.
+                // Start a Whisper utterance on the STT core — unless a
+                // push-to-talk pill owns it (⌘⇧D / ⌘⇧A active): then VAD
+                // must not steal claims, or the next pill toggle loses
+                // the race. Level metering above keeps running regardless.
                 if !STTRouter.shared.pillSuppressesCommandVAD {
                     WhisperCommandListener.shared.beginUtterance()
                 }
@@ -1846,8 +2081,8 @@ final class AppState: ObservableObject {
                 appendLog("Recording ended (silence detected).")
                 // Finish the Whisper utterance — its transcript arrives
                 // asynchronously via STTRouter → handleTranscript(isFinal:).
-                // Suppressed while the pill owns the core (pill stops its
-                // own recording via toggleDictation, not via VAD).
+                // Suppressed while a pill owns the core (pills stop their
+                // own recordings via toggle, not via VAD).
                 if !STTRouter.shared.pillSuppressesCommandVAD {
                     WhisperCommandListener.shared.endUtterance()
                 }

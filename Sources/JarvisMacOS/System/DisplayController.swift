@@ -121,6 +121,18 @@ final class DisplayController {
         return nil
     }
 
+    /// Returns current display contrast (0-100, external DDC only).
+    func getCurrentContrast() -> Int? {
+        for displayID in DDCController.externalDisplayIDs() {
+            ddc.onLog = onLog
+            if let cur = ddc.getContrast(displayID: displayID) {
+                cachedContrastPct = Int(cur.current)
+                return Int(cur.current)
+            }
+        }
+        return nil
+    }
+
     private var cachedBrightnessPct: Int = 50
     private var cachedContrastPct: Int = 50
 
@@ -185,6 +197,7 @@ final class DisplayController {
         ddc.onLog = onLog
         for displayID in DDCController.externalDisplayIDs() {
             if ddc.setContrast(displayID: displayID, percent: percent) {
+                cachedContrastPct = clamp(percent, 0, 100)
                 return "Contrast set to \(percent)%"
             }
         }
@@ -194,11 +207,11 @@ final class DisplayController {
     private func adjustContrast(delta: Int, direction: Direction) -> String {
         ddc.onLog = onLog
         for displayID in DDCController.externalDisplayIDs() {
-            if let current = ddc.getContrast(displayID: displayID) {
-                let newPct = clamp(direction == .up ? current.current + delta : current.current - delta, 0, current.max)
-                if ddc.setContrast(displayID: displayID, percent: newPct) {
-                    return "Contrast \(direction == .up ? "increased" : "decreased") to \(newPct)%"
-                }
+            let currentPct = ddc.getContrast(displayID: displayID)?.current ?? cachedContrastPct
+            let newPct = clamp(direction == .up ? currentPct + delta : currentPct - delta, 0, 100)
+            if ddc.setContrast(displayID: displayID, percent: newPct) {
+                cachedContrastPct = newPct
+                return "Contrast \(direction == .up ? "increased" : "decreased") to \(newPct)%"
             }
         }
         return "Contrast adjustment requires an external monitor connected via DDC/CI"

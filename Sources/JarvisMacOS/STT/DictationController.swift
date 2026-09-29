@@ -8,9 +8,18 @@ import SwiftUI
 /// ⌘⇧D toggles Recording → Transcribing → transcript card (Copy/Close),
 /// copy auto-dismisses after 0.6 s. The Rust STT core owns the phase
 /// machine; this controller mirrors it for UI and forwards user actions.
+/// Which push-to-talk pill is active. Dictate (⌘⇧D) is voice-to-text
+/// only — it never executes. Action (⌘⇧A) transcribes then runs the result
+/// as a command (no wake word; verify per the user setting).
+enum PillMode {
+    case dictate
+    case action
+}
+
 final class DictationController: ObservableObject {
     static let shared = DictationController()
 
+    @Published var mode: PillMode = .dictate
     @Published var phase: AppPhase = .Idle
     @Published var modelPhase: ModelPhase = .NotInstalled
     @Published var transcript: String = ""
@@ -27,12 +36,14 @@ final class DictationController: ObservableObject {
     private var panelHost: NSHostingView<DictationHUDView>?
     private var recordingStartedAt: Date?
     private var pendingStartOnReady = false
+    private var pendingStartMode: PillMode = .dictate
 
     /// Sticky anchor for the pill — computed once per run, bottom-center.
     private var recordingAnchor: NSPoint?
 
     private var levelTimer: Timer?
     private var watchdogTimer: Timer?
+    var pendingSpeechSecs: Double = 0
 
     private init() {}
 
@@ -49,7 +60,7 @@ final class DictationController: ObservableObject {
         // and SwiftUI isn't re-rendered 30×/s forever.
     }
 
-    /// 30 Hz FFI meter — runs ONLY while the pill owns a recording.
+    /// 30 Hz FFI meter — runs ONLY while a pill owns a recording.
     /// Started by startDictation, stopped when the recording ends
     /// (stopDictation / dismiss / retry). The in-guard double-checks
     /// phase+owner so a stale fire after stop is a no-op.
@@ -57,7 +68,7 @@ final class DictationController: ObservableObject {
         stopLevelPolling()
         levelTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
             guard let self else { return }
-            guard self.phase == .Recording, STTRouter.shared.owner == .pill else { return }
+            guard self.phase == .Recording, STTRouter.shared.isModalOwner else { return }
             self.audioLevel = get_audio_level()
         }
     }
@@ -75,7 +86,7 @@ final class DictationController: ObservableObject {
         watchdogTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             guard let self,
                   self.phase == .Recording,
-                  STTRouter.shared.owner == .pill else { return }
+                  STTRouter.shared.isModalOwner else { return }
             let elapsed = self.recordingStartedAt.map { Date().timeIntervalSince($0) } ?? 0
             if elapsed > 300 {
                 NSLog("[Jarvis][STT] Recording timeout — auto stop")
@@ -105,24 +116,23 @@ final class DictationController: ObservableObject {
 
         switch STTRouter.shared.owner {
         case .command:
-            // A command utterance is recording — preempt it: finish its
-            // audio silently, then start the pill when the core is free.
-            // The suppressed result normally triggers the pill; a short
-            // utterance may produce no final job at all (empty-stop in
-            // Rust), so schedule a watchdog that force-clears the wedge.
-            // First dismiss any stale TranscriptReady/Error left by a
-            // finished utterance whose callback path hasn't run yet.
-            if get_app_phase() != .Recording {
-                dismiss_transcript()
-            }
+            // A command utterance is recording — abandon it instantly and
+            // start the pill (AgentTalk parity: no waiting on a silent
+            // final; the old wait left the pill dead on empty-stop).
             if !STTRouter.shared.preemptCommandForPill() {
                 NSLog("[Jarvis][STT] toggleDictation result: ignored (command busy)")
             } else {
                 NSLog("[Jarvis][STT] toggleDictation result: preempted command, pill starting")
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                    STTRouter.shared.forceClearPreemption()
-                }
             }
+            return
+        case .action:
+            // Action pill owns the core — hand over to it: ⌘⇧D abandons
+            // the action session and starts dictation fresh.
+            NSLog("[Jarvis][STT] toggleDictation result: abandoning action pill, starting dictation")
+            STTRouter.shared.abandonModalForOtherPill()
+            mode = .dictate
+            guard STTRouter.shared.claimForPill() else { return }
+            startDictation()
             return
         case .pill:
             break // owned by us — phase switch below
@@ -140,10 +150,15 @@ final class DictationController: ObservableObject {
 
         switch phase {
         case .Ready:
+            // Quiet-period BEFORE the claim lands: a VAD tick between this
+            // press and start_recording must not steal the core for command
+            // mode (auto-expires in 0.5 s; harmless if the claim fails).
+            STTRouter.shared.suppressCommandClaimsUntil = Date().addingTimeInterval(0.5)
             guard STTRouter.shared.claimForPill() else {
                 NSLog("[Jarvis][STT] toggleDictation result: ignored (core busy, owner: \(STTRouter.shared.owner))")
                 return
             }
+            mode = .dictate
             NSLog("[Jarvis][STT] toggleDictation result: claimed, starting pill")
             startDictation()
         case .Recording:
@@ -157,12 +172,15 @@ final class DictationController: ObservableObject {
             NSLog("[Jarvis][STT] toggleDictation result: close + new recording")
             dismissTranscript()
             guard STTRouter.shared.claimForPill() else { return }
+            mode = .dictate
             startDictation()
         case .Idle, .Preparing:
             // Model still loading/downloading. Queue a start for when
             // Ready arrives so the press is not lost.
             NSLog("[Jarvis][STT] toggleDictation result: queued on Ready (model: \(modelPhase))")
+            mode = .dictate
             pendingStartOnReady = true
+            pendingStartMode = .dictate
             showPanel()
         default:
             // Processing, Error
@@ -170,17 +188,88 @@ final class DictationController: ObservableObject {
         }
     }
 
+    // ── SINGLE action entry point (⌘⇧A) ───────────────────────
+    // Same lifecycle as toggleDictation, but the final transcript RUNS as
+    // a command (no wake word) instead of landing on a Copy/Close card.
+
+    func toggleAction() {
+        NSLog("[Jarvis][STT] toggleAction — phase: \(phase), model: \(modelPhase), owner: \(STTRouter.shared.owner)")
+
+        switch STTRouter.shared.owner {
+        case .command:
+            if !STTRouter.shared.preemptCommandForAction() {
+                NSLog("[Jarvis][STT] toggleAction result: ignored (command busy)")
+            } else {
+                NSLog("[Jarvis][STT] toggleAction result: preempted command, action starting")
+            }
+            return
+        case .pill:
+            // Dictation owns the core — hand over: ⌘⇧A abandons dictation
+            // and starts the action session fresh.
+            NSLog("[Jarvis][STT] toggleAction result: abandoning dictate pill, starting action")
+            STTRouter.shared.abandonModalForOtherPill()
+            mode = .action
+            guard STTRouter.shared.claimForAction() else { return }
+            startDictation()
+            return
+        case .action:
+            break // owned by us — phase switch below
+        case .none:
+            break // core free — phase switch below
+        }
+
+        if (phase == .TranscriptReady || phase == .Error), get_app_phase() == .Ready {
+            dismiss_transcript()
+            phase = .Ready
+        }
+
+        switch phase {
+        case .Ready:
+            STTRouter.shared.suppressCommandClaimsUntil = Date().addingTimeInterval(0.5)
+            guard STTRouter.shared.claimForAction() else {
+                NSLog("[Jarvis][STT] toggleAction result: ignored (core busy, owner: \(STTRouter.shared.owner))")
+                return
+            }
+            mode = .action
+            NSLog("[Jarvis][STT] toggleAction result: claimed, starting action")
+            startDictation()
+        case .Recording:
+            NSLog("[Jarvis][STT] toggleAction result: stopping action recording")
+            stopDictation()
+        case .TranscriptReady:
+            NSLog("[Jarvis][STT] toggleAction result: close + new action recording")
+            dismissTranscript()
+            mode = .action
+            guard STTRouter.shared.claimForAction() else { return }
+            startDictation()
+        case .Idle, .Preparing:
+            NSLog("[Jarvis][STT] toggleAction result: queued on Ready (model: \(modelPhase))")
+            mode = .action
+            pendingStartOnReady = true
+            pendingStartMode = .action
+            showPanel()
+        default:
+            NSLog("[Jarvis][STT] toggleAction result: ignored in phase \(phase)")
+        }
+    }
+
+    /// Starts an action recording session. The caller must hold action
+    /// ownership (via claimForAction, or the router's pending-start path).
+    func startActionRecording() {
+        mode = .action
+        startDictation()
+    }
+
     /// Starts a pill recording session. The caller must hold pill ownership
     /// (via claimForPill, or the router's pending-start path).
     func startPillRecording() {
+        mode = .dictate
         startDictation()
     }
 
     private func startDictation() {
         // Panel FIRST (agentTalk order): the press must always produce
         // something visible, even if the core then refuses to record.
-        // start_recording failing only releases the claim — the Error card
-        // (via on_error → showPanel) explains why instead of silence.
         showPanel()
         let ok = start_recording()
         NSLog("[Jarvis][STT] start_recording returned: \(ok)")
@@ -188,6 +277,10 @@ final class DictationController: ObservableObject {
             recordingStartedAt = Date()
             copied = false
             partialTranscript = ""
+            // Optimistic mirror: the second press must see .Recording even
+            // before the Rust callback round-trips, or it lands on
+            // `ignored (core busy, owner: pill)` instead of the stop arm.
+            phase = .Recording
             resizePanelForCurrentState()
             // Activity timers live exactly as long as this recording.
             startLevelPolling()
@@ -197,8 +290,21 @@ final class DictationController: ObservableObject {
             // next toggle loses the race. Level meter keeps running.
             STTRouter.shared.pillSuppressesCommandVAD = true
         } else {
-            // Core refused (race with command mode) — release the claim.
-            STTRouter.shared.releaseFromPill()
+            // Core refused (race with command mode) — surface the failure as
+            // an Error card instead of an invisible panel, then release.
+            phase = .Error
+            errorMessage = mode == .action
+                ? "Could not start recording — core busy. Press ⌘⇧A again."
+                : "Could not start recording — core busy. Press ⌘⇧D again."
+            resizePanelForCurrentState()
+            positionPanelForCurrentState()
+            panel?.orderFrontRegardless()
+            STTRouter.shared.pillSuppressesCommandVAD = false
+            if mode == .action {
+                STTRouter.shared.releaseFromAction()
+            } else {
+                STTRouter.shared.releaseFromPill()
+            }
         }
     }
 
@@ -207,25 +313,48 @@ final class DictationController: ObservableObject {
     func flushPendingStart() {
         guard pendingStartOnReady, phase == .Ready else { return }
         pendingStartOnReady = false
+        let queuedMode = pendingStartMode
+        pendingStartMode = .dictate
         NSLog("[Jarvis][STT] Flushing queued start (model now Ready)")
-        guard STTRouter.shared.claimForPill() else { return }
+        if queuedMode == .action {
+            mode = .action
+            guard STTRouter.shared.claimForAction() else { return }
+        } else {
+            mode = .dictate
+            guard STTRouter.shared.claimForPill() else { return }
+        }
         startDictation()
     }
 
     private func stopDictation() {
         NSLog("[Jarvis][STT] Recording stopped — starting inference")
+        let speechSecs = recordingStartedAt.map { Date().timeIntervalSince($0) } ?? 0
+        pendingSpeechSecs = speechSecs
         recordingStartedAt = nil
         stopActivityTimers()
-        guard get_app_phase() == .Recording else {
+        let rustPhase = get_app_phase()
+        guard rustPhase == .Recording else {
             // Stale mirror (e.g. a command result just routed and freed
             // the core) — nothing to stop; release so we can't wedge.
-            NSLog("[Jarvis][STT] stop ignored — core not recording")
-            STTRouter.shared.releaseFromPill()
+            // Also unmute VAD: with owner .none and the mute still set,
+            // command mode would go deaf.
+            NSLog("[Jarvis][STT] stop ignored — core not recording (mirror: \(phase), rust: \(rustPhase))")
+            STTRouter.shared.pillSuppressesCommandVAD = false
+            if mode == .action {
+                STTRouter.shared.releaseFromAction()
+            } else {
+                STTRouter.shared.releaseFromPill()
+            }
             return
         }
         // FFI runs on main thread: captures audio (thread_local),
         // transitions to Processing, then spawns its own inference thread.
         stop_recording()
+        // Optimistic flip: the SAME panel shows Transcribing instantly while
+        // inference runs (the user waits on the pill). The Rust
+        // Recording → Processing callback confirms and re-syncs.
+        phase = .Processing
+        showPanelIfNeeded()
     }
 
     // ── Transcript actions ──────────────────────────────────
@@ -240,6 +369,7 @@ final class DictationController: ObservableObject {
         NSLog("[Jarvis][STT] Copied to clipboard (\(transcript.count) chars)")
 
         copied = true
+        StatsRecorder.shared.recordCopy(chars: transcript.count)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
             self?.dismissTranscript()
         }
@@ -253,9 +383,10 @@ final class DictationController: ObservableObject {
         dismiss_transcript()
         stopActivityTimers()
         hidePanel()
-        STTRouter.shared.releaseFromPill()
+        STTRouter.shared.releaseModalOwner()
         STTRouter.shared.pillSuppressesCommandVAD = false
         resetDictationHotkeyHeldState()
+        resetActionHotkeyHeldState()
     }
 
     func retryRecording() {
@@ -272,7 +403,14 @@ final class DictationController: ObservableObject {
         if panel == nil {
             createPanel()
         }
-        resizePanelForCurrentState()
+        // setFrame only when the size actually changed: every setFrame on a
+        // borderless NSPanel hosting SwiftUI re-runs the constraint solver,
+        // and resize-while-content-resizes is what threw NSGenericException
+        // ("more Update Constraints passes than views") → SIGABRT on
+        // 2026-09-29. Positioning (setFrameOrigin) is always safe.
+        if let panel, panel.frame.size != panelSizeForCurrentState() {
+            resizePanelForCurrentState()
+        }
         positionPanelForCurrentState()
         panel?.orderFrontRegardless()
     }
@@ -280,13 +418,13 @@ final class DictationController: ObservableObject {
     private func createPanel() {
         let p = NSPanel(
             contentRect: NSRect(x: 0, y: 0, width: 240, height: 44),
-            styleMask: [.borderless],
+            styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
         p.isFloatingPanel = true
         p.level = .statusBar + 1
-        p.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
+        p.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient, .stationary]
         p.isOpaque = false
         p.backgroundColor = .clear
         p.hasShadow = false
@@ -346,8 +484,17 @@ final class DictationController: ObservableObject {
     }
 
     private func positionPanelForCurrentState() {
-        guard let panel, let screen = NSScreen.main else { return }
-        let visible = screen.visibleFrame
+        guard let panel else { return }
+        // NSScreen.main is nil during Spaces transitions / display sleep —
+        // fall back to the first screen, then the last anchor, then bottom-center.
+        let screen = NSScreen.main ?? NSScreen.screens.first
+        guard let visibleFrame = screen?.visibleFrame else {
+            if let anchor = recordingAnchor {
+                panel.setFrameOrigin(anchor)
+            }
+            return
+        }
+        let visible = visibleFrame
 
         // Anchor: computed once (bottom-center), sticky for the whole run.
         if recordingAnchor == nil {
@@ -361,12 +508,14 @@ final class DictationController: ObservableObject {
         case .TranscriptReady:
             // Float above the anchor, horizontally aligned to it — but never
             // off-screen: if the pill is near the top, put the transcript
-            // BELOW the pill instead.
+            // BELOW the pill instead. Clamp X too so the wider 300pt card
+            // never runs off the right edge.
             let anchor = recordingAnchor ?? NSPoint(x: visible.midX - panel.frame.width / 2, y: visible.minY + 24)
             let aboveY = anchor.y + panel.frame.height + 24
             let fitsAbove = aboveY + panel.frame.height <= visible.maxY
             let y = fitsAbove ? aboveY : anchor.y - panel.frame.height - 24
-            panel.setFrameOrigin(NSPoint(x: anchor.x, y: max(y, visible.minY)))
+            let x = min(max(anchor.x, visible.minX), max(visible.minX, visible.maxX - panel.frame.width))
+            panel.setFrameOrigin(NSPoint(x: x, y: min(max(y, visible.minY), max(visible.minY, visible.maxY - panel.frame.height))))
         default:
             panel.setFrameOrigin(recordingAnchor ?? .zero)
         }
@@ -381,7 +530,10 @@ final class DictationController: ObservableObject {
     /// Called from Rust callbacks when phase changes while panel may exist.
     func showPanelIfNeeded() {
         if panel != nil {
-            resizePanelForCurrentState()
+            // Same crash guard as showPanel: never setFrame redundantly.
+            if let panel, panel.frame.size != panelSizeForCurrentState() {
+                resizePanelForCurrentState()
+            }
             positionPanelForCurrentState()
             panel?.orderFrontRegardless()
         }

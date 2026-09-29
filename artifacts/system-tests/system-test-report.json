@@ -1,12 +1,12 @@
 {
-  "generatedAt" : "2026-09-22T03:21:29Z",
+  "generatedAt" : "2026-09-29T15:24:53Z",
   "retryPolicy" : "1 retry on failure (max 2 attempts per scenario)",
   "scenarios" : [
     {
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 47,
+          "durationMs" : 44,
           "planDescriptions" : [
             "Open 'textedit'"
           ],
@@ -27,7 +27,7 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 965,
+          "durationMs" : 942,
           "planDescriptions" : [
             "Close 'textedit'"
           ],
@@ -49,66 +49,92 @@
         {
           "attempt" : 1,
           "durationMs" : 0,
+          "failureReason" : "Intent mismatch: expected info",
           "planDescriptions" : [
-            "Info: current time"
+            "AI query: 'what time is it'"
           ],
           "stepMessages" : [
-            "✓ Current time: 8:51:24 AM"
-          ],
-          "success" : true
-        }
-      ],
-      "attemptsUsed" : 1,
-      "command" : "what time is it",
-      "expectedIntent" : "info",
-      "id" : "info-time",
-      "success" : true,
-      "suite" : "info"
-    },
-    {
-      "attempts" : [
-        {
-          "attempt" : 1,
-          "durationMs" : 28,
-          "planDescriptions" : [
-            "Info: battery status"
-          ],
-          "stepMessages" : [
-            "✓ Battery status: Now drawing from 'AC Power'"
-          ],
-          "success" : true
-        }
-      ],
-      "attemptsUsed" : 1,
-      "command" : "battery status",
-      "expectedIntent" : "info",
-      "id" : "info-battery",
-      "success" : true,
-      "suite" : "info"
-    },
-    {
-      "attempts" : [
-        {
-          "attempt" : 1,
-          "durationMs" : 13,
-          "failureReason" : "One or more action steps failed",
-          "planDescriptions" : [
-            "Media: pause"
-          ],
-          "stepMessages" : [
-            "✗ Spotify backend failed: Could not connect to the server."
+
           ],
           "success" : false
         },
         {
           "attempt" : 2,
-          "durationMs" : 5,
+          "durationMs" : 0,
+          "failureReason" : "Intent mismatch: expected info",
+          "planDescriptions" : [
+            "AI query: 'what time is it'"
+          ],
+          "stepMessages" : [
+
+          ],
+          "success" : false
+        }
+      ],
+      "attemptsUsed" : 2,
+      "command" : "what time is it",
+      "expectedIntent" : "info",
+      "id" : "info-time",
+      "success" : false,
+      "suite" : "info"
+    },
+    {
+      "attempts" : [
+        {
+          "attempt" : 1,
+          "durationMs" : 0,
+          "failureReason" : "Intent mismatch: expected info",
+          "planDescriptions" : [
+            "AI query: 'battery status'"
+          ],
+          "stepMessages" : [
+
+          ],
+          "success" : false
+        },
+        {
+          "attempt" : 2,
+          "durationMs" : 0,
+          "failureReason" : "Intent mismatch: expected info",
+          "planDescriptions" : [
+            "AI query: 'battery status'"
+          ],
+          "stepMessages" : [
+
+          ],
+          "success" : false
+        }
+      ],
+      "attemptsUsed" : 2,
+      "command" : "battery status",
+      "expectedIntent" : "info",
+      "id" : "info-battery",
+      "success" : false,
+      "suite" : "info"
+    },
+    {
+      "attempts" : [
+        {
+          "attempt" : 1,
+          "durationMs" : 1191,
           "failureReason" : "One or more action steps failed",
           "planDescriptions" : [
             "Media: pause"
           ],
           "stepMessages" : [
-            "✗ Spotify backend failed: Could not connect to the server."
+            "✗ Spotify backend failed (400): {\"detail\":\"No active Spotify device\"}"
+          ],
+          "success" : false
+        },
+        {
+          "attempt" : 2,
+          "durationMs" : 1060,
+          "failureReason" : "One or more action steps failed",
+          "planDescriptions" : [
+            "Media: pause"
+          ],
+          "stepMessages" : [
+            "✗ Spotify backend failed (400): {\"detail\":\"No active Spotify device\"}"
           ],
           "success" : false
         }
@@ -124,25 +150,25 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 3,
+          "durationMs" : 1063,
           "failureReason" : "One or more action steps failed",
           "planDescriptions" : [
             "Media: next track"
           ],
           "stepMessages" : [
-            "✗ Spotify backend failed: Could not connect to the server."
+            "✗ Spotify backend failed (400): {\"detail\":\"No active Spotify device\"}"
           ],
           "success" : false
         },
         {
           "attempt" : 2,
-          "durationMs" : 2,
+          "durationMs" : 946,
           "failureReason" : "One or more action steps failed",
           "planDescriptions" : [
             "Media: next track"
           ],
           "stepMessages" : [
-            "✗ Spotify backend failed: Could not connect to the server."
+            "✗ Spotify backend failed (400): {\"detail\":\"No active Spotify device\"}"
           ],
           "success" : false
         }
@@ -158,7 +184,7 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 1970,
+          "durationMs" : 1807,
           "planDescriptions" : [
             "Search YouTube for 'swift package manager'",
             "Open URL: https:\/\/www.youtube.com\/results?search_query=swift%20package%20manager"
@@ -181,7 +207,7 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 1776,
+          "durationMs" : 1808,
           "planDescriptions" : [
             "Search Google for 'swift concurrency'",
             "Open URL: https:\/\/www.google.com\/search?q=swift%20concurrency"
@@ -204,18 +230,18 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 2,
+          "durationMs" : 3,
           "planDescriptions" : [
-            "Create folder 'e2e-folder-8268356f'"
+            "Create folder 'e2e-folder-607ae43d'"
           ],
           "stepMessages" : [
-            "✓ Created folder: \/Users\/chiteshvarun\/D-drive\/jarvis_code\/e2e-folder-8268356f"
+            "✓ Created folder: \/Users\/chiteshvarun\/D-drive\/jarvis_code\/e2e-folder-607ae43d"
           ],
           "success" : true
         }
       ],
       "attemptsUsed" : 1,
-      "command" : "create folder e2e-folder-8268356F",
+      "command" : "create folder e2e-folder-607AE43D",
       "expectedIntent" : "filesystem",
       "id" : "fs-create-folder",
       "success" : true,
@@ -227,16 +253,16 @@
           "attempt" : 1,
           "durationMs" : 1,
           "planDescriptions" : [
-            "Create file 'e2e-file-8268356f.txt'"
+            "Create file 'e2e-file-607ae43d.txt'"
           ],
           "stepMessages" : [
-            "✓ Created file: \/Users\/chiteshvarun\/D-drive\/jarvis_code\/e2e-file-8268356f.txt"
+            "✓ Created file: \/Users\/chiteshvarun\/D-drive\/jarvis_code\/e2e-file-607ae43d.txt"
           ],
           "success" : true
         }
       ],
       "attemptsUsed" : 1,
-      "command" : "create file e2e-file-8268356F.txt",
+      "command" : "create file e2e-file-607AE43D.txt",
       "expectedIntent" : "filesystem",
       "id" : "fs-create-file",
       "success" : true,
@@ -251,22 +277,23 @@
             "Automation path via AppState.executeTypedCommand"
           ],
           "stepMessages" : [
-            "[2026-09-22T03:21:28Z] [Typed] Received: 'focus mode 8268356F'",
-            "[2026-09-22T03:21:28Z] [DDC] Discovered 1 DCPAVServiceProxy entries",
-            "[2026-09-22T03:21:28Z] [DDC] Matched display 1 → IOAVService (location: '')",
-            "[2026-09-22T03:21:28Z] [DDC] Read VCP 0x10: current=38 max=100 on display 1",
-            "[2026-09-22T03:21:28Z] [Queue] Enqueued (normal): 'focus mode 8268356F' [queue size: 1]",
-            "[2026-09-22T03:21:28Z] [Execution] started: 'focus mode 8268356F'",
-            "[2026-09-22T03:21:28Z] [Automation] Triggered keyword: 'focus mode 8268356F'",
-            "[2026-09-22T03:21:28Z] [Automation] Executing 1 actions for 'focus mode 8268356F'",
-            "[2026-09-22T03:21:28Z] [Automation] ▶ Open folder 'Downloads'",
-            "[2026-09-22T03:21:29Z] [Automation] ✓ Opened folder: \/Users\/chiteshvarun\/Downloads"
+            "[2026-09-29T15:24:53Z] [Typed] Received: 'focus mode 607AE43D'",
+            "[2026-09-29T15:24:53Z] [DDC] Discovered 1 DCPAVServiceProxy entries",
+            "[2026-09-29T15:24:53Z] [DDC] Matched display 2 → IOAVService (location: '')",
+            "[2026-09-29T15:24:53Z] [DDC] Read VCP 0x10: current=14 max=100 on display 2",
+            "[2026-09-29T15:24:53Z] [DDC] Read VCP 0x12: current=57 max=100 on display 2",
+            "[2026-09-29T15:24:53Z] [Queue] Enqueued (normal): 'focus mode 607AE43D' [queue size: 1]",
+            "[2026-09-29T15:24:53Z] [Execution] started: 'focus mode 607AE43D'",
+            "[2026-09-29T15:24:53Z] [Automation] Triggered keyword: 'focus mode 607AE43D'",
+            "[2026-09-29T15:24:53Z] [Automation] Executing 1 actions for 'focus mode 607AE43D'",
+            "[2026-09-29T15:24:53Z] [Automation] ▶ Open folder 'Downloads'",
+            "[2026-09-29T15:24:53Z] [Automation] ✓ Opened folder: \/Users\/chiteshvarun\/Downloads"
           ],
           "success" : true
         }
       ],
       "attemptsUsed" : 1,
-      "command" : "focus mode 8268356F",
+      "command" : "focus mode 607AE43D",
       "expectedIntent" : "automation",
       "id" : "automation-on",
       "success" : true,
@@ -276,29 +303,29 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 128,
+          "durationMs" : 252,
           "planDescriptions" : [
             "Automation path via AppState.executeTypedCommand"
           ],
           "stepMessages" : [
-            "[2026-09-22T03:21:28Z] [Execution] started: 'focus mode 8268356F'",
-            "[2026-09-22T03:21:28Z] [Automation] Triggered keyword: 'focus mode 8268356F'",
-            "[2026-09-22T03:21:28Z] [Automation] Executing 1 actions for 'focus mode 8268356F'",
-            "[2026-09-22T03:21:28Z] [Automation] ▶ Open folder 'Downloads'",
-            "[2026-09-22T03:21:29Z] [Automation] ✓ Opened folder: \/Users\/chiteshvarun\/Downloads",
-            "[2026-09-22T03:21:29Z] [Typed] Received: 'focus mode off 8268356F'",
-            "[2026-09-22T03:21:29Z] [Queue] Enqueued (normal): 'focus mode off 8268356F' [queue size: 1]",
-            "[2026-09-22T03:21:29Z] [Execution] finished: 'focus mode 8268356F'",
-            "[2026-09-22T03:21:29Z] [Execution] started: 'focus mode off 8268356F'",
-            "[2026-09-22T03:21:29Z] [Automation] Triggered keyword: 'focus mode 8268356F'",
-            "[2026-09-22T03:21:29Z] [Automation] Off variant matched for 'focus mode 8268356F'.",
-            "[2026-09-22T03:21:29Z] [Execution] finished: 'focus mode off 8268356F'"
+            "[2026-09-29T15:24:53Z] [Execution] started: 'focus mode 607AE43D'",
+            "[2026-09-29T15:24:53Z] [Automation] Triggered keyword: 'focus mode 607AE43D'",
+            "[2026-09-29T15:24:53Z] [Automation] Executing 1 actions for 'focus mode 607AE43D'",
+            "[2026-09-29T15:24:53Z] [Automation] ▶ Open folder 'Downloads'",
+            "[2026-09-29T15:24:53Z] [Automation] ✓ Opened folder: \/Users\/chiteshvarun\/Downloads",
+            "[2026-09-29T15:24:53Z] [Typed] Received: 'focus mode off 607AE43D'",
+            "[2026-09-29T15:24:53Z] [Queue] Enqueued (normal): 'focus mode off 607AE43D' [queue size: 1]",
+            "[2026-09-29T15:24:53Z] [Execution] finished: 'focus mode 607AE43D'",
+            "[2026-09-29T15:24:53Z] [Execution] started: 'focus mode off 607AE43D'",
+            "[2026-09-29T15:24:53Z] [Automation] Triggered keyword: 'focus mode 607AE43D'",
+            "[2026-09-29T15:24:53Z] [Automation] Off variant matched for 'focus mode 607AE43D'.",
+            "[2026-09-29T15:24:53Z] [Execution] finished: 'focus mode off 607AE43D'"
           ],
           "success" : true
         }
       ],
       "attemptsUsed" : 1,
-      "command" : "focus mode off 8268356F",
+      "command" : "focus mode off 607AE43D",
       "expectedIntent" : "automation",
       "id" : "automation-off",
       "success" : true,
@@ -314,10 +341,10 @@
     "spotify"
   ],
   "summary" : {
-    "averageDurationMs" : 370.42857142857144,
-    "failed" : 2,
-    "passed" : 10,
-    "successRate" : 83.33333333333334,
+    "averageDurationMs" : 585.1875,
+    "failed" : 4,
+    "passed" : 8,
+    "successRate" : 66.66666666666666,
     "total" : 12
   }
 }

@@ -123,12 +123,34 @@ impl InferenceEngine {
             whisper_rs::FullParams::new(whisper_rs::SamplingStrategy::Greedy { best_of: 1 });
         params.set_n_threads(self.n_threads);
         params.set_language(Some("en"));
+        // Same anti-hallucination set as the live path (warmup/fallback).
+        params.set_suppress_blank(true);
+        params.set_no_speech_thold(0.6);
+        params.set_temperature(0.0);
+        params.set_temperature_inc(0.2);
+        params.set_entropy_thold(2.4);
+        params.set_logprob_thold(-1.0);
+        params.set_single_segment(true);
         params.set_no_timestamps(true);
+        // Anti-hallucination: silence must decode to nothing, not "Thank you."
+        params.set_suppress_blank(true);
+        params.set_no_speech_thold(0.6);
+        params.set_temperature(0.0);
+        params.set_temperature_inc(0.2);
+        params.set_entropy_thold(2.4);
+        params.set_logprob_thold(-1.0);
+        params.set_single_segment(true);
 
         self.state = InferenceState::Running;
         let start = std::time::Instant::now();
 
-        let ctx_guard = ctx.lock().unwrap();
+        let ctx_guard = match ctx.lock() {
+            Ok(guard) => guard,
+            Err(poisoned) => {
+                tracing::error!("Whisper context mutex poisoned — recovering");
+                poisoned.into_inner()
+            }
+        };
         let mut state = ctx_guard.create_state()?;
         state.full(params, samples)?;
 
@@ -169,7 +191,13 @@ impl InferenceEngine {
 
     fn transcribe_core(&self, samples: &[f32]) -> anyhow::Result<String> {
         let ctx = self.context.as_ref().ok_or_else(|| anyhow::anyhow!("Context not loaded"))?;
-        let ctx = ctx.lock().unwrap();
+        let ctx = match ctx.lock() {
+            Ok(guard) => guard,
+            Err(poisoned) => {
+                tracing::error!("Whisper context mutex poisoned in transcribe_core — recovering");
+                poisoned.into_inner()
+            }
+        };
 
         let mut params =
             whisper_rs::FullParams::new(whisper_rs::SamplingStrategy::Greedy { best_of: 1 });

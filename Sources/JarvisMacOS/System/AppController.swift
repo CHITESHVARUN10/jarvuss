@@ -2,7 +2,7 @@ import Foundation
 
 final class AppController {
     func open(appName: String) -> String {
-        let normalized = AppAliasResolver.resolve(appName)
+        let normalized = AppAliasResolver.resolveSpoken(appName)
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
         process.arguments = ["-a", normalized]
@@ -20,7 +20,7 @@ final class AppController {
     }
 
     func close(appName: String) -> String {
-        let normalized = AppAliasResolver.resolve(appName)
+        let normalized = AppAliasResolver.resolveSpoken(appName)
         let script = "tell application \"\(normalized)\" to quit"
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
@@ -59,12 +59,25 @@ enum AppAliasResolver {
 
     private static let aliasMap: [String: Set<String>] = [
         "Google Chrome": ["chrome", "google chrome", "googlechrom"],
+        "Spotify": ["spotify"],
+        "WhatsApp": ["whatsapp"],
+        "Safari": ["safari", "apple safari"],
+        "Photos": ["photos", "apple photos", "photo", "fotos"],
+        "Brave Browser": ["brave", "brave browser", "browser", "web browser"],
+        "Firefox": ["firefox", "mozilla firefox", "fox"],
+        "Mail": ["mail", "apple mail", "email"],
+        "Messages": ["messages", "imessage", "message"],
+        "Calendar": ["calendar", "apple calendar"],
+        "Notes": ["notes", "apple notes", "note"],
+        "Music": ["music", "apple music"],
+        "Maps": ["maps", "apple maps", "map"],
+        "App Store": ["app store", "appstore"],
+        "City": ["city"],
         "GitHub Desktop": [
             "github", "github desktop", "git hub", "git hub desktop", "githab desktop",
             "get her desktop", "getha desktop", "get desktop", "gate desktop", "get up desktop", "gita desktop"
         ],
         "System Settings": ["system settings", "settings", "system setting"],
-        "Brave Browser": ["brave", "brave browser", "browser", "web browser"],
         "Visual Studio Code": ["vscode", "vs code", "visual studio code", "visual code"],
         "Finder": ["finder"],
         "Terminal": ["terminal"]
@@ -92,9 +105,19 @@ enum AppAliasResolver {
     private static func normalize(_ value: String) -> String {
         value
             .lowercased()
-            .replacingOccurrences(of: "[^a-z0-9\\s]", with: " ", options: .regularExpression)
+            .replacingOccurrences(of: "[^a-z0-9\\s]", with: "", options: .regularExpression)
             .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
             .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Whisper appends sentence punctuation ("Open photos.", "Open city!").
+    /// Strip it BEFORE resolve so "photos." hits the alias map.
+    static func resolveSpoken(_ name: String) -> String {
+        let cleaned = name
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .trimmingCharacters(in: CharacterSet(charactersIn: "?.!,,;:"))
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return resolve(cleaned)
     }
 
     private static func levenshteinDistance(lhs: String, rhs: String) -> Int {

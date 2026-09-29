@@ -80,6 +80,63 @@ mkdir -p "$BRIDGE_DST"
 # every regen stays warning-free.
 sed -i '' 's/extension RustStr: Identifiable/extension RustStr: @retroactive Identifiable/' "$GEN_CORE_SWIFT"
 sed -i '' 's/extension RustStr: Equatable/extension RustStr: @retroactive Equatable/' "$GEN_CORE_SWIFT"
+# Crash hardening (re-applied on every regen — these patches are load-bearing).
+# Idempotent: the generated dir keeps the previous run's patched output, so
+# each patch checks for BOTH the pristine target and its own prior result.
+# 1. RustStr.toString() force-unwraps UTF-8: Whisper garbage bytes on silence
+#    would fatalError and kill the app. Fall back lossily instead.
+python3 - "$GEN_CORE_SWIFT" <<'PY'
+import sys
+path = sys.argv[1]
+src = open(path).read()
+old = "        return String(bytes: bytes, encoding: .utf8)!"
+new = "        return String(bytes: bytes, encoding: .utf8) ?? String(decoding: bytes, as: UTF8.self)"
+if old in src:
+    src = src.replace(old, new)
+    print("[STT] Patched SwiftBridgeCore.toString (lossy UTF-8 fallback)")
+elif new in src:
+    print("[STT] SwiftBridgeCore.toString already patched — skipping")
+else:
+    raise SystemExit("SwiftBridgeCore patch target missing — swift-bridge output changed?")
+open(path, "w").write(src)
+PY
+# 2. Phase mapping `fatalError("Unreachable")` on unknown tags: a new Rust
+#    variant / uninit tag would trap the app. Degrade to .Error instead.
+python3 - "$GEN_SWIFT" <<'PY'
+import sys
+path = sys.argv[1]
+src = open(path).read()
+old_app = """            case __swift_bridge__$AppPhase$Error:
+                return AppPhase.Error
+            default:
+                fatalError("Unreachable")"""
+new_app = """            case __swift_bridge__$AppPhase$Error:
+                return AppPhase.Error
+            default:
+                print("[Jarvis][STT] Unknown AppPhase tag \\(self.tag) — mapping to .Error")
+                return AppPhase.Error"""
+old_model = old_app.replace("AppPhase", "ModelPhase")
+new_model = new_app.replace("AppPhase", "ModelPhase")
+# Legacy NSLog variants from an earlier revision (no Foundation import in the
+# generated file, so NSLog never compiles there). Normalized FIRST: the loop
+# below raises when neither pristine-old nor print-new is present, which is
+# exactly the legacy state.
+legacy_app = 'NSLog("[Jarvis][STT] Unknown AppPhase tag %d — mapping to .Error", Int(self.tag))'
+legacy_model = 'NSLog("[Jarvis][STT] Unknown ModelPhase tag %d — mapping to .Error", Int(self.tag))'
+changed = False
+for legacy, new in ((legacy_app, new_app), (legacy_model, new_model)):
+    if legacy in src:
+        src = src.replace(legacy, new)
+        changed = True
+for old, new in ((old_app, new_app), (old_model, new_model)):
+    if old in src:
+        src = src.replace(old, new)
+        changed = True
+    elif new not in src:
+        raise SystemExit("phase-mapping patch target missing — swift-bridge output changed?")
+open(path, "w").write(src)
+print("[STT] Phase mapping patched" if changed else "[STT] Phase mapping already patched — skipping")
+PY
 # Both generated files touch C symbols (RustStr struct, __swift_bridge__$*)
 # from the xcframework module — Xcode projects get this via bridging header,
 # SwiftPM needs an explicit import.

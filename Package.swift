@@ -25,6 +25,7 @@ let package = Package(
             name: "JarvisMacOS",
             dependencies: ["CDDCShim", "STTCore"],
             path: "Sources/JarvisMacOS",
+            exclude: ["Resources/Info.plist", "JarvisMacOS.entitlements"],
             linkerSettings: [
                 // Native frameworks required by the STT staticlib
                 // (whisper.cpp/Metal, cpal/CoreAudio, arboard) + Carbon hotkey.

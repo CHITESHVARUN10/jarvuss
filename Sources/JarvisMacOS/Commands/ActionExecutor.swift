@@ -16,7 +16,7 @@ final class ActionExecutor {
 
     private let appController    = AppController()
     private let fileManager      = JarvisFileManager()
-    private let ollamaClient     = OllamaClient(model: "qwen2.5-coder:1.5b-base")
+    private let ollamaClient     = OllamaClient(model: JarvisModel.name)
     private let volumeController = VolumeController()
     private let displayController = DisplayController()
 
@@ -185,6 +185,18 @@ final class ActionExecutor {
                 return ActionResult(action: .systemInfo(action), success: true, message: "System volume: \(level)%")
             }
             return ActionResult(action: .systemInfo(action), success: false, message: "Unable to read system volume")
+
+        case .displayBrightness:
+            if let pct = displayController.getCurrentBrightness() {
+                return ActionResult(action: .systemInfo(action), success: true, message: "Brightness is \(pct)%")
+            }
+            return ActionResult(action: .systemInfo(action), success: false, message: "Unable to read brightness")
+
+        case .displayContrast:
+            if let pct = displayController.getCurrentContrast() {
+                return ActionResult(action: .systemInfo(action), success: true, message: "Contrast is \(pct)%")
+            }
+            return ActionResult(action: .systemInfo(action), success: true, message: "Contrast control needs an external monitor — built-in display has no contrast readout")
         }
     }
 

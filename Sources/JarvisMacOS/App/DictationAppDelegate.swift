@@ -10,10 +10,34 @@ final class DictationAppDelegate: NSObject, NSApplicationDelegate {
         setvbuf(stdout, nil, _IONBF, 0)
         DictationController.shared.launch()
         registerDictationHotkey()
-        NSLog("[Jarvis] Dictation ready (⌘⇧D)")
+        NSLog("[Jarvis] Dictation ready (⌘⇧D dictate · ⌘⇧A action)")
     }
 
     func applicationWillTerminate(_ notification: Notification) {
         unregisterDictationHotkey()
+    }
+
+    // WindowGroup keeps the process alive after the last window closes
+    // (regular policy → dock icon stays). Without this, dock-click does
+    // nothing and the app looks "vanished". Reopen: activate + front any
+    // existing window, or open a fresh main window.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        NSLog("[Jarvis] Reopen — visible windows: \(flag)")
+        NSApp.activate(ignoringOtherApps: true)
+        if !flag {
+            for window in NSApp.windows where window.canBecomeMain {
+                window.makeKeyAndOrderFront(nil)
+                return true
+            }
+            // No window left at all — ask SwiftUI to recreate the main one.
+            if let url = URL(string: "jarvis://main") {
+                NSWorkspace.shared.open(url)
+            }
+        }
+        return true
+    }
+
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        false
     }
 }

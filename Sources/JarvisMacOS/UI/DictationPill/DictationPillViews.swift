@@ -9,6 +9,8 @@ import SwiftUI
 struct DictationHUDView: View {
     @ObservedObject private var model = DictationController.shared
 
+    private var isAction: Bool { model.mode == .action }
+
     var body: some View {
         Group {
             switch model.phase {
@@ -16,11 +18,12 @@ struct DictationHUDView: View {
                 DictationRecordingPillView(
                     audioLevel: model.audioLevel,
                     livePreview: model.partialTranscript,
-                    livePreviewEnabled: model.livePreviewEnabled
+                    livePreviewEnabled: model.livePreviewEnabled,
+                    isAction: isAction
                 )
 
             case .Processing:
-                DictationTranscribingPillView()
+                DictationTranscribingPillView(isAction: isAction)
 
             case .TranscriptReady:
                 DictationTranscriptOverlayView(
@@ -50,10 +53,15 @@ struct DictationHUDView: View {
             case .Idle, .Ready:
                 // Reloading after an idle-unload: session phase may still read
                 // Ready/Idle while the model itself is Loading/Unloading.
-                // Show a loading card instead of an invisible EmptyView.
                 if model.modelPhase == .Loading || model.modelPhase == .Unloading {
                     DictationReloadingView()
                         .frame(width: 300)
+                } else {
+                    // Panel exists but core is idle-ready (e.g. press landed
+                    // while Ready, or start_recording was refused). Never a
+                    // bare EmptyView — user must see *something*.
+                    DictationReadyView()
+                        .frame(width: 240)
                 }
 
             default:
@@ -73,6 +81,7 @@ struct DictationRecordingPillView: View {
     var audioLevel: Float = 0.2
     var livePreview: String = ""
     var livePreviewEnabled: Bool = false
+    var isAction: Bool = false
 
     var body: some View {
         VStack(spacing: 6) {
@@ -99,7 +108,7 @@ struct DictationRecordingPillView: View {
 
     private var pill: some View {
         HStack(spacing: 10) {
-            DictationRecordingStatusDot()
+            DictationRecordingStatusDot(isAction: isAction)
                 .padding(.leading, 14)
 
             Spacer(minLength: 2)
@@ -110,7 +119,7 @@ struct DictationRecordingPillView: View {
 
             Spacer(minLength: 2)
 
-            Text("Recording")
+            Text(isAction ? "Listening" : "Recording")
                 .font(.system(size: 11, weight: .medium, design: .default))
                 .foregroundStyle(.white.opacity(0.4))
                 .padding(.trailing, 14)
@@ -158,11 +167,16 @@ private struct DictationLivePreviewBubble: View {
     }
 }
 
-/// 8px red status dot with soft glow and breathing pulse.
+/// 8px status dot with soft glow and breathing pulse.
+/// Red for dictate (⌘⇧D), indigo for action (⌘⇧A) — same glass, own color.
 private struct DictationRecordingStatusDot: View {
     @State private var isPulsing = false
+    var isAction: Bool = false
 
-    private let dotColor = Color(red: 0.73, green: 0.10, blue: 0.10)
+    private var dotColor: Color {
+        isAction ? Color(red: 0.45, green: 0.50, blue: 1.0)
+                 : Color(red: 0.73, green: 0.10, blue: 0.10)
+    }
 
     var body: some View {
         Circle()
@@ -186,6 +200,7 @@ private struct DictationRecordingStatusDot: View {
 /// Same 240×44 glass, spinner + dimmed waveform + "Transcribing".
 struct DictationTranscribingPillView: View {
     @State private var isVisible = false
+    var isAction: Bool = false
 
     var body: some View {
         HStack(spacing: 10) {
@@ -203,7 +218,7 @@ struct DictationTranscribingPillView: View {
 
             Spacer(minLength: 2)
 
-            Text("Transcribing")
+            Text((isAction ? "Working" : "Transcribing"))
                 .font(.system(size: 11, weight: .medium, design: .default))
                 .foregroundStyle(.white.opacity(0.4))
                 .padding(.trailing, 14)
@@ -323,7 +338,48 @@ struct DictationTranscriptOverlayView: View {
     }
 }
 
-// MARK: - Error / Download / Reload states
+// MARK: - Error / Download / Reload / Ready states
+
+/// Shown when the panel exists but the core is idle-ready — e.g. the press
+/// landed while Ready, or start_recording was refused. Guarantees the user
+/// always sees *something* instead of a transparent 240×44 window.
+struct DictationReadyView: View {
+    @State private var isVisible = false
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Circle()
+                .fill(Color(red: 0.35, green: 0.90, blue: 0.65))
+                .frame(width: 8, height: 8)
+                .padding(.leading, 14)
+            Spacer(minLength: 2)
+            Text(DictationController.shared.mode == .action ? "Ready — say a command" : "Ready — speak")
+                .font(.system(size: 11, weight: .medium, design: .default))
+                .foregroundStyle(.white.opacity(0.4))
+                .padding(.trailing, 14)
+        }
+        .frame(width: 240, height: 44)
+        .background {
+            RoundedRectangle(cornerRadius: 22)
+                .fill(.ultraThinMaterial)
+                .environment(\.colorScheme, .dark)
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 22)
+                .stroke(.white.opacity(0.12), lineWidth: 0.5)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 22))
+        .compositingGroup()
+        .shadow(color: .black.opacity(0.4), radius: 20, y: 10)
+        .scaleEffect(isVisible ? 1 : 0.85)
+        .opacity(isVisible ? 1 : 0)
+        .onAppear {
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                isVisible = true
+            }
+        }
+    }
+}
 
 /// Shown when the model is reloading after an idle-unload (5 min rule):
 /// first use pays a multi-second mmap + warmup, and the pill must say so

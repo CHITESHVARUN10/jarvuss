@@ -93,6 +93,18 @@ final class DBManager {
         }
 
         let sql = """
+        CREATE TABLE IF NOT EXISTS jarvis_usage_stats (
+            day DATE PRIMARY KEY,
+            talk_secs DOUBLE PRECISION NOT NULL DEFAULT 0,
+            sessions INT NOT NULL DEFAULT 0,
+            chars_dictated INT NOT NULL DEFAULT 0,
+            tokens_prompt_est INT NOT NULL DEFAULT 0,
+            tokens_completion_est INT NOT NULL DEFAULT 0,
+            copies INT NOT NULL DEFAULT 0,
+            commands_run INT NOT NULL DEFAULT 0,
+            commands_failed INT NOT NULL DEFAULT 0,
+            time_saved_secs DOUBLE PRECISION NOT NULL DEFAULT 0
+        );
         CREATE TABLE IF NOT EXISTS jarvis_recognition_events (
             id BIGSERIAL PRIMARY KEY,
             created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -155,12 +167,108 @@ final class DBManager {
         }
     }
 
-    func hasEnrollmentCompletionEvent() -> Bool {
+    func upsertDailyStats(_ bucket: DayBucket) {
+        guard let config else { return }
+        let sql = """
+        INSERT INTO jarvis_usage_stats (
+            day, talk_secs, sessions, chars_dictated,
+            tokens_prompt_est, tokens_completion_est,
+            copies, commands_run, commands_failed, time_saved_secs
+        ) VALUES (
+            DATE '\(escapeSQL(bucket.day))',
+            \(bucket.talkSecs), \(bucket.sessions), \(bucket.charsDictated),
+            \(bucket.tokensPromptEst), \(bucket.tokensCompletionEst),
+            \(bucket.copies), \(bucket.commandsRun), \(bucket.commandsFailed), \(bucket.timeSavedSecs)
+        )
+        ON CONFLICT (day) DO UPDATE SET
+            talk_secs = jarvis_usage_stats.talk_secs + EXCLUDED.talk_secs,
+            sessions = jarvis_usage_stats.sessions + EXCLUDED.sessions,
+            chars_dictated = jarvis_usage_stats.chars_dictated + EXCLUDED.chars_dictated,
+            tokens_prompt_est = jarvis_usage_stats.tokens_prompt_est + EXCLUDED.tokens_prompt_est,
+            tokens_completion_est = jarvis_usage_stats.tokens_completion_est + EXCLUDED.tokens_completion_est,
+            copies = jarvis_usage_stats.copies + EXCLUDED.copies,
+            commands_run = jarvis_usage_stats.commands_run + EXCLUDED.commands_run,
+            commands_failed = jarvis_usage_stats.commands_failed + EXCLUDED.commands_failed,
+            time_saved_secs = jarvis_usage_stats.time_saved_secs + EXCLUDED.time_saved_secs;
+        """
+        queue.async {
+            _ = self.runSQL(sql, config: config)
+        }
+    }
+
+    func fetchDailyStats(sinceDays: Int) async -> [DayBucket] {
+        guard let config else { return [] }
+        let sql = "SELECT day::text, talk_secs, sessions, chars_dictated, tokens_prompt_est, tokens_completion_est, copies, commands_run, commands_failed, time_saved_secs FROM jarvis_usage_stats WHERE day >= CURRENT_DATE - INTERVAL '\(sinceDays) days' ORDER BY day ASC;"
+        // NEVER queue.sync from @MainActor (boot deadlock: MainActor parks
+        // behind a stalled psql on this serial queue). Async hop instead.
+        let raw: String = await withCheckedContinuation { cont in
+            queue.async {
+                cont.resume(returning: self.runSQLQueryRows(sql, config: config))
+            }
+        }
+        var out: [DayBucket] = []
+        for line in raw.components(separatedBy: .newlines) {
+            let parts = line.components(separatedBy: "|")
+            guard parts.count == 10 else { continue }
+            out.append(DayBucket(
+                day: parts[0],
+                talkSecs: Double(parts[1]) ?? 0,
+                sessions: Int(parts[2]) ?? 0,
+                charsDictated: Int(parts[3]) ?? 0,
+                tokensPromptEst: Int(parts[4]) ?? 0,
+                tokensCompletionEst: Int(parts[5]) ?? 0,
+                copies: Int(parts[6]) ?? 0,
+                commandsRun: Int(parts[7]) ?? 0,
+                commandsFailed: Int(parts[8]) ?? 0,
+                timeSavedSecs: Double(parts[9]) ?? 0
+            ))
+        }
+        return out
+    }
+
+    private func runSQLQueryRows(_ sql: String, config: Config) -> String {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/opt/homebrew/bin/psql")
+        if !FileManager.default.fileExists(atPath: "/opt/homebrew/bin/psql") {
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/psql")
+        }
+        process.arguments = [
+            "-h", config.host,
+            "-p", config.port,
+            "-d", config.database,
+            "-U", config.user,
+            "--set", "connect_timeout=5",
+            "--set", "statement_timeout=8000",
+            "-tA", "-F", "|", sql
+        ]
+        var env = ProcessInfo.processInfo.environment
+        if let password = config.password {
+            env["PGPASSWORD"] = password
+        }
+        process.environment = env
+        let stdout = Pipe()
+        process.standardOutput = stdout
+        process.standardError = Pipe()
+        do {
+            try process.run()
+            process.waitUntilExit()
+            let data = stdout.fileHandleForReading.readDataToEndOfFile()
+            return (String(data: data, encoding: .utf8) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        } catch {
+            return ""
+        }
+    }
+
+    /// Async (never blocks @MainActor): UserDefaults fast-path decides
+    /// immediately; the DB check reconciles in the background via bootstrap.
+    func hasEnrollmentCompletionEvent() async -> Bool {
         guard let config else { return false }
 
         let sql = "SELECT EXISTS (SELECT 1 FROM jarvis_recognition_events WHERE event_type = 'enrollment_completed');"
-        let result = queue.sync {
-            runSQLQueryValue(sql, config: config)
+        let result: String = await withCheckedContinuation { cont in
+            queue.async {
+                cont.resume(returning: self.runSQLQueryValue(sql, config: config))
+            }
         }
 
         return result == "t" || result == "true" || result == "1"
@@ -179,6 +287,10 @@ final class DBManager {
             "-d", config.database,
             "-U", config.user,
             "-v", "ON_ERROR_STOP=1",
+            // Timeouts so a dead PG can't wedge the serial queue forever
+            // (boot deadlock: MainActor parked behind a stalled psql).
+            "-v", "connect_timeout=5",
+            "-v", "statement_timeout=8000",
             "-c", sql
         ]
 
@@ -216,6 +328,8 @@ final class DBManager {
             "-p", config.port,
             "-d", config.database,
             "-U", config.user,
+            "--set", "connect_timeout=5",
+            "--set", "statement_timeout=8000",
             "-tAc", sql
         ]
 

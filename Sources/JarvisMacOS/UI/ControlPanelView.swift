@@ -33,47 +33,60 @@ struct ControlPanelView: View {
                 VStack(spacing: 14) {
 
                     // Mic controls
-                    micControlSection
+                    SectionCard(content: micControlSection)
 
                     Divider().background(Color.white.opacity(0.06))
 
                     // Voice Auth card
-                    VoiceAuthCard(
+                    SectionCard(content: VoiceAuthCard(
                         status: appState.voiceVerificationStatus,
                         similarity: appState.lastVoiceSimilarity,
                         samplesCount: appState.backendEnrollmentSampleCount,
                         samplesTarget: appState.voiceEnrollmentSampleTarget
-                    )
+                    ))
 
                     Divider().background(Color.white.opacity(0.06))
 
                     // Enrollment
-                    EnrollmentView(appState: appState)
+                    SectionCard(content: EnrollmentView(appState: appState))
+
+                    Divider().background(Color.white.opacity(0.06))
+
+                    // Usage stats (Wrapped)
+                    StatsView(dbManager: appState.dbManager)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .clipped()
 
                     Divider().background(Color.white.opacity(0.06))
 
                     // Manual input
-                    manualInputSection
+                    SectionCard(content: manualInputSection)
 
                     Divider().background(Color.white.opacity(0.06))
 
-                    // Display brightness controls (hardware DDC)
-                    displayControlSection
+                    // Brightness box
+                    SectionCard(content: brightnessBox)
 
                     Divider().background(Color.white.opacity(0.06))
 
-                    // Combined brightness controls (DDC + GPU Software Dimming)
-                    combinedDisplayControlSection
+                    // Contrast box
+                    SectionCard(content: contrastBox)
 
                     Divider().background(Color.white.opacity(0.06))
 
-                    automationSection
+                    // Automations (single row)
+                    SectionCard(content: automationRow)
+
+                    Divider().background(Color.white.opacity(0.06))
+
+                    // Connectors (Spotify keys + authorize)
+                    SectionCard(content: connectorsSection)
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 14)
             }
         }
-        .frame(width: 270)
+        .frame(width: 300)
         .background(
             ZStack {
                 Color(red: 0.07, green: 0.07, blue: 0.10)
@@ -177,10 +190,30 @@ struct ControlPanelView: View {
             .disabled(!appState.voiceProfileReady)
             .buttonStyle(JarvisButtonStyle(
                 color: appState.voiceModeEnabled
-                    ? Color(red: 0.55, green: 0.88, blue: 1.0)
+                    ? Color(red: 0.55, green: 0.55, blue: 1.0)
                     : Color.white.opacity(0.35),
                 compact: true
             ))
+
+            // Action pill (⌘⇧A) verify toggle — flips without code changes
+            Button {
+                appState.actionPillRequiresVerify.toggle()
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: appState.actionPillRequiresVerify ? "lock.fill" : "bolt.fill")
+                        .font(.system(size: 13))
+                    Text(appState.actionPillRequiresVerify ? "⌘⇧A Verify: ON" : "⌘⇧A Verify: OFF")
+                        .font(.system(size: 11, weight: .semibold))
+                    Spacer()
+                }
+            }
+            .buttonStyle(JarvisButtonStyle(
+                color: appState.actionPillRequiresVerify
+                    ? Color(red: 0.55, green: 0.55, blue: 1.0)
+                    : Color.white.opacity(0.35),
+                compact: true
+            ))
+            .help("⌘⇧A action pill: verify voiceprint before running (ON), or run immediately on hotkey (OFF)")
 
             // Voice response toggle
             Button {
@@ -193,21 +226,21 @@ struct ControlPanelView: View {
                     Image(systemName: appState.voiceResponseEnabled ? "speaker.wave.2.fill" : "speaker.slash.fill")
                         .font(.system(size: 13))
                         .foregroundStyle(appState.voiceResponseEnabled
-                            ? Color(red: 0.55, green: 0.88, blue: 0.55)
+                            ? Color(red: 0.55, green: 0.55, blue: 1.0)
                             : Color.white.opacity(0.35))
                     Text(appState.voiceResponseEnabled ? "Voice Response: ON" : "Voice Response: OFF")
                         .font(.system(size: 11, weight: .semibold))
                     Spacer()
                     if ResponseEngine.shared.isSpeaking {
                         Circle()
-                            .fill(Color(red: 0.55, green: 0.88, blue: 0.55))
+                            .fill(Color(red: 0.55, green: 0.55, blue: 1.0))
                             .frame(width: 6, height: 6)
                     }
                 }
             }
             .buttonStyle(JarvisButtonStyle(
                 color: appState.voiceResponseEnabled
-                    ? Color(red: 0.55, green: 0.88, blue: 0.55)
+                    ? Color(red: 0.55, green: 0.55, blue: 1.0)
                     : Color.white.opacity(0.35),
                 compact: true
             ))
@@ -259,15 +292,86 @@ struct ControlPanelView: View {
                     .strokeBorder(Color.white.opacity(0.09), lineWidth: 1)
             )
 
-            Text("Wake word required in voice mode: \"Jarvis <verb> <target>\"")
+            Text("⌘⇧D dictates · ⌘⇧A runs commands (no wake word). Voice mode needs \"Jarvis <verb> <target>\"")
                 .font(.system(size: 9))
                 .foregroundStyle(Color.white.opacity(0.22))
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
 
-    // MARK: - Helpers
-    private var automationSection: some View {
+    // MARK: - Brightness box (exact value +10 / -10)
+    private var brightnessBox: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionLabel("BRIGHTNESS", icon: "sun.max.fill")
+
+            HStack {
+                Text("Level")
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color.white.opacity(0.55))
+                Spacer()
+                Text("\(appState.currentBrightness)%")
+                    .font(.system(size: 13, weight: .bold, design: .monospaced))
+                    .foregroundStyle(Color.white.opacity(0.85))
+            }
+
+            HStack(spacing: 8) {
+                Button(action: { appState.decreaseBrightnessUI() }) {
+                    Text("-10")
+                        .font(.system(size: 11, weight: .bold))
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(JarvisButtonStyle(color: Color.white.opacity(0.5), compact: true))
+
+                Button(action: { appState.increaseBrightnessUI() }) {
+                    Text("+10")
+                        .font(.system(size: 11, weight: .bold))
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(JarvisButtonStyle(color: Color.white.opacity(0.5), compact: true))
+            }
+        }
+    }
+
+    // MARK: - Contrast box (exact value +10 / -10, external monitors via DDC/CI)
+    private var contrastBox: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionLabel("CONTRAST", icon: "circle.lefthalf.filled")
+
+            HStack {
+                Text("Level")
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color.white.opacity(0.55))
+                Spacer()
+                Text("\(appState.currentContrast)%")
+                    .font(.system(size: 13, weight: .bold, design: .monospaced))
+                    .foregroundStyle(Color.white.opacity(0.85))
+            }
+
+            HStack(spacing: 8) {
+                Button(action: { appState.decreaseContrastUI() }) {
+                    Text("-10")
+                        .font(.system(size: 11, weight: .bold))
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(JarvisButtonStyle(color: Color.white.opacity(0.5), compact: true))
+
+                Button(action: { appState.increaseContrastUI() }) {
+                    Text("+10")
+                        .font(.system(size: 11, weight: .bold))
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(JarvisButtonStyle(color: Color.white.opacity(0.5), compact: true))
+            }
+
+            Text("Built-in Retina has no contrast control — external monitors only.")
+                .font(.system(size: 9))
+                .foregroundStyle(Color.white.opacity(0.25))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    // MARK: - Automations (single minimal row, modal holds the rest)
+    private var automationRow: some View {
         VStack(alignment: .leading, spacing: 8) {
             sectionLabel("AUTOMATIONS", icon: "bolt.fill")
 
@@ -276,7 +380,7 @@ struct ControlPanelView: View {
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "slider.horizontal.3")
-                    Text("Manage Automations")
+                    Text("Manage")
                         .font(.system(size: 11, weight: .semibold))
                     Spacer()
                     Text("\(appState.automations.count)")
@@ -284,124 +388,54 @@ struct ControlPanelView: View {
                         .foregroundStyle(Color.white.opacity(0.70))
                 }
             }
-            .buttonStyle(JarvisButtonStyle(color: Color(red: 0.95, green: 0.75, blue: 0.30), compact: true))
-
-            if let first = appState.automations.first {
-                Text("Example: \(first.keyword)")
-                    .font(.system(size: 9))
-                    .foregroundStyle(Color.white.opacity(0.30))
-            }
+            .buttonStyle(JarvisButtonStyle(color: Color.white.opacity(0.5), compact: true))
         }
     }
+
+    // MARK: - Connectors
+    private var connectorsSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            sectionLabel("CONNECTORS", icon: "link")
+            ConnectorsView(appState: appState)
+        }
+    }
+
+    // MARK: - Helpers
 
     // MARK: - Display brightness control section
-    private var displayControlSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            sectionLabel("BRIGHTNESS TEST", icon: "sun.max.fill")
 
-            HStack {
-                Text("Current Brightness")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(Color.white.opacity(0.60))
-                Spacer()
-                Text("\(appState.currentBrightness)%")
-                    .font(.system(size: 13, weight: .bold, design: .monospaced))
-                    .foregroundStyle(Color(red: 1.0, green: 0.85, blue: 0.40))
-            }
+    // MARK: - Combined brightness control section (GUI test only)
 
-            HStack(spacing: 8) {
-                Button(action: { appState.decreaseBrightnessUI() }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "minus.circle.fill")
-                        Text("-10%")
+    // MARK: - Shared section card
+    private struct SectionCard<Content: View>: View {
+        let content: Content
+        var body: some View {
+            content
+                .padding(14)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Color.white.opacity(0.035))
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .strokeBorder(Color.white.opacity(0.07), lineWidth: 1)
                     }
-                    .font(.system(size: 11, weight: .bold))
-                    .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(JarvisButtonStyle(color: Color.orange, compact: true))
-
-                Button(action: { appState.increaseBrightnessUI() }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "plus.circle.fill")
-                        Text("+10%")
-                    }
-                    .font(.system(size: 11, weight: .bold))
-                    .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(JarvisButtonStyle(color: Color.yellow, compact: true))
-            }
-
-            HStack(spacing: 8) {
-                Button(action: { appState.setBrightnessUI(0) }) {
-                    Text("0% (Min)")
-                        .font(.system(size: 10, weight: .medium))
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(JarvisButtonStyle(color: Color.gray, compact: true))
-
-                Button(action: { appState.setBrightnessUI(100) }) {
-                    Text("100% (Max)")
-                        .font(.system(size: 10, weight: .medium))
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(JarvisButtonStyle(color: Color.yellow, compact: true))
-            }
+                )
         }
     }
 
-    // MARK: - Combined brightness control section (GUI test only)
-    private var combinedDisplayControlSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            sectionLabel("COMBINED BRIGHTNESS TEST", icon: "sun.max.trianglebadge.exclamationmark.fill")
-
-            HStack {
-                Text("Combined Level")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(Color.white.opacity(0.60))
-                Spacer()
-                Text("\(appState.combinedBrightness)%")
-                    .font(.system(size: 13, weight: .bold, design: .monospaced))
-                    .foregroundStyle(Color(red: 0.50, green: 0.90, blue: 1.0))
-            }
-
-            HStack(spacing: 8) {
-                Button(action: { appState.decreaseCombinedBrightnessUI() }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "minus.circle.fill")
-                        Text("-10%")
-                    }
-                    .font(.system(size: 11, weight: .bold))
-                    .frame(maxWidth: .infinity)
+    private func sectionCard<Content: View>(_ content: Content) -> some View {
+        content
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color.white.opacity(0.035))
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.07), lineWidth: 1)
                 }
-                .buttonStyle(JarvisButtonStyle(color: Color.blue, compact: true))
-
-                Button(action: { appState.increaseCombinedBrightnessUI() }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "plus.circle.fill")
-                        Text("+10%")
-                    }
-                    .font(.system(size: 11, weight: .bold))
-                    .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(JarvisButtonStyle(color: Color.cyan, compact: true))
-            }
-
-            HStack(spacing: 8) {
-                Button(action: { appState.setCombinedBrightnessUI(0) }) {
-                    Text("0% (Pitch Black)")
-                        .font(.system(size: 10, weight: .medium))
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(JarvisButtonStyle(color: Color.indigo, compact: true))
-
-                Button(action: { appState.setCombinedBrightnessUI(100) }) {
-                    Text("100% (Max)")
-                        .font(.system(size: 10, weight: .medium))
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(JarvisButtonStyle(color: Color.cyan, compact: true))
-            }
-        }
+            )
     }
 
     private func sectionLabel(_ text: String, icon: String) -> some View {

@@ -8,5 +8,4 @@ scipy>=1.10.0
 python-multipart==0.0.9
 setuptools<70.0.0
 torch>=2.5.0
-
-
+certifi>=2024.0

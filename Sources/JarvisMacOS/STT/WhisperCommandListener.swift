@@ -19,18 +19,18 @@ final class WhisperCommandListener {
     private var utteranceStartedAt: Date?
     /// Max seconds a command utterance may hold the core before it is
     /// force-finalized (prevents an abandoned claim wedging the pill).
-    /// 20 s > longest legit enrollment phrase, < Rust 300 s ring cap.
-    private let maxUtteranceSeconds: TimeInterval = 20
+    /// 30 s > longest legit enrollment phrase, < Rust 300 s ring cap.
+    private let maxUtteranceSeconds: TimeInterval = 30
 
     private init() {}
 
-    /// Voice detected. Starts a core recording unless the pill owns the core.
+    /// Voice detected. Starts a core recording unless a pill owns the core.
     /// Safe to call repeatedly: re-entrant while recording just extends the
     /// failsafe window check (no double-start, no wedge).
-    /// While DictationController holds the pill (⌘⇧D), VAD claims are muted
-    /// at the AppState.handleAudioLevel layer and never reach here — that
-    /// mute is what lets the pill win the core race. This guard is belt and
-    /// braces for any direct caller.
+    /// While DictationController holds a pill (⌘⇧D / ⌘⇧A), VAD claims are
+    /// muted at the AppState.handleAudioLevel layer and never reach here —
+    /// that mute is what lets the pills win the core race. This guard is
+    /// belt and braces for any direct caller.
     func beginUtterance() {
         if utteranceActive {
             // Failsafe: a stuck utterance (VAD never saw silence) must not
@@ -43,11 +43,15 @@ final class WhisperCommandListener {
             return
         }
         guard STTRouter.shared.claimForCommand() else {
+            // Quiet-period after a pill preempt refuses inside claimForCommand
+            // — don't spam the drop log for the expected race; VAD resumes
+            // on the next ticks once the pill owns or releases the core.
+            if Date() < STTRouter.shared.suppressCommandClaimsUntil { return }
             STTRouter.shared.logCommandDrop(reason: "core busy (owner: \(STTRouter.shared.owner), phase: \(get_app_phase()))")
             return
         }
-        // Pill owns the core (⌘⇧D active): never steal it back. The VAD mute
-        // in handleAudioLevel normally prevents reaching here.
+        // A pill owns the core (⌘⇧D / ⌘⇧A active): never steal it back.
+        // The VAD mute in handleAudioLevel normally prevents reaching here.
         guard STTRouter.shared.owner == .command else {
             STTRouter.shared.releaseFromCommand()
             return
@@ -97,12 +101,10 @@ final class WhisperCommandListener {
         endUtterance()
     }
 
-    /// Abandon path (mic stop / mode toggle): drops the audio with NO
-    /// inference and NO callback — the utterance never existed. Also
-    /// releases the router claim so the pill can claim immediately.
-    /// NOTE: the preempt path calls endUtteranceSilently() right after this
-    /// to finish the Rust-side audio — this only stops the VAD listener
-    /// from firing further begins during the handoff.
+    /// Abandon path (mic stop / mode toggle / pill preempt): drops the VAD
+    /// session flags with NO inference and NO callback — the utterance never
+    /// existed. The router calls cancel_recording() itself to finish the
+    /// Rust-side audio and release the claim so the pill can start now.
     func cancelUtterance() {
         utteranceActive = false
         utteranceStartedAt = nil
@@ -111,8 +113,6 @@ final class WhisperCommandListener {
     /// Hard reset (mic stop / shutdown): cancels the Rust recording with NO
     /// inference and NO callback, then releases the claim. Use when the
     /// utterance must never produce a transcript (mic off, app exit).
-    /// The pill-preempt path must NOT use this — it needs the silent final
-    /// to trigger the pill start (see STTRouter.preemptCommandForPill).
     func reset() {
         if utteranceActive {
             utteranceActive = false

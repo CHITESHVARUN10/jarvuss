@@ -6,6 +6,7 @@ enum ParsedCommand: Equatable {
     case createFile(String)
     case createFolder(String)
     case openFolder(String)
+    case searchWeb(String)
     case aiQuery(String)
     case unknown(String)
     /// New: a resolved multi-step plan from ActionPlanner
@@ -59,6 +60,11 @@ final class CommandParser {
         if lowercase.hasPrefix("create folder ") {
             let folderName = trimmed.dropFirst("create folder ".count).trimmingCharacters(in: .whitespaces)
             return .createFolder(String(folderName))
+        }
+
+        if lowercase.hasPrefix("searchweb: ") {
+            let query = trimmed.dropFirst("searchweb: ".count).trimmingCharacters(in: .whitespaces)
+            return .searchWeb(String(query))
         }
 
         if lowercase.starts(with: "explain ") || lowercase.starts(with: "what is ") || lowercase.starts(with: "who is ") {

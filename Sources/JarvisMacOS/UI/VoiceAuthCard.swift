@@ -102,15 +102,7 @@ struct VoiceAuthCard: View {
                     .foregroundStyle(accentColor)
             }
         }
-        .padding(14)
-        .background(
-            ZStack {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(accentColor.opacity(0.06))
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(accentColor.opacity(0.18), lineWidth: 1)
-            }
-        )
+
     }
 
     private var cleanStatus: String {

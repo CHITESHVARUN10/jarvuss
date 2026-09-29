@@ -20,6 +20,7 @@ enum CommandAction: Equatable, CustomStringConvertible {
     case openFolder(String)
     case createFile(String)
     case createFolder(String)
+    case media(String)           // Spotify playback: play|pause|next|prev|liked_songs|play_song:<n>|play_playlist:<n>
     case aiQuery(String)         // LLM answer query
 
     var description: String {
@@ -31,6 +32,7 @@ enum CommandAction: Equatable, CustomStringConvertible {
         case .openFolder(let p):   return "openFolder(\(p))"
         case .createFile(let n):   return "createFile(\(n))"
         case .createFolder(let n): return "createFolder(\(n))"
+        case .media(let m):       return "media(\(m))"
         case .aiQuery(let q):      return "aiQuery(\(q))"
         }
     }
@@ -55,10 +57,11 @@ struct NormalizedCommand {
         case .openApp(let n):      return "open \(n)"
         case .closeApp(let n):     return "close \(n)"
         case .openURL(let u):      return "open \(u)"
-        case .searchWeb(let q):    return "ai: search for \(q)"
+        case .searchWeb(let q):    return "searchweb: \(q)"
         case .openFolder(let p):   return "open folder \(p)"
         case .createFile(let n):   return "create file \(n)"
         case .createFolder(let n): return "create folder \(n)"
+        case .media(let m):       return "media \(m)"
         case .aiQuery(let q):      return "ai: \(q)"
         }
     }
@@ -109,7 +112,7 @@ final class CommandNormalizer {
 
     private let ollamaClient: OllamaClient
 
-    init(model: String = "qwen2.5-coder:1.5b-base") {
+    init(model: String = JarvisModel.name) {
         ollamaClient = OllamaClient(model: model)
     }
 
@@ -198,12 +201,17 @@ final class CommandNormalizer {
         }
 
         // ── Web search ─────────────────────────────────────────────
+        // Covers: "search on youtube for X", "search X on/in youtube",
+        // "search on the internet for X", "search X in brave", plus
+        // trailing Whisper punctuation ("...in youtube.").
         if let (engine, query) = parseSearch(lower) {
             let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
             let base: String = engine == "YouTube"
                 ? "https://www.youtube.com/results?search_query="
                 : "https://www.google.com/search?q="
-            return .multi([.searchWeb(query), .openURL(base + encoded)], raw: stripped)
+            // SINGLE open: the executor opens base+encoded from searchWeb —
+            // never return both or the browser opens twice.
+            return .single(.searchWeb(query), raw: stripped)
         }
 
         // ── App open ───────────────────────────────────────────────
@@ -222,7 +230,7 @@ final class CommandNormalizer {
                     // System default browser — just open default browser app
                     return .single(.openApp("browser"), raw: stripped)
                 }
-                return .single(.openApp(AppAliasResolver.resolve(target)), raw: stripped)
+                return .single(.openApp(AppAliasResolver.resolveSpoken(target)), raw: stripped)
             }
         }
 
@@ -230,7 +238,7 @@ final class CommandNormalizer {
         if lower.hasPrefix("close ") {
             let target = String(stripped.dropFirst("close ".count))
                            .trimmingCharacters(in: .whitespaces)
-            return .single(.closeApp(AppAliasResolver.resolve(target)), raw: stripped)
+            return .single(.closeApp(AppAliasResolver.resolveSpoken(target)), raw: stripped)
         }
 
         // ── File / folder creation ─────────────────────────────────
@@ -306,9 +314,9 @@ final class CommandNormalizer {
             if let url = webShortcuts[tTarget] {
                 actions.append(.openURL(url))
             } else if tLower.hasPrefix("close ") {
-                actions.append(.closeApp(AppAliasResolver.resolve(tTarget)))
+                actions.append(.closeApp(AppAliasResolver.resolveSpoken(tTarget)))
             } else {
-                actions.append(.openApp(AppAliasResolver.resolve(tTarget)))
+                actions.append(.openApp(AppAliasResolver.resolveSpoken(tTarget)))
             }
         }
 
@@ -326,7 +334,7 @@ final class CommandNormalizer {
 
         let site     = String(lower[siteRange]).trimmingCharacters(in: .whitespaces)
         let browser  = String(lower[browserRange])
-        let resolved = AppAliasResolver.resolve(browser)
+        let resolved = AppAliasResolver.resolveSpoken(browser)
         let url      = knownSiteURL(site)
         return (url, resolved)
     }
@@ -346,16 +354,28 @@ final class CommandNormalizer {
 
     private func parseSearch(_ lower: String) -> (engine: String, query: String)? {
         let patterns: [(pattern: String, engine: String)] = [
-            (#"search google for (.+)"#,  "Google"),
-            (#"google (.+)"#,             "Google"),
-            (#"search for (.+)"#,         "Google"),
-            (#"search youtube for (.+)"#, "YouTube"),
+            (#"search (?:on )?youtube for (.+)"#, "YouTube"),
+            (#"youtube search for (.+)"#,         "YouTube"),
+            (#"search google for (.+)"#,          "Google"),
+            (#"search (?:on the )?internet for (.+)"#, "Google"),
+            (#"google (.+)"#,                     "Google"),
+            (#"search for (.+)"#,                 "Google"),
+            (#"search youtube for (.+)"#,         "YouTube"),
+            (#"search (.+?) on youtube"#,         "YouTube"),
+            (#"search (.+?) in youtube"#,         "YouTube"),
+            (#"search (.+?) on google"#,          "Google"),
+            (#"search (.+?) in google"#,          "Google"),
+            (#"search (.+?) in brave"#,           "Google"),
+            (#"search (.+?) on brave"#,           "Google"),
         ]
         for entry in patterns {
             guard let regex = try? NSRegularExpression(pattern: entry.pattern),
                   let match = regex.firstMatch(in: lower, range: NSRange(lower.startIndex..., in: lower)),
                   let qRange = Range(match.range(at: 1), in: lower) else { continue }
-            let query = String(lower[qRange]).trimmingCharacters(in: .whitespaces)
+            var query = String(lower[qRange]).trimmingCharacters(in: .whitespaces)
+            query = query.trimmingCharacters(in: CharacterSet(charactersIn: "?.!."))
+                .trimmingCharacters(in: .whitespaces)
+            guard !query.isEmpty else { continue }
             return (entry.engine, query)
         }
         return nil
@@ -381,32 +401,8 @@ final class CommandNormalizer {
     // MARK: - Ollama fallback (complex / unrecognised input only)
 
     private func ollamaFallback(_ cleaned: String, raw: String) async -> NormalizedCommand {
-        let prompt = """
-        You are a command normalizer for a macOS voice assistant.
-        Convert the user input into a JSON object with this exact shape:
-
-        {
-          "priority": "high" | "normal" | "low",
-          "actions": [
-            { "type": "open_app",      "value": "<app name>" },
-            { "type": "close_app",     "value": "<app name>" },
-            { "type": "open_url",      "value": "<url>" },
-            { "type": "search_web",    "value": "<query>" },
-            { "type": "open_folder",   "value": "<folder name>" },
-            { "type": "create_file",   "value": "<filename>" },
-            { "type": "create_folder", "value": "<folder name>" },
-            { "type": "ai_query",      "value": "<query>" }
-          ]
-        }
-
-        Rules:
-        - NEVER use chrome unless explicitly requested by the user.
-        - Use open_url for web destinations; the system default browser will open it.
-        - If you are not sure, return a single ai_query action.
-        - Output ONLY the JSON object. No explanation.
-
-        User: \(cleaned)
-        """
+        // X (user words) + shared tools prompt in, Y (executor JSON) out.
+        let prompt = JarvisToolsPrompt.text + "Respond with Shape B.\n\nUser: \(cleaned)"
 
         let response = await ollamaClient.generate(prompt: prompt)
 
@@ -443,13 +439,14 @@ final class CommandNormalizer {
             guard let type  = act["type"]  as? String,
                   let value = act["value"] as? String else { continue }
             switch type {
-            case "open_app":      actions.append(.openApp(AppAliasResolver.resolve(value)))
-            case "close_app":     actions.append(.closeApp(AppAliasResolver.resolve(value)))
+            case "open_app":      actions.append(.openApp(AppAliasResolver.resolveSpoken(value)))
+            case "close_app":     actions.append(.closeApp(AppAliasResolver.resolveSpoken(value)))
             case "open_url":      actions.append(.openURL(value))
             case "search_web":    actions.append(.searchWeb(value))
             case "open_folder":   actions.append(.openFolder(value))
             case "create_file":   actions.append(.createFile(value))
             case "create_folder": actions.append(.createFolder(value))
+            case "media":         actions.append(.media(value))
             case "ai_query":      actions.append(.aiQuery(value))
             default: break
             }
@@ -468,6 +465,24 @@ final class CommandNormalizer {
 // MARK: - Bridge: CommandAction → PlannedAction
 
 extension CommandAction {
+    /// Colon media form ("play_song:X") -> the matching MediaAction.
+    static func toPlannedMedia(_ raw: String) -> PlannedAction {
+        if raw.hasPrefix("play_song:") {
+            return .mediaControl(.playSong(String(raw.dropFirst("play_song:".count))))
+        }
+        if raw.hasPrefix("play_playlist:") {
+            return .mediaControl(.playPlaylist(String(raw.dropFirst("play_playlist:".count))))
+        }
+        switch raw {
+        case "play":        return .mediaControl(.play)
+        case "pause":       return .mediaControl(.pause)
+        case "next":        return .mediaControl(.nextTrack)
+        case "prev":        return .mediaControl(.previousTrack)
+        case "liked_songs": return .mediaControl(.playLikedSongs)
+        default:            return .aiQuery(raw)
+        }
+    }
+
     /// Converts to PlannedAction so AppState can pass multi-action
     /// NormalizedCommands directly to ActionExecutor without coupling layers.
     func toPlannedAction() -> PlannedAction {
@@ -479,6 +494,7 @@ extension CommandAction {
         case .openFolder(let p):   return .openFolder(p)
         case .createFile(let n):   return .createFile(n)
         case .createFolder(let n): return .createFolder(n)
+        case .media(let m):       return CommandAction.toPlannedMedia(m)
         case .aiQuery(let q):      return .aiQuery(q)
         }
     }

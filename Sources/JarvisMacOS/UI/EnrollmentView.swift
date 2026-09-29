@@ -186,15 +186,7 @@ struct EnrollmentView: View {
                 }
             }
         }
-        .padding(14)
-        .background(
-            ZStack {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color(red: 0.55, green: 0.45, blue: 1.0).opacity(0.06))
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(Color(red: 0.55, green: 0.45, blue: 1.0).opacity(0.18), lineWidth: 1)
-            }
-        )
+
     }
 
     // MARK: - Layer badge

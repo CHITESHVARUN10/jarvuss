@@ -20,7 +20,7 @@ func on_state_changed(phase: AppPhase, model: ModelPhase) {
 
         // Panel side-effects are pill-only: command utterances must never
         // pop the pill.
-        guard STTRouter.shared.owner == .pill else {
+        guard STTRouter.shared.isModalOwner else {
             // Core became ready with no owner (app launch): allow a
             // queued pill press to fire.
             if phase == .Ready {
@@ -32,18 +32,20 @@ func on_state_changed(phase: AppPhase, model: ModelPhase) {
         // Reloading after an idle-unload surfaces as Loading/Unloading (see
         // lib.rs TranscribeChunk + Unload arms) — show the panel so the user
         // sees "Downloading/Loading…" instead of a hung Transcribing pill.
-        // Preparing/Loading/Error create (showPanel); Processing/TranscriptReady
-        // only resize an existing panel (showPanelIfNeeded).
+        // showPanel (create), not showPanelIfNeeded (nil-guard no-op): the
+        // panel may have been destroyed mid-flight, and the card must appear
+        // regardless. Command utterances never reach here (owner guard above).
         if phase == .Preparing || model == .Loading || model == .Unloading || model == .Downloading {
             controller.showPanel()
         } else if phase == .Processing || phase == .TranscriptReady {
-            controller.showPanelIfNeeded()
+            controller.showPanel()
         } else if phase == .Error {
             controller.showPanel()
         }
 
         if phase == .TranscriptReady {
             controller.transcript = get_transcript().toString()
+            NSLog("[Jarvis][STT] state→TranscriptReady route=\(STTRouter.shared.owner) chars=\(controller.transcript.count)")
         }
 
         // A press during model load is queued; fire it now that Ready arrived.
@@ -57,18 +59,47 @@ func on_transcript_ready(text: RustString) {
     let t = text.toString()
     DispatchQueue.main.async {
         // Router decides: pill transcript, command sink, or dropped.
-        // Pill path is pure STT (voice-to-text into the panel) — it never
-        // touches onCommandTranscript, so no AI/command execution can fire
-        // from a ⌘⇧D dictation. That separation is load-bearing; keep it.
+        // Dictate path is pure STT (voice-to-text into the panel) — it
+        // never touches onCommandTranscript, so no AI/command execution
+        // can fire from a ⌘⇧D dictation. That separation is load-bearing;
+        // keep it. The ACTION pill (⌘⇧A) forwards to onActionTranscript.
         if let pillText = STTRouter.shared.routeTranscript(t) {
-            DictationController.shared.transcript = pillText
-            DictationController.shared.partialTranscript = ""
-            DictationController.shared.phase = .TranscriptReady
+            let controller = DictationController.shared
+            // Owner is ground truth for routing (not controller.mode, which
+            // can go stale if a previous run ended without a reset — that
+            // staleness was the ⌘⇧D-executes-commands bug).
+            let actionMode = STTRouter.shared.owner == .action
+            NSLog("[Jarvis][STT] transcript route=\(actionMode ? "action" : "pill") chars=\(pillText.count)")
+            StatsRecorder.shared.recordDictation(speechSecs: controller.pendingSpeechSecs, chars: pillText.count)
+            controller.pendingSpeechSecs = 0
+            if actionMode {
+                // Action pill: hand the text to AppState (verifies per the
+                // user setting, then runs) and close the pill. The command
+                // result surfaces in the main window; the pill is done.
+                controller.partialTranscript = ""
+                controller.phase = .Ready
+                STTRouter.shared.onActionTranscript?(pillText)
+                controller.dismissTranscript()
+            } else {
+                controller.transcript = pillText
+                controller.partialTranscript = ""
+                controller.phase = .TranscriptReady
+                // Same panel grows into the transcript card (300x170).
+                // Do NOT dismiss_transcript() here (agentTalk parity): Rust must
+                // stay TranscriptReady with the text intact — Copy / Close / the
+                // next press dismisses. Dismissing here wiped get_transcript()
+                // and flipped the mirror to Ready (the "another pill" bug).
+                controller.showPanel()
+            }
+        } else {
+            // Command-mode (or dropped): ready the core for the next
+            // utterance — set_transcript() left Rust at TranscriptReady,
+            // which would reject the next begin (can_record allows Ready).
+            // (The VAD listener also self-heals a stale TranscriptReady, so
+            // this is just the fast path.)
+            NSLog("[Jarvis][STT] transcript route=command/dropped owner=\(STTRouter.shared.owner) chars=\(t.count)")
+            dismiss_transcript()
         }
-        // Ready the core for the next utterance — set_transcript() left
-        // the Rust phase at TranscriptReady, which would reject the next
-        // begin (can_record only allows Ready).
-        dismiss_transcript()
     }
 }
 

@@ -215,7 +215,9 @@ final class MicManager {
     }
 
     private func writeWav(samples: [Float], sampleRate: Double, to url: URL) throws {
-        let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 1)!
+        guard let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 1) else {
+            throw MicManagerError.insufficientAudio
+        }
         guard let buffer = AVAudioPCMBuffer(
             pcmFormat: format,
             frameCapacity: AVAudioFrameCount(samples.count)

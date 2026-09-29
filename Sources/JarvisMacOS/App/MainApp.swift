@@ -17,9 +17,10 @@ struct MainApp: App {
                 .task {
                     await appState.bootstrap()
                 }
-                .onDisappear {
-                    appState.shutdown()
-                }
+                // NOTE: onDisappear must NOT shut down services — closing the
+                // last WindowGroup window leaves the process + dock icon alive
+                // (regular policy), and killing mic/backend here strands the
+                // app windowless. Shutdown happens only on willTerminate.
                 .onReceive(NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)) { _ in
                     appState.shutdown()
                 }

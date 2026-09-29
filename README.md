@@ -2,7 +2,7 @@
 
 Offline-first macOS assistant in Swift & Python with:
 
-- **Local Ollama Integration**: Powered by `mistral:7b` for offline reasoning & answer synthesis, plus `qwen2.5-coder:1.5b-base` for command planning fallback.
+- **Local Ollama Integration**: Powered by `qwen2.5-coder:1.5b` for command planning, normalization, and answers.
 - **Voice Auth & Enrollment**: Resemblyzer speaker verification and 2-layer phrase enrollment.
 - **System Automation**: Open/close apps, create files/folders, media/volume/display control, and multi-action workflows.
 
@@ -33,8 +33,7 @@ brew install cmake ffmpeg portaudio ollama postgresql@18
 ### 2) Ollama Model Setup
 
 ```zsh
-ollama pull mistral:7b
-ollama pull qwen2.5-coder:1.5b-base
+ollama pull qwen2.5-coder:1.5b
 ollama serve
 ```
 

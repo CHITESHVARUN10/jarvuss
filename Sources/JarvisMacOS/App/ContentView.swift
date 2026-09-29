@@ -85,7 +85,7 @@ struct ContentView: View {
                     .frame(maxWidth: 360)
             }
         }
-        .frame(minWidth: 960, minHeight: 680)
+        .frame(minWidth: 1020, minHeight: 680)
     }
 
     // MARK: - Background

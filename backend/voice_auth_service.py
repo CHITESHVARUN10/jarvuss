@@ -8,7 +8,10 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from urllib.parse import urlencode
 from urllib.error import HTTPError
+from urllib.request import Request, urlopen
 from typing import Any, Dict
+
+import ssl
 
 import numpy as np
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile
@@ -47,6 +50,43 @@ SPOTIFY_SCOPES = [
     "user-library-read",
     "playlist-read-private",
 ]
+
+def _https_context() -> ssl.SSLContext:
+    # python.org Python ships its own OpenSSL WITHOUT system roots — the
+    # bundled cert.pem is often missing, so every HTTPS call dies with
+    # CERTIFICATE_VERIFY_FAILED. certifi (Mozilla bundle, already in the
+    # venv via requirements) fixes it. Falls back to the default context
+    # when certifi is unavailable.
+    try:
+        import certifi
+
+        return ssl.create_default_context(cafile=certifi.where())
+    except Exception:
+        return ssl.create_default_context()
+
+
+def _spotify_token_error_detail(prefix: str, error: Exception) -> str:
+    # Spotify answers failed token calls with JSON like
+    # {"error": "invalid_grant", "error_description": "..."}. urlopen raises
+    # HTTPError and DISCARDS that body unless we read it — so read it.
+    if isinstance(error, HTTPError):
+        try:
+            raw = error.read().decode("utf-8")
+        except Exception:
+            raw = ""
+        if raw:
+            try:
+                payload = json.loads(raw)
+                err = str(payload.get("error", ""))
+                desc = str(payload.get("error_description", ""))
+                if err or desc:
+                    return f"{prefix}: {err} — {desc}"
+            except Exception:
+                pass
+            return f"{prefix}: HTTP {error.code}: {raw[:300]}"
+        return f"{prefix}: HTTP {error.code}"
+    return f"{prefix}: {error}"
+
 
 spotify_tokens: Dict[str, Any] = {
     "access_token": "",
@@ -181,12 +221,16 @@ def _exchange_code_for_token(code: str) -> dict:
         },
     )
 
+    print(f"[Spotify] Exchange redirect_uri: {redirect_uri}")
     try:
-        with urlopen(request, timeout=15) as response:
+        with urlopen(request, timeout=15, context=_https_context()) as response:
             payload = json.loads(response.read().decode("utf-8"))
             return payload
     except Exception as error:
-        raise HTTPException(status_code=400, detail=f"Spotify token exchange failed: {error}")
+        raise HTTPException(
+            status_code=400,
+            detail=_spotify_token_error_detail("Spotify token exchange failed", error),
+        )
 
 
 def _refresh_spotify_token() -> str:
@@ -222,10 +266,13 @@ def _refresh_spotify_token() -> str:
     )
 
     try:
-        with urlopen(request, timeout=15) as response:
+        with urlopen(request, timeout=15, context=_https_context()) as response:
             payload = json.loads(response.read().decode("utf-8"))
     except Exception as error:
-        raise HTTPException(status_code=400, detail=f"Spotify token refresh failed: {error}")
+        raise HTTPException(
+            status_code=400,
+            detail=_spotify_token_error_detail("Spotify token refresh failed", error),
+        )
 
     access_token = payload.get("access_token", "")
     expires_in = int(payload.get("expires_in", 3600))
@@ -293,7 +340,7 @@ def _spotify_api_request(
     )
 
     try:
-        with urlopen(request, timeout=15) as response:
+        with urlopen(request, timeout=15, context=_https_context()) as response:
             raw = response.read().decode("utf-8")
             payload = json.loads(raw) if raw else None
             return int(response.status), payload, raw
@@ -752,7 +799,16 @@ def spotify_login() -> RedirectResponse:
 
 
 @app.get("/spotify/callback")
-def spotify_callback(code: str = Query(...)) -> Dict[str, Any]:
+def spotify_callback(
+    code: str | None = Query(default=None),
+    error: str | None = Query(default=None),
+) -> Dict[str, Any]:
+    if error:
+        raise HTTPException(
+            status_code=400, detail=f"Spotify authorization refused: {error}"
+        )
+    if not code:
+        raise HTTPException(status_code=400, detail="Spotify callback missing code")
     token_payload = _exchange_code_for_token(code)
 
     access_token = token_payload.get("access_token", "")
@@ -774,8 +830,80 @@ def spotify_callback(code: str = Query(...)) -> Dict[str, Any]:
 
 
 @app.get("/callback")
-def spotify_callback_alias(code: str = Query(...)) -> Dict[str, Any]:
-    return spotify_callback(code=code)
+def spotify_callback_alias(
+    code: str | None = Query(default=None),
+    error: str | None = Query(default=None),
+) -> Dict[str, Any]:
+    return spotify_callback(code=code, error=error)
+
+
+@app.get("/spotify/status")
+def spotify_status() -> Dict[str, Any]:
+    env_values = _load_env_values()
+    client_id = env_values.get("SPOTIFY_CLIENT_ID", "")
+    has_secret = bool(env_values.get("SPOTIFY_CLIENT_SECRET", ""))
+    access_present = bool(
+        str(spotify_tokens.get("access_token") or "")
+        or env_values.get("SPOTIFY_ACCESS_TOKEN", "")
+    )
+    expires_at_raw = str(spotify_tokens.get("expires_at") or "") or env_values.get(
+        "SPOTIFY_ACCESS_TOKEN_EXPIRES_AT", "0"
+    )
+    try:
+        expires_at = int(expires_at_raw)
+    except ValueError:
+        expires_at = 0
+    return {
+        "status": "ok",
+        "client_id_present": bool(client_id),
+        "client_secret_present": has_secret,
+        "access_token_present": access_present,
+        "expires_at": expires_at,
+        "expired": expires_at <= int(time.time()),
+        "redirect_uri": env_values.get(
+            "SPOTIFY_REDIRECT_URI", "http://127.0.0.1:8000/spotify/callback"
+        ),
+    }
+
+
+@app.post("/spotify/credentials")
+def spotify_save_credentials(payload: Dict[str, Any]) -> Dict[str, Any]:
+    client_id = str(payload.get("client_id", "") or "").strip()
+    client_secret = str(payload.get("client_secret", "") or "").strip()
+    redirect_uri = str(payload.get("redirect_uri", "") or "").strip()
+    if not client_id or not client_secret:
+        raise HTTPException(
+            status_code=400, detail="client_id and client_secret are required"
+        )
+    updates = {
+        "SPOTIFY_CLIENT_ID": client_id,
+        "SPOTIFY_CLIENT_SECRET": client_secret,
+    }
+    if redirect_uri:
+        updates["SPOTIFY_REDIRECT_URI"] = redirect_uri
+    _persist_env_updates(updates)
+    # Drop cached tokens so the next call re-auths against the new app keys.
+    spotify_tokens["access_token"] = ""
+    spotify_tokens["expires_at"] = 0
+    return {"status": "ok", "message": "Spotify credentials saved. Open the connect link to authorize."}
+
+
+@app.get("/spotify/connect-url")
+def spotify_connect_url() -> Dict[str, Any]:
+    config = _spotify_config()
+    if not config["client_id"]:
+        raise HTTPException(status_code=500, detail="Missing SPOTIFY_CLIENT_ID")
+    params = {
+        "client_id": config["client_id"],
+        "response_type": "code",
+        "redirect_uri": config["redirect_uri"],
+        "scope": " ".join(SPOTIFY_SCOPES),
+    }
+    return {
+        "status": "ok",
+        "url": f"{SPOTIFY_AUTH_URL}?{urlencode(params)}",
+        "redirect_uri": config["redirect_uri"],
+    }
 
 
 @app.get("/spotify/token")

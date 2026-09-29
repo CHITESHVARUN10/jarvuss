@@ -24,21 +24,45 @@ fn active_buffer() -> &'static Mutex<Option<Arc<Mutex<Vec<f32>>>>> {
 
 /// Register the active buffer so other threads (chunker) can read windows.
 pub fn register_buffer(buffer: Arc<Mutex<Vec<f32>>>) {
-    *active_buffer().lock().unwrap() = Some(buffer);
+    match active_buffer().lock() {
+        Ok(mut guard) => *guard = Some(buffer),
+        Err(poisoned) => {
+            tracing::error!("ACTIVE_BUFFER mutex poisoned on register — recovering");
+            *poisoned.into_inner() = Some(buffer);
+        }
+    }
 }
 
 /// Clear the active buffer registration.
 pub fn unregister_buffer() {
-    *active_buffer().lock().unwrap() = None;
+    match active_buffer().lock() {
+        Ok(mut guard) => *guard = None,
+        Err(poisoned) => {
+            tracing::error!("ACTIVE_BUFFER mutex poisoned on unregister — recovering");
+            *poisoned.into_inner() = None;
+        }
+    }
 }
 
 /// Non-destructive snapshot of the last `n` samples of the active buffer.
 /// Returns (window, total_len). Empty when no recording is active.
 pub fn tail_active(n: usize) -> (Vec<f32>, u64) {
-    let guard = active_buffer().lock().unwrap();
+    let guard = match active_buffer().lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => {
+            tracing::error!("ACTIVE_BUFFER mutex poisoned on tail — recovering");
+            poisoned.into_inner()
+        }
+    };
     match guard.as_ref() {
         Some(buf) => {
-            let data = buf.lock().unwrap();
+            let data = match buf.lock() {
+                Ok(data) => data,
+                Err(poisoned) => {
+                    tracing::error!("audio buffer mutex poisoned on tail — recovering");
+                    poisoned.into_inner()
+                }
+            };
             let start = data.len().saturating_sub(n);
             (data[start..].to_vec(), data.len() as u64)
         }
@@ -85,7 +109,11 @@ impl AudioCapture {
                 let buf_clone = buf_clone.clone();
                 let lvl_clone = lvl_clone.clone();
                 move |data: &[f32], _: &cpal::InputCallbackInfo| {
-                    let mut buf = buf_clone.lock().unwrap();
+                    // Audio callback: never panic here (would abort the app).
+                    let mut buf = match buf_clone.lock() {
+                        Ok(buf) => buf,
+                        Err(poisoned) => poisoned.into_inner(),
+                    };
                     if buf.len() + data.len() > max_samples {
                         let excess = (buf.len() + data.len()) - max_samples;
                         if excess < buf.len() {
@@ -114,23 +142,63 @@ impl AudioCapture {
     }
 
     pub fn drain_samples(&self) -> Vec<f32> {
-        let mut buf = self.buffer.lock().unwrap();
+        let mut buf = match self.buffer.lock() {
+            Ok(buf) => buf,
+            Err(poisoned) => poisoned.into_inner(),
+        };
         std::mem::take(&mut *buf)
     }
 
     /// Non-destructive: returns the last `n` samples (the chunk window).
     /// Used by the chunker to snapshot a window while recording continues.
     pub fn tail_samples(&self, n: usize) -> Vec<f32> {
-        let buf = self.buffer.lock().unwrap();
+        let buf = match self.buffer.lock() {
+            Ok(buf) => buf,
+            Err(poisoned) => poisoned.into_inner(),
+        };
         let start = buf.len().saturating_sub(n);
         buf[start..].to_vec()
     }
 
     /// Non-destructive: returns (last `n` samples, total buffer length).
     pub fn tail_samples_with_len(&self, n: usize) -> (Vec<f32>, u64) {
-        let buf = self.buffer.lock().unwrap();
+        let buf = match self.buffer.lock() {
+            Ok(buf) => buf,
+            Err(poisoned) => poisoned.into_inner(),
+        };
         let start = buf.len().saturating_sub(n);
         (buf[start..].to_vec(), buf.len() as u64)
+    }
+
+    /// Mean RMS over an arbitrary slice — the silence gate in
+    /// `stop_recording` / `chunker_thread` uses this to decide whether a
+    /// clip is worth sending to Whisper at all. Display metering
+    /// (`current_level`) is unchanged.
+    pub fn rms(samples: &[f32]) -> f32 {
+        if samples.is_empty() {
+            return 0.0;
+        }
+        let sum: f32 = samples.iter().map(|s| s * s).sum();
+        (sum / samples.len() as f32).sqrt()
+    }
+
+    /// Fraction of 20 ms frames whose RMS clears `floor` — distinguishes a
+    /// quiet-but-voiced utterance (many frames hot) from a breath/silence
+    /// blip with one loud tick (few frames hot).
+    pub fn voiced_fraction(samples: &[f32], floor: f32) -> f32 {
+        const FRAME: usize = 320; // 20 ms @ 16 kHz
+        if samples.len() < FRAME {
+            return if Self::rms(samples) >= floor { 1.0 } else { 0.0 };
+        }
+        let frames = samples.len() / FRAME;
+        let mut hot = 0usize;
+        for i in 0..frames {
+            let s = &samples[i * FRAME..(i + 1) * FRAME];
+            if Self::rms(s) >= floor {
+                hot += 1;
+            }
+        }
+        hot as f32 / frames as f32
     }
 
     pub fn current_level(&self) -> f32 {
