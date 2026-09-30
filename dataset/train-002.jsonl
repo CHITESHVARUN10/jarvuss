@@ -1,0 +1,257 @@
+{"text": "close whatsapp and open spotify", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close whatsapp then open spotify", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close whatsapp open spotify", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close whatsapp and then open spotify", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close whatsapp, then open spotify", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "quit whatsapp and open spotify", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "quit whatsapp then open spotify", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close whatsapp and launch spotify", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close whatsapp and start spotify", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close whatsapp and run spotify", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "can you close whatsapp and open spotify", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "please close whatsapp and open spotify", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close whatsapp for me and open spotify", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close whatsapp and open up spotify", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close whats app and open spotify", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close whatsapp and open spotifi", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close whatsapp. and open spotify.", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "uh close whatsapp and open spotify", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close whatsapp and open spotify please", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "shut whatsapp and open spotify", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close the whatsapp and open the spotify", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close whatsapp? and open spotify", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close whatsapp and open spotify.", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close whatsapp, open spotify", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "jarvis close whatsapp and open spotify", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "hey jarvis close whatsapp then open spotify", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close whtasapp and open spotify", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close whatsap and open spotify", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close whatsapp and open spotify for me", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close chrome and open spotify", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close chrome then open spotify", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close chrome open spotify", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "quit chrome and open spotify", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close google chrome and open spotify", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close chrome and launch spotify", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "can you close chrome and open spotify", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close the chrome and start spotify", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close chrome and open spotifi", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close chrome, then open spotify", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close chrome and open spotify please", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "please close chrome then open spotify", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close chrome. open spotify.", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "uh close chrome and open spotify", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close chrome and open up spotify", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "shut chrome and open spotify", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close spotify and open whatsapp", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}, {"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "close spotify then open whatsapp", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}, {"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "close spotify open whatsapp", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}, {"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "quit spotify and open whatsapp", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}, {"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "close spotify and launch whatsapp", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}, {"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "close spotify and start whatsapp", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}, {"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "can you close spotify and open whatsapp", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}, {"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "close spotifi and open whatsapp", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}, {"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "close spotify and open whats app", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}, {"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "close spotify, then open whatsapp", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}, {"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "please close spotify and open whatsapp", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}, {"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "close spotify and open whatsapp please", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}, {"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "close spotify. and open whatsapp.", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}, {"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "close spotify and then open whatsapp", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}, {"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "close spotify and open whatsapp for me", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}, {"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "close spotify and run whatsapp", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}, {"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "close whatsapp and open chrome", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "close whatsapp then open chrome", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "close whatsapp open chrome", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "quit whatsapp and open chrome", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "close whatsapp and launch chrome", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "close whatsapp and start google chrome", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "can you close whatsapp and open chrome", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "close whats app then open chrome", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "close whatsapp and open googlechrom", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "close whatsapp, open chrome", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "close whatsapp and open chrome please", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "please close whatsapp and open chrome", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "close whatsapp. and open chrome.", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "close whatsapp and open the chrome", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "shut whatsapp and open chrome", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "close whatsapp and open chrome for me", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "close vscode and open chrome", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "close vscode then open chrome", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "quit vscode and open chrome", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "close vs code and open chrome", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "close visual studio code and open google chrome", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "close vscode and launch chrome", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "close vscode open chrome", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "can you close vscode and open chrome", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "close vscode, then open chrome", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "close vscode and open chrome please", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "close vscode and open spotify", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close vscode then open spotify", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "quit vscode and open spotify", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close vs code and open spotify", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close vscode and launch spotify", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close vscode and start spotify", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close vscode open spotify", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "can you close vscode and open spotify", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close vscode and open spotifi", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close vscode, open spotify", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close safari and open chrome", "intents": [{"name": "app.close", "args": {"name": "Safari"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "close safari then open chrome", "intents": [{"name": "app.close", "args": {"name": "Safari"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "quit safari and open chrome", "intents": [{"name": "app.close", "args": {"name": "Safari"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "close safari open chrome", "intents": [{"name": "app.close", "args": {"name": "Safari"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "close safri and open chrome", "intents": [{"name": "app.close", "args": {"name": "Safari"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "close safari and launch chrome", "intents": [{"name": "app.close", "args": {"name": "Safari"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "close safari and open google chrome", "intents": [{"name": "app.close", "args": {"name": "Safari"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "can you close safari and open chrome", "intents": [{"name": "app.close", "args": {"name": "Safari"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "close safari, then open chrome", "intents": [{"name": "app.close", "args": {"name": "Safari"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "close safari and open chrome please", "intents": [{"name": "app.close", "args": {"name": "Safari"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "close chrome and open safari", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "close chrome then open safari", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "quit chrome and open safari", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "close chrome open safari", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "close the chrome and open safri", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "close chrome and launch safari", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "can you close chrome and open safari", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "close chrome and open safari.", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "close chrome and open safari please", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "close chrome, open safari", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "close brave and open safari", "intents": [{"name": "app.close", "args": {"name": "Brave Browser"}}, {"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "close brave then open safari", "intents": [{"name": "app.close", "args": {"name": "Brave Browser"}}, {"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "quit brave and open safari", "intents": [{"name": "app.close", "args": {"name": "Brave Browser"}}, {"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "close brave open safari", "intents": [{"name": "app.close", "args": {"name": "Brave Browser"}}, {"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "close the brave browser and open safari", "intents": [{"name": "app.close", "args": {"name": "Brave Browser"}}, {"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "close brave and open safri", "intents": [{"name": "app.close", "args": {"name": "Brave Browser"}}, {"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "close brave and launch safari", "intents": [{"name": "app.close", "args": {"name": "Brave Browser"}}, {"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "can you close brave and open safari", "intents": [{"name": "app.close", "args": {"name": "Brave Browser"}}, {"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "close brave and open spotify", "intents": [{"name": "app.close", "args": {"name": "Brave Browser"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close brave then open spotify", "intents": [{"name": "app.close", "args": {"name": "Brave Browser"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "quit brave and open spotify", "intents": [{"name": "app.close", "args": {"name": "Brave Browser"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close brave open spotify", "intents": [{"name": "app.close", "args": {"name": "Brave Browser"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close brave and start spotify", "intents": [{"name": "app.close", "args": {"name": "Brave Browser"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close brave and open spotifi", "intents": [{"name": "app.close", "args": {"name": "Brave Browser"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close photos and open music", "intents": [{"name": "app.close", "args": {"name": "Photos"}}, {"name": "app.open", "args": {"name": "Music"}}]}
+{"text": "close photos then open music", "intents": [{"name": "app.close", "args": {"name": "Photos"}}, {"name": "app.open", "args": {"name": "Music"}}]}
+{"text": "close photos open music", "intents": [{"name": "app.close", "args": {"name": "Photos"}}, {"name": "app.open", "args": {"name": "Music"}}]}
+{"text": "quit photos and open music", "intents": [{"name": "app.close", "args": {"name": "Photos"}}, {"name": "app.open", "args": {"name": "Music"}}]}
+{"text": "close the photos app and open music", "intents": [{"name": "app.close", "args": {"name": "Photos"}}, {"name": "app.open", "args": {"name": "Music"}}]}
+{"text": "close photos. and open music.", "intents": [{"name": "app.close", "args": {"name": "Photos"}}, {"name": "app.open", "args": {"name": "Music"}}]}
+{"text": "close photos and launch music", "intents": [{"name": "app.close", "args": {"name": "Photos"}}, {"name": "app.open", "args": {"name": "Music"}}]}
+{"text": "can you close photos and open music", "intents": [{"name": "app.close", "args": {"name": "Photos"}}, {"name": "app.open", "args": {"name": "Music"}}]}
+{"text": "close music and open photos", "intents": [{"name": "app.close", "args": {"name": "Music"}}, {"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "close music then open photos", "intents": [{"name": "app.close", "args": {"name": "Music"}}, {"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "quit music and open photos", "intents": [{"name": "app.close", "args": {"name": "Music"}}, {"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "close music open photos", "intents": [{"name": "app.close", "args": {"name": "Music"}}, {"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "close music and open photos.", "intents": [{"name": "app.close", "args": {"name": "Music"}}, {"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "close music and open the photos app", "intents": [{"name": "app.close", "args": {"name": "Music"}}, {"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "can you close music and open photos", "intents": [{"name": "app.close", "args": {"name": "Music"}}, {"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "close music, then open photos", "intents": [{"name": "app.close", "args": {"name": "Music"}}, {"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "close mail and open notes", "intents": [{"name": "app.close", "args": {"name": "Mail"}}, {"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "close mail then open notes", "intents": [{"name": "app.close", "args": {"name": "Mail"}}, {"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "quit mail and open notes", "intents": [{"name": "app.close", "args": {"name": "Mail"}}, {"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "close mail open notes", "intents": [{"name": "app.close", "args": {"name": "Mail"}}, {"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "close apple mail and open notes", "intents": [{"name": "app.close", "args": {"name": "Mail"}}, {"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "close notes and open mail", "intents": [{"name": "app.close", "args": {"name": "Notes"}}, {"name": "app.open", "args": {"name": "Mail"}}]}
+{"text": "close notes then open mail", "intents": [{"name": "app.close", "args": {"name": "Notes"}}, {"name": "app.open", "args": {"name": "Mail"}}]}
+{"text": "quit notes and open mail", "intents": [{"name": "app.close", "args": {"name": "Notes"}}, {"name": "app.open", "args": {"name": "Mail"}}]}
+{"text": "close notes open mail", "intents": [{"name": "app.close", "args": {"name": "Notes"}}, {"name": "app.open", "args": {"name": "Mail"}}]}
+{"text": "close notes and open apple mail", "intents": [{"name": "app.close", "args": {"name": "Notes"}}, {"name": "app.open", "args": {"name": "Mail"}}]}
+{"text": "close terminal and open vscode", "intents": [{"name": "app.close", "args": {"name": "Terminal"}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "close terminal then open vscode", "intents": [{"name": "app.close", "args": {"name": "Terminal"}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "quit terminal and open vscode", "intents": [{"name": "app.close", "args": {"name": "Terminal"}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "close terminal open vscode", "intents": [{"name": "app.close", "args": {"name": "Terminal"}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "close terminal and open vs code", "intents": [{"name": "app.close", "args": {"name": "Terminal"}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "close terminal and launch visual studio code", "intents": [{"name": "app.close", "args": {"name": "Terminal"}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "close finder and open terminal", "intents": [{"name": "app.close", "args": {"name": "Finder"}}, {"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "close finder then open terminal", "intents": [{"name": "app.close", "args": {"name": "Finder"}}, {"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "quit finder and open terminal", "intents": [{"name": "app.close", "args": {"name": "Finder"}}, {"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "close finder open terminal", "intents": [{"name": "app.close", "args": {"name": "Finder"}}, {"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "close finder and start terminal", "intents": [{"name": "app.close", "args": {"name": "Finder"}}, {"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "close messages and open calendar", "intents": [{"name": "app.close", "args": {"name": "Messages"}}, {"name": "app.open", "args": {"name": "Calendar"}}]}
+{"text": "close messages then open calendar", "intents": [{"name": "app.close", "args": {"name": "Messages"}}, {"name": "app.open", "args": {"name": "Calendar"}}]}
+{"text": "quit messages and open calendar", "intents": [{"name": "app.close", "args": {"name": "Messages"}}, {"name": "app.open", "args": {"name": "Calendar"}}]}
+{"text": "close messages open calendar", "intents": [{"name": "app.close", "args": {"name": "Messages"}}, {"name": "app.open", "args": {"name": "Calendar"}}]}
+{"text": "close messages and open the calendar", "intents": [{"name": "app.close", "args": {"name": "Messages"}}, {"name": "app.open", "args": {"name": "Calendar"}}]}
+{"text": "close whatsapp and open messages", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Messages"}}]}
+{"text": "close whatsapp then open messages", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Messages"}}]}
+{"text": "close whatsapp open messages", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Messages"}}]}
+{"text": "quit whatsapp and open messages", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Messages"}}]}
+{"text": "close whatsapp and open imessage", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Messages"}}]}
+{"text": "open spotify and close whatsapp", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "open spotify then close whatsapp", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "open spotify close whatsapp", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "launch spotify and close whatsapp", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "open spotify and quit whatsapp", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "open spotify and close whats app", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "open spotify, close whatsapp", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "open spotifi and close whatsapp", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "open chrome and close safari", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}, {"name": "app.close", "args": {"name": "Safari"}}]}
+{"text": "open chrome then close safari", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}, {"name": "app.close", "args": {"name": "Safari"}}]}
+{"text": "open chrome close safari", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}, {"name": "app.close", "args": {"name": "Safari"}}]}
+{"text": "launch chrome and quit safari", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}, {"name": "app.close", "args": {"name": "Safari"}}]}
+{"text": "open google chrome and close safri", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}, {"name": "app.close", "args": {"name": "Safari"}}]}
+{"text": "open chrome and close the safari", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}, {"name": "app.close", "args": {"name": "Safari"}}]}
+{"text": "open vscode and close terminal", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}, {"name": "app.close", "args": {"name": "Terminal"}}]}
+{"text": "open vscode then close terminal", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}, {"name": "app.close", "args": {"name": "Terminal"}}]}
+{"text": "open vs code and quit terminal", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}, {"name": "app.close", "args": {"name": "Terminal"}}]}
+{"text": "launch vscode and close terminal", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}, {"name": "app.close", "args": {"name": "Terminal"}}]}
+{"text": "open notes and close mail", "intents": [{"name": "app.open", "args": {"name": "Notes"}}, {"name": "app.close", "args": {"name": "Mail"}}]}
+{"text": "open notes then close mail", "intents": [{"name": "app.open", "args": {"name": "Notes"}}, {"name": "app.close", "args": {"name": "Mail"}}]}
+{"text": "open notes and quit mail", "intents": [{"name": "app.open", "args": {"name": "Notes"}}, {"name": "app.close", "args": {"name": "Mail"}}]}
+{"text": "open music and close photos", "intents": [{"name": "app.open", "args": {"name": "Music"}}, {"name": "app.close", "args": {"name": "Photos"}}]}
+{"text": "open music then close photos", "intents": [{"name": "app.open", "args": {"name": "Music"}}, {"name": "app.close", "args": {"name": "Photos"}}]}
+{"text": "open music and close the photos app", "intents": [{"name": "app.open", "args": {"name": "Music"}}, {"name": "app.close", "args": {"name": "Photos"}}]}
+{"text": "open calendar and close messages", "intents": [{"name": "app.open", "args": {"name": "Calendar"}}, {"name": "app.close", "args": {"name": "Messages"}}]}
+{"text": "open calendar then close messages", "intents": [{"name": "app.open", "args": {"name": "Calendar"}}, {"name": "app.close", "args": {"name": "Messages"}}]}
+{"text": "open calendar and quit messages", "intents": [{"name": "app.open", "args": {"name": "Calendar"}}, {"name": "app.close", "args": {"name": "Messages"}}]}
+{"text": "open brave and close chrome", "intents": [{"name": "app.open", "args": {"name": "Brave Browser"}}, {"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "open brave then close chrome", "intents": [{"name": "app.open", "args": {"name": "Brave Browser"}}, {"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "open the brave browser and close chrome", "intents": [{"name": "app.open", "args": {"name": "Brave Browser"}}, {"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "launch brave and quit chrome", "intents": [{"name": "app.open", "args": {"name": "Brave Browser"}}, {"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "open brave and close the chrome", "intents": [{"name": "app.open", "args": {"name": "Brave Browser"}}, {"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "open terminal and close finder", "intents": [{"name": "app.open", "args": {"name": "Terminal"}}, {"name": "app.close", "args": {"name": "Finder"}}]}
+{"text": "open terminal then close finder", "intents": [{"name": "app.open", "args": {"name": "Terminal"}}, {"name": "app.close", "args": {"name": "Finder"}}]}
+{"text": "open terminal and quit finder", "intents": [{"name": "app.open", "args": {"name": "Terminal"}}, {"name": "app.close", "args": {"name": "Finder"}}]}
+{"text": "open whatsapp and close messages", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}, {"name": "app.close", "args": {"name": "Messages"}}]}
+{"text": "open whatsapp then close messages", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}, {"name": "app.close", "args": {"name": "Messages"}}]}
+{"text": "open whats app and close messages", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}, {"name": "app.close", "args": {"name": "Messages"}}]}
+{"text": "open spotify and open chrome", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open spotify then open chrome", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open spotify and open up chrome", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open spotify open chrome", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "launch spotify and launch chrome", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open spotifi and open chrome", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open spotify and open googlechrom", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open chrome and open spotify", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open chrome then open spotify", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open chrome open spotify", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open chrome and start spotify", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open chrome and open up spotify", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open notes and open terminal", "intents": [{"name": "app.open", "args": {"name": "Notes"}}, {"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "open notes then open terminal", "intents": [{"name": "app.open", "args": {"name": "Notes"}}, {"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "open notes open terminal", "intents": [{"name": "app.open", "args": {"name": "Notes"}}, {"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "open mail and open calendar", "intents": [{"name": "app.open", "args": {"name": "Mail"}}, {"name": "app.open", "args": {"name": "Calendar"}}]}
+{"text": "open mail then open calendar", "intents": [{"name": "app.open", "args": {"name": "Mail"}}, {"name": "app.open", "args": {"name": "Calendar"}}]}
+{"text": "open mail open calendar", "intents": [{"name": "app.open", "args": {"name": "Mail"}}, {"name": "app.open", "args": {"name": "Calendar"}}]}
+{"text": "open maps and open photos", "intents": [{"name": "app.open", "args": {"name": "Maps"}}, {"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "open maps then open photos", "intents": [{"name": "app.open", "args": {"name": "Maps"}}, {"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "open maps open the photos app", "intents": [{"name": "app.open", "args": {"name": "Maps"}}, {"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "close chrome and close spotify", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "close chrome then close spotify", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "close chrome and quit spotify", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "close chrome close spotify", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "quit chrome and quit spotify", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "close whatsapp and close telegram", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.close", "args": {"name": "Telegram"}}]}
+{"text": "close whatsapp then close telegram", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.close", "args": {"name": "Telegram"}}]}
+{"text": "quit whatsapp and quit telegram", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.close", "args": {"name": "Telegram"}}]}
+{"text": "close music and close photos and close spotify", "intents": [{"name": "app.close", "args": {"name": "Music"}}, {"name": "app.close", "args": {"name": "Photos"}}, {"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "close music then close photos then close spotify", "intents": [{"name": "app.close", "args": {"name": "Music"}}, {"name": "app.close", "args": {"name": "Photos"}}, {"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "quit music, quit photos, quit spotify", "intents": [{"name": "app.close", "args": {"name": "Music"}}, {"name": "app.close", "args": {"name": "Photos"}}, {"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "open spotify and open notes and open terminal", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "app.open", "args": {"name": "Notes"}}, {"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "open spotify then open notes then open terminal", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "app.open", "args": {"name": "Notes"}}, {"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "open spotify, open notes, open terminal", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "app.open", "args": {"name": "Notes"}}, {"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "close safari and close chrome and close brave", "intents": [{"name": "app.close", "args": {"name": "Safari"}}, {"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.close", "args": {"name": "Brave Browser"}}]}
+{"text": "close safari then close chrome then close brave", "intents": [{"name": "app.close", "args": {"name": "Safari"}}, {"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "app.close", "args": {"name": "Brave Browser"}}]}
+{"text": "open messages and close whatsapp and open spotify", "intents": [{"name": "app.open", "args": {"name": "Messages"}}, {"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open messages then close whatsapp then open spotify", "intents": [{"name": "app.open", "args": {"name": "Messages"}}, {"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close mail and open notes and open vscode", "intents": [{"name": "app.close", "args": {"name": "Mail"}}, {"name": "app.open", "args": {"name": "Notes"}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "close mail then open notes then open vscode", "intents": [{"name": "app.close", "args": {"name": "Mail"}}, {"name": "app.open", "args": {"name": "Notes"}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}]}

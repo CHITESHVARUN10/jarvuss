@@ -1,0 +1,102 @@
+{"text": "would you mind opening spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "would you mind closing whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "would you mind opening chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "do you mind opening spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "do you mind closing whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "open spotify if you would", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close whatsapp if you would", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "might you open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "might you close whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "shall we open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "lets open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "lets close whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "let us open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "let me have spotify open", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "let me have whatsapp closed", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "i would like spotify opened", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "i would like whatsapp closed", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "i would like chrome opened", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "i would like vscode opened", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "i would like the brightness increased", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "i would like the brightness decreased", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "i would like the volume turned up", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "i would like the volume turned down", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "i would like the volume muted", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "i would like my liked songs playing", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "i would like to know the time", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "i would like to know the date", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "brightness up a tad", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "brightness down a tad", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "volume up a tad", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "volume down a tad", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "a tad brighter", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "a tad dimmer", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "a tad louder", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "a tad quieter", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "a touch brighter", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "a touch dimmer", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "a touch louder", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "a touch quieter", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "a shade brighter", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "a shade dimmer", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "increase the brightness by thirty five", "intents": [{"name": "display.brightness_up", "args": {"by": 35}}]}
+{"text": "increase the brightness by forty five", "intents": [{"name": "display.brightness_up", "args": {"by": 45}}]}
+{"text": "decrease the brightness by thirty five", "intents": [{"name": "display.brightness_down", "args": {"by": 35}}]}
+{"text": "decrease the brightness by forty five", "intents": [{"name": "display.brightness_down", "args": {"by": 45}}]}
+{"text": "increase the volume by thirty five", "intents": [{"name": "volume.up", "args": {"by": 35}}]}
+{"text": "increase the volume by forty five", "intents": [{"name": "volume.up", "args": {"by": 45}}]}
+{"text": "decrease the volume by thirty five", "intents": [{"name": "volume.down", "args": {"by": 35}}]}
+{"text": "decrease the volume by forty five", "intents": [{"name": "volume.down", "args": {"by": 45}}]}
+{"text": "increase the contrast by thirty five", "intents": [{"name": "display.contrast_up", "args": {"by": 35}}]}
+{"text": "decrease the contrast by thirty five", "intents": [{"name": "display.contrast_down", "args": {"by": 35}}]}
+{"text": "play the song titanium", "intents": [{"name": "media.play_song", "args": {"title": "titanium"}}]}
+{"text": "play titanium", "intents": [{"name": "media.play_song", "args": {"title": "titanium"}}]}
+{"text": "play the song clarity", "intents": [{"name": "media.play_song", "args": {"title": "clarity"}}]}
+{"text": "play clarity", "intents": [{"name": "media.play_song", "args": {"title": "clarity"}}]}
+{"text": "play the song lean on", "intents": [{"name": "media.play_song", "args": {"title": "lean on"}}]}
+{"text": "play lean on", "intents": [{"name": "media.play_song", "args": {"title": "lean on"}}]}
+{"text": "play the song animals", "intents": [{"name": "media.play_song", "args": {"title": "animals"}}]}
+{"text": "play animals", "intents": [{"name": "media.play_song", "args": {"title": "animals"}}]}
+{"text": "play the song pompeii", "intents": [{"name": "media.play_song", "args": {"title": "pompeii"}}]}
+{"text": "play pompeii", "intents": [{"name": "media.play_song", "args": {"title": "pompeii"}}]}
+{"text": "play the song wake me up", "intents": [{"name": "media.play_song", "args": {"title": "wake me up"}}]}
+{"text": "play wake me up", "intents": [{"name": "media.play_song", "args": {"title": "wake me up"}}]}
+{"text": "play the song hey brother", "intents": [{"name": "media.play_song", "args": {"title": "hey brother"}}]}
+{"text": "play hey brother", "intents": [{"name": "media.play_song", "args": {"title": "hey brother"}}]}
+{"text": "play the song the nights", "intents": [{"name": "media.play_song", "args": {"title": "the nights"}}]}
+{"text": "play the nights", "intents": [{"name": "media.play_song", "args": {"title": "the nights"}}]}
+{"text": "play the song waiting for love", "intents": [{"name": "media.play_song", "args": {"title": "waiting for love"}}]}
+{"text": "play waiting for love", "intents": [{"name": "media.play_song", "args": {"title": "waiting for love"}}]}
+{"text": "play the song on top of the world", "intents": [{"name": "media.play_song", "args": {"title": "on top of the world"}}]}
+{"text": "play on top of the world", "intents": [{"name": "media.play_song", "args": {"title": "on top of the world"}}]}
+{"text": "play playlist coding energy", "intents": [{"name": "media.play_playlist", "args": {"name": "coding energy"}}]}
+{"text": "play playlist deep work", "intents": [{"name": "media.play_playlist", "args": {"name": "deep work"}}]}
+{"text": "play playlist morning boost", "intents": [{"name": "media.play_playlist", "args": {"name": "morning boost"}}]}
+{"text": "play playlist evening wind down", "intents": [{"name": "media.play_playlist", "args": {"name": "evening wind down"}}]}
+{"text": "play playlist weekend vibes", "intents": [{"name": "media.play_playlist", "args": {"name": "weekend vibes"}}]}
+{"text": "play playlist monday motivation", "intents": [{"name": "media.play_playlist", "args": {"name": "monday motivation"}}]}
+{"text": "play playlist friday feeling", "intents": [{"name": "media.play_playlist", "args": {"name": "friday feeling"}}]}
+{"text": "play playlist study lofi", "intents": [{"name": "media.play_playlist", "args": {"name": "study lofi"}}]}
+{"text": "play playlist gym pump", "intents": [{"name": "media.play_playlist", "args": {"name": "gym pump"}}]}
+{"text": "play playlist car karaoke", "intents": [{"name": "media.play_playlist", "args": {"name": "car karaoke"}}]}
+{"text": "search the web for how to make cold coffee", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to make cold coffee"}}]}
+{"text": "search the web for how to remove stains", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to remove stains"}}]}
+{"text": "search the web for how to organize files", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to organize files"}}]}
+{"text": "search the web for best laptops under 1000", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "best laptops under 1000"}}]}
+{"text": "search the web for top programming languages", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "top programming languages"}}]}
+{"text": "search the web for how to speed up my laptop", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to speed up my laptop"}}]}
+{"text": "search the web for why is my mac slow", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "why is my mac slow"}}]}
+{"text": "search the web for how to backup iphone", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to backup iphone"}}]}
+{"text": "search youtube for how to make cold coffee", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "how to make cold coffee"}}]}
+{"text": "search youtube for how to organize files", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "how to organize files"}}]}
+{"text": "google how to make cold coffee", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to make cold coffee"}}]}
+{"text": "google how to backup iphone", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to backup iphone"}}]}
+{"text": "what is the oldest language", "intents": [{"name": "ai.query", "args": {"text": "what is the oldest language"}}]}
+{"text": "what is the rarest gem", "intents": [{"name": "ai.query", "args": {"text": "what is the rarest gem"}}]}
+{"text": "who wrote the divine comedy", "intents": [{"name": "ai.query", "args": {"text": "who wrote the divine comedy"}}]}
+{"text": "explain how batteries work", "intents": [{"name": "ai.query", "args": {"text": "explain how batteries work"}}]}
+{"text": "explain how the internet works", "intents": [{"name": "ai.query", "args": {"text": "explain how the internet works"}}]}
+{"text": "create a file called brainstorm", "intents": [{"name": "file.create", "args": {"name": "brainstorm"}}]}
+{"text": "create a folder called inspiration", "intents": [{"name": "folder.create", "args": {"name": "inspiration"}}]}
+{"text": "open the movies folder please", "intents": [{"name": "folder.open", "args": {"name": "movies"}}]}
+{"text": "install htop with homebrew", "intents": [{"name": "install.preview", "args": {"package": "htop", "source": "homebrew"}}]}

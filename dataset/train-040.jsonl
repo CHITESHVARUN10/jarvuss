@@ -1,0 +1,60 @@
+{"text": "open firefox please", "intents": [{"name": "app.open", "args": {"name": "Firefox"}}]}
+{"text": "close notes please", "intents": [{"name": "app.close", "args": {"name": "Notes"}}]}
+{"text": "close firefox please", "intents": [{"name": "app.close", "args": {"name": "Firefox"}}]}
+{"text": "close mail please", "intents": [{"name": "app.close", "args": {"name": "Mail"}}]}
+{"text": "close calendar please", "intents": [{"name": "app.close", "args": {"name": "Calendar"}}]}
+{"text": "close messages please", "intents": [{"name": "app.close", "args": {"name": "Messages"}}]}
+{"text": "close maps please", "intents": [{"name": "app.close", "args": {"name": "Maps"}}]}
+{"text": "close finder please", "intents": [{"name": "app.close", "args": {"name": "Finder"}}]}
+{"text": "can you close vscode", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}]}
+{"text": "can you close notes", "intents": [{"name": "app.close", "args": {"name": "Notes"}}]}
+{"text": "can you increase the volume", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "can you decrease the volume", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "can you pause", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "can you play", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "can you tell me the date", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "can you set the contrast to 50", "intents": [{"name": "display.contrast_set", "args": {"level": 50}}]}
+{"text": "can you search youtube for lofi beats", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "lofi beats"}}]}
+{"text": "can you search the web for the weather", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "the weather"}}]}
+{"text": "can you create file notes", "intents": [{"name": "file.create", "args": {"name": "notes"}}]}
+{"text": "can you create folder work", "intents": [{"name": "folder.create", "args": {"name": "work"}}]}
+{"text": "open notes for me", "intents": [{"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "close chrome for me", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "close vscode for me", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}]}
+{"text": "close notes for me", "intents": [{"name": "app.close", "args": {"name": "Notes"}}]}
+{"text": "decrease the brightness for me", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "turn up the volume for me", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "turn down the volume for me", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "play my liked songs for me", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "pause for me", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "tell me the time for me", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "tell me the date for me", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "set the brightness to 50 for me", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "set the volume to 50 for me", "intents": [{"name": "volume.set", "args": {"level": 50}}]}
+{"text": "um close whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "um mute", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "um whats the time", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "uh increase the brightness", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "uh play my liked songs", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "uh whats the time", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "hey jarvis whats the time", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "jarvis increase the brightness", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "jarvis whats the time", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "play my liked songs.", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "whats the time.", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "whats the date.", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "set the brightness to 50.", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "set the volume to 50.", "intents": [{"name": "volume.set", "args": {"level": 50}}]}
+{"text": "search youtube for lofi beats.", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "lofi beats"}}]}
+{"text": "search the web for the weather.", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "the weather"}}]}
+{"text": "close whatsapp?", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "volume up?", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "mute?", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "whats the time?", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "whats the date?", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "please set the brightness to 50", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "just volume up", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "volume up now", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "play my liked songs now", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "i want brightness at 50", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "i wanna mute", "intents": [{"name": "volume.mute", "args": {}}]}

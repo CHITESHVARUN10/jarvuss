@@ -332,10 +332,11 @@ enum FastPathRouter {
 final class ActionPlanner {
 
     private let ollamaClient = OllamaClient(model: JarvisModel.name)
+    private let intentModelRouter = IntentModelRouter()
 
     // ── Public entry point ──────────────────────────────────────────
 
-    func plan(from raw: String) async -> [PlannedAction] {
+    func plan(from raw: String, requestID: UUID = UUID()) async -> [PlannedAction] {
         // 1. Strip wake word and trailing noise before anything else
         let cleaned = stripWakeWord(stripTrailingNoise(raw))
         let lower   = cleaned.lowercased()
@@ -346,18 +347,34 @@ final class ActionPlanner {
         // level" is answered from hardware, NEVER sent to Ollama (the
         // code-dump bug: Qwen answered a hardware question with Java).
         if let local = answerLocalStateQuery(cleaned: cleaned, lower: lower) {
+            logPlanEvent(branch: "local", text: cleaned, requestID: requestID, actions: local)
             return local
         }
 
-        // 2. Safety pre-check on the full input (runs BEFORE the fast-path
+        // 2. Safety pre-check on the full input (runs BEFORE the routers
         // so destructive/sudo/install input never executes unchecked).
         switch SafetyGuard.validate(rawCommand: cleaned) {
         case .blocked(let reason):
-            return [.aiQuery("blocked: \(reason)")]
+            let blocked = [PlannedAction.aiQuery("blocked: \(reason)")]
+            logPlanEvent(branch: "blocked", text: cleaned, requestID: requestID, actions: blocked)
+            return blocked
         case .installPreview(let cmd, let src):
-            return [.installPreview(package: cmd, source: src)]
+            let preview = [PlannedAction.installPreview(package: cmd, source: src)]
+            logPlanEvent(branch: "install", text: cleaned, requestID: requestID, actions: preview)
+            return preview
         case .allowed:
             break
+        }
+
+        // 2a. Learned intent model — primary router. It understands phrasing
+        // and ordered multi-step plans the regexes cannot. On ANY miss
+        // (disabled, backend down, low confidence, unmappable JSON) it logs
+        // to intent_router.jsonl for RL and returns nil — the regex pipeline
+        // below (FastPathRouter → rules → Qwen) stays as the safety net.
+        if let learned = await intentModelRouter.route(cleaned, requestID: requestID) {
+            NSLog("[Plan] Intent model: %@", learned.map(\.description).joined(separator: ", "))
+            logPlanEvent(branch: "model", text: cleaned, requestID: requestID, actions: learned)
+            return learned
         }
 
         // 2b. Fast-path router — simple intents execute with ZERO model
@@ -369,6 +386,7 @@ final class ActionPlanner {
             } else {
                 NSLog("[Plan] Fast-path: dropped noise without model")
             }
+            logPlanEvent(branch: "rule", text: cleaned, requestID: requestID, actions: actions)
             return actions
         case .needsModel:
             NSLog("[Plan] Fast-path miss — full pipeline")
@@ -379,6 +397,7 @@ final class ActionPlanner {
         // SYSTEM -> INFO -> MEDIA -> AI
         if let actions = ruleBasedPlan(cleaned: cleaned, lower: lower) {
             NSLog("[Plan] Rule-based: %@", actions.map(\.description).joined(separator: ", "))
+            logPlanEvent(branch: "rule", text: cleaned, requestID: requestID, actions: actions)
             return actions
         }
 
@@ -406,7 +425,22 @@ final class ActionPlanner {
 
         NSLog("[Intent] AI: fallback")
         NSLog("[Plan] → Routing to Ollama: '%@'", cleaned)
-        return await ollamaFallback(cleaned)
+        let qwenPlan = await ollamaFallback(cleaned)
+        logPlanEvent(branch: "qwen", text: cleaned, requestID: requestID, actions: qwenPlan)
+        return qwenPlan
+    }
+
+    /// One JSONL line per routing decision — the RL corpus pairs these with
+    /// the model_hit/model_miss lines from IntentModelRouter and the
+    /// execute_step lines from AppState runCommand (same request_id).
+    private func logPlanEvent(branch: String, text: String, requestID: UUID, actions: [PlannedAction]) {
+        IntentRouterLog.shared.append([
+            "event": "plan",
+            "branch": branch,
+            "request_id": requestID.uuidString,
+            "text": text,
+            "actions": actions.map(\.description),
+        ])
     }
 
     // MARK: - Rule-based planner

@@ -1,0 +1,110 @@
+{"text": "open spotify and set brightness to 30", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "display.brightness_set", "args": {"level": 30}}]}
+{"text": "open spotify and set brightness to 70", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "display.brightness_set", "args": {"level": 70}}]}
+{"text": "open spotify and set the volume to 50", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "volume.set", "args": {"level": 50}}]}
+{"text": "open spotify and set the volume to 30", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "volume.set", "args": {"level": 30}}]}
+{"text": "open spotify and set the volume to 70", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "volume.set", "args": {"level": 70}}]}
+{"text": "open chrome and set brightness to 50", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}, {"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "open chrome and set the volume to 50", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}, {"name": "volume.set", "args": {"level": 50}}]}
+{"text": "open vscode and set brightness to 50", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}, {"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "open vscode and set the volume to 50", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}, {"name": "volume.set", "args": {"level": 50}}]}
+{"text": "open notes and set brightness to 50", "intents": [{"name": "app.open", "args": {"name": "Notes"}}, {"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "open notes and set the volume to 50", "intents": [{"name": "app.open", "args": {"name": "Notes"}}, {"name": "volume.set", "args": {"level": 50}}]}
+{"text": "open terminal and set brightness to 50", "intents": [{"name": "app.open", "args": {"name": "Terminal"}}, {"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "open terminal and set the volume to 50", "intents": [{"name": "app.open", "args": {"name": "Terminal"}}, {"name": "volume.set", "args": {"level": 50}}]}
+{"text": "open whatsapp and set brightness to 50", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}, {"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "open whatsapp and set the volume to 50", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}, {"name": "volume.set", "args": {"level": 50}}]}
+{"text": "close spotify and set brightness to 50", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}, {"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "close chrome and set the volume to 50", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "volume.set", "args": {"level": 50}}]}
+{"text": "close vscode and set brightness to 50", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}, {"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "close whatsapp and set the volume to 50", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "volume.set", "args": {"level": 50}}]}
+{"text": "open spotify and volume up 10", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "open spotify and volume down 10", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "volume.down", "args": {"by": 10}}]}
+{"text": "open spotify and volume down 20", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "volume.down", "args": {"by": 20}}]}
+{"text": "open spotify and increase brightness by 10", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "open spotify and increase brightness by 20", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "display.brightness_up", "args": {"by": 20}}]}
+{"text": "open spotify and decrease brightness by 10", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "open spotify and decrease brightness by 20", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "display.brightness_down", "args": {"by": 20}}]}
+{"text": "open chrome and volume up 10", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "open chrome and volume down 10", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}, {"name": "volume.down", "args": {"by": 10}}]}
+{"text": "open chrome and increase brightness by 10", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}, {"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "open chrome and decrease brightness by 10", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}, {"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "open vscode and volume up 10", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "open vscode and volume down 10", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}, {"name": "volume.down", "args": {"by": 10}}]}
+{"text": "open vscode and increase brightness by 10", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}, {"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "open vscode and decrease brightness by 10", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}, {"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "open notes and volume up 10", "intents": [{"name": "app.open", "args": {"name": "Notes"}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "open notes and volume down 10", "intents": [{"name": "app.open", "args": {"name": "Notes"}}, {"name": "volume.down", "args": {"by": 10}}]}
+{"text": "open notes and increase brightness by 10", "intents": [{"name": "app.open", "args": {"name": "Notes"}}, {"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "open notes and decrease brightness by 10", "intents": [{"name": "app.open", "args": {"name": "Notes"}}, {"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "open terminal and volume up 10", "intents": [{"name": "app.open", "args": {"name": "Terminal"}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "open terminal and volume down 10", "intents": [{"name": "app.open", "args": {"name": "Terminal"}}, {"name": "volume.down", "args": {"by": 10}}]}
+{"text": "open whatsapp and volume up 10", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "open whatsapp and volume down 10", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}, {"name": "volume.down", "args": {"by": 10}}]}
+{"text": "open whatsapp and increase brightness by 10", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}, {"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "open whatsapp and decrease brightness by 10", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}, {"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "close spotify and volume up 10", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "close spotify and volume down 10", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}, {"name": "volume.down", "args": {"by": 10}}]}
+{"text": "close chrome and volume up 10", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "close chrome and volume down 10", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "volume.down", "args": {"by": 10}}]}
+{"text": "close vscode and volume up 10", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "close vscode and volume down 10", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}, {"name": "volume.down", "args": {"by": 10}}]}
+{"text": "close whatsapp and volume up 10", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "close whatsapp and volume down 10", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "volume.down", "args": {"by": 10}}]}
+{"text": "close chrome and increase brightness by 10", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "close chrome and decrease brightness by 10", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "close vscode and increase brightness by 10", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}, {"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "close vscode and decrease brightness by 10", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}, {"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "play liked songs and volume up 10", "intents": [{"name": "media.play_liked", "args": {}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "play liked songs and volume down 10", "intents": [{"name": "media.play_liked", "args": {}}, {"name": "volume.down", "args": {"by": 10}}]}
+{"text": "play liked songs and set volume to 50", "intents": [{"name": "media.play_liked", "args": {}}, {"name": "volume.set", "args": {"level": 50}}]}
+{"text": "play liked songs and set brightness to 50", "intents": [{"name": "media.play_liked", "args": {}}, {"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "play liked songs and increase brightness by 10", "intents": [{"name": "media.play_liked", "args": {}}, {"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "play liked songs and decrease brightness by 10", "intents": [{"name": "media.play_liked", "args": {}}, {"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "play liked songs and mute", "intents": [{"name": "media.play_liked", "args": {}}, {"name": "volume.mute", "args": {}}]}
+{"text": "play liked songs and unmute", "intents": [{"name": "media.play_liked", "args": {}}, {"name": "volume.unmute", "args": {}}]}
+{"text": "play the song thunder and volume up 10", "intents": [{"name": "media.play_song", "args": {"title": "thunder"}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "play the song thunder and set volume to 50", "intents": [{"name": "media.play_song", "args": {"title": "thunder"}}, {"name": "volume.set", "args": {"level": 50}}]}
+{"text": "play the song thunder and set brightness to 50", "intents": [{"name": "media.play_song", "args": {"title": "thunder"}}, {"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "play the song demons and volume up 20", "intents": [{"name": "media.play_song", "args": {"title": "demons"}}, {"name": "volume.up", "args": {"by": 20}}]}
+{"text": "play the song demons and set volume to 40", "intents": [{"name": "media.play_song", "args": {"title": "demons"}}, {"name": "volume.set", "args": {"level": 40}}]}
+{"text": "play playlist deep focus and volume up 10", "intents": [{"name": "media.play_playlist", "args": {"name": "deep focus"}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "play playlist deep focus and set volume to 50", "intents": [{"name": "media.play_playlist", "args": {"name": "deep focus"}}, {"name": "volume.set", "args": {"level": 50}}]}
+{"text": "play playlist deep focus and set brightness to 30", "intents": [{"name": "media.play_playlist", "args": {"name": "deep focus"}}, {"name": "display.brightness_set", "args": {"level": 30}}]}
+{"text": "play playlist deep focus and mute", "intents": [{"name": "media.play_playlist", "args": {"name": "deep focus"}}, {"name": "volume.mute", "args": {}}]}
+{"text": "play playlist coding mode and volume up 20", "intents": [{"name": "media.play_playlist", "args": {"name": "coding mode"}}, {"name": "volume.up", "args": {"by": 20}}]}
+{"text": "play playlist coding mode and set brightness to 40", "intents": [{"name": "media.play_playlist", "args": {"name": "coding mode"}}, {"name": "display.brightness_set", "args": {"level": 40}}]}
+{"text": "next song and volume up 10", "intents": [{"name": "media.next", "args": {}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "next song and volume down 10", "intents": [{"name": "media.next", "args": {}}, {"name": "volume.down", "args": {"by": 10}}]}
+{"text": "next song and set volume to 50", "intents": [{"name": "media.next", "args": {}}, {"name": "volume.set", "args": {"level": 50}}]}
+{"text": "next song and set brightness to 50", "intents": [{"name": "media.next", "args": {}}, {"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "previous song and volume up 10", "intents": [{"name": "media.previous", "args": {}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "previous song and volume down 10", "intents": [{"name": "media.previous", "args": {}}, {"name": "volume.down", "args": {"by": 10}}]}
+{"text": "previous song and set volume to 50", "intents": [{"name": "media.previous", "args": {}}, {"name": "volume.set", "args": {"level": 50}}]}
+{"text": "previous song and set brightness to 50", "intents": [{"name": "media.previous", "args": {}}, {"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "previous song and mute", "intents": [{"name": "media.previous", "args": {}}, {"name": "volume.mute", "args": {}}]}
+{"text": "pause and volume up 10", "intents": [{"name": "media.pause", "args": {}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "pause and volume down 10", "intents": [{"name": "media.pause", "args": {}}, {"name": "volume.down", "args": {"by": 10}}]}
+{"text": "pause and set brightness to 50", "intents": [{"name": "media.pause", "args": {}}, {"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "resume and volume up 10", "intents": [{"name": "media.play", "args": {}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "resume and set brightness to 50", "intents": [{"name": "media.play", "args": {}}, {"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "whats the time and volume up 10", "intents": [{"name": "info.time", "args": {}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "whats the time and mute", "intents": [{"name": "info.time", "args": {}}, {"name": "volume.mute", "args": {}}]}
+{"text": "whats the time and set brightness to 50", "intents": [{"name": "info.time", "args": {}}, {"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "whats the date and volume up 10", "intents": [{"name": "info.date", "args": {}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "whats the date and mute", "intents": [{"name": "info.date", "args": {}}, {"name": "volume.mute", "args": {}}]}
+{"text": "whats the date and set brightness to 50", "intents": [{"name": "info.date", "args": {}}, {"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "whats my battery and volume up 10", "intents": [{"name": "info.battery", "args": {}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "whats my battery and set brightness to 50", "intents": [{"name": "info.battery", "args": {}}, {"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "whats the brightness and set brightness to 50", "intents": [{"name": "info.brightness", "args": {}}, {"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "whats the contrast and set contrast to 50", "intents": [{"name": "info.contrast", "args": {}}, {"name": "display.contrast_set", "args": {"level": 50}}]}
+{"text": "search youtube for lofi beats and mute", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "lofi beats"}}, {"name": "volume.mute", "args": {}}]}
+{"text": "search youtube for lofi beats and set brightness to 50", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "lofi beats"}}, {"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "search the web for the weather and volume up 10", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "the weather"}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "search the web for the weather and set brightness to 50", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "the weather"}}, {"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "create file notes and volume up 10", "intents": [{"name": "file.create", "args": {"name": "notes"}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "create file notes and mute", "intents": [{"name": "file.create", "args": {"name": "notes"}}, {"name": "volume.mute", "args": {}}]}
+{"text": "create folder work and set brightness to 50", "intents": [{"name": "folder.create", "args": {"name": "work"}}, {"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "open the downloads folder and volume up 10", "intents": [{"name": "folder.open", "args": {"name": "downloads"}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "open the downloads folder and mute", "intents": [{"name": "folder.open", "args": {"name": "downloads"}}, {"name": "volume.mute", "args": {}}]}
+{"text": "install node using homebrew and volume up 10", "intents": [{"name": "install.preview", "args": {"package": "node", "source": "homebrew"}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "install node using homebrew and mute", "intents": [{"name": "install.preview", "args": {"package": "node", "source": "homebrew"}}, {"name": "volume.mute", "args": {}}]}

@@ -1,0 +1,101 @@
+{"text": "increase the brightness and open youtube", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}, {"name": "url.open", "args": {"url": "https://www.youtube.com"}}]}
+{"text": "increase the brightness open youtube", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}, {"name": "url.open", "args": {"url": "https://www.youtube.com"}}]}
+{"text": "increase brightness and open youtube", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}, {"name": "url.open", "args": {"url": "https://www.youtube.com"}}]}
+{"text": "increase the brightness then open youtube", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}, {"name": "url.open", "args": {"url": "https://www.youtube.com"}}]}
+{"text": "brightness up and open youtube", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}, {"name": "url.open", "args": {"url": "https://www.youtube.com"}}]}
+{"text": "turn up the brightness and open youtube", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}, {"name": "url.open", "args": {"url": "https://www.youtube.com"}}]}
+{"text": "make it brighter and open youtube", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}, {"name": "url.open", "args": {"url": "https://www.youtube.com"}}]}
+{"text": "increase the brightness and open spotify", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "increase brightness then open spotify", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "brightness up and open spotify", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "decrease the brightness and open photos", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}, {"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "decrease brightness then open photos", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}, {"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "lower the brightness and open photos", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}, {"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "brightness down and open the photos app", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}, {"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "make it dimmer and open photos", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}, {"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "set brightness to 40 and volume up", "intents": [{"name": "display.brightness_set", "args": {"level": 40}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "set the brightness to 40 and turn up the volume", "intents": [{"name": "display.brightness_set", "args": {"level": 40}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "set brightness to 60 and volume up 10", "intents": [{"name": "display.brightness_set", "args": {"level": 60}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "set the brightness to 30 and the contrast to 70", "intents": [{"name": "display.brightness_set", "args": {"level": 30}}, {"name": "display.contrast_set", "args": {"level": 70}}]}
+{"text": "set brightness to 30 and contrast to 70", "intents": [{"name": "display.brightness_set", "args": {"level": 30}}, {"name": "display.contrast_set", "args": {"level": 70}}]}
+{"text": "set the brightness to 50 and the contrast to 50", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}, {"name": "display.contrast_set", "args": {"level": 50}}]}
+{"text": "set brightness 80 and set contrast 20", "intents": [{"name": "display.brightness_set", "args": {"level": 80}}, {"name": "display.contrast_set", "args": {"level": 20}}]}
+{"text": "increase the brightness by 10 and volume up by 10", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "increase brightness 10 and volume up 10", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "brightness up 10 and volume up 10", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "decrease the brightness by 10 and volume down by 10", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}, {"name": "volume.down", "args": {"by": 10}}]}
+{"text": "brightness down 10 and volume down 10", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}, {"name": "volume.down", "args": {"by": 10}}]}
+{"text": "increase the brightness and increase the contrast", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}, {"name": "display.contrast_up", "args": {"by": 10}}]}
+{"text": "brightness up and contrast up", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}, {"name": "display.contrast_up", "args": {"by": 10}}]}
+{"text": "decrease brightness and decrease contrast", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}, {"name": "display.contrast_down", "args": {"by": 10}}]}
+{"text": "increase brightness and decrease contrast", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}, {"name": "display.contrast_down", "args": {"by": 10}}]}
+{"text": "mute the volume and open whatsapp", "intents": [{"name": "volume.mute", "args": {}}, {"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "mute and open whatsapp", "intents": [{"name": "volume.mute", "args": {}}, {"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "mute then open whatsapp", "intents": [{"name": "volume.mute", "args": {}}, {"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "mute the sound and open whatsapp", "intents": [{"name": "volume.mute", "args": {}}, {"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "open whatsapp and mute", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}, {"name": "volume.mute", "args": {}}]}
+{"text": "open whatsapp then mute the volume", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}, {"name": "volume.mute", "args": {}}]}
+{"text": "unmute and open spotify", "intents": [{"name": "volume.unmute", "args": {}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "unmute the volume and open spotify", "intents": [{"name": "volume.unmute", "args": {}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "volume up and open spotify", "intents": [{"name": "volume.up", "args": {"by": 10}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "volume up 20 and open spotify", "intents": [{"name": "volume.up", "args": {"by": 20}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "turn up the volume and open spotify", "intents": [{"name": "volume.up", "args": {"by": 10}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "set the volume to 20 and open chrome", "intents": [{"name": "volume.set", "args": {"level": 20}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "set volume 20 and open google chrome", "intents": [{"name": "volume.set", "args": {"level": 20}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "set the volume to 50 and open vscode", "intents": [{"name": "volume.set", "args": {"level": 50}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "volume down and open terminal", "intents": [{"name": "volume.down", "args": {"by": 10}}, {"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "lower the volume and open terminal", "intents": [{"name": "volume.down", "args": {"by": 10}}, {"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "open spotify then set volume to 40", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "volume.set", "args": {"level": 40}}]}
+{"text": "open spotify and volume up 20", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "volume.up", "args": {"by": 20}}]}
+{"text": "open spotify and turn up the volume", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "open spotify and mute", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "volume.mute", "args": {}}]}
+{"text": "open chrome and search for swift documentation on google", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}, {"name": "web.search", "args": {"engine": "Google", "query": "swift documentation"}}]}
+{"text": "open chrome then search for swift documentation on google", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}, {"name": "web.search", "args": {"engine": "Google", "query": "swift documentation"}}]}
+{"text": "open chrome and then search for the weather in google", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}, {"name": "web.search", "args": {"engine": "Google", "query": "the weather"}}]}
+{"text": "open chrome and search for the weather on google", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}, {"name": "web.search", "args": {"engine": "Google", "query": "the weather"}}]}
+{"text": "open brave and search claude code", "intents": [{"name": "app.open", "args": {"name": "Brave Browser"}}, {"name": "web.search", "args": {"engine": "Google", "query": "claude code"}}]}
+{"text": "open brave then search claude code", "intents": [{"name": "app.open", "args": {"name": "Brave Browser"}}, {"name": "web.search", "args": {"engine": "Google", "query": "claude code"}}]}
+{"text": "open brave and search for claude code", "intents": [{"name": "app.open", "args": {"name": "Brave Browser"}}, {"name": "web.search", "args": {"engine": "Google", "query": "claude code"}}]}
+{"text": "open safari and search for flights to tokyo", "intents": [{"name": "app.open", "args": {"name": "Safari"}}, {"name": "web.search", "args": {"engine": "Google", "query": "flights to tokyo"}}]}
+{"text": "open safari then search for the capital of france", "intents": [{"name": "app.open", "args": {"name": "Safari"}}, {"name": "web.search", "args": {"engine": "Google", "query": "the capital of france"}}]}
+{"text": "open spotify then play kesariya", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_song", "args": {"title": "kesariya"}}]}
+{"text": "open spotify then play liked songs", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_liked", "args": {}}]}
+{"text": "open spotify and play playlist gym mix", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_playlist", "args": {"name": "gym mix"}}]}
+{"text": "open spotify then play the chill vibes playlist", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_playlist", "args": {"name": "chill vibes"}}]}
+{"text": "open spotify and resume the music", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play", "args": {}}]}
+{"text": "open spotify then pause", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.pause", "args": {}}]}
+{"text": "open spotify and next song", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.next", "args": {}}]}
+{"text": "next song then volume up", "intents": [{"name": "media.next", "args": {}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "skip and volume up 15", "intents": [{"name": "media.next", "args": {}}, {"name": "volume.up", "args": {"by": 15}}]}
+{"text": "previous song then lower the volume", "intents": [{"name": "media.previous", "args": {}}, {"name": "volume.down", "args": {"by": 10}}]}
+{"text": "volume up 20 and play liked songs", "intents": [{"name": "volume.up", "args": {"by": 20}}, {"name": "media.play_liked", "args": {}}]}
+{"text": "set the volume to 30 and play the song yellow", "intents": [{"name": "volume.set", "args": {"level": 30}}, {"name": "media.play_song", "args": {"title": "yellow"}}]}
+{"text": "pause then close spotify", "intents": [{"name": "media.pause", "args": {}}, {"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "close spotify then pause the music", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}, {"name": "media.pause", "args": {}}]}
+{"text": "increase the brightness and open YouTube and search for jailer trailer", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}, {"name": "web.search", "args": {"engine": "YouTube", "query": "jailer trailer"}}]}
+{"text": "increase the brightness and open YouTube and search in the YouTube for a specific video of jailer trailer", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}, {"name": "web.search", "args": {"engine": "YouTube", "query": "a specific video of jailer trailer"}}]}
+{"text": "increase the brightness 10 and search on youtube for jailer trailer", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}, {"name": "web.search", "args": {"engine": "YouTube", "query": "jailer trailer"}}]}
+{"text": "increase brightness and search youtube for interstellar trailer", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}, {"name": "web.search", "args": {"engine": "YouTube", "query": "interstellar trailer"}}]}
+{"text": "brightness up and search for cat videos on youtube", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}, {"name": "web.search", "args": {"engine": "YouTube", "query": "cat videos"}}]}
+{"text": "set the volume to 20 and open youtube and search for cat videos", "intents": [{"name": "volume.set", "args": {"level": 20}}, {"name": "web.search", "args": {"engine": "YouTube", "query": "cat videos"}}]}
+{"text": "volume up and search youtube for bohemian rhapsody", "intents": [{"name": "volume.up", "args": {"by": 10}}, {"name": "web.search", "args": {"engine": "YouTube", "query": "bohemian rhapsody"}}]}
+{"text": "decrease the brightness and search the web for the price of gold", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}, {"name": "web.search", "args": {"engine": "Google", "query": "the price of gold"}}]}
+{"text": "what is the time and open spotify", "intents": [{"name": "info.time", "args": {}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "what is the time then open spotify", "intents": [{"name": "info.time", "args": {}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "whats the time and open chrome", "intents": [{"name": "info.time", "args": {}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "what is the date and open calendar", "intents": [{"name": "info.date", "args": {}}, {"name": "app.open", "args": {"name": "Calendar"}}]}
+{"text": "whats todays date and open the calendar", "intents": [{"name": "info.date", "args": {}}, {"name": "app.open", "args": {"name": "Calendar"}}]}
+{"text": "what is the brightness level and set brightness to 50", "intents": [{"name": "info.brightness", "args": {}}, {"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "whats the battery level and mute", "intents": [{"name": "info.battery", "args": {}}, {"name": "volume.mute", "args": {}}]}
+{"text": "what time is it and play my liked songs", "intents": [{"name": "info.time", "args": {}}, {"name": "media.play_liked", "args": {}}]}
+{"text": "open whatsapp and then open spotify", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open terminal then open spotify", "intents": [{"name": "app.open", "args": {"name": "Terminal"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "set brightness to 45 and mute", "intents": [{"name": "display.brightness_set", "args": {"level": 45}}, {"name": "volume.mute", "args": {}}]}
+{"text": "set brightness to 45 then mute the sound", "intents": [{"name": "display.brightness_set", "args": {"level": 45}}, {"name": "volume.mute", "args": {}}]}
+{"text": "set contrast to 41 and unmute", "intents": [{"name": "display.contrast_set", "args": {"level": 41}}, {"name": "volume.unmute", "args": {}}]}
+{"text": "create file notes and open notes", "intents": [{"name": "file.create", "args": {"name": "notes"}}, {"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "create file report and open the downloads folder", "intents": [{"name": "file.create", "args": {"name": "report"}}, {"name": "folder.open", "args": {"name": "downloads"}}]}
+{"text": "create folder archive and open documents folder", "intents": [{"name": "folder.create", "args": {"name": "archive"}}, {"name": "folder.open", "args": {"name": "documents"}}]}
+{"text": "open the downloads folder and open the latest file in downloads", "intents": [{"name": "folder.open", "args": {"name": "downloads"}}, {"name": "file.open_latest", "args": {"folder": "downloads"}}]}
+{"text": "install ffmpeg using homebrew and open terminal", "intents": [{"name": "install.preview", "args": {"package": "ffmpeg", "source": "homebrew"}}, {"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "open vscode and create a file called notes", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}, {"name": "file.create", "args": {"name": "notes"}}]}

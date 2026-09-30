@@ -1,0 +1,116 @@
+{"text": "open spofity", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open sportify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open spotify music", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open the spotify music app", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "start spotify app", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "start the spotify music", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "launch spotify music", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "run spotify app", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open the google chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open google chrome browser", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open chrome app", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "start chrome browser", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "launch chrome browser", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "run chrome browser", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open googe chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open gogle chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open crohome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open whatsapp app", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "start whatsapp app", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "launch whatsapp app", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "open wats app", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "open watsup", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "open safari browser", "intents": [{"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "open safari app", "intents": [{"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "start safari browser", "intents": [{"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "launch safari browser", "intents": [{"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "open safaree", "intents": [{"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "open brave app", "intents": [{"name": "app.open", "args": {"name": "Brave Browser"}}]}
+{"text": "start brave browser", "intents": [{"name": "app.open", "args": {"name": "Brave Browser"}}]}
+{"text": "launch brave browser", "intents": [{"name": "app.open", "args": {"name": "Brave Browser"}}]}
+{"text": "open firefox", "intents": [{"name": "app.open", "args": {"name": "Firefox"}}]}
+{"text": "open firefox browser", "intents": [{"name": "app.open", "args": {"name": "Firefox"}}]}
+{"text": "open the firefox", "intents": [{"name": "app.open", "args": {"name": "Firefox"}}]}
+{"text": "open fire fox", "intents": [{"name": "app.open", "args": {"name": "Firefox"}}]}
+{"text": "start firefox browser", "intents": [{"name": "app.open", "args": {"name": "Firefox"}}]}
+{"text": "launch firefox browser", "intents": [{"name": "app.open", "args": {"name": "Firefox"}}]}
+{"text": "open vs code app", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "open the vscode", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "open visual studio", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "open terminal app", "intents": [{"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "open the terminal app", "intents": [{"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "start terminal app", "intents": [{"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "launch terminal app", "intents": [{"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "open notes app", "intents": [{"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "start notes app", "intents": [{"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "launch notes app", "intents": [{"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "open mail app", "intents": [{"name": "app.open", "args": {"name": "Mail"}}]}
+{"text": "start mail app", "intents": [{"name": "app.open", "args": {"name": "Mail"}}]}
+{"text": "launch mail app", "intents": [{"name": "app.open", "args": {"name": "Mail"}}]}
+{"text": "open calendar app", "intents": [{"name": "app.open", "args": {"name": "Calendar"}}]}
+{"text": "open the calendar app", "intents": [{"name": "app.open", "args": {"name": "Calendar"}}]}
+{"text": "start calendar app", "intents": [{"name": "app.open", "args": {"name": "Calendar"}}]}
+{"text": "open messages app", "intents": [{"name": "app.open", "args": {"name": "Messages"}}]}
+{"text": "open imessage app", "intents": [{"name": "app.open", "args": {"name": "Messages"}}]}
+{"text": "open photos app", "intents": [{"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "start photos app", "intents": [{"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "open music app", "intents": [{"name": "app.open", "args": {"name": "Music"}}]}
+{"text": "start music app", "intents": [{"name": "app.open", "args": {"name": "Music"}}]}
+{"text": "open maps app", "intents": [{"name": "app.open", "args": {"name": "Maps"}}]}
+{"text": "open finder app", "intents": [{"name": "app.open", "args": {"name": "Finder"}}]}
+{"text": "open the finder app", "intents": [{"name": "app.open", "args": {"name": "Finder"}}]}
+{"text": "open settings app", "intents": [{"name": "app.open", "args": {"name": "System Settings"}}]}
+{"text": "open the settings app", "intents": [{"name": "app.open", "args": {"name": "System Settings"}}]}
+{"text": "open app store app", "intents": [{"name": "app.open", "args": {"name": "App Store"}}]}
+{"text": "open github desktop app", "intents": [{"name": "app.open", "args": {"name": "GitHub Desktop"}}]}
+{"text": "open telegram app", "intents": [{"name": "app.open", "args": {"name": "Telegram"}}]}
+{"text": "open slack app", "intents": [{"name": "app.open", "args": {"name": "Slack"}}]}
+{"text": "open notion app", "intents": [{"name": "app.open", "args": {"name": "Notion"}}]}
+{"text": "open figma app", "intents": [{"name": "app.open", "args": {"name": "Figma"}}]}
+{"text": "open obs app", "intents": [{"name": "app.open", "args": {"name": "OBS"}}]}
+{"text": "quit spotify app", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "close chrome app", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "close the chrome app", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "quit chrome browser", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "close whatsapp app", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "quit whatsapp app", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "close whats app", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "close safari app", "intents": [{"name": "app.close", "args": {"name": "Safari"}}]}
+{"text": "close the safari app", "intents": [{"name": "app.close", "args": {"name": "Safari"}}]}
+{"text": "close safari browser", "intents": [{"name": "app.close", "args": {"name": "Safari"}}]}
+{"text": "quit safari browser", "intents": [{"name": "app.close", "args": {"name": "Safari"}}]}
+{"text": "close brave browser", "intents": [{"name": "app.close", "args": {"name": "Brave Browser"}}]}
+{"text": "close the brave app", "intents": [{"name": "app.close", "args": {"name": "Brave Browser"}}]}
+{"text": "quit brave browser", "intents": [{"name": "app.close", "args": {"name": "Brave Browser"}}]}
+{"text": "close firefox", "intents": [{"name": "app.close", "args": {"name": "Firefox"}}]}
+{"text": "close firefox browser", "intents": [{"name": "app.close", "args": {"name": "Firefox"}}]}
+{"text": "close the firefox app", "intents": [{"name": "app.close", "args": {"name": "Firefox"}}]}
+{"text": "quit firefox browser", "intents": [{"name": "app.close", "args": {"name": "Firefox"}}]}
+{"text": "close vscode app", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}]}
+{"text": "close the vscode app", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}]}
+{"text": "quit vscode app", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}]}
+{"text": "close terminal app", "intents": [{"name": "app.close", "args": {"name": "Terminal"}}]}
+{"text": "close the terminal app", "intents": [{"name": "app.close", "args": {"name": "Terminal"}}]}
+{"text": "quit terminal app", "intents": [{"name": "app.close", "args": {"name": "Terminal"}}]}
+{"text": "close notes app", "intents": [{"name": "app.close", "args": {"name": "Notes"}}]}
+{"text": "close the notes app", "intents": [{"name": "app.close", "args": {"name": "Notes"}}]}
+{"text": "quit notes app", "intents": [{"name": "app.close", "args": {"name": "Notes"}}]}
+{"text": "close mail app", "intents": [{"name": "app.close", "args": {"name": "Mail"}}]}
+{"text": "close the mail app", "intents": [{"name": "app.close", "args": {"name": "Mail"}}]}
+{"text": "close calendar app", "intents": [{"name": "app.close", "args": {"name": "Calendar"}}]}
+{"text": "close the calendar app", "intents": [{"name": "app.close", "args": {"name": "Calendar"}}]}
+{"text": "close messages app", "intents": [{"name": "app.close", "args": {"name": "Messages"}}]}
+{"text": "close the messages app", "intents": [{"name": "app.close", "args": {"name": "Messages"}}]}
+{"text": "close photos app", "intents": [{"name": "app.close", "args": {"name": "Photos"}}]}
+{"text": "close music app", "intents": [{"name": "app.close", "args": {"name": "Music"}}]}
+{"text": "close maps app", "intents": [{"name": "app.close", "args": {"name": "Maps"}}]}
+{"text": "close finder app", "intents": [{"name": "app.close", "args": {"name": "Finder"}}]}
+{"text": "close system settings", "intents": [{"name": "app.close", "args": {"name": "System Settings"}}]}
+{"text": "close settings app", "intents": [{"name": "app.close", "args": {"name": "System Settings"}}]}
+{"text": "close app store", "intents": [{"name": "app.close", "args": {"name": "App Store"}}]}
+{"text": "close github desktop", "intents": [{"name": "app.close", "args": {"name": "GitHub Desktop"}}]}
+{"text": "close telegram app", "intents": [{"name": "app.close", "args": {"name": "Telegram"}}]}
+{"text": "close slack app", "intents": [{"name": "app.close", "args": {"name": "Slack"}}]}
+{"text": "close notion app", "intents": [{"name": "app.close", "args": {"name": "Notion"}}]}
+{"text": "close figma app", "intents": [{"name": "app.close", "args": {"name": "Figma"}}]}
+{"text": "close obs app", "intents": [{"name": "app.close", "args": {"name": "OBS"}}]}

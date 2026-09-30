@@ -7,12 +7,12 @@ struct PopupView: View {
         if manager.isVisible {
             VStack(spacing: 12) {
                 Image(systemName: manager.icon)
-                    .font(.system(size: 38, weight: .light))
-                    .foregroundStyle(.white.opacity(0.85))
+                    .font(.system(size: 34, weight: .light))
+                    .foregroundStyle(JarvisColor.textSecondary)
 
                 Text(manager.message)
-                    .font(.system(size: 30, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white)
+                    .font(.system(size: 26, weight: .regular))
+                    .foregroundStyle(JarvisColor.textPrimary)
                     .multilineTextAlignment(.center)
                     .lineLimit(3)
                     .padding(.horizontal, 8)

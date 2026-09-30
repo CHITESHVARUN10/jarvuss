@@ -7,67 +7,63 @@ struct EventLogDrawer: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Drag handle / toggle bar
             Button {
                 withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
                     isExpanded.toggle()
                 }
             } label: {
                 HStack(spacing: 10) {
-                    Image(systemName: "terminal.fill")
+                    Image(systemName: "terminal")
                         .font(.system(size: 11))
-                        .foregroundStyle(Color.white.opacity(0.40))
+                        .foregroundStyle(JarvisColor.textTertiary)
 
-                    Text("SYSTEM LOGS")
-                        .font(.system(size: 9, weight: .bold, design: .monospaced))
-                        .tracking(2)
-                        .foregroundStyle(Color.white.opacity(0.40))
+                    Text("System log")
+                        .font(JarvisType.caption)
+                        .foregroundStyle(JarvisColor.textSecondary)
 
                     if !appState.logs.isEmpty {
                         Text("\(appState.logs.count)")
-                            .font(.system(size: 8, weight: .bold, design: .monospaced))
-                            .foregroundStyle(Color(red: 0.55, green: 0.55, blue: 1.0))
+                            .font(JarvisType.dataSmall)
+                            .foregroundStyle(JarvisColor.textTertiary)
                             .padding(.horizontal, 5)
                             .padding(.vertical, 2)
-                            .background(Color(red: 0.55, green: 0.55, blue: 1.0).opacity(0.15))
+                            .background(JarvisColor.surface)
                             .clipShape(Capsule())
                     }
 
                     Spacer()
 
-                    // Copy button
                     Button {
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(appState.eventLogText, forType: .string)
                     } label: {
                         Image(systemName: "doc.on.doc")
                             .font(.system(size: 11))
-                            .foregroundStyle(Color.white.opacity(0.30))
+                            .foregroundStyle(JarvisColor.textTertiary)
                     }
                     .buttonStyle(.plain)
 
-                    // Clear button
                     Button {
                         appState.clearEventLog()
                     } label: {
                         Image(systemName: "trash")
                             .font(.system(size: 11))
-                            .foregroundStyle(Color(red: 0.85, green: 0.35, blue: 0.45).opacity(0.6))
+                            .foregroundStyle(JarvisColor.textTertiary)
                     }
                     .buttonStyle(.plain)
 
                     Image(systemName: isExpanded ? "chevron.down" : "chevron.up")
                         .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(Color.white.opacity(0.25))
+                        .foregroundStyle(JarvisColor.textTertiary)
                 }
                 .padding(.horizontal, 18)
                 .padding(.vertical, 10)
             }
             .buttonStyle(.plain)
-            .background(Color(red: 0.08, green: 0.08, blue: 0.11))
+            .background(JarvisColor.canvas)
 
             Divider()
-                .background(Color.white.opacity(0.06))
+                .overlay(JarvisColor.hairline)
 
             if isExpanded {
                 ScrollViewReader { proxy in
@@ -90,14 +86,14 @@ struct EventLogDrawer: View {
                     }
                 }
                 .frame(height: 180)
-                .background(Color(red: 0.055, green: 0.055, blue: 0.08))
+                .background(JarvisColor.canvas)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
         .overlay(
             Rectangle()
                 .frame(height: 1)
-                .foregroundStyle(Color.white.opacity(0.06)),
+                .foregroundStyle(JarvisColor.hairline),
             alignment: .top
         )
     }
@@ -106,24 +102,16 @@ struct EventLogDrawer: View {
 private struct LogLine: View {
     let text: String
 
+    /// Severity only — the default row is neutral.
     private var color: Color {
         let lowered = text.lowercased()
         if lowered.contains("[error]") || lowered.contains("failed") || lowered.contains("rejected") {
-            return Color(red: 1.0, green: 0.40, blue: 0.55)
-        }
-        if lowered.contains("[voice]") || lowered.contains("speech") {
-            return Color(red: 0.55, green: 0.62, blue: 1.0)
-        }
-        if lowered.contains("[system]") || lowered.contains("microphone") || lowered.contains("postgresql") {
-            return Color(red: 0.35, green: 0.85, blue: 0.75)
-        }
-        if lowered.contains("enrollment") || lowered.contains("phrase") || lowered.contains("sample") {
-            return Color(red: 0.80, green: 0.60, blue: 1.0)
+            return JarvisColor.danger
         }
         if lowered.contains("blocked") || lowered.contains("warning") {
-            return Color(red: 1.0, green: 0.78, blue: 0.2)
+            return JarvisColor.attention
         }
-        return Color.white.opacity(0.40)
+        return JarvisColor.textTertiary
     }
 
     var body: some View {

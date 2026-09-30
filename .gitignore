@@ -6,6 +6,12 @@ logs/
 backend/.venv/
 backend/__pycache__/
 backend/*.pyc
+backend/models/
+training/.venv/
+training/out/
+training/data/
+training/__pycache__/
+training/*.log
 *.swp
 *.swo
 rust-core/target/

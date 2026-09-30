@@ -17,54 +17,40 @@ struct ConnectorsView: View {
                 HStack(spacing: 8) {
                     Circle()
                         .fill(dotColor)
-                        .frame(width: 8, height: 8)
+                        .frame(width: 7, height: 7)
                     Text("Spotify")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(Color.white.opacity(0.85))
+                        .font(JarvisType.title)
+                        .foregroundStyle(JarvisColor.textPrimary)
                     Spacer()
                     Text(appState.spotifyStatusText)
-                        .font(.system(size: 10, design: .monospaced))
-                        .foregroundStyle(Color.white.opacity(0.45))
+                        .font(JarvisType.dataSmall)
+                        .foregroundStyle(JarvisColor.textTertiary)
                         .lineLimit(1)
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                         .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(Color.white.opacity(0.35))
+                        .foregroundStyle(JarvisColor.textTertiary)
                 }
             }
             .buttonStyle(.plain)
 
             if isExpanded {
                 Text("Paste your Spotify Developer keys, Save, then Connect to authorize. Keys are stored in the backend .env — never logged.")
-                    .font(.system(size: 10))
-                    .foregroundStyle(Color.white.opacity(0.45))
+                    .font(JarvisType.caption)
+                    .foregroundStyle(JarvisColor.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
 
                 VStack(spacing: 8) {
                     SecureField("Client ID", text: $clientID)
-                        .textFieldStyle(.plain)
-                        .font(.system(size: 12, design: .monospaced))
-                        .foregroundStyle(Color.white.opacity(0.85))
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 8)
-                        .background(Color.white.opacity(0.05))
-                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Color.white.opacity(0.09)))
+                        .quietField()
 
                     SecureField("Client Secret", text: $clientSecret)
-                        .textFieldStyle(.plain)
-                        .font(.system(size: 12, design: .monospaced))
-                        .foregroundStyle(Color.white.opacity(0.85))
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 8)
-                        .background(Color.white.opacity(0.05))
-                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Color.white.opacity(0.09)))
+                        .quietField()
                 }
 
                 if let notice {
                     Text(notice)
-                        .font(.system(size: 10))
-                        .foregroundStyle(Color.white.opacity(0.6))
+                        .font(JarvisType.caption)
+                        .foregroundStyle(JarvisColor.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
@@ -73,20 +59,16 @@ struct ConnectorsView: View {
                         Task { await save() }
                     } label: {
                         Text(isSaving ? "Saving…" : "Save Keys")
-                            .font(.system(size: 11, weight: .semibold))
-                            .frame(maxWidth: .infinity)
                     }
                     .disabled(isSaving || clientID.isEmpty || clientSecret.isEmpty)
-                    .buttonStyle(JarvisButtonStyle(color: Color(red: 0.55, green: 0.55, blue: 1.0), compact: true))
+                    .buttonStyle(JarvisButtonStyle(color: JarvisColor.accent, compact: true))
 
                     Button {
                         Task { await connect() }
                     } label: {
                         Text("Connect")
-                            .font(.system(size: 11, weight: .semibold))
-                            .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(JarvisButtonStyle(color: Color(red: 0.25, green: 0.90, blue: 0.65), compact: true))
+                    .buttonStyle(JarvisButtonStyle(color: JarvisColor.ok, compact: true))
 
                     Button {
                         Task { await appState.refreshSpotifyStatus() }
@@ -94,7 +76,7 @@ struct ConnectorsView: View {
                         Image(systemName: "arrow.clockwise")
                             .font(.system(size: 11, weight: .semibold))
                     }
-                    .buttonStyle(JarvisButtonStyle(color: Color.white.opacity(0.5), compact: true))
+                    .buttonStyle(JarvisButtonStyle(color: JarvisColor.textSecondary, compact: true))
                 }
             }
         }
@@ -102,9 +84,9 @@ struct ConnectorsView: View {
     }
 
     private var dotColor: Color {
-        if appState.spotifyLinked { return Color(red: 0.25, green: 0.90, blue: 0.65) }
-        if appState.spotifyStatusText == "Backend unreachable" { return Color.white.opacity(0.25) }
-        return Color(red: 1.0, green: 0.78, blue: 0.2)
+        if appState.spotifyLinked { return JarvisColor.ok }
+        if appState.spotifyStatusText == "Backend unreachable" { return JarvisColor.textTertiary }
+        return JarvisColor.attention
     }
 
     private func save() async {

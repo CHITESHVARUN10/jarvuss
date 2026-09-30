@@ -1,0 +1,152 @@
+{"text": "whats time", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "the current time", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "current time please", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "say the time", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "speak the time", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "what is time", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "time now", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "now the time", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "whats date", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "the current date", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "current date please", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "say the date", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "speak the date", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "what is date", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "date now", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "todays date please", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "what day today", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "brightness level", "intents": [{"name": "info.brightness", "args": {}}]}
+{"text": "brightness level now", "intents": [{"name": "info.brightness", "args": {}}]}
+{"text": "the brightness level", "intents": [{"name": "info.brightness", "args": {}}]}
+{"text": "say the brightness level", "intents": [{"name": "info.brightness", "args": {}}]}
+{"text": "how bright now", "intents": [{"name": "info.brightness", "args": {}}]}
+{"text": "screen brightness now", "intents": [{"name": "info.brightness", "args": {}}]}
+{"text": "current brightness level", "intents": [{"name": "info.brightness", "args": {}}]}
+{"text": "contrast level now", "intents": [{"name": "info.contrast", "args": {}}]}
+{"text": "the contrast level", "intents": [{"name": "info.contrast", "args": {}}]}
+{"text": "say the contrast level", "intents": [{"name": "info.contrast", "args": {}}]}
+{"text": "current contrast level", "intents": [{"name": "info.contrast", "args": {}}]}
+{"text": "volume level now", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "the volume level", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "say the volume level", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "current volume level", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "system volume level", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "battery level", "intents": [{"name": "info.battery", "args": {}}]}
+{"text": "battery level now", "intents": [{"name": "info.battery", "args": {}}]}
+{"text": "the battery level", "intents": [{"name": "info.battery", "args": {}}]}
+{"text": "say the battery level", "intents": [{"name": "info.battery", "args": {}}]}
+{"text": "current battery level", "intents": [{"name": "info.battery", "args": {}}]}
+{"text": "battery right now", "intents": [{"name": "info.battery", "args": {}}]}
+{"text": "wifi status", "intents": [{"name": "info.wifi", "args": {}}]}
+{"text": "the wifi status", "intents": [{"name": "info.wifi", "args": {}}]}
+{"text": "say the wifi status", "intents": [{"name": "info.wifi", "args": {}}]}
+{"text": "current wifi status", "intents": [{"name": "info.wifi", "args": {}}]}
+{"text": "wifi right now", "intents": [{"name": "info.wifi", "args": {}}]}
+{"text": "bluetooth status", "intents": [{"name": "info.bluetooth", "args": {}}]}
+{"text": "the bluetooth status", "intents": [{"name": "info.bluetooth", "args": {}}]}
+{"text": "say the bluetooth status", "intents": [{"name": "info.bluetooth", "args": {}}]}
+{"text": "current bluetooth status", "intents": [{"name": "info.bluetooth", "args": {}}]}
+{"text": "bluetooth right now", "intents": [{"name": "info.bluetooth", "args": {}}]}
+{"text": "create file draft", "intents": [{"name": "file.create", "args": {"name": "draft"}}]}
+{"text": "make file draft", "intents": [{"name": "file.create", "args": {"name": "draft"}}]}
+{"text": "create file essay", "intents": [{"name": "file.create", "args": {"name": "essay"}}]}
+{"text": "create a file called essay", "intents": [{"name": "file.create", "args": {"name": "essay"}}]}
+{"text": "create file poetry", "intents": [{"name": "file.create", "args": {"name": "poetry"}}]}
+{"text": "create a file called poetry", "intents": [{"name": "file.create", "args": {"name": "poetry"}}]}
+{"text": "create file budget", "intents": [{"name": "file.create", "args": {"name": "budget"}}]}
+{"text": "create a file called budget", "intents": [{"name": "file.create", "args": {"name": "budget"}}]}
+{"text": "create file expenses", "intents": [{"name": "file.create", "args": {"name": "expenses"}}]}
+{"text": "create a file called expenses", "intents": [{"name": "file.create", "args": {"name": "expenses"}}]}
+{"text": "create file invoice", "intents": [{"name": "file.create", "args": {"name": "invoice"}}]}
+{"text": "create a file called invoice", "intents": [{"name": "file.create", "args": {"name": "invoice"}}]}
+{"text": "create file recipe", "intents": [{"name": "file.create", "args": {"name": "recipe"}}]}
+{"text": "create a file called recipe", "intents": [{"name": "file.create", "args": {"name": "recipe"}}]}
+{"text": "create file workout plan", "intents": [{"name": "file.create", "args": {"name": "workout plan"}}]}
+{"text": "create a file called workout plan", "intents": [{"name": "file.create", "args": {"name": "workout plan"}}]}
+{"text": "create folder drafts", "intents": [{"name": "folder.create", "args": {"name": "drafts"}}]}
+{"text": "create a folder called drafts", "intents": [{"name": "folder.create", "args": {"name": "drafts"}}]}
+{"text": "create folder photos 2026", "intents": [{"name": "folder.create", "args": {"name": "photos 2026"}}]}
+{"text": "create a folder called photos 2026", "intents": [{"name": "folder.create", "args": {"name": "photos 2026"}}]}
+{"text": "create folder invoices", "intents": [{"name": "folder.create", "args": {"name": "invoices"}}]}
+{"text": "create a folder called invoices", "intents": [{"name": "folder.create", "args": {"name": "invoices"}}]}
+{"text": "create folder music old", "intents": [{"name": "folder.create", "args": {"name": "music old"}}]}
+{"text": "create a folder called music old", "intents": [{"name": "folder.create", "args": {"name": "music old"}}]}
+{"text": "create folder projects 2026", "intents": [{"name": "folder.create", "args": {"name": "projects 2026"}}]}
+{"text": "create a folder called projects 2026", "intents": [{"name": "folder.create", "args": {"name": "projects 2026"}}]}
+{"text": "create folder college work", "intents": [{"name": "folder.create", "args": {"name": "college work"}}]}
+{"text": "create a folder called college work", "intents": [{"name": "folder.create", "args": {"name": "college work"}}]}
+{"text": "open the documents", "intents": [{"name": "folder.open", "args": {"name": "documents"}}]}
+{"text": "open the desktop", "intents": [{"name": "folder.open", "args": {"name": "desktop"}}]}
+{"text": "open desktop folder", "intents": [{"name": "folder.open", "args": {"name": "desktop"}}]}
+{"text": "open the pictures", "intents": [{"name": "folder.open", "args": {"name": "pictures"}}]}
+{"text": "open pictures folder", "intents": [{"name": "folder.open", "args": {"name": "pictures"}}]}
+{"text": "open the movies", "intents": [{"name": "folder.open", "args": {"name": "movies"}}]}
+{"text": "open movies folder", "intents": [{"name": "folder.open", "args": {"name": "movies"}}]}
+{"text": "open the music directory", "intents": [{"name": "folder.open", "args": {"name": "music"}}]}
+{"text": "open music directory", "intents": [{"name": "folder.open", "args": {"name": "music"}}]}
+{"text": "open the latest file in downloads folder", "intents": [{"name": "file.open_latest", "args": {"folder": "downloads"}}]}
+{"text": "open the latest file in documents folder", "intents": [{"name": "file.open_latest", "args": {"folder": "documents"}}]}
+{"text": "open the latest file in desktop folder", "intents": [{"name": "file.open_latest", "args": {"folder": "desktop"}}]}
+{"text": "open the latest file in pictures folder", "intents": [{"name": "file.open_latest", "args": {"folder": "pictures"}}]}
+{"text": "open the latest file in movies folder", "intents": [{"name": "file.open_latest", "args": {"folder": "movies"}}]}
+{"text": "open the latest file in music folder", "intents": [{"name": "file.open_latest", "args": {"folder": "music"}}]}
+{"text": "open newest file in downloads folder", "intents": [{"name": "file.open_latest", "args": {"folder": "downloads"}}]}
+{"text": "open newest file in documents folder", "intents": [{"name": "file.open_latest", "args": {"folder": "documents"}}]}
+{"text": "install vim using homebrew", "intents": [{"name": "install.preview", "args": {"package": "vim", "source": "homebrew"}}]}
+{"text": "install vim with homebrew", "intents": [{"name": "install.preview", "args": {"package": "vim", "source": "homebrew"}}]}
+{"text": "install nano using homebrew", "intents": [{"name": "install.preview", "args": {"package": "nano", "source": "homebrew"}}]}
+{"text": "install tmux using homebrew", "intents": [{"name": "install.preview", "args": {"package": "tmux", "source": "homebrew"}}]}
+{"text": "install tmux with homebrew", "intents": [{"name": "install.preview", "args": {"package": "tmux", "source": "homebrew"}}]}
+{"text": "install zsh using homebrew", "intents": [{"name": "install.preview", "args": {"package": "zsh", "source": "homebrew"}}]}
+{"text": "install ripgrep using homebrew", "intents": [{"name": "install.preview", "args": {"package": "ripgrep", "source": "homebrew"}}]}
+{"text": "install fzf using homebrew", "intents": [{"name": "install.preview", "args": {"package": "fzf", "source": "homebrew"}}]}
+{"text": "install jq using homebrew", "intents": [{"name": "install.preview", "args": {"package": "jq", "source": "homebrew"}}]}
+{"text": "install postgres using homebrew", "intents": [{"name": "install.preview", "args": {"package": "postgres", "source": "homebrew"}}]}
+{"text": "install redis using homebrew", "intents": [{"name": "install.preview", "args": {"package": "redis", "source": "homebrew"}}]}
+{"text": "install mongodb using homebrew", "intents": [{"name": "install.preview", "args": {"package": "mongodb", "source": "homebrew"}}]}
+{"text": "install nginx using homebrew", "intents": [{"name": "install.preview", "args": {"package": "nginx", "source": "homebrew"}}]}
+{"text": "what is the tallest mountain", "intents": [{"name": "ai.query", "args": {"text": "what is the tallest mountain"}}]}
+{"text": "what is the longest river", "intents": [{"name": "ai.query", "args": {"text": "what is the longest river"}}]}
+{"text": "what is the smallest country", "intents": [{"name": "ai.query", "args": {"text": "what is the smallest country"}}]}
+{"text": "who painted the mona lisa", "intents": [{"name": "ai.query", "args": {"text": "who painted the mona lisa"}}]}
+{"text": "who wrote romeo and juliet", "intents": [{"name": "ai.query", "args": {"text": "who wrote romeo and juliet"}}]}
+{"text": "when did world war 1 end", "intents": [{"name": "ai.query", "args": {"text": "when did world war 1 end"}}]}
+{"text": "explain the theory of relativity simply", "intents": [{"name": "ai.query", "args": {"text": "explain the theory of relativity simply"}}]}
+{"text": "explain how vaccines work", "intents": [{"name": "ai.query", "args": {"text": "explain how vaccines work"}}]}
+{"text": "explain how planes fly", "intents": [{"name": "ai.query", "args": {"text": "explain how planes fly"}}]}
+{"text": "what is the boiling point of water", "intents": [{"name": "ai.query", "args": {"text": "what is the boiling point of water"}}]}
+{"text": "what is the capital of japan", "intents": [{"name": "ai.query", "args": {"text": "what is the capital of japan"}}]}
+{"text": "what is the capital of australia", "intents": [{"name": "ai.query", "args": {"text": "what is the capital of australia"}}]}
+{"text": "who is the ceo of apple", "intents": [{"name": "ai.query", "args": {"text": "who is the ceo of apple"}}]}
+{"text": "who is the ceo of tesla", "intents": [{"name": "ai.query", "args": {"text": "who is the ceo of tesla"}}]}
+{"text": "tell me a fun fact", "intents": [{"name": "ai.query", "args": {"text": "tell me a fun fact"}}]}
+{"text": "tell me something interesting", "intents": [{"name": "ai.query", "args": {"text": "tell me something interesting"}}]}
+{"text": "give me a riddle", "intents": [{"name": "ai.query", "args": {"text": "give me a riddle"}}]}
+{"text": "write a limerick about a cat", "intents": [{"name": "ai.query", "args": {"text": "write a limerick about a cat"}}]}
+{"text": "summarize the plot of titanic", "intents": [{"name": "ai.query", "args": {"text": "summarize the plot of titanic"}}]}
+{"text": "what is 45 divided by 9", "intents": [{"name": "ai.query", "args": {"text": "what is 45 divided by 9"}}]}
+{"text": "convert 20 celsius to fahrenheit", "intents": [{"name": "ai.query", "args": {"text": "convert 20 celsius to fahrenheit"}}]}
+{"text": "convert 100 km to miles", "intents": [{"name": "ai.query", "args": {"text": "convert 100 km to miles"}}]}
+{"text": "what should i eat for lunch", "intents": [{"name": "ai.query", "args": {"text": "what should i eat for lunch"}}]}
+{"text": "recommend a movie for tonight", "intents": [{"name": "ai.query", "args": {"text": "recommend a movie for tonight"}}]}
+{"text": "what is a good gift for a friend", "intents": [{"name": "ai.query", "args": {"text": "what is a good gift for a friend"}}]}
+{"text": "open spotify and set brightness to 33", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "display.brightness_set", "args": {"level": 33}}]}
+{"text": "open chrome and set volume to 44", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}, {"name": "volume.set", "args": {"level": 44}}]}
+{"text": "open notes and volume up 13", "intents": [{"name": "app.open", "args": {"name": "Notes"}}, {"name": "volume.up", "args": {"by": 13}}]}
+{"text": "close spotify and set brightness to 66", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}, {"name": "display.brightness_set", "args": {"level": 66}}]}
+{"text": "close chrome and volume down 17", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}, {"name": "volume.down", "args": {"by": 17}}]}
+{"text": "play the song thunder and volume up 23", "intents": [{"name": "media.play_song", "args": {"title": "thunder"}}, {"name": "volume.up", "args": {"by": 23}}]}
+{"text": "play playlist rainy day and set brightness to 28", "intents": [{"name": "media.play_playlist", "args": {"name": "rainy day"}}, {"name": "display.brightness_set", "args": {"level": 28}}]}
+{"text": "play liked songs and set volume to 39", "intents": [{"name": "media.play_liked", "args": {}}, {"name": "volume.set", "args": {"level": 39}}]}
+{"text": "search youtube for acoustic covers and volume up", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "acoustic covers"}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "search the web for gold rate today and open chrome", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "gold rate today"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "whats the time and set brightness to 55", "intents": [{"name": "info.time", "args": {}}, {"name": "display.brightness_set", "args": {"level": 55}}]}
+{"text": "whats my battery and volume down", "intents": [{"name": "info.battery", "args": {}}, {"name": "volume.down", "args": {"by": 10}}]}
+{"text": "create file ideas and open notes", "intents": [{"name": "file.create", "args": {"name": "ideas"}}, {"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "open spotify and play liked songs and set volume to 45", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_liked", "args": {}}, {"name": "volume.set", "args": {"level": 45}}]}
+{"text": "close whatsapp and open spotify and set brightness to 35", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}, {"name": "display.brightness_set", "args": {"level": 35}}]}
+{"text": "set brightness to 72 and set volume to 28 and mute", "intents": [{"name": "display.brightness_set", "args": {"level": 72}}, {"name": "volume.set", "args": {"level": 28}}, {"name": "volume.mute", "args": {}}]}
+{"text": "open spotify and play the song counting stars and volume up 17", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_song", "args": {"title": "counting stars"}}, {"name": "volume.up", "args": {"by": 17}}]}
+{"text": "pause and close spotify and close music", "intents": [{"name": "media.pause", "args": {}}, {"name": "app.close", "args": {"name": "Spotify"}}, {"name": "app.close", "args": {"name": "Music"}}]}
+{"text": "whats the time and open spotify and play liked songs and mute", "intents": [{"name": "info.time", "args": {}}, {"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_liked", "args": {}}, {"name": "volume.mute", "args": {}}]}
+{"text": "open spotify and play playlist coding mode and volume up 20 and open vscode", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_playlist", "args": {"name": "coding mode"}}, {"name": "volume.up", "args": {"by": 20}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}]}

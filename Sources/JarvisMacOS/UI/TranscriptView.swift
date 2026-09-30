@@ -17,48 +17,28 @@ struct TranscriptView: View {
 
             // Transcript card
             VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    Label {
-                        Text("LIVE TRANSCRIPT")
-                            .font(.system(size: 9, weight: .bold, design: .monospaced))
-                            .tracking(2)
-                            .foregroundStyle(Color(red: 0.6, green: 0.6, blue: 0.85))
-                    } icon: {
-                        Image(systemName: "waveform.badge.mic")
-                            .font(.system(size: 10))
-                            .foregroundStyle(Color(red: 0.6, green: 0.6, blue: 0.85))
-                    }
-                    Spacer()
-                    if !lastSpeech.isEmpty {
-                        Image(systemName: "bolt.fill")
-                            .font(.system(size: 11))
-                            .foregroundStyle(Color(red: 0.75, green: 0.55, blue: 1.0))
-                    }
-                }
-
-                Text(lastSpeech.isEmpty ? "Awaiting voice input..." : "\"\(lastSpeech)\"")
-                    .font(.system(size: 16, weight: .medium, design: .default))
+                Text(lastSpeech.isEmpty ? "Awaiting voice input…" : lastSpeech)
+                    .font(.system(size: 16, weight: .regular))
                     .foregroundStyle(lastSpeech.isEmpty
-                        ? Color.white.opacity(0.25)
-                        : Color.white.opacity(0.90))
+                        ? JarvisColor.textTertiary
+                        : JarvisColor.textPrimary)
                     .lineLimit(3)
                     .animation(.easeOut(duration: 0.3), value: lastSpeech)
                     .textSelection(.enabled)
 
                 if !currentCommand.isEmpty {
                     Divider()
-                        .background(Color.white.opacity(0.08))
+                        .overlay(JarvisColor.hairline)
 
                     HStack(alignment: .top, spacing: 8) {
                         Text("CMD")
-                            .font(.system(size: 9, weight: .bold, design: .monospaced))
-                            .tracking(1.5)
-                            .foregroundStyle(Color(red: 0.55, green: 0.85, blue: 0.65))
+                            .font(JarvisType.dataSmall)
+                            .foregroundStyle(JarvisColor.ok)
                             .padding(.top, 1)
 
                         Text(currentCommand)
-                            .font(.system(size: 13, weight: .medium, design: .monospaced))
-                            .foregroundStyle(Color(red: 0.55, green: 0.95, blue: 0.75))
+                            .font(JarvisType.data)
+                            .foregroundStyle(JarvisColor.ok)
                             .lineLimit(2)
                             .textSelection(.enabled)
                     }
@@ -66,12 +46,13 @@ struct TranscriptView: View {
             }
             .padding(.horizontal, 18)
             .padding(.vertical, 16)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 ZStack {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color(red: 0.10, green: 0.10, blue: 0.14).opacity(0.75))
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .strokeBorder(Color.white.opacity(0.07), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: JarvisRadius.lg, style: .continuous)
+                        .fill(JarvisColor.canvas)
+                    RoundedRectangle(cornerRadius: JarvisRadius.lg, style: .continuous)
+                        .strokeBorder(JarvisColor.hairline, lineWidth: 1)
                 }
             )
         }
@@ -87,9 +68,7 @@ struct WaveformView: View {
     @State private var timer: Timer?
 
     private var barColor: Color {
-        state == .recording
-            ? Color(red: 1.0, green: 0.38, blue: 0.55)
-            : Color(red: 0.55, green: 0.62, blue: 1.0)
+        state == .recording ? JarvisColor.danger : JarvisColor.accent
     }
 
     var body: some View {

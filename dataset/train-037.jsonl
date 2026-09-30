@@ -1,0 +1,44 @@
+{"text": "set the brightness to 50", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "set brightness to 50", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "set brightness 50", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "brightness to 50", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "brightness at 50", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "make the brightness 50", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "change the brightness to 50", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "put the brightness at 50", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "set my brightness to 50", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "put the volume at 50", "intents": [{"name": "volume.set", "args": {"level": 50}}]}
+{"text": "set the contrast to 50", "intents": [{"name": "display.contrast_set", "args": {"level": 50}}]}
+{"text": "set contrast to 50", "intents": [{"name": "display.contrast_set", "args": {"level": 50}}]}
+{"text": "set contrast 50", "intents": [{"name": "display.contrast_set", "args": {"level": 50}}]}
+{"text": "contrast to 50", "intents": [{"name": "display.contrast_set", "args": {"level": 50}}]}
+{"text": "contrast at 50", "intents": [{"name": "display.contrast_set", "args": {"level": 50}}]}
+{"text": "make the contrast 50", "intents": [{"name": "display.contrast_set", "args": {"level": 50}}]}
+{"text": "change the contrast to 50", "intents": [{"name": "display.contrast_set", "args": {"level": 50}}]}
+{"text": "set my contrast to 50", "intents": [{"name": "display.contrast_set", "args": {"level": 50}}]}
+{"text": "bump the brightness by 10", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "decrease volume by 10", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "lower the volume by 10", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "play song thunder", "intents": [{"name": "media.play_song", "args": {"title": "thunder"}}]}
+{"text": "play song demons", "intents": [{"name": "media.play_song", "args": {"title": "demons"}}]}
+{"text": "play song radioactive", "intents": [{"name": "media.play_song", "args": {"title": "radioactive"}}]}
+{"text": "play faded", "intents": [{"name": "media.play_song", "args": {"title": "faded"}}]}
+{"text": "play my playlist deep focus", "intents": [{"name": "media.play_playlist", "args": {"name": "deep focus"}}]}
+{"text": "play the deep focus playlist", "intents": [{"name": "media.play_playlist", "args": {"name": "deep focus"}}]}
+{"text": "play my playlist coding mode", "intents": [{"name": "media.play_playlist", "args": {"name": "coding mode"}}]}
+{"text": "play the coding mode playlist", "intents": [{"name": "media.play_playlist", "args": {"name": "coding mode"}}]}
+{"text": "play my playlist rainy day", "intents": [{"name": "media.play_playlist", "args": {"name": "rainy day"}}]}
+{"text": "search youtube for lofi beats", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "lofi beats"}}]}
+{"text": "search for lofi beats on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "lofi beats"}}]}
+{"text": "search on youtube for lofi beats", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "lofi beats"}}]}
+{"text": "search youtube for jazz music", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jazz music"}}]}
+{"text": "search for jazz music on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jazz music"}}]}
+{"text": "search the web for the weather", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "the weather"}}]}
+{"text": "search for the weather", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "the weather"}}]}
+{"text": "google the weather", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "the weather"}}]}
+{"text": "search the web for news", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "news"}}]}
+{"text": "search for news", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "news"}}]}
+{"text": "google news", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "news"}}]}
+{"text": "what is the brightness level", "intents": [{"name": "info.brightness", "args": {}}]}
+{"text": "what is the contrast level", "intents": [{"name": "info.contrast", "args": {}}]}
+{"text": "install node with homebrew", "intents": [{"name": "install.preview", "args": {"package": "node", "source": "homebrew"}}]}

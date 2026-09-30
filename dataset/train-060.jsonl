@@ -1,0 +1,131 @@
+{"text": "cut the sound entirely", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "cut the audio entirely", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "kill the sound", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "kill the audio", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "silence everything", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "mute everything", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "mute the whole thing", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "no sound", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "turn the sound all the way off", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "turn the audio off", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "sound off completely", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "shut the audio off", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "cut the volume", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "make it completely silent", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "go completely silent", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "bring the audio back", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "bring the sound back", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "bring the audio back on", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "sound back on", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "audio back on", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "turn the audio back on", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "turn the sound back on", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "get the sound back", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "unmute everything", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "restore the sound", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "restore the audio", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "sound level to 27", "intents": [{"name": "volume.set", "args": {"level": 27}}]}
+{"text": "sound level to 27 please", "intents": [{"name": "volume.set", "args": {"level": 27}}]}
+{"text": "sound level at 44", "intents": [{"name": "volume.set", "args": {"level": 44}}]}
+{"text": "set the sound to 33", "intents": [{"name": "volume.set", "args": {"level": 33}}]}
+{"text": "set the sound level to 61", "intents": [{"name": "volume.set", "args": {"level": 61}}]}
+{"text": "set the audio to 58", "intents": [{"name": "volume.set", "args": {"level": 58}}]}
+{"text": "set the audio level to 46", "intents": [{"name": "volume.set", "args": {"level": 46}}]}
+{"text": "audio level 72", "intents": [{"name": "volume.set", "args": {"level": 72}}]}
+{"text": "put the sound at 38", "intents": [{"name": "volume.set", "args": {"level": 38}}]}
+{"text": "put the audio at 64", "intents": [{"name": "volume.set", "args": {"level": 64}}]}
+{"text": "make the sound 55", "intents": [{"name": "volume.set", "args": {"level": 55}}]}
+{"text": "make the audio 42", "intents": [{"name": "volume.set", "args": {"level": 42}}]}
+{"text": "sound at 50 percent", "intents": [{"name": "volume.set", "args": {"level": 50}}]}
+{"text": "audio at 68 percent", "intents": [{"name": "volume.set", "args": {"level": 68}}]}
+{"text": "rewind that track", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "rewind", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "rewind the song", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "go back a track", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "go back a song", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "back it up", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "play the last track", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "play the last song", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "take me back a song", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "take me back a track", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "go back to the last song", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "back one", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "back one track", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "previous one please", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "create a folder called screenshots backup", "intents": [{"name": "folder.create", "args": {"name": "screenshots backup"}}]}
+{"text": "create folder screenshots backup", "intents": [{"name": "folder.create", "args": {"name": "screenshots backup"}}]}
+{"text": "make a folder called screenshots backup", "intents": [{"name": "folder.create", "args": {"name": "screenshots backup"}}]}
+{"text": "create a folder called tax stuff 2026", "intents": [{"name": "folder.create", "args": {"name": "tax stuff 2026"}}]}
+{"text": "make a folder called old files", "intents": [{"name": "folder.create", "args": {"name": "old files"}}]}
+{"text": "create a folder called work docs", "intents": [{"name": "folder.create", "args": {"name": "work docs"}}]}
+{"text": "create a folder called project x", "intents": [{"name": "folder.create", "args": {"name": "project x"}}]}
+{"text": "make a folder called college work", "intents": [{"name": "folder.create", "args": {"name": "college work"}}]}
+{"text": "create a folder called trip photos", "intents": [{"name": "folder.create", "args": {"name": "trip photos"}}]}
+{"text": "make a folder called music old", "intents": [{"name": "folder.create", "args": {"name": "music old"}}]}
+{"text": "create a file called trip budget", "intents": [{"name": "file.create", "args": {"name": "trip budget"}}]}
+{"text": "make a file called meeting notes", "intents": [{"name": "file.create", "args": {"name": "meeting notes"}}]}
+{"text": "create a file called weekly review", "intents": [{"name": "file.create", "args": {"name": "weekly review"}}]}
+{"text": "create a file called reading list", "intents": [{"name": "file.create", "args": {"name": "reading list"}}]}
+{"text": "whats 2 plus 2", "intents": [{"name": "ai.query", "args": {"text": "whats 2 plus 2"}}]}
+{"text": "what is 2 plus 2", "intents": [{"name": "ai.query", "args": {"text": "what is 2 plus 2"}}]}
+{"text": "whats 5 times 8", "intents": [{"name": "ai.query", "args": {"text": "whats 5 times 8"}}]}
+{"text": "what is 7 times 6", "intents": [{"name": "ai.query", "args": {"text": "what is 7 times 6"}}]}
+{"text": "whats 10 percent of 50", "intents": [{"name": "ai.query", "args": {"text": "whats 10 percent of 50"}}]}
+{"text": "what is 10 percent of 250", "intents": [{"name": "ai.query", "args": {"text": "what is 10 percent of 250"}}]}
+{"text": "calculate 12 plus 30", "intents": [{"name": "ai.query", "args": {"text": "calculate 12 plus 30"}}]}
+{"text": "calculate 18 divided by 3", "intents": [{"name": "ai.query", "args": {"text": "calculate 18 divided by 3"}}]}
+{"text": "how much is 9 plus 10", "intents": [{"name": "ai.query", "args": {"text": "how much is 9 plus 10"}}]}
+{"text": "whats 100 minus 37", "intents": [{"name": "ai.query", "args": {"text": "whats 100 minus 37"}}]}
+{"text": "what is 6 times 7", "intents": [{"name": "ai.query", "args": {"text": "what is 6 times 7"}}]}
+{"text": "who is the fastest runner", "intents": [{"name": "ai.query", "args": {"text": "who is the fastest runner"}}]}
+{"text": "search youtube for the interstellar docking scene", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "the interstellar docking scene"}}]}
+{"text": "search youtube for the latest trailer", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "the latest trailer"}}]}
+{"text": "search youtube for the full movie", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "the full movie"}}]}
+{"text": "search youtube for the best of arijit singh", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "the best of arijit singh"}}]}
+{"text": "search youtube for the office bloopers", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "the office bloopers"}}]}
+{"text": "search youtube for the jailer interview", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "the jailer interview"}}]}
+{"text": "search for the best pizza in town", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "the best pizza in town"}}]}
+{"text": "check the date and time", "intents": [{"name": "info.time", "args": {}}, {"name": "info.date", "args": {}}]}
+{"text": "check the time and date", "intents": [{"name": "info.time", "args": {}}, {"name": "info.date", "args": {}}]}
+{"text": "whats the date and time", "intents": [{"name": "info.time", "args": {}}, {"name": "info.date", "args": {}}]}
+{"text": "tell me the time and date", "intents": [{"name": "info.time", "args": {}}, {"name": "info.date", "args": {}}]}
+{"text": "tell me the date and time", "intents": [{"name": "info.time", "args": {}}, {"name": "info.date", "args": {}}]}
+{"text": "show me the time and date", "intents": [{"name": "info.time", "args": {}}, {"name": "info.date", "args": {}}]}
+{"text": "install htop through brew", "intents": [{"name": "install.preview", "args": {"package": "htop", "source": "homebrew"}}]}
+{"text": "install wget through brew", "intents": [{"name": "install.preview", "args": {"package": "wget", "source": "homebrew"}}]}
+{"text": "install tmux through brew", "intents": [{"name": "install.preview", "args": {"package": "tmux", "source": "homebrew"}}]}
+{"text": "install ffmpeg via brew", "intents": [{"name": "install.preview", "args": {"package": "ffmpeg", "source": "homebrew"}}]}
+{"text": "install jq via brew", "intents": [{"name": "install.preview", "args": {"package": "jq", "source": "homebrew"}}]}
+{"text": "get htop through brew", "intents": [{"name": "install.preview", "args": {"package": "htop", "source": "homebrew"}}]}
+{"text": "get node through brew", "intents": [{"name": "install.preview", "args": {"package": "node", "source": "homebrew"}}]}
+{"text": "show me the downloads folder", "intents": [{"name": "folder.open", "args": {"name": "downloads"}}]}
+{"text": "show me the documents folder", "intents": [{"name": "folder.open", "args": {"name": "documents"}}]}
+{"text": "show me the desktop folder", "intents": [{"name": "folder.open", "args": {"name": "desktop"}}]}
+{"text": "show me the movies folder", "intents": [{"name": "folder.open", "args": {"name": "movies"}}]}
+{"text": "show me the pictures folder", "intents": [{"name": "folder.open", "args": {"name": "pictures"}}]}
+{"text": "show me the music folder", "intents": [{"name": "folder.open", "args": {"name": "music"}}]}
+{"text": "display the photos folder", "intents": [{"name": "folder.open", "args": {"name": "pictures"}}]}
+{"text": "display the downloads folder", "intents": [{"name": "folder.open", "args": {"name": "downloads"}}]}
+{"text": "bring up the documents folder", "intents": [{"name": "folder.open", "args": {"name": "documents"}}]}
+{"text": "bring up the movies folder", "intents": [{"name": "folder.open", "args": {"name": "movies"}}]}
+{"text": "mute the sound and open photos and create a folder called screenshots", "intents": [{"name": "volume.mute", "args": {}}, {"name": "app.open", "args": {"name": "Photos"}}, {"name": "folder.create", "args": {"name": "screenshots"}}]}
+{"text": "mute and open photos and create a folder called screenshots", "intents": [{"name": "volume.mute", "args": {}}, {"name": "app.open", "args": {"name": "Photos"}}, {"name": "folder.create", "args": {"name": "screenshots"}}]}
+{"text": "cut the sound and open chrome and create a folder called backups", "intents": [{"name": "volume.mute", "args": {}}, {"name": "app.open", "args": {"name": "Google Chrome"}}, {"name": "folder.create", "args": {"name": "backups"}}]}
+{"text": "bring the audio back and open notes", "intents": [{"name": "volume.unmute", "args": {}}, {"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "rewind that track and set volume to 40", "intents": [{"name": "media.previous", "args": {}}, {"name": "volume.set", "args": {"level": 40}}]}
+{"text": "sound level to 30 and open spotify", "intents": [{"name": "volume.set", "args": {"level": 30}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "show me the downloads folder and open vscode", "intents": [{"name": "folder.open", "args": {"name": "downloads"}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "create a folder called tax stuff 2026 and open finder", "intents": [{"name": "folder.create", "args": {"name": "tax stuff 2026"}}, {"name": "app.open", "args": {"name": "Finder"}}]}
+{"text": "whats 2 plus 2 and open notes", "intents": [{"name": "ai.query", "args": {"text": "whats 2 plus 2"}}, {"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "install jq through brew and open terminal", "intents": [{"name": "install.preview", "args": {"package": "jq", "source": "homebrew"}}, {"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "silence everything and open whatsapp", "intents": [{"name": "volume.mute", "args": {}}, {"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "bring the sound back and raise brightness by 10", "intents": [{"name": "volume.unmute", "args": {}}, {"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "set the sound to 45 and play my liked songs", "intents": [{"name": "volume.set", "args": {"level": 45}}, {"name": "media.play_liked", "args": {}}]}
+{"text": "go back a track and decrease the volume", "intents": [{"name": "media.previous", "args": {}}, {"name": "volume.down", "args": {"by": 10}}]}
+{"text": "mute everything and search youtube for the full movie", "intents": [{"name": "volume.mute", "args": {}}, {"name": "web.search", "args": {"engine": "YouTube", "query": "the full movie"}}]}
+{"text": "cut the audio and check the date and time", "intents": [{"name": "volume.mute", "args": {}}, {"name": "info.time", "args": {}}, {"name": "info.date", "args": {}}]}
+{"text": "play the last song and volume up 20 and open photos", "intents": [{"name": "media.previous", "args": {}}, {"name": "volume.up", "args": {"by": 20}}, {"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "show me the movies folder and create a file called watchlist", "intents": [{"name": "folder.open", "args": {"name": "movies"}}, {"name": "file.create", "args": {"name": "watchlist"}}]}
+{"text": "make a folder called old files and show me the documents folder", "intents": [{"name": "folder.create", "args": {"name": "old files"}}, {"name": "folder.open", "args": {"name": "documents"}}]}
+{"text": "install htop through brew and set volume to 25 and open terminal", "intents": [{"name": "install.preview", "args": {"package": "htop", "source": "homebrew"}}, {"name": "volume.set", "args": {"level": 25}}, {"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "rewind that track and mute and open vscode", "intents": [{"name": "media.previous", "args": {}}, {"name": "volume.mute", "args": {}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}]}

@@ -1,0 +1,173 @@
+{"text": "what is the current time", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "what's the current time", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "whats the current time", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "what is the time", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "what's the time", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "whats the time", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "whats the time now", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "what time is it", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "what time is it now", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "tell me the time", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "tell me the current time", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "current time", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "time right now", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "show me the time", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "the time please", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "um what time is it", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "uh what is the time", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "can you tell me the time", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "what is today's date", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "what's today's date", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "whats the date today", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "what is the date today", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "what is the date", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "what's the date", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "whats the date", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "what day is today", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "what day is it today", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "what day is it", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "what month is it", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "what year is it", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "current date", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "tell me the date", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "show me the date", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "the date please", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "what is the current brightness level", "intents": [{"name": "info.brightness", "args": {}}]}
+{"text": "what's the current brightness level", "intents": [{"name": "info.brightness", "args": {}}]}
+{"text": "whats the brightness level", "intents": [{"name": "info.brightness", "args": {}}]}
+{"text": "whats my brightness", "intents": [{"name": "info.brightness", "args": {}}]}
+{"text": "what is my brightness", "intents": [{"name": "info.brightness", "args": {}}]}
+{"text": "what is the brightness", "intents": [{"name": "info.brightness", "args": {}}]}
+{"text": "current brightness", "intents": [{"name": "info.brightness", "args": {}}]}
+{"text": "brightness level?", "intents": [{"name": "info.brightness", "args": {}}]}
+{"text": "tell me the brightness level", "intents": [{"name": "info.brightness", "args": {}}]}
+{"text": "show me the brightness", "intents": [{"name": "info.brightness", "args": {}}]}
+{"text": "what is the current contrast level", "intents": [{"name": "info.contrast", "args": {}}]}
+{"text": "what's the current contrast level", "intents": [{"name": "info.contrast", "args": {}}]}
+{"text": "whats the contrast level", "intents": [{"name": "info.contrast", "args": {}}]}
+{"text": "whats my contrast", "intents": [{"name": "info.contrast", "args": {}}]}
+{"text": "what is the contrast", "intents": [{"name": "info.contrast", "args": {}}]}
+{"text": "current contrast", "intents": [{"name": "info.contrast", "args": {}}]}
+{"text": "tell me the contrast level", "intents": [{"name": "info.contrast", "args": {}}]}
+{"text": "what is the system volume", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "what's the system volume", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "whats the system volume", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "whats the current volume", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "what is the current volume", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "whats my volume", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "what is the volume", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "current volume", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "volume level?", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "tell me the volume level", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "what is the battery level", "intents": [{"name": "info.battery", "args": {}}]}
+{"text": "what's the battery level", "intents": [{"name": "info.battery", "args": {}}]}
+{"text": "whats the battery level", "intents": [{"name": "info.battery", "args": {}}]}
+{"text": "how much battery is left", "intents": [{"name": "info.battery", "args": {}}]}
+{"text": "battery level?", "intents": [{"name": "info.battery", "args": {}}]}
+{"text": "what is my battery", "intents": [{"name": "info.battery", "args": {}}]}
+{"text": "tell me the battery status", "intents": [{"name": "info.battery", "args": {}}]}
+{"text": "is wifi on", "intents": [{"name": "info.wifi", "args": {}}]}
+{"text": "is the wifi on", "intents": [{"name": "info.wifi", "args": {}}]}
+{"text": "what is the wifi status", "intents": [{"name": "info.wifi", "args": {}}]}
+{"text": "what's the wifi status", "intents": [{"name": "info.wifi", "args": {}}]}
+{"text": "wifi status?", "intents": [{"name": "info.wifi", "args": {}}]}
+{"text": "check the wifi", "intents": [{"name": "info.wifi", "args": {}}]}
+{"text": "wifi?", "intents": [{"name": "info.wifi", "args": {}}]}
+{"text": "tell me the wifi status", "intents": [{"name": "info.wifi", "args": {}}]}
+{"text": "is the bluetooth on", "intents": [{"name": "info.bluetooth", "args": {}}]}
+{"text": "what bluetooth devices are connected", "intents": [{"name": "info.bluetooth", "args": {}}]}
+{"text": "show me bluetooth devices", "intents": [{"name": "info.bluetooth", "args": {}}]}
+{"text": "bluetooth status?", "intents": [{"name": "info.bluetooth", "args": {}}]}
+{"text": "check bluetooth", "intents": [{"name": "info.bluetooth", "args": {}}]}
+{"text": "tell me the bluetooth status", "intents": [{"name": "info.bluetooth", "args": {}}]}
+{"text": "create a file called notes", "intents": [{"name": "file.create", "args": {"name": "notes"}}]}
+{"text": "create file notes", "intents": [{"name": "file.create", "args": {"name": "notes"}}]}
+{"text": "create a file named notes", "intents": [{"name": "file.create", "args": {"name": "notes"}}]}
+{"text": "make a file called notes", "intents": [{"name": "file.create", "args": {"name": "notes"}}]}
+{"text": "make a file named notes", "intents": [{"name": "file.create", "args": {"name": "notes"}}]}
+{"text": "make file notes", "intents": [{"name": "file.create", "args": {"name": "notes"}}]}
+{"text": "create a file called report", "intents": [{"name": "file.create", "args": {"name": "report"}}]}
+{"text": "create file report", "intents": [{"name": "file.create", "args": {"name": "report"}}]}
+{"text": "make a file named report", "intents": [{"name": "file.create", "args": {"name": "report"}}]}
+{"text": "create a new file called report", "intents": [{"name": "file.create", "args": {"name": "report"}}]}
+{"text": "create a file called todo", "intents": [{"name": "file.create", "args": {"name": "todo"}}]}
+{"text": "make a file named todo", "intents": [{"name": "file.create", "args": {"name": "todo"}}]}
+{"text": "create file notes2", "intents": [{"name": "file.create", "args": {"name": "notes2"}}]}
+{"text": "create a file called ideas", "intents": [{"name": "file.create", "args": {"name": "ideas"}}]}
+{"text": "create a file called grocery", "intents": [{"name": "file.create", "args": {"name": "grocery"}}]}
+{"text": "make a file named grocery", "intents": [{"name": "file.create", "args": {"name": "grocery"}}]}
+{"text": "create a file called draft", "intents": [{"name": "file.create", "args": {"name": "draft"}}]}
+{"text": "can you create a file called notes", "intents": [{"name": "file.create", "args": {"name": "notes"}}]}
+{"text": "please create file report", "intents": [{"name": "file.create", "args": {"name": "report"}}]}
+{"text": "create a folder named projects", "intents": [{"name": "folder.create", "args": {"name": "projects"}}]}
+{"text": "create folder projects", "intents": [{"name": "folder.create", "args": {"name": "projects"}}]}
+{"text": "create a folder called projects", "intents": [{"name": "folder.create", "args": {"name": "projects"}}]}
+{"text": "make a folder named projects", "intents": [{"name": "folder.create", "args": {"name": "projects"}}]}
+{"text": "make a folder called projects", "intents": [{"name": "folder.create", "args": {"name": "projects"}}]}
+{"text": "make folder projects", "intents": [{"name": "folder.create", "args": {"name": "projects"}}]}
+{"text": "create folder archive", "intents": [{"name": "folder.create", "args": {"name": "archive"}}]}
+{"text": "create a folder named archive", "intents": [{"name": "folder.create", "args": {"name": "archive"}}]}
+{"text": "make a folder called archive", "intents": [{"name": "folder.create", "args": {"name": "archive"}}]}
+{"text": "create folder memes", "intents": [{"name": "folder.create", "args": {"name": "memes"}}]}
+{"text": "make a folder named memes", "intents": [{"name": "folder.create", "args": {"name": "memes"}}]}
+{"text": "create a folder called work stuff", "intents": [{"name": "folder.create", "args": {"name": "work stuff"}}]}
+{"text": "make a folder named personal", "intents": [{"name": "folder.create", "args": {"name": "personal"}}]}
+{"text": "can you create a folder named projects", "intents": [{"name": "folder.create", "args": {"name": "projects"}}]}
+{"text": "please create folder archive", "intents": [{"name": "folder.create", "args": {"name": "archive"}}]}
+{"text": "open the downloads folder", "intents": [{"name": "folder.open", "args": {"name": "downloads"}}]}
+{"text": "open downloads folder", "intents": [{"name": "folder.open", "args": {"name": "downloads"}}]}
+{"text": "open my downloads folder", "intents": [{"name": "folder.open", "args": {"name": "downloads"}}]}
+{"text": "open folder downloads", "intents": [{"name": "folder.open", "args": {"name": "downloads"}}]}
+{"text": "open downloads", "intents": [{"name": "folder.open", "args": {"name": "downloads"}}]}
+{"text": "open the documents folder", "intents": [{"name": "folder.open", "args": {"name": "documents"}}]}
+{"text": "open folder documents", "intents": [{"name": "folder.open", "args": {"name": "documents"}}]}
+{"text": "open my documents", "intents": [{"name": "folder.open", "args": {"name": "documents"}}]}
+{"text": "open the desktop folder", "intents": [{"name": "folder.open", "args": {"name": "desktop"}}]}
+{"text": "open folder desktop", "intents": [{"name": "folder.open", "args": {"name": "desktop"}}]}
+{"text": "open the pictures folder", "intents": [{"name": "folder.open", "args": {"name": "pictures"}}]}
+{"text": "open folder pictures", "intents": [{"name": "folder.open", "args": {"name": "pictures"}}]}
+{"text": "open the movies folder", "intents": [{"name": "folder.open", "args": {"name": "movies"}}]}
+{"text": "open folder movies", "intents": [{"name": "folder.open", "args": {"name": "movies"}}]}
+{"text": "open the music folder", "intents": [{"name": "folder.open", "args": {"name": "music"}}]}
+{"text": "open folder music", "intents": [{"name": "folder.open", "args": {"name": "music"}}]}
+{"text": "can you open the downloads folder", "intents": [{"name": "folder.open", "args": {"name": "downloads"}}]}
+{"text": "open the latest file in downloads", "intents": [{"name": "file.open_latest", "args": {"folder": "downloads"}}]}
+{"text": "open latest file in downloads", "intents": [{"name": "file.open_latest", "args": {"folder": "downloads"}}]}
+{"text": "open the most recent file in downloads", "intents": [{"name": "file.open_latest", "args": {"folder": "downloads"}}]}
+{"text": "open the newest file in downloads", "intents": [{"name": "file.open_latest", "args": {"folder": "downloads"}}]}
+{"text": "open latest file in documents", "intents": [{"name": "file.open_latest", "args": {"folder": "documents"}}]}
+{"text": "open the latest file in documents", "intents": [{"name": "file.open_latest", "args": {"folder": "documents"}}]}
+{"text": "open the latest file in pictures", "intents": [{"name": "file.open_latest", "args": {"folder": "pictures"}}]}
+{"text": "install ffmpeg using homebrew", "intents": [{"name": "install.preview", "args": {"package": "ffmpeg", "source": "homebrew"}}]}
+{"text": "install ffmpeg via homebrew", "intents": [{"name": "install.preview", "args": {"package": "ffmpeg", "source": "homebrew"}}]}
+{"text": "install wget with homebrew", "intents": [{"name": "install.preview", "args": {"package": "wget", "source": "homebrew"}}]}
+{"text": "install node using homebrew", "intents": [{"name": "install.preview", "args": {"package": "node", "source": "homebrew"}}]}
+{"text": "install node via homebrew", "intents": [{"name": "install.preview", "args": {"package": "node", "source": "homebrew"}}]}
+{"text": "install python using homebrew", "intents": [{"name": "install.preview", "args": {"package": "python", "source": "homebrew"}}]}
+{"text": "can you install python using homebrew", "intents": [{"name": "install.preview", "args": {"package": "python", "source": "homebrew"}}]}
+{"text": "install iterm2 using homebrew", "intents": [{"name": "install.preview", "args": {"package": "iterm2", "source": "homebrew"}}]}
+{"text": "install iterm2 with homebrew", "intents": [{"name": "install.preview", "args": {"package": "iterm2", "source": "homebrew"}}]}
+{"text": "install htop using homebrew", "intents": [{"name": "install.preview", "args": {"package": "htop", "source": "homebrew"}}]}
+{"text": "install tree with homebrew", "intents": [{"name": "install.preview", "args": {"package": "tree", "source": "homebrew"}}]}
+{"text": "install neovim using homebrew", "intents": [{"name": "install.preview", "args": {"package": "neovim", "source": "homebrew"}}]}
+{"text": "install neovim via homebrew", "intents": [{"name": "install.preview", "args": {"package": "neovim", "source": "homebrew"}}]}
+{"text": "explain how photosynthesis works", "intents": [{"name": "ai.query", "args": {"text": "explain how photosynthesis works"}}]}
+{"text": "what is the capital of france", "intents": [{"name": "ai.query", "args": {"text": "what is the capital of france"}}]}
+{"text": "who is alan turing", "intents": [{"name": "ai.query", "args": {"text": "who is alan turing"}}]}
+{"text": "why is the sky blue", "intents": [{"name": "ai.query", "args": {"text": "why is the sky blue"}}]}
+{"text": "tell me about black holes", "intents": [{"name": "ai.query", "args": {"text": "tell me about black holes"}}]}
+{"text": "describe quantum entanglement", "intents": [{"name": "ai.query", "args": {"text": "describe quantum entanglement"}}]}
+{"text": "how does a neural network work", "intents": [{"name": "ai.query", "args": {"text": "how does a neural network work"}}]}
+{"text": "write a short poem about the sea", "intents": [{"name": "ai.query", "args": {"text": "write a short poem about the sea"}}]}
+{"text": "summarize the plot of inception", "intents": [{"name": "ai.query", "args": {"text": "summarize the plot of inception"}}]}
+{"text": "what is 15 percent of 240", "intents": [{"name": "ai.query", "args": {"text": "what is 15 percent of 240"}}]}
+{"text": "convert 10 usd to eur", "intents": [{"name": "ai.query", "args": {"text": "convert 10 usd to eur"}}]}
+{"text": "tell me a joke", "intents": [{"name": "ai.query", "args": {"text": "tell me a joke"}}]}
+{"text": "what should i cook for dinner", "intents": [{"name": "ai.query", "args": {"text": "what should i cook for dinner"}}]}
+{"text": "how tall is mount everest", "intents": [{"name": "ai.query", "args": {"text": "how tall is mount everest"}}]}
+{"text": "what is the meaning of life", "intents": [{"name": "ai.query", "args": {"text": "what is the meaning of life"}}]}
+{"text": "recommend me a movie", "intents": [{"name": "ai.query", "args": {"text": "recommend me a movie"}}]}
+{"text": "how do i boil an egg", "intents": [{"name": "ai.query", "args": {"text": "how do i boil an egg"}}]}
+{"text": "what is bitcoin", "intents": [{"name": "ai.query", "args": {"text": "what is bitcoin"}}]}
+{"text": "explain recursion with an example", "intents": [{"name": "ai.query", "args": {"text": "explain recursion with an example"}}]}
+{"text": "what is the fastest animal", "intents": [{"name": "ai.query", "args": {"text": "what is the fastest animal"}}]}

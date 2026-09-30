@@ -17,7 +17,8 @@ struct ContentView: View {
     var body: some View {
         ZStack {
             // ── Background ──────────────────────────────────────────
-            backgroundLayer
+            JarvisColor.canvas
+                .ignoresSafeArea()
 
             // ── Layout ──────────────────────────────────────────────
             HStack(spacing: 0) {
@@ -38,8 +39,8 @@ struct ContentView: View {
                     VStack(spacing: 28) {
                         // Greeting
                         Text(greeting)
-                            .font(.system(size: 34, weight: .semibold, design: .default))
-                            .foregroundStyle(Color.white.opacity(0.88))
+                            .font(.system(size: 30, weight: .regular))
+                            .foregroundStyle(JarvisColor.textPrimary)
                             .multilineTextAlignment(.center)
                             .animation(.easeOut(duration: 0.3), value: appState.assistantState)
 
@@ -73,6 +74,7 @@ struct ContentView: View {
                     // Bottom log drawer
                     EventLogDrawer(appState: appState)
                 }
+                .background(SubtleGridView())
             }
 
             // ── Popup overlay ────────────────────────────────────────
@@ -88,55 +90,16 @@ struct ContentView: View {
         .frame(minWidth: 1020, minHeight: 680)
     }
 
-    // MARK: - Background
-    private var backgroundLayer: some View {
-        ZStack {
-            Color(red: 0.055, green: 0.055, blue: 0.075)
-
-            // Ambient blobs
-            Circle()
-                .fill(Color(red: 0.35, green: 0.35, blue: 0.90).opacity(0.08))
-                .frame(width: 600, height: 600)
-                .blur(radius: 100)
-                .offset(x: -200, y: -180)
-
-            Circle()
-                .fill(Color(red: 0.60, green: 0.25, blue: 0.90).opacity(0.05))
-                .frame(width: 500, height: 500)
-                .blur(radius: 90)
-                .offset(x: 300, y: 200)
-        }
-        .ignoresSafeArea()
-    }
-
     // MARK: - Top bar
     private var topBar: some View {
         HStack(spacing: 14) {
-            // App identity
-            HStack(spacing: 8) {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color(red: 0.55, green: 0.55, blue: 1.0),
-                                Color(red: 0.75, green: 0.40, blue: 1.0)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 8, height: 8)
-                    .shadow(color: Color(red: 0.55, green: 0.55, blue: 1.0).opacity(0.8), radius: 6)
-
-                Text("JARVIS")
-                    .font(.system(size: 12, weight: .black, design: .default))
-                    .tracking(4)
-                    .foregroundStyle(Color.white.opacity(0.75))
-            }
+            Text("Jarvis")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(JarvisColor.textPrimary)
 
             Rectangle()
                 .frame(width: 1, height: 16)
-                .foregroundStyle(Color.white.opacity(0.10))
+                .foregroundStyle(JarvisColor.hairline)
 
             StatusBadge(state: appState.assistantState, micActive: appState.micActive, sessionState: appState.voiceSessionState)
 
@@ -146,11 +109,11 @@ struct ContentView: View {
             backendStatusBadge
         }
         .padding(.horizontal, 24)
-        .background(Color.black.opacity(0.20))
+        .background(JarvisColor.canvas)
         .overlay(
             Rectangle()
                 .frame(height: 1)
-                .foregroundStyle(Color.white.opacity(0.06)),
+                .foregroundStyle(JarvisColor.hairline),
             alignment: .bottom
         )
     }
@@ -159,21 +122,16 @@ struct ContentView: View {
         HStack(spacing: 5) {
             Image(systemName: appState.micActive ? "mic.fill" : "mic.slash.fill")
                 .font(.system(size: 11))
-                .foregroundStyle(appState.micActive
-                    ? Color(red: 0.35, green: 0.90, blue: 0.65)
-                    : Color.white.opacity(0.25))
-            Text(appState.micActive ? "ACTIVE" : "OFFLINE")
-                .font(.system(size: 9, weight: .bold, design: .monospaced))
-                .tracking(1.5)
-                .foregroundStyle(appState.micActive
-                    ? Color(red: 0.35, green: 0.90, blue: 0.65).opacity(0.8)
-                    : Color.white.opacity(0.25))
+                .foregroundStyle(appState.micActive ? JarvisColor.ok : JarvisColor.textTertiary)
+            Text(appState.micActive ? "Active" : "Offline")
+                .font(JarvisType.dataSmall)
+                .foregroundStyle(appState.micActive ? JarvisColor.ok : JarvisColor.textTertiary)
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
-        .background(Color.white.opacity(0.04))
+        .background(JarvisColor.surface)
         .clipShape(Capsule())
-        .overlay(Capsule().strokeBorder(Color.white.opacity(0.08), lineWidth: 0.8))
+        .overlay(Capsule().strokeBorder(JarvisColor.hairline, lineWidth: 1))
     }
 
     private var backendStatusBadge: some View {
@@ -182,20 +140,15 @@ struct ContentView: View {
         return HStack(spacing: 5) {
             Image(systemName: isHealthy ? "network" : "network.slash")
                 .font(.system(size: 11))
-                .foregroundStyle(isHealthy
-                    ? Color(red: 0.55, green: 0.88, blue: 0.55)
-                    : Color(red: 1.0, green: 0.45, blue: 0.45))
+                .foregroundStyle(isHealthy ? JarvisColor.textSecondary : JarvisColor.danger)
             Text(appState.backendStatus)
-                .font(.system(size: 9, weight: .bold, design: .monospaced))
-                .tracking(1.2)
-                .foregroundStyle(isHealthy
-                    ? Color(red: 0.55, green: 0.88, blue: 0.55).opacity(0.8)
-                    : Color(red: 1.0, green: 0.45, blue: 0.45).opacity(0.9))
+                .font(JarvisType.dataSmall)
+                .foregroundStyle(isHealthy ? JarvisColor.textSecondary : JarvisColor.danger)
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
-        .background(Color.white.opacity(0.04))
+        .background(JarvisColor.surface)
         .clipShape(Capsule())
-        .overlay(Capsule().strokeBorder(Color.white.opacity(0.08), lineWidth: 0.8))
+        .overlay(Capsule().strokeBorder(JarvisColor.hairline, lineWidth: 1))
     }
 }

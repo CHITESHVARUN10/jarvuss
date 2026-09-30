@@ -1,0 +1,101 @@
+{"text": "get spotify up", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "get chrome up", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "get vscode up", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "put spotify on", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "put chrome on", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "put whatsapp off", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "put spotify off", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "flip on spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "flip on chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "flip off whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "activate spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "activate chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "deactivate whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "boot chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open spotify yeah do it", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close whatsapp yeah do it", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "go ahead and open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "go ahead and close whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "go ahead and increase the brightness", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "go ahead and volume up", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "go ahead and mute", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "go ahead and play my liked songs", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "feel free to open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "feel free to close whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "if you dont mind open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "if you dont mind close whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "when you get a chance open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "when you get a chance close whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "at your earliest convenience open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "crank the brightness up", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "crank the brightness down", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "crank up the brightness", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "crank down the volume", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "spin the volume up", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "spin the volume down", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "jack up the volume", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "jack up the brightness", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "roll the volume up", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "roll the volume down", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "ease the brightness up", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "ease the brightness down", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "ease the volume up", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "ease the volume down", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "play the song bad liar", "intents": [{"name": "media.play_song", "args": {"title": "bad liar"}}]}
+{"text": "play bad liar", "intents": [{"name": "media.play_song", "args": {"title": "bad liar"}}]}
+{"text": "play the song wolves", "intents": [{"name": "media.play_song", "args": {"title": "wolves"}}]}
+{"text": "play wolves", "intents": [{"name": "media.play_song", "args": {"title": "wolves"}}]}
+{"text": "play the song back to you", "intents": [{"name": "media.play_song", "args": {"title": "back to you"}}]}
+{"text": "play back to you", "intents": [{"name": "media.play_song", "args": {"title": "back to you"}}]}
+{"text": "play the song it aint me", "intents": [{"name": "media.play_song", "args": {"title": "it aint me"}}]}
+{"text": "play it aint me", "intents": [{"name": "media.play_song", "args": {"title": "it aint me"}}]}
+{"text": "play the song symphony", "intents": [{"name": "media.play_song", "args": {"title": "symphony"}}]}
+{"text": "play symphony", "intents": [{"name": "media.play_song", "args": {"title": "symphony"}}]}
+{"text": "play the song one kiss", "intents": [{"name": "media.play_song", "args": {"title": "one kiss"}}]}
+{"text": "play one kiss", "intents": [{"name": "media.play_song", "args": {"title": "one kiss"}}]}
+{"text": "play the song no lie", "intents": [{"name": "media.play_song", "args": {"title": "no lie"}}]}
+{"text": "play no lie", "intents": [{"name": "media.play_song", "args": {"title": "no lie"}}]}
+{"text": "play the song there for you", "intents": [{"name": "media.play_song", "args": {"title": "there for you"}}]}
+{"text": "play there for you", "intents": [{"name": "media.play_song", "args": {"title": "there for you"}}]}
+{"text": "play playlist top 50 global", "intents": [{"name": "media.play_playlist", "args": {"name": "top 50 global"}}]}
+{"text": "play playlist viral hits", "intents": [{"name": "media.play_playlist", "args": {"name": "viral hits"}}]}
+{"text": "play playlist chill collection", "intents": [{"name": "media.play_playlist", "args": {"name": "chill collection"}}]}
+{"text": "play playlist jazz cafe", "intents": [{"name": "media.play_playlist", "args": {"name": "jazz cafe"}}]}
+{"text": "play playlist bedtime lullabies", "intents": [{"name": "media.play_playlist", "args": {"name": "bedtime lullabies"}}]}
+{"text": "play playlist epic workout", "intents": [{"name": "media.play_playlist", "args": {"name": "epic workout"}}]}
+{"text": "play playlist coding soundtrack", "intents": [{"name": "media.play_playlist", "args": {"name": "coding soundtrack"}}]}
+{"text": "play playlist rainy day jazz", "intents": [{"name": "media.play_playlist", "args": {"name": "rainy day jazz"}}]}
+{"text": "play playlist summer party", "intents": [{"name": "media.play_playlist", "args": {"name": "summer party"}}]}
+{"text": "play playlist winter classics", "intents": [{"name": "media.play_playlist", "args": {"name": "winter classics"}}]}
+{"text": "search the web for how to make pancakes at home", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to make pancakes at home"}}]}
+{"text": "search the web for how to write an essay", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to write an essay"}}]}
+{"text": "search the web for how to learn guitar fast", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to learn guitar fast"}}]}
+{"text": "search the web for best coffee shops near me", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "best coffee shops near me"}}]}
+{"text": "search the web for top rated movies this year", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "top rated movies this year"}}]}
+{"text": "search youtube for how to make pancakes at home", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "how to make pancakes at home"}}]}
+{"text": "search youtube for how to learn guitar fast", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "how to learn guitar fast"}}]}
+{"text": "google how to make pancakes at home", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to make pancakes at home"}}]}
+{"text": "google how to write an essay", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to write an essay"}}]}
+{"text": "whats the time and open spotify and play the song wolves", "intents": [{"name": "info.time", "args": {}}, {"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_song", "args": {"title": "wolves"}}]}
+{"text": "open spotify and play the song symphony and volume up 12", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_song", "args": {"title": "symphony"}}, {"name": "volume.up", "args": {"by": 12}}]}
+{"text": "open spotify and play playlist viral hits and set brightness to 48", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_playlist", "args": {"name": "viral hits"}}, {"name": "display.brightness_set", "args": {"level": 48}}]}
+{"text": "open spotify and play playlist jazz cafe and open vscode", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_playlist", "args": {"name": "jazz cafe"}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "close telegram and open spotify and play the song one kiss", "intents": [{"name": "app.close", "args": {"name": "Telegram"}}, {"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_song", "args": {"title": "one kiss"}}]}
+{"text": "crank up the brightness and crank up the volume", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "crank down the brightness and crank down the volume", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}, {"name": "volume.down", "args": {"by": 10}}]}
+{"text": "go ahead and open spotify and play my liked songs", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_liked", "args": {}}]}
+{"text": "go ahead and close whatsapp and open spotify", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "flip on spotify and throw on my liked songs", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_liked", "args": {}}]}
+{"text": "set brightness to 36 and set volume to 48 and open spotify and play liked songs", "intents": [{"name": "display.brightness_set", "args": {"level": 36}}, {"name": "volume.set", "args": {"level": 48}}, {"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_liked", "args": {}}]}
+{"text": "set brightness to 36 and set volume to 48 and open spotify and play liked songs and open vscode", "intents": [{"name": "display.brightness_set", "args": {"level": 36}}, {"name": "volume.set", "args": {"level": 48}}, {"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_liked", "args": {}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "open spotify and play liked songs and volume up 12 and set brightness to 48 and open vscode and close telegram", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_liked", "args": {}}, {"name": "volume.up", "args": {"by": 12}}, {"name": "display.brightness_set", "args": {"level": 48}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}, {"name": "app.close", "args": {"name": "Telegram"}}]}
+{"text": "open spotify and play liked songs and volume up 12 and set brightness to 48 and open vscode and close telegram and mute", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_liked", "args": {}}, {"name": "volume.up", "args": {"by": 12}}, {"name": "display.brightness_set", "args": {"level": 48}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}, {"name": "app.close", "args": {"name": "Telegram"}}, {"name": "volume.mute", "args": {}}]}
+{"text": "open spotify and play liked songs and volume up 12 and set brightness to 48 and open vscode and close telegram and mute and set contrast to 36", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_liked", "args": {}}, {"name": "volume.up", "args": {"by": 12}}, {"name": "display.brightness_set", "args": {"level": 48}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}, {"name": "app.close", "args": {"name": "Telegram"}}, {"name": "volume.mute", "args": {}}, {"name": "display.contrast_set", "args": {"level": 36}}]}
+{"text": "open spotify and play liked songs and volume up 12 and set brightness to 48 and open vscode and close telegram and mute and set contrast to 36 and open slack", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_liked", "args": {}}, {"name": "volume.up", "args": {"by": 12}}, {"name": "display.brightness_set", "args": {"level": 48}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}, {"name": "app.close", "args": {"name": "Telegram"}}, {"name": "volume.mute", "args": {}}, {"name": "display.contrast_set", "args": {"level": 36}}, {"name": "app.open", "args": {"name": "Slack"}}]}
+{"text": "open spotify and play liked songs and volume up 12 and set brightness to 48 and open vscode and close telegram and mute and set contrast to 36 and open slack and close notion", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_liked", "args": {}}, {"name": "volume.up", "args": {"by": 12}}, {"name": "display.brightness_set", "args": {"level": 48}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}, {"name": "app.close", "args": {"name": "Telegram"}}, {"name": "volume.mute", "args": {}}, {"name": "display.contrast_set", "args": {"level": 36}}, {"name": "app.open", "args": {"name": "Slack"}}, {"name": "app.close", "args": {"name": "Notion"}}]}
+{"text": "open spotify and play liked songs and volume up 12 and set brightness to 48 and open vscode and close telegram and mute and set contrast to 36 and open slack and close notion and unmute", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_liked", "args": {}}, {"name": "volume.up", "args": {"by": 12}}, {"name": "display.brightness_set", "args": {"level": 48}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}, {"name": "app.close", "args": {"name": "Telegram"}}, {"name": "volume.mute", "args": {}}, {"name": "display.contrast_set", "args": {"level": 36}}, {"name": "app.open", "args": {"name": "Slack"}}, {"name": "app.close", "args": {"name": "Notion"}}, {"name": "volume.unmute", "args": {}}]}
+{"text": "open spotify and play liked songs and volume up 12 and set brightness to 48 and open vscode and close telegram and mute and set contrast to 36 and open slack and close notion and unmute and open figma", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_liked", "args": {}}, {"name": "volume.up", "args": {"by": 12}}, {"name": "display.brightness_set", "args": {"level": 48}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}, {"name": "app.close", "args": {"name": "Telegram"}}, {"name": "volume.mute", "args": {}}, {"name": "display.contrast_set", "args": {"level": 36}}, {"name": "app.open", "args": {"name": "Slack"}}, {"name": "app.close", "args": {"name": "Notion"}}, {"name": "volume.unmute", "args": {}}, {"name": "app.open", "args": {"name": "Figma"}}]}
+{"text": "open spotify and play liked songs and volume up 12 and set brightness to 48 and open vscode and close telegram and mute and set contrast to 36 and open slack and close notion and unmute and open figma and close obs", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_liked", "args": {}}, {"name": "volume.up", "args": {"by": 12}}, {"name": "display.brightness_set", "args": {"level": 48}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}, {"name": "app.close", "args": {"name": "Telegram"}}, {"name": "volume.mute", "args": {}}, {"name": "display.contrast_set", "args": {"level": 36}}, {"name": "app.open", "args": {"name": "Slack"}}, {"name": "app.close", "args": {"name": "Notion"}}, {"name": "volume.unmute", "args": {}}, {"name": "app.open", "args": {"name": "Figma"}}, {"name": "app.close", "args": {"name": "OBS"}}]}
+{"text": "open spotify and play liked songs and volume up 12 and set brightness to 48 and open vscode and close telegram and mute and set contrast to 36 and open slack and close notion and unmute and open figma and close obs and set the volume to 36", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_liked", "args": {}}, {"name": "volume.up", "args": {"by": 12}}, {"name": "display.brightness_set", "args": {"level": 48}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}, {"name": "app.close", "args": {"name": "Telegram"}}, {"name": "volume.mute", "args": {}}, {"name": "display.contrast_set", "args": {"level": 36}}, {"name": "app.open", "args": {"name": "Slack"}}, {"name": "app.close", "args": {"name": "Notion"}}, {"name": "volume.unmute", "args": {}}, {"name": "app.open", "args": {"name": "Figma"}}, {"name": "app.close", "args": {"name": "OBS"}}, {"name": "volume.set", "args": {"level": 36}}]}
+{"text": "open spotify and play liked songs and volume up 12 and set brightness to 48 and open vscode and close telegram and mute and set contrast to 36 and open slack and close notion and unmute and open figma and close obs and set the volume to 36 and open maps", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_liked", "args": {}}, {"name": "volume.up", "args": {"by": 12}}, {"name": "display.brightness_set", "args": {"level": 48}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}, {"name": "app.close", "args": {"name": "Telegram"}}, {"name": "volume.mute", "args": {}}, {"name": "display.contrast_set", "args": {"level": 36}}, {"name": "app.open", "args": {"name": "Slack"}}, {"name": "app.close", "args": {"name": "Notion"}}, {"name": "volume.unmute", "args": {}}, {"name": "app.open", "args": {"name": "Figma"}}, {"name": "app.close", "args": {"name": "OBS"}}, {"name": "volume.set", "args": {"level": 36}}, {"name": "app.open", "args": {"name": "Maps"}}]}
+{"text": "whats the time and open spotify and play liked songs and volume up 12 and set brightness to 48 and open vscode and close telegram and mute and set contrast to 36 and open slack", "intents": [{"name": "info.time", "args": {}}, {"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_liked", "args": {}}, {"name": "volume.up", "args": {"by": 12}}, {"name": "display.brightness_set", "args": {"level": 48}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}, {"name": "app.close", "args": {"name": "Telegram"}}, {"name": "volume.mute", "args": {}}, {"name": "display.contrast_set", "args": {"level": 36}}, {"name": "app.open", "args": {"name": "Slack"}}]}

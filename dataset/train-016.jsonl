@@ -1,0 +1,134 @@
+{"text": "play song channa mereya", "intents": [{"name": "media.play_song", "args": {"title": "channa mereya"}}]}
+{"text": "play song tum hi ho", "intents": [{"name": "media.play_song", "args": {"title": "tum hi ho"}}]}
+{"text": "play song kesariya", "intents": [{"name": "media.play_song", "args": {"title": "kesariya"}}]}
+{"text": "play the song apna bana le", "intents": [{"name": "media.play_song", "args": {"title": "apna bana le"}}]}
+{"text": "play the song o bedardeya", "intents": [{"name": "media.play_song", "args": {"title": "o bedardeya"}}]}
+{"text": "play o bedardeya", "intents": [{"name": "media.play_song", "args": {"title": "o bedardeya"}}]}
+{"text": "play the song heeriye", "intents": [{"name": "media.play_song", "args": {"title": "heeriye"}}]}
+{"text": "play heeriye", "intents": [{"name": "media.play_song", "args": {"title": "heeriye"}}]}
+{"text": "play the song satranga", "intents": [{"name": "media.play_song", "args": {"title": "satranga"}}]}
+{"text": "play satranga", "intents": [{"name": "media.play_song", "args": {"title": "satranga"}}]}
+{"text": "play the song ve kamleya", "intents": [{"name": "media.play_song", "args": {"title": "ve kamleya"}}]}
+{"text": "play the song show me the meaning", "intents": [{"name": "media.play_song", "args": {"title": "show me the meaning"}}]}
+{"text": "play show me the meaning", "intents": [{"name": "media.play_song", "args": {"title": "show me the meaning"}}]}
+{"text": "play the song yellow coldplay", "intents": [{"name": "media.play_song", "args": {"title": "yellow coldplay"}}]}
+{"text": "play the scientist", "intents": [{"name": "media.play_song", "args": {"title": "the scientist"}}]}
+{"text": "play the song the scientist", "intents": [{"name": "media.play_song", "args": {"title": "the scientist"}}]}
+{"text": "play fix you", "intents": [{"name": "media.play_song", "args": {"title": "fix you"}}]}
+{"text": "play the song fix you", "intents": [{"name": "media.play_song", "args": {"title": "fix you"}}]}
+{"text": "play viva la vida", "intents": [{"name": "media.play_song", "args": {"title": "viva la vida"}}]}
+{"text": "play the song viva la vida", "intents": [{"name": "media.play_song", "args": {"title": "viva la vida"}}]}
+{"text": "play clocks", "intents": [{"name": "media.play_song", "args": {"title": "clocks"}}]}
+{"text": "play the song clocks", "intents": [{"name": "media.play_song", "args": {"title": "clocks"}}]}
+{"text": "play photograph", "intents": [{"name": "media.play_song", "args": {"title": "photograph"}}]}
+{"text": "play the song photograph", "intents": [{"name": "media.play_song", "args": {"title": "photograph"}}]}
+{"text": "play thinking out loud", "intents": [{"name": "media.play_song", "args": {"title": "thinking out loud"}}]}
+{"text": "play the song thinking out loud", "intents": [{"name": "media.play_song", "args": {"title": "thinking out loud"}}]}
+{"text": "play shivers", "intents": [{"name": "media.play_song", "args": {"title": "shivers"}}]}
+{"text": "play the song shivers", "intents": [{"name": "media.play_song", "args": {"title": "shivers"}}]}
+{"text": "play bad habits", "intents": [{"name": "media.play_song", "args": {"title": "bad habits"}}]}
+{"text": "play the song bad habits", "intents": [{"name": "media.play_song", "args": {"title": "bad habits"}}]}
+{"text": "play cruel summer", "intents": [{"name": "media.play_song", "args": {"title": "cruel summer"}}]}
+{"text": "play the song cruel summer", "intents": [{"name": "media.play_song", "args": {"title": "cruel summer"}}]}
+{"text": "play anti hero", "intents": [{"name": "media.play_song", "args": {"title": "anti hero"}}]}
+{"text": "play the song anti hero", "intents": [{"name": "media.play_song", "args": {"title": "anti hero"}}]}
+{"text": "play blank space", "intents": [{"name": "media.play_song", "args": {"title": "blank space"}}]}
+{"text": "play the song blank space", "intents": [{"name": "media.play_song", "args": {"title": "blank space"}}]}
+{"text": "play mi gente", "intents": [{"name": "media.play_song", "args": {"title": "mi gente"}}]}
+{"text": "play the song mi gente", "intents": [{"name": "media.play_song", "args": {"title": "mi gente"}}]}
+{"text": "play dancin", "intents": [{"name": "media.play_song", "args": {"title": "dancin"}}]}
+{"text": "play the song dancin", "intents": [{"name": "media.play_song", "args": {"title": "dancin"}}]}
+{"text": "play closer", "intents": [{"name": "media.play_song", "args": {"title": "closer"}}]}
+{"text": "play the song closer", "intents": [{"name": "media.play_song", "args": {"title": "closer"}}]}
+{"text": "play something just like this", "intents": [{"name": "media.play_song", "args": {"title": "something just like this"}}]}
+{"text": "play the song something just like this", "intents": [{"name": "media.play_song", "args": {"title": "something just like this"}}]}
+{"text": "play playlist focus", "intents": [{"name": "media.play_playlist", "args": {"name": "focus"}}]}
+{"text": "play playlist sleep", "intents": [{"name": "media.play_playlist", "args": {"name": "sleep"}}]}
+{"text": "play playlist drive", "intents": [{"name": "media.play_playlist", "args": {"name": "drive"}}]}
+{"text": "play playlist romance", "intents": [{"name": "media.play_playlist", "args": {"name": "romance"}}]}
+{"text": "play playlist throwback", "intents": [{"name": "media.play_playlist", "args": {"name": "throwback"}}]}
+{"text": "play playlist indie", "intents": [{"name": "media.play_playlist", "args": {"name": "indie"}}]}
+{"text": "play playlist edm", "intents": [{"name": "media.play_playlist", "args": {"name": "edm"}}]}
+{"text": "play playlist acoustic", "intents": [{"name": "media.play_playlist", "args": {"name": "acoustic"}}]}
+{"text": "play playlist coffee shop", "intents": [{"name": "media.play_playlist", "args": {"name": "coffee shop"}}]}
+{"text": "play playlist morning vibes", "intents": [{"name": "media.play_playlist", "args": {"name": "morning vibes"}}]}
+{"text": "play playlist late night", "intents": [{"name": "media.play_playlist", "args": {"name": "late night"}}]}
+{"text": "play playlist top hits", "intents": [{"name": "media.play_playlist", "args": {"name": "top hits"}}]}
+{"text": "play my playlist workout", "intents": [{"name": "media.play_playlist", "args": {"name": "workout"}}]}
+{"text": "play my playlist party", "intents": [{"name": "media.play_playlist", "args": {"name": "party"}}]}
+{"text": "play my playlist focus", "intents": [{"name": "media.play_playlist", "args": {"name": "focus"}}]}
+{"text": "play my playlist throwback", "intents": [{"name": "media.play_playlist", "args": {"name": "throwback"}}]}
+{"text": "play the chill vibes playlist", "intents": [{"name": "media.play_playlist", "args": {"name": "chill vibes"}}]}
+{"text": "play the workout playlist", "intents": [{"name": "media.play_playlist", "args": {"name": "workout"}}]}
+{"text": "play the party playlist", "intents": [{"name": "media.play_playlist", "args": {"name": "party"}}]}
+{"text": "play the focus playlist", "intents": [{"name": "media.play_playlist", "args": {"name": "focus"}}]}
+{"text": "play the throwback playlist", "intents": [{"name": "media.play_playlist", "args": {"name": "throwback"}}]}
+{"text": "put on playlist chill vibes", "intents": [{"name": "media.play_playlist", "args": {"name": "chill vibes"}}]}
+{"text": "put on playlist workout", "intents": [{"name": "media.play_playlist", "args": {"name": "workout"}}]}
+{"text": "put on my playlist party", "intents": [{"name": "media.play_playlist", "args": {"name": "party"}}]}
+{"text": "start playlist chill vibes", "intents": [{"name": "media.play_playlist", "args": {"name": "chill vibes"}}]}
+{"text": "start my playlist workout", "intents": [{"name": "media.play_playlist", "args": {"name": "workout"}}]}
+{"text": "put on liked songs", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "start liked songs", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "play favorites", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "play my saved songs", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "continue", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "keep playing", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "stop playback", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "halt the music", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "skip song", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "skip this", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "skip to next", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "skip to the next", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "go next", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "go to next", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "play the next one", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "forward", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "go back", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "go back one", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "go to previous", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "play previous", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "play the previous one", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "replay", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "back", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "open spotify and play the song kesariya", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_song", "args": {"title": "kesariya"}}]}
+{"text": "open spotify and play tum hi ho", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_song", "args": {"title": "tum hi ho"}}]}
+{"text": "open spotify and play fix you", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_song", "args": {"title": "fix you"}}]}
+{"text": "open spotify and play anti hero", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_song", "args": {"title": "anti hero"}}]}
+{"text": "open spotify and play closer", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_song", "args": {"title": "closer"}}]}
+{"text": "open spotify and play playlist focus", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_playlist", "args": {"name": "focus"}}]}
+{"text": "open spotify and play playlist drive", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_playlist", "args": {"name": "drive"}}]}
+{"text": "open spotify and play playlist indie", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_playlist", "args": {"name": "indie"}}]}
+{"text": "open spotify and play playlist edm", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_playlist", "args": {"name": "edm"}}]}
+{"text": "open spotify then play playlist morning vibes", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_playlist", "args": {"name": "morning vibes"}}]}
+{"text": "open spotify then play my favorites", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_liked", "args": {}}]}
+{"text": "open spotify and previous song", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.previous", "args": {}}]}
+{"text": "play the song kesariya and volume up", "intents": [{"name": "media.play_song", "args": {"title": "kesariya"}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "play tum hi ho and volume down", "intents": [{"name": "media.play_song", "args": {"title": "tum hi ho"}}, {"name": "volume.down", "args": {"by": 10}}]}
+{"text": "play fix you and set the volume to 40", "intents": [{"name": "media.play_song", "args": {"title": "fix you"}}, {"name": "volume.set", "args": {"level": 40}}]}
+{"text": "play liked songs and volume up 20", "intents": [{"name": "media.play_liked", "args": {}}, {"name": "volume.up", "args": {"by": 20}}]}
+{"text": "play playlist workout and volume up 30", "intents": [{"name": "media.play_playlist", "args": {"name": "workout"}}, {"name": "volume.up", "args": {"by": 30}}]}
+{"text": "play playlist chill vibes and set volume to 50", "intents": [{"name": "media.play_playlist", "args": {"name": "chill vibes"}}, {"name": "volume.set", "args": {"level": 50}}]}
+{"text": "next song and mute", "intents": [{"name": "media.next", "args": {}}, {"name": "volume.mute", "args": {}}]}
+{"text": "previous song and unmute", "intents": [{"name": "media.previous", "args": {}}, {"name": "volume.unmute", "args": {}}]}
+{"text": "pause and unmute", "intents": [{"name": "media.pause", "args": {}}, {"name": "volume.unmute", "args": {}}]}
+{"text": "resume and volume up", "intents": [{"name": "media.play", "args": {}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "play the song ve kamleya and increase brightness", "intents": [{"name": "media.play_song", "args": {"title": "ve kamleya"}}, {"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "play satranga and set brightness to 60", "intents": [{"name": "media.play_song", "args": {"title": "satranga"}}, {"name": "display.brightness_set", "args": {"level": 60}}]}
+{"text": "play heeriye and open notes", "intents": [{"name": "media.play_song", "args": {"title": "heeriye"}}, {"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "play the scientist and close chrome", "intents": [{"name": "media.play_song", "args": {"title": "the scientist"}}, {"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "play blank space and open vscode", "intents": [{"name": "media.play_song", "args": {"title": "blank space"}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "play liked songs and open notes", "intents": [{"name": "media.play_liked", "args": {}}, {"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "play playlist focus and open vscode", "intents": [{"name": "media.play_playlist", "args": {"name": "focus"}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "play playlist study and open vscode", "intents": [{"name": "media.play_playlist", "args": {"name": "study"}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "play some edm", "intents": [{"name": "media.play_playlist", "args": {"name": "edm"}}]}
+{"text": "play some indie", "intents": [{"name": "media.play_playlist", "args": {"name": "indie"}}]}
+{"text": "play some acoustic", "intents": [{"name": "media.play_playlist", "args": {"name": "acoustic"}}]}
+{"text": "play some pop", "intents": [{"name": "media.play_playlist", "args": {"name": "pop"}}]}
+{"text": "play some country", "intents": [{"name": "media.play_playlist", "args": {"name": "country"}}]}
+{"text": "play some metal", "intents": [{"name": "media.play_playlist", "args": {"name": "metal"}}]}
+{"text": "play some blues", "intents": [{"name": "media.play_playlist", "args": {"name": "blues"}}]}
+{"text": "play some funk", "intents": [{"name": "media.play_playlist", "args": {"name": "funk"}}]}
+{"text": "play some reggae", "intents": [{"name": "media.play_playlist", "args": {"name": "reggae"}}]}
+{"text": "play some disco", "intents": [{"name": "media.play_playlist", "args": {"name": "disco"}}]}
+{"text": "play some synthwave", "intents": [{"name": "media.play_playlist", "args": {"name": "synthwave"}}]}

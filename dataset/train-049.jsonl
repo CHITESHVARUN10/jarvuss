@@ -1,0 +1,72 @@
+{"text": "set the brightness to fifty five", "intents": [{"name": "display.brightness_set", "args": {"level": 55}}]}
+{"text": "set the brightness to sixty six", "intents": [{"name": "display.brightness_set", "args": {"level": 66}}]}
+{"text": "set the brightness to seventy seven", "intents": [{"name": "display.brightness_set", "args": {"level": 77}}]}
+{"text": "set the brightness to eighty eight", "intents": [{"name": "display.brightness_set", "args": {"level": 88}}]}
+{"text": "set the brightness to forty four", "intents": [{"name": "display.brightness_set", "args": {"level": 44}}]}
+{"text": "set the brightness to thirty three", "intents": [{"name": "display.brightness_set", "args": {"level": 33}}]}
+{"text": "set the brightness to twenty two", "intents": [{"name": "display.brightness_set", "args": {"level": 22}}]}
+{"text": "set the brightness to eleven", "intents": [{"name": "display.brightness_set", "args": {"level": 11}}]}
+{"text": "set the brightness to ninety nine", "intents": [{"name": "display.brightness_set", "args": {"level": 99}}]}
+{"text": "set the volume to fifty five", "intents": [{"name": "volume.set", "args": {"level": 55}}]}
+{"text": "set the volume to sixty six", "intents": [{"name": "volume.set", "args": {"level": 66}}]}
+{"text": "set the volume to seventy seven", "intents": [{"name": "volume.set", "args": {"level": 77}}]}
+{"text": "set the volume to eighty eight", "intents": [{"name": "volume.set", "args": {"level": 88}}]}
+{"text": "set the volume to forty four", "intents": [{"name": "volume.set", "args": {"level": 44}}]}
+{"text": "set the volume to thirty three", "intents": [{"name": "volume.set", "args": {"level": 33}}]}
+{"text": "set the volume to twenty two", "intents": [{"name": "volume.set", "args": {"level": 22}}]}
+{"text": "set the volume to eleven", "intents": [{"name": "volume.set", "args": {"level": 11}}]}
+{"text": "set the volume to ninety nine", "intents": [{"name": "volume.set", "args": {"level": 99}}]}
+{"text": "set the contrast to fifty five", "intents": [{"name": "display.contrast_set", "args": {"level": 55}}]}
+{"text": "set the contrast to sixty six", "intents": [{"name": "display.contrast_set", "args": {"level": 66}}]}
+{"text": "set the contrast to seventy seven", "intents": [{"name": "display.contrast_set", "args": {"level": 77}}]}
+{"text": "set the contrast to forty four", "intents": [{"name": "display.contrast_set", "args": {"level": 44}}]}
+{"text": "set the contrast to thirty three", "intents": [{"name": "display.contrast_set", "args": {"level": 33}}]}
+{"text": "set the contrast to twenty two", "intents": [{"name": "display.contrast_set", "args": {"level": 22}}]}
+{"text": "increase the brightness by twenty", "intents": [{"name": "display.brightness_up", "args": {"by": 20}}]}
+{"text": "increase the brightness by thirty", "intents": [{"name": "display.brightness_up", "args": {"by": 30}}]}
+{"text": "increase the brightness by forty", "intents": [{"name": "display.brightness_up", "args": {"by": 40}}]}
+{"text": "increase the brightness by fifteen", "intents": [{"name": "display.brightness_up", "args": {"by": 15}}]}
+{"text": "increase the brightness by twenty five", "intents": [{"name": "display.brightness_up", "args": {"by": 25}}]}
+{"text": "increase the brightness by five", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "decrease the brightness by twenty", "intents": [{"name": "display.brightness_down", "args": {"by": 20}}]}
+{"text": "decrease the brightness by thirty", "intents": [{"name": "display.brightness_down", "args": {"by": 30}}]}
+{"text": "decrease the brightness by fifteen", "intents": [{"name": "display.brightness_down", "args": {"by": 15}}]}
+{"text": "decrease the brightness by twenty five", "intents": [{"name": "display.brightness_down", "args": {"by": 25}}]}
+{"text": "decrease the brightness by five", "intents": [{"name": "display.brightness_down", "args": {"by": 5}}]}
+{"text": "increase the volume by twenty", "intents": [{"name": "volume.up", "args": {"by": 20}}]}
+{"text": "increase the volume by thirty", "intents": [{"name": "volume.up", "args": {"by": 30}}]}
+{"text": "increase the volume by fifteen", "intents": [{"name": "volume.up", "args": {"by": 15}}]}
+{"text": "increase the volume by twenty five", "intents": [{"name": "volume.up", "args": {"by": 25}}]}
+{"text": "increase the volume by five", "intents": [{"name": "volume.up", "args": {"by": 5}}]}
+{"text": "decrease the volume by twenty", "intents": [{"name": "volume.down", "args": {"by": 20}}]}
+{"text": "decrease the volume by thirty", "intents": [{"name": "volume.down", "args": {"by": 30}}]}
+{"text": "decrease the volume by fifteen", "intents": [{"name": "volume.down", "args": {"by": 15}}]}
+{"text": "decrease the volume by twenty five", "intents": [{"name": "volume.down", "args": {"by": 25}}]}
+{"text": "decrease the volume by five", "intents": [{"name": "volume.down", "args": {"by": 5}}]}
+{"text": "increase the contrast by twenty", "intents": [{"name": "display.contrast_up", "args": {"by": 20}}]}
+{"text": "increase the contrast by fifteen", "intents": [{"name": "display.contrast_up", "args": {"by": 15}}]}
+{"text": "decrease the contrast by twenty", "intents": [{"name": "display.contrast_down", "args": {"by": 20}}]}
+{"text": "decrease the contrast by fifteen", "intents": [{"name": "display.contrast_down", "args": {"by": 15}}]}
+{"text": "search the web for how to write a cover letter", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to write a cover letter"}}]}
+{"text": "search the web for best python books", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "best python books"}}]}
+{"text": "search the web for best horror movies", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "best horror movies"}}]}
+{"text": "search the web for top anime", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "top anime"}}]}
+{"text": "search the web for how to draw a face", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to draw a face"}}]}
+{"text": "search the web for how to sing better", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to sing better"}}]}
+{"text": "search youtube for how to draw a face", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "how to draw a face"}}]}
+{"text": "search youtube for how to sing better", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "how to sing better"}}]}
+{"text": "search youtube for best horror movies", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "best horror movies"}}]}
+{"text": "search youtube for top anime openings", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "top anime openings"}}]}
+{"text": "google how to write a cover letter", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to write a cover letter"}}]}
+{"text": "google best python books", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "best python books"}}]}
+{"text": "google best horror movies", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "best horror movies"}}]}
+{"text": "google how to draw a face", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to draw a face"}}]}
+{"text": "play song watermelon sugar", "intents": [{"name": "media.play_song", "args": {"title": "watermelon sugar"}}]}
+{"text": "play song drivers license", "intents": [{"name": "media.play_song", "args": {"title": "drivers license"}}]}
+{"text": "play song montero", "intents": [{"name": "media.play_song", "args": {"title": "montero"}}]}
+{"text": "what is the largest planet", "intents": [{"name": "ai.query", "args": {"text": "what is the largest planet"}}]}
+{"text": "what is the fastest car", "intents": [{"name": "ai.query", "args": {"text": "what is the fastest car"}}]}
+{"text": "who wrote the iliad", "intents": [{"name": "ai.query", "args": {"text": "who wrote the iliad"}}]}
+{"text": "who invented the radio", "intents": [{"name": "ai.query", "args": {"text": "who invented the radio"}}]}
+{"text": "explain how engines work", "intents": [{"name": "ai.query", "args": {"text": "explain how engines work"}}]}
+{"text": "explain how computers work", "intents": [{"name": "ai.query", "args": {"text": "explain how computers work"}}]}

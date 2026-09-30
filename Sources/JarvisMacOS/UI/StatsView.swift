@@ -105,66 +105,74 @@ struct StatsView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text("USAGE STATS")
-                    .font(.system(size: 11, weight: .bold, design: .monospaced))
-                    .tracking(2)
-                    .foregroundStyle(Color.white.opacity(0.5))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-                Spacer(minLength: 4)
-                Picker("", selection: $range) {
-                    ForEach(StatsRange.allCases, id: \.self) { r in
-                        Text(r.rawValue).tag(r)
-                    }
+            HStack(spacing: 8) {
+                Text("Usage")
+                    .font(JarvisType.title)
+                    .foregroundStyle(JarvisColor.textPrimary)
+
+                Spacer()
+
+                Button {
+                    Task { await refresh() }
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 10, weight: .semibold))
                 }
-                .pickerStyle(.segmented)
-                .frame(maxWidth: 150)
-                .clipped()
-                .onChange(of: range) { _ in Task { await refresh() } }
+                .buttonStyle(JarvisButtonStyle(color: JarvisColor.textSecondary, compact: true))
+                .help("Refresh usage stats")
             }
-            LazyVGrid(columns: [GridItem(.flexible(minimum: 40), spacing: 8), GridItem(.flexible(minimum: 40), spacing: 8)], spacing: 8) {
-                statCard("Talk time", value: formatDuration(summary.talkSecs), icon: "mic.fill")
-                statCard("Sessions", value: "\(summary.sessions)", icon: "waveform")
-                statCard("Words", value: "\(summary.chars / 5)", icon: "textformat")
-                statCard("Tokens in", value: "\(summary.tokensPrompt)", icon: "arrow.down.circle")
-                statCard("Tokens out", value: "\(summary.tokensCompletion)", icon: "arrow.up.circle")
-                statCard("Copies", value: "\(summary.copies)", icon: "doc.on.doc")
-                statCard("Commands", value: "\(summary.commandsRun)", icon: "bolt.fill")
-                statCard("Success", value: String(format: "%.0f%%", summary.successPct), icon: "checkmark.circle")
-                statCard("Time saved", value: formatDuration(summary.timeSavedSecs), icon: "clock.fill")
+
+            Picker("", selection: $range) {
+                ForEach(StatsRange.allCases, id: \.self) { r in
+                    Text(r.rawValue).tag(r)
+                }
             }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            // Fixed width: the segmented control's intrinsic width shifts with
+            // the selected segment (bold label), which resized the whole panel
+            // when switching Day/Week/Year/Lifetime. 260 = sidebar 300 − 2×20.
+            .frame(width: 260)
+            .onChange(of: range) { _ in Task { await refresh() } }
+
+            VStack(spacing: 0) {
+                statRow("Talk time", value: formatDuration(summary.talkSecs))
+                statRow("Sessions", value: "\(summary.sessions)")
+                statRow("Words", value: "\(summary.chars / 5)")
+                statRow("Tokens in", value: "\(summary.tokensPrompt)")
+                statRow("Tokens out", value: "\(summary.tokensCompletion)")
+                statRow("Copies", value: "\(summary.copies)")
+                statRow("Commands", value: "\(summary.commandsRun)")
+                statRow("Success", value: String(format: "%.0f%%", summary.successPct))
+                statRow("Time saved", value: formatDuration(summary.timeSavedSecs), isLast: true)
+            }
+
             if !buckets.isEmpty {
-                Text("BY DAY")
-                    .font(.system(size: 10, weight: .bold, design: .monospaced))
-                    .tracking(1.5)
-                    .foregroundStyle(Color.white.opacity(0.4))
+                Text("By day")
+                    .font(JarvisType.caption)
+                    .foregroundStyle(JarvisColor.textTertiary)
                 ForEach(buckets.suffix(7), id: \.day) { b in
                     VStack(alignment: .leading, spacing: 1) {
                         Text(b.day)
-                            .font(.system(size: 11, design: .monospaced))
-                            .foregroundStyle(Color.white.opacity(0.6))
+                            .font(JarvisType.dataSmall)
+                            .foregroundStyle(JarvisColor.textSecondary)
                             .lineLimit(1)
                         Text("\(b.sessions)sess · \(formatShortDuration(b.talkSecs)) · \(b.copies)⧉ · \(b.commandsRun)✓")
                             .font(.system(size: 10, design: .monospaced))
-                            .foregroundStyle(Color.white.opacity(0.45))
+                            .foregroundStyle(JarvisColor.textTertiary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.8)
                     }
                     .padding(.vertical, 2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
             } else {
                 Text("No usage yet — press ⌘⇧D and talk.")
-                    .font(.system(size: 11))
-                    .foregroundStyle(Color.white.opacity(0.35))
+                    .font(JarvisType.caption)
+                    .foregroundStyle(JarvisColor.textTertiary)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.white.opacity(0.04))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.white.opacity(0.08), lineWidth: 0.8))
         .task { await refresh() }
     }
 
@@ -175,29 +183,27 @@ struct StatsView: View {
         summary = StatsSummary.sum(list)
     }
 
-    private func statCard(_ label: String, value: String, icon: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 4) {
-                Image(systemName: icon)
-                    .font(.system(size: 9))
-                    .foregroundStyle(Color.white.opacity(0.35))
-                Text(label.uppercased())
-                    .font(.system(size: 8, weight: .bold, design: .monospaced))
-                    .tracking(0.8)
-                    .foregroundStyle(Color.white.opacity(0.4))
+    private func statRow(_ label: String, value: String, isLast: Bool = false) -> some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text(label)
+                    .font(JarvisType.caption)
+                    .foregroundStyle(JarvisColor.textSecondary)
+                Spacer()
+                Text(value)
+                    .font(JarvisType.dataSmall)
+                    .foregroundStyle(JarvisColor.textPrimary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
             }
-            Text(value)
-                .font(.system(size: 16, weight: .semibold, design: .monospaced))
-                .foregroundStyle(Color.white.opacity(0.9))
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
+            .padding(.vertical, 5)
+
+            if !isLast {
+                Rectangle()
+                    .fill(JarvisColor.hairline)
+                    .frame(height: 0.5)
+            }
         }
-        .padding(8)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.white.opacity(0.04))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
     private func formatDuration(_ secs: Double) -> String {

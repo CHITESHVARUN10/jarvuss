@@ -38,6 +38,12 @@ if str(BASE_DIR) not in sys.path:
 
 app = FastAPI(title="Jarvis Voice Auth Service", version="2.1.0")
 
+# Learned intent parser (t5-small int8 ONNX) — lazy-loaded on first request;
+# missing model degrades to 503 and the app falls back to the rule router.
+from intent_router_model import router as intent_router  # noqa: E402
+
+app.include_router(intent_router)
+
 # Encoder is initialised ONCE at startup — never reloaded.
 encoder = VoiceEncoder()
 

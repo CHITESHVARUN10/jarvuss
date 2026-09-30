@@ -1,0 +1,239 @@
+{"text": "set the contrast to 25", "intents": [{"name": "display.contrast_set", "args": {"level": 25}}]}
+{"text": "set contrast to 25", "intents": [{"name": "display.contrast_set", "args": {"level": 25}}]}
+{"text": "set contrast 25", "intents": [{"name": "display.contrast_set", "args": {"level": 25}}]}
+{"text": "contrast to 25", "intents": [{"name": "display.contrast_set", "args": {"level": 25}}]}
+{"text": "contrast at 25", "intents": [{"name": "display.contrast_set", "args": {"level": 25}}]}
+{"text": "set the contrast at 25", "intents": [{"name": "display.contrast_set", "args": {"level": 25}}]}
+{"text": "make the contrast 25", "intents": [{"name": "display.contrast_set", "args": {"level": 25}}]}
+{"text": "change contrast to 25", "intents": [{"name": "display.contrast_set", "args": {"level": 25}}]}
+{"text": "put the contrast to 25", "intents": [{"name": "display.contrast_set", "args": {"level": 25}}]}
+{"text": "set my contrast to 25", "intents": [{"name": "display.contrast_set", "args": {"level": 25}}]}
+{"text": "set the contrast to 25%", "intents": [{"name": "display.contrast_set", "args": {"level": 25}}]}
+{"text": "contrast 25 percent", "intents": [{"name": "display.contrast_set", "args": {"level": 25}}]}
+{"text": "can you set the contrast to 25", "intents": [{"name": "display.contrast_set", "args": {"level": 25}}]}
+{"text": "please set contrast to 25", "intents": [{"name": "display.contrast_set", "args": {"level": 25}}]}
+{"text": "set the contrast to 25 please", "intents": [{"name": "display.contrast_set", "args": {"level": 25}}]}
+{"text": "set the contrast to 25.", "intents": [{"name": "display.contrast_set", "args": {"level": 25}}]}
+{"text": "set contras to 25", "intents": [{"name": "display.contrast_set", "args": {"level": 25}}]}
+{"text": "set the contras to 25", "intents": [{"name": "display.contrast_set", "args": {"level": 25}}]}
+{"text": "set the contrast to 65", "intents": [{"name": "display.contrast_set", "args": {"level": 65}}]}
+{"text": "set contrast to 65", "intents": [{"name": "display.contrast_set", "args": {"level": 65}}]}
+{"text": "contrast to 65", "intents": [{"name": "display.contrast_set", "args": {"level": 65}}]}
+{"text": "set contrast 65", "intents": [{"name": "display.contrast_set", "args": {"level": 65}}]}
+{"text": "make the contrast 65", "intents": [{"name": "display.contrast_set", "args": {"level": 65}}]}
+{"text": "set my contrast to 65", "intents": [{"name": "display.contrast_set", "args": {"level": 65}}]}
+{"text": "set the contrast to 85", "intents": [{"name": "display.contrast_set", "args": {"level": 85}}]}
+{"text": "set contrast to 85", "intents": [{"name": "display.contrast_set", "args": {"level": 85}}]}
+{"text": "contrast 85", "intents": [{"name": "display.contrast_set", "args": {"level": 85}}]}
+{"text": "set the contrast to 15", "intents": [{"name": "display.contrast_set", "args": {"level": 15}}]}
+{"text": "set contrast to 15", "intents": [{"name": "display.contrast_set", "args": {"level": 15}}]}
+{"text": "contrast to 15", "intents": [{"name": "display.contrast_set", "args": {"level": 15}}]}
+{"text": "set the contrast to 40", "intents": [{"name": "display.contrast_set", "args": {"level": 40}}]}
+{"text": "set contrast to 40", "intents": [{"name": "display.contrast_set", "args": {"level": 40}}]}
+{"text": "set the contrast to 75", "intents": [{"name": "display.contrast_set", "args": {"level": 75}}]}
+{"text": "set contrast to 75", "intents": [{"name": "display.contrast_set", "args": {"level": 75}}]}
+{"text": "set the contrast to 90", "intents": [{"name": "display.contrast_set", "args": {"level": 90}}]}
+{"text": "set contrast to 90", "intents": [{"name": "display.contrast_set", "args": {"level": 90}}]}
+{"text": "set the contrast to 100", "intents": [{"name": "display.contrast_set", "args": {"level": 100}}]}
+{"text": "set contrast to 100", "intents": [{"name": "display.contrast_set", "args": {"level": 100}}]}
+{"text": "max the contrast", "intents": [{"name": "display.contrast_set", "args": {"level": 100}}]}
+{"text": "set the contrast to 0", "intents": [{"name": "display.contrast_set", "args": {"level": 0}}]}
+{"text": "set contrast to 0", "intents": [{"name": "display.contrast_set", "args": {"level": 0}}]}
+{"text": "set the contrast to 200", "intents": [{"name": "display.contrast_set", "args": {"level": 200}}]}
+{"text": "set contrast to 200", "intents": [{"name": "display.contrast_set", "args": {"level": 200}}]}
+{"text": "increase the contrast by 5", "intents": [{"name": "display.contrast_up", "args": {"by": 5}}]}
+{"text": "increase contrast by 5", "intents": [{"name": "display.contrast_up", "args": {"by": 5}}]}
+{"text": "increase contrast 5", "intents": [{"name": "display.contrast_up", "args": {"by": 5}}]}
+{"text": "contrast up by 5", "intents": [{"name": "display.contrast_up", "args": {"by": 5}}]}
+{"text": "contrast up 5", "intents": [{"name": "display.contrast_up", "args": {"by": 5}}]}
+{"text": "raise the contrast by 5", "intents": [{"name": "display.contrast_up", "args": {"by": 5}}]}
+{"text": "raise contrast 5", "intents": [{"name": "display.contrast_up", "args": {"by": 5}}]}
+{"text": "turn up the contrast by 5", "intents": [{"name": "display.contrast_up", "args": {"by": 5}}]}
+{"text": "bump the contrast by 5", "intents": [{"name": "display.contrast_up", "args": {"by": 5}}]}
+{"text": "increase the contrast by 10", "intents": [{"name": "display.contrast_up", "args": {"by": 10}}]}
+{"text": "increase contrast by 10", "intents": [{"name": "display.contrast_up", "args": {"by": 10}}]}
+{"text": "increase contrast 10", "intents": [{"name": "display.contrast_up", "args": {"by": 10}}]}
+{"text": "contrast up 10", "intents": [{"name": "display.contrast_up", "args": {"by": 10}}]}
+{"text": "contrast up by 10", "intents": [{"name": "display.contrast_up", "args": {"by": 10}}]}
+{"text": "raise the contrast by 10", "intents": [{"name": "display.contrast_up", "args": {"by": 10}}]}
+{"text": "turn up contrast 10", "intents": [{"name": "display.contrast_up", "args": {"by": 10}}]}
+{"text": "increase the contrast by 15", "intents": [{"name": "display.contrast_up", "args": {"by": 15}}]}
+{"text": "increase contrast by 15", "intents": [{"name": "display.contrast_up", "args": {"by": 15}}]}
+{"text": "contrast up 15", "intents": [{"name": "display.contrast_up", "args": {"by": 15}}]}
+{"text": "raise the contrast 15", "intents": [{"name": "display.contrast_up", "args": {"by": 15}}]}
+{"text": "increase the contrast by 20", "intents": [{"name": "display.contrast_up", "args": {"by": 20}}]}
+{"text": "increase contrast by 20", "intents": [{"name": "display.contrast_up", "args": {"by": 20}}]}
+{"text": "contrast up 20", "intents": [{"name": "display.contrast_up", "args": {"by": 20}}]}
+{"text": "increase the contrast", "intents": [{"name": "display.contrast_up", "args": {"by": 10}}]}
+{"text": "increase contrast", "intents": [{"name": "display.contrast_up", "args": {"by": 10}}]}
+{"text": "contrast up", "intents": [{"name": "display.contrast_up", "args": {"by": 10}}]}
+{"text": "raise the contrast", "intents": [{"name": "display.contrast_up", "args": {"by": 10}}]}
+{"text": "make contrast higher", "intents": [{"name": "display.contrast_up", "args": {"by": 10}}]}
+{"text": "make the contrast higher", "intents": [{"name": "display.contrast_up", "args": {"by": 10}}]}
+{"text": "turn up the contrast", "intents": [{"name": "display.contrast_up", "args": {"by": 10}}]}
+{"text": "can you increase the contrast", "intents": [{"name": "display.contrast_up", "args": {"by": 10}}]}
+{"text": "contrast plus 10", "intents": [{"name": "display.contrast_up", "args": {"by": 10}}]}
+{"text": "contrast minus 10", "intents": [{"name": "display.contrast_down", "args": {"by": 10}}]}
+{"text": "decrease the contrast by 5", "intents": [{"name": "display.contrast_down", "args": {"by": 5}}]}
+{"text": "decrease contrast by 5", "intents": [{"name": "display.contrast_down", "args": {"by": 5}}]}
+{"text": "lower contrast by 5", "intents": [{"name": "display.contrast_down", "args": {"by": 5}}]}
+{"text": "contrast down 5", "intents": [{"name": "display.contrast_down", "args": {"by": 5}}]}
+{"text": "reduce the contrast by 5", "intents": [{"name": "display.contrast_down", "args": {"by": 5}}]}
+{"text": "decrease the contrast by 10", "intents": [{"name": "display.contrast_down", "args": {"by": 10}}]}
+{"text": "decrease contrast by 10", "intents": [{"name": "display.contrast_down", "args": {"by": 10}}]}
+{"text": "decrease contrast 10", "intents": [{"name": "display.contrast_down", "args": {"by": 10}}]}
+{"text": "contrast down by 10", "intents": [{"name": "display.contrast_down", "args": {"by": 10}}]}
+{"text": "contrast down 10", "intents": [{"name": "display.contrast_down", "args": {"by": 10}}]}
+{"text": "lower the contrast by 10", "intents": [{"name": "display.contrast_down", "args": {"by": 10}}]}
+{"text": "lower contrast 10", "intents": [{"name": "display.contrast_down", "args": {"by": 10}}]}
+{"text": "reduce the contrast by 10", "intents": [{"name": "display.contrast_down", "args": {"by": 10}}]}
+{"text": "turn down the contrast 10", "intents": [{"name": "display.contrast_down", "args": {"by": 10}}]}
+{"text": "decrease the contrast by 15", "intents": [{"name": "display.contrast_down", "args": {"by": 15}}]}
+{"text": "reduce the contrast 15", "intents": [{"name": "display.contrast_down", "args": {"by": 15}}]}
+{"text": "lower contrast by 15", "intents": [{"name": "display.contrast_down", "args": {"by": 15}}]}
+{"text": "decrease the contrast", "intents": [{"name": "display.contrast_down", "args": {"by": 10}}]}
+{"text": "decrease contrast", "intents": [{"name": "display.contrast_down", "args": {"by": 10}}]}
+{"text": "contrast down", "intents": [{"name": "display.contrast_down", "args": {"by": 10}}]}
+{"text": "lower the contrast", "intents": [{"name": "display.contrast_down", "args": {"by": 10}}]}
+{"text": "reduce the contrast", "intents": [{"name": "display.contrast_down", "args": {"by": 10}}]}
+{"text": "make the contrast lower", "intents": [{"name": "display.contrast_down", "args": {"by": 10}}]}
+{"text": "make contrast lower", "intents": [{"name": "display.contrast_down", "args": {"by": 10}}]}
+{"text": "turn down the contrast", "intents": [{"name": "display.contrast_down", "args": {"by": 10}}]}
+{"text": "can you decrease the contrast", "intents": [{"name": "display.contrast_down", "args": {"by": 10}}]}
+{"text": "volume up", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "volume up.", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "volume up please", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "turn up the volume", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "turn the volume up", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "turn volume up", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "increase the volume", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "increase volume", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "raise the volume", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "raise volume", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "make it louder", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "make the sound louder", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "make it a bit louder", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "louder", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "a bit louder", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "can you turn up the volume", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "please increase the volume", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "volume up by 5", "intents": [{"name": "volume.up", "args": {"by": 5}}]}
+{"text": "turn the volume up by 5", "intents": [{"name": "volume.up", "args": {"by": 5}}]}
+{"text": "increase the volume by 5", "intents": [{"name": "volume.up", "args": {"by": 5}}]}
+{"text": "raise volume 5", "intents": [{"name": "volume.up", "args": {"by": 5}}]}
+{"text": "volume up 5", "intents": [{"name": "volume.up", "args": {"by": 5}}]}
+{"text": "volume up by 10", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "volume up 10", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "increase the volume by 10", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "increase volume by 10", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "turn up the volume by 10", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "raise the volume by 10", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "volume up 15", "intents": [{"name": "volume.up", "args": {"by": 15}}]}
+{"text": "increase the volume by 15", "intents": [{"name": "volume.up", "args": {"by": 15}}]}
+{"text": "volume up by 20", "intents": [{"name": "volume.up", "args": {"by": 20}}]}
+{"text": "raise the volume by 20", "intents": [{"name": "volume.up", "args": {"by": 20}}]}
+{"text": "increase volume 20", "intents": [{"name": "volume.up", "args": {"by": 20}}]}
+{"text": "turn the volume up by 25", "intents": [{"name": "volume.up", "args": {"by": 25}}]}
+{"text": "volume up 25", "intents": [{"name": "volume.up", "args": {"by": 25}}]}
+{"text": "increase the volume by 30", "intents": [{"name": "volume.up", "args": {"by": 30}}]}
+{"text": "volume up 30", "intents": [{"name": "volume.up", "args": {"by": 30}}]}
+{"text": "volume down", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "volume down.", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "volume down please", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "turn down the volume", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "turn the volume down", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "turn volume down", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "decrease the volume", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "decrease volume", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "lower the volume", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "lower volume", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "reduce the volume", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "make it quieter", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "make the sound quieter", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "make it a bit quieter", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "quieter", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "a bit quieter", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "can you turn down the volume", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "volume down by 5", "intents": [{"name": "volume.down", "args": {"by": 5}}]}
+{"text": "turn the volume down by 5", "intents": [{"name": "volume.down", "args": {"by": 5}}]}
+{"text": "decrease the volume by 5", "intents": [{"name": "volume.down", "args": {"by": 5}}]}
+{"text": "volume down 5", "intents": [{"name": "volume.down", "args": {"by": 5}}]}
+{"text": "lower volume by 5", "intents": [{"name": "volume.down", "args": {"by": 5}}]}
+{"text": "volume down by 10", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "volume down 10", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "decrease the volume by 10", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "decrease volume 10", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "turn down the volume by 10", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "volume down 15", "intents": [{"name": "volume.down", "args": {"by": 15}}]}
+{"text": "lower the volume by 15", "intents": [{"name": "volume.down", "args": {"by": 15}}]}
+{"text": "volume down by 20", "intents": [{"name": "volume.down", "args": {"by": 20}}]}
+{"text": "lower the volume by 20", "intents": [{"name": "volume.down", "args": {"by": 20}}]}
+{"text": "decrease volume 20", "intents": [{"name": "volume.down", "args": {"by": 20}}]}
+{"text": "volume down 25", "intents": [{"name": "volume.down", "args": {"by": 25}}]}
+{"text": "volume down 30", "intents": [{"name": "volume.down", "args": {"by": 30}}]}
+{"text": "set the volume to 50", "intents": [{"name": "volume.set", "args": {"level": 50}}]}
+{"text": "set volume to 50", "intents": [{"name": "volume.set", "args": {"level": 50}}]}
+{"text": "set volume 50", "intents": [{"name": "volume.set", "args": {"level": 50}}]}
+{"text": "volume to 50", "intents": [{"name": "volume.set", "args": {"level": 50}}]}
+{"text": "volume at 50", "intents": [{"name": "volume.set", "args": {"level": 50}}]}
+{"text": "set the volume at 50", "intents": [{"name": "volume.set", "args": {"level": 50}}]}
+{"text": "make the volume 50", "intents": [{"name": "volume.set", "args": {"level": 50}}]}
+{"text": "set my volume to 50", "intents": [{"name": "volume.set", "args": {"level": 50}}]}
+{"text": "change the volume to 50", "intents": [{"name": "volume.set", "args": {"level": 50}}]}
+{"text": "put the volume to 50", "intents": [{"name": "volume.set", "args": {"level": 50}}]}
+{"text": "set the volume to 50%", "intents": [{"name": "volume.set", "args": {"level": 50}}]}
+{"text": "volume 50 percent", "intents": [{"name": "volume.set", "args": {"level": 50}}]}
+{"text": "can you set the volume to 50", "intents": [{"name": "volume.set", "args": {"level": 50}}]}
+{"text": "please set volume to 50", "intents": [{"name": "volume.set", "args": {"level": 50}}]}
+{"text": "set the volume to fifty", "intents": [{"name": "volume.set", "args": {"level": 50}}]}
+{"text": "set the volume to 20", "intents": [{"name": "volume.set", "args": {"level": 20}}]}
+{"text": "set volume to 20", "intents": [{"name": "volume.set", "args": {"level": 20}}]}
+{"text": "volume to 20", "intents": [{"name": "volume.set", "args": {"level": 20}}]}
+{"text": "set the volume to 30", "intents": [{"name": "volume.set", "args": {"level": 30}}]}
+{"text": "set volume to 30", "intents": [{"name": "volume.set", "args": {"level": 30}}]}
+{"text": "volume 30", "intents": [{"name": "volume.set", "args": {"level": 30}}]}
+{"text": "set the volume to 40", "intents": [{"name": "volume.set", "args": {"level": 40}}]}
+{"text": "set volume to 40", "intents": [{"name": "volume.set", "args": {"level": 40}}]}
+{"text": "set the volume to 60", "intents": [{"name": "volume.set", "args": {"level": 60}}]}
+{"text": "set volume to 60", "intents": [{"name": "volume.set", "args": {"level": 60}}]}
+{"text": "set the volume to 70", "intents": [{"name": "volume.set", "args": {"level": 70}}]}
+{"text": "set volume to 70", "intents": [{"name": "volume.set", "args": {"level": 70}}]}
+{"text": "set the volume to 80", "intents": [{"name": "volume.set", "args": {"level": 80}}]}
+{"text": "volume to 80", "intents": [{"name": "volume.set", "args": {"level": 80}}]}
+{"text": "set the volume to 90", "intents": [{"name": "volume.set", "args": {"level": 90}}]}
+{"text": "set volume to 90", "intents": [{"name": "volume.set", "args": {"level": 90}}]}
+{"text": "set the volume to 100", "intents": [{"name": "volume.set", "args": {"level": 100}}]}
+{"text": "set volume to 100", "intents": [{"name": "volume.set", "args": {"level": 100}}]}
+{"text": "max the volume", "intents": [{"name": "volume.set", "args": {"level": 100}}]}
+{"text": "max out the volume", "intents": [{"name": "volume.set", "args": {"level": 100}}]}
+{"text": "set the volume to 0", "intents": [{"name": "volume.set", "args": {"level": 0}}]}
+{"text": "set volume to 0", "intents": [{"name": "volume.set", "args": {"level": 0}}]}
+{"text": "set the volume to 250", "intents": [{"name": "volume.set", "args": {"level": 250}}]}
+{"text": "mute", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "mute.", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "mute please", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "mute the sound", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "mute the volume", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "mute the audio", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "mute sound", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "sound off", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "turn the sound off", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "silence", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "silence the sound", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "can you mute", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "please mute", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "unmute", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "unmute.", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "unmute the sound", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "unmute the volume", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "unmute the audio", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "sound on", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "turn the sound on", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "can you unmute", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "volum up 10", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "volue up", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "set volue to 40", "intents": [{"name": "volume.set", "args": {"level": 40}}]}
+{"text": "increse the volume by 5", "intents": [{"name": "volume.up", "args": {"by": 5}}]}
+{"text": "volum down", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "um volume up", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "uh mute", "intents": [{"name": "volume.mute", "args": {}}]}

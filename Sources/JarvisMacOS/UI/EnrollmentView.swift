@@ -32,157 +32,158 @@ struct EnrollmentView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Header
             HStack(spacing: 6) {
                 Image(systemName: "person.wave.2.fill")
                     .font(.system(size: 12))
-                    .foregroundStyle(Color(red: 0.75, green: 0.55, blue: 1.0))
-                Text("VOICE ENROLLMENT")
-                    .font(.system(size: 9, weight: .bold, design: .monospaced))
-                    .tracking(2)
-                    .foregroundStyle(Color(red: 0.75, green: 0.55, blue: 1.0).opacity(0.8))
+                    .foregroundStyle(JarvisColor.accent)
+                Text("Voice enrollment")
+                    .font(JarvisType.title)
+                    .foregroundStyle(JarvisColor.textPrimary)
                 Spacer()
                 enrollmentBadge
             }
 
             if appState.enrollmentCompleted && appState.voiceProfileReady {
-                // Complete state
                 HStack(spacing: 8) {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(Color(red: 0.25, green: 0.90, blue: 0.65))
+                        .foregroundStyle(JarvisColor.ok)
                     Text("Voice profile ready")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(Color.white.opacity(0.7))
+                        .font(JarvisType.body)
+                        .foregroundStyle(JarvisColor.textSecondary)
                 }
 
-                // Total samples
                 HStack {
                     Text("Total samples")
-                        .font(.system(size: 10))
-                        .foregroundStyle(Color.white.opacity(0.4))
+                        .font(JarvisType.caption)
+                        .foregroundStyle(JarvisColor.textSecondary)
                     Spacer()
                     Text("\(totalSamplesCollected)/\(totalSamplesRequired)")
-                        .font(.system(size: 10, weight: .bold, design: .monospaced))
-                        .foregroundStyle(Color(red: 0.25, green: 0.90, blue: 0.65))
+                        .font(JarvisType.dataSmall)
+                        .foregroundStyle(JarvisColor.ok)
                 }
             } else {
-                // Progress section
                 VStack(alignment: .leading, spacing: 6) {
 
-                    // Layer status badges
                     HStack(spacing: 6) {
                         layerBadge(layer: 1, complete: layer1Complete)
                         layerBadge(layer: 2, complete: appState.enrollmentCompleted)
                     }
 
-                    // Total progress bar
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
                             Text("Phrase \(min(appState.enrollmentIndex + 1, totalSteps))/\(totalSteps)")
-                                .font(.system(size: 10, design: .monospaced))
-                                .foregroundStyle(Color.white.opacity(0.45))
+                                .font(JarvisType.dataSmall)
+                                .foregroundStyle(JarvisColor.textSecondary)
                             Spacer()
                             Text("Rep \(appState.enrollmentCurrentPhraseMatchCount)/\(appState.enrollmentRequiredMatchesPerPhrase)")
-                                .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                                .foregroundStyle(Color(red: 0.75, green: 0.55, blue: 1.0))
+                                .font(JarvisType.dataSmall)
+                                .foregroundStyle(JarvisColor.accent)
                         }
 
                         GeometryReader { geo in
                             ZStack(alignment: .leading) {
-                                RoundedRectangle(cornerRadius: 3)
-                                    .fill(Color.white.opacity(0.07))
-                                    .frame(height: 5)
-                                RoundedRectangle(cornerRadius: 3)
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [
-                                                Color(red: 0.55, green: 0.55, blue: 1.0),
-                                                Color(red: 0.75, green: 0.35, blue: 1.0)
-                                            ],
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        )
-                                    )
-                                    .frame(width: geo.size.width * progress, height: 5)
+                                Capsule()
+                                    .fill(JarvisColor.surfaceRaised)
+                                    .frame(height: 4)
+                                Capsule()
+                                    .fill(JarvisColor.accent)
+                                    .frame(width: geo.size.width * progress, height: 4)
                                     .animation(.easeOut(duration: 0.4), value: progress)
                             }
                         }
-                        .frame(height: 5)
+                        .frame(height: 4)
                     }
 
-                    // Total samples collected
                     HStack {
                         Text("Samples")
-                            .font(.system(size: 9, design: .monospaced))
-                            .foregroundStyle(Color.white.opacity(0.35))
+                            .font(JarvisType.caption)
+                            .foregroundStyle(JarvisColor.textTertiary)
                         Spacer()
                         Text("\(totalSamplesCollected)/\(totalSamplesRequired)")
-                            .font(.system(size: 10, weight: .bold, design: .monospaced))
-                            .foregroundStyle(Color(red: 0.55, green: 0.55, blue: 1.0))
+                            .font(JarvisType.dataSmall)
+                            .foregroundStyle(JarvisColor.accent)
                     }
 
-                    // Current phrase
                     if appState.enrollmentActive {
                         Text(appState.currentEnrollmentPhrase)
-                            .font(.system(size: 12, weight: .medium, design: .default))
-                            .foregroundStyle(Color.white.opacity(0.80))
+                            .font(JarvisType.body)
+                            .foregroundStyle(JarvisColor.textPrimary)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 7)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color(red: 0.55, green: 0.45, blue: 1.0).opacity(0.12))
-                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                            .background(
+                                RoundedRectangle(cornerRadius: JarvisRadius.sm, style: .continuous)
+                                    .fill(JarvisColor.accent.opacity(0.10))
+                            )
                             .overlay(
-                                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                    .strokeBorder(Color(red: 0.55, green: 0.45, blue: 1.0).opacity(0.25), lineWidth: 1)
+                                RoundedRectangle(cornerRadius: JarvisRadius.sm, style: .continuous)
+                                    .strokeBorder(JarvisColor.accent.opacity(0.22), lineWidth: 1)
                             )
 
-                        // Score badge
                         if appState.latestEnrollmentScore > 0 {
                             HStack(spacing: 6) {
-                                Text("Last score:")
-                                    .font(.system(size: 9, design: .monospaced))
-                                    .foregroundStyle(Color.white.opacity(0.35))
+                                Text("Last score")
+                                    .font(JarvisType.caption)
+                                    .foregroundStyle(JarvisColor.textTertiary)
                                 Text(String(format: "%.2f", appState.latestEnrollmentScore))
-                                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                    .font(JarvisType.dataSmall)
                                     .foregroundStyle(scoreColor(appState.latestEnrollmentScore))
                                 Spacer()
-                                Text("Attempts: \(appState.enrollmentAttemptCount)")
-                                    .font(.system(size: 9, design: .monospaced))
-                                    .foregroundStyle(Color.white.opacity(0.30))
+                                Text("Attempts \(appState.enrollmentAttemptCount)")
+                                    .font(JarvisType.dataSmall)
+                                    .foregroundStyle(JarvisColor.textTertiary)
                             }
                         }
                     }
                 }
 
-                // Control buttons
-                HStack(spacing: 8) {
-                    Button {
-                        appState.startEnrollment()
-                    } label: {
-                        Label("Start", systemImage: "play.fill")
-                            .font(.system(size: 11, weight: .semibold))
-                    }
-                    .disabled(!appState.micActive || appState.enrollmentActive)
-                    .buttonStyle(JarvisButtonStyle(color: Color(red: 0.55, green: 0.45, blue: 1.0), compact: true))
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 8) {
+                        Button {
+                            appState.startEnrollment()
+                        } label: {
+                            Label("Start", systemImage: "play.fill")
+                        }
+                        .disabled(!appState.micActive || appState.enrollmentActive)
+                        .buttonStyle(JarvisButtonStyle(color: JarvisColor.accent, compact: true))
 
-                    Button {
-                        appState.stopEnrollment()
-                    } label: {
-                        Label("Stop", systemImage: "stop.fill")
-                            .font(.system(size: 11, weight: .semibold))
-                    }
-                    .disabled(!appState.enrollmentActive)
-                    .buttonStyle(JarvisButtonStyle(color: Color(red: 0.75, green: 0.25, blue: 0.45), compact: true))
+                        Button {
+                            appState.stopEnrollment()
+                        } label: {
+                            Label("Stop", systemImage: "stop.fill")
+                        }
+                        .disabled(!appState.enrollmentActive)
+                        .buttonStyle(JarvisButtonStyle(color: JarvisColor.danger, compact: true))
 
-                    Button {
-                        appState.resetVoiceProfile()
-                    } label: {
-                        Label("Reset", systemImage: "trash.fill")
-                            .font(.system(size: 11, weight: .semibold))
+                        Spacer()
                     }
-                    .disabled(appState.enrollmentActive)
-                    .buttonStyle(JarvisButtonStyle(color: Color(red: 0.55, green: 0.55, blue: 0.60), compact: true))
-                    .help("Clear stored voice embeddings (POST /reset) so the next enrollment starts from 0")
+
+                    HStack(spacing: 8) {
+                        Button {
+                            appState.retrainVoiceProfile()
+                        } label: {
+                            Label("Retrain voice", systemImage: "arrow.triangle.2.circlepath")
+                        }
+                        .disabled(!appState.micActive || appState.enrollmentActive)
+                        .buttonStyle(JarvisButtonStyle(color: JarvisColor.attention, compact: true))
+                        .help("Deletes ALL stored voice samples, then starts a fresh enrollment so only the new samples are used")
+
+                        Button {
+                            appState.resetVoiceProfile()
+                        } label: {
+                            Label("Clear", systemImage: "trash.fill")
+                        }
+                        .disabled(appState.enrollmentActive)
+                        .buttonStyle(JarvisButtonStyle(color: JarvisColor.textSecondary, compact: true))
+                        .help("Clear stored voice embeddings (POST /reset) without starting a new enrollment")
+
+                        Spacer()
+                    }
+
+                    Text("Retrain wipes old samples first — verify against the new enrollment only.")
+                        .font(JarvisType.micro)
+                        .foregroundStyle(JarvisColor.textTertiary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
         }
@@ -196,22 +197,16 @@ struct EnrollmentView: View {
         HStack(spacing: 4) {
             Image(systemName: complete ? "checkmark.circle.fill" : "circle")
                 .font(.system(size: 8))
-                .foregroundStyle(complete
-                    ? Color(red: 0.25, green: 0.90, blue: 0.65)
-                    : Color.white.opacity(0.30))
+                .foregroundStyle(complete ? JarvisColor.ok : JarvisColor.textTertiary)
             Text("Layer \(layer)")
-                .font(.system(size: 8, weight: .bold, design: .monospaced))
-                .foregroundStyle(complete
-                    ? Color(red: 0.25, green: 0.90, blue: 0.65).opacity(0.8)
-                    : Color.white.opacity(0.35))
+                .font(JarvisType.dataSmall)
+                .foregroundStyle(complete ? JarvisColor.ok : JarvisColor.textTertiary)
         }
         .padding(.horizontal, 6)
         .padding(.vertical, 3)
         .background(
             RoundedRectangle(cornerRadius: 5, style: .continuous)
-                .fill(complete
-                    ? Color(red: 0.25, green: 0.90, blue: 0.65).opacity(0.10)
-                    : Color.white.opacity(0.04))
+                .fill(complete ? JarvisColor.ok.opacity(0.10) : JarvisColor.surface)
         )
     }
 
@@ -220,52 +215,27 @@ struct EnrollmentView: View {
     @ViewBuilder
     private var enrollmentBadge: some View {
         if appState.enrollmentActive {
-            Text("TRAINING")
-                .font(.system(size: 8, weight: .bold, design: .monospaced))
-                .tracking(1.5)
-                .foregroundStyle(Color(red: 1.0, green: 0.78, blue: 0.2))
+            Text("Training")
+                .font(JarvisType.dataSmall)
+                .foregroundStyle(JarvisColor.attention)
                 .padding(.horizontal, 7)
                 .padding(.vertical, 3)
-                .background(Color(red: 1.0, green: 0.78, blue: 0.2).opacity(0.15))
+                .background(JarvisColor.attention.opacity(0.12))
                 .clipShape(Capsule())
         } else if appState.enrollmentCompleted {
-            Text("DONE")
-                .font(.system(size: 8, weight: .bold, design: .monospaced))
-                .tracking(1.5)
-                .foregroundStyle(Color(red: 0.25, green: 0.90, blue: 0.65))
+            Text("Done")
+                .font(JarvisType.dataSmall)
+                .foregroundStyle(JarvisColor.ok)
                 .padding(.horizontal, 7)
                 .padding(.vertical, 3)
-                .background(Color(red: 0.25, green: 0.90, blue: 0.65).opacity(0.15))
+                .background(JarvisColor.ok.opacity(0.12))
                 .clipShape(Capsule())
         }
     }
 
     private func scoreColor(_ score: Double) -> Color {
-        if score >= 0.7 { return Color(red: 0.25, green: 0.90, blue: 0.65) }
-        if score >= 0.48 { return Color(red: 1.0, green: 0.78, blue: 0.2) }
-        return Color(red: 1.0, green: 0.40, blue: 0.55)
-    }
-}
-
-// MARK: - Shared button style
-struct JarvisButtonStyle: ButtonStyle {
-    let color: Color
-    var compact: Bool = false
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .foregroundStyle(configuration.isPressed ? color.opacity(0.6) : color)
-            .padding(.horizontal, compact ? 10 : 14)
-            .padding(.vertical, compact ? 6 : 9)
-            .background(
-                RoundedRectangle(cornerRadius: compact ? 8 : 10, style: .continuous)
-                    .fill(color.opacity(configuration.isPressed ? 0.20 : 0.12))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: compact ? 8 : 10, style: .continuous)
-                    .strokeBorder(color.opacity(0.30), lineWidth: 1)
-            )
-            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
-            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
+        if score >= 0.7 { return JarvisColor.ok }
+        if score >= 0.48 { return JarvisColor.attention }
+        return JarvisColor.danger
     }
 }

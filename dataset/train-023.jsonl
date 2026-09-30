@@ -1,0 +1,147 @@
+{"text": "search youtube for guitar solo", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "guitar solo"}}]}
+{"text": "search for guitar solo on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "guitar solo"}}]}
+{"text": "search on youtube for guitar solo", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "guitar solo"}}]}
+{"text": "search youtube for drum solo", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "drum solo"}}]}
+{"text": "search for drum solo on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "drum solo"}}]}
+{"text": "search youtube for piano covers", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "piano covers"}}]}
+{"text": "search for piano covers on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "piano covers"}}]}
+{"text": "search youtube for violin covers", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "violin covers"}}]}
+{"text": "search youtube for edm mix", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "edm mix"}}]}
+{"text": "search for edm mix on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "edm mix"}}]}
+{"text": "search youtube for trap music", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "trap music"}}]}
+{"text": "search youtube for jazz saxophone", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jazz saxophone"}}]}
+{"text": "search youtube for stand up comedy full show", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "stand up comedy full show"}}]}
+{"text": "search for stand up comedy full show on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "stand up comedy full show"}}]}
+{"text": "search youtube for prank videos", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "prank videos"}}]}
+{"text": "search youtube for unboxing videos", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "unboxing videos"}}]}
+{"text": "search for unboxing videos on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "unboxing videos"}}]}
+{"text": "search youtube for iphone unboxing", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "iphone unboxing"}}]}
+{"text": "search youtube for laptop review", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "laptop review"}}]}
+{"text": "search for laptop review on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "laptop review"}}]}
+{"text": "search youtube for camera review", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "camera review"}}]}
+{"text": "search youtube for coding tutorial", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "coding tutorial"}}]}
+{"text": "search for coding tutorial on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "coding tutorial"}}]}
+{"text": "search youtube for swift tutorial", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "swift tutorial"}}]}
+{"text": "search youtube for rust tutorial", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "rust tutorial"}}]}
+{"text": "search youtube for java tutorial", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "java tutorial"}}]}
+{"text": "search youtube for javascript tutorial", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "javascript tutorial"}}]}
+{"text": "search for javascript tutorial on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "javascript tutorial"}}]}
+{"text": "search youtube for machine learning course", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "machine learning course"}}]}
+{"text": "search youtube for drawing tutorial", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "drawing tutorial"}}]}
+{"text": "search youtube for painting tutorial", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "painting tutorial"}}]}
+{"text": "search youtube for makeup tutorial", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "makeup tutorial"}}]}
+{"text": "search for makeup tutorial on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "makeup tutorial"}}]}
+{"text": "search youtube for hair tutorial", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "hair tutorial"}}]}
+{"text": "search youtube for origami tutorial", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "origami tutorial"}}]}
+{"text": "search youtube for magic tricks", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "magic tricks"}}]}
+{"text": "search for magic tricks on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "magic tricks"}}]}
+{"text": "search youtube for card tricks", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "card tricks"}}]}
+{"text": "search youtube for science experiments", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "science experiments"}}]}
+{"text": "search youtube for space documentary", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "space documentary"}}]}
+{"text": "search for space documentary on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "space documentary"}}]}
+{"text": "search youtube for nature documentary", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "nature documentary"}}]}
+{"text": "search youtube for history documentary", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "history documentary"}}]}
+{"text": "search youtube for true crime", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "true crime"}}]}
+{"text": "search youtube for horror stories", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "horror stories"}}]}
+{"text": "search for horror stories on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "horror stories"}}]}
+{"text": "search youtube for motivational speech", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "motivational speech"}}]}
+{"text": "search for motivational speech on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "motivational speech"}}]}
+{"text": "search youtube for ted talks", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "ted talks"}}]}
+{"text": "search youtube for podcast clips", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "podcast clips"}}]}
+{"text": "search youtube for news today india", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "news today india"}}]}
+{"text": "search youtube for live news", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "live news"}}]}
+{"text": "search the web for the price of bitcoin", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "the price of bitcoin"}}]}
+{"text": "google the price of bitcoin", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "the price of bitcoin"}}]}
+{"text": "search for the price of bitcoin", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "the price of bitcoin"}}]}
+{"text": "search the web for the price of silver", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "the price of silver"}}]}
+{"text": "search the web for gold rate today", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "gold rate today"}}]}
+{"text": "google gold rate today", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "gold rate today"}}]}
+{"text": "search the web for petrol price", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "petrol price"}}]}
+{"text": "search the web for dollar to rupee", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "dollar to rupee"}}]}
+{"text": "google dollar to rupee", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "dollar to rupee"}}]}
+{"text": "search the web for euro to dollar", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "euro to dollar"}}]}
+{"text": "search the web for pnr status", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "pnr status"}}]}
+{"text": "search the web for horoscope today", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "horoscope today"}}]}
+{"text": "google horoscope today", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "horoscope today"}}]}
+{"text": "search the web for lottery result", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "lottery result"}}]}
+{"text": "search the web for exam admit card", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "exam admit card"}}]}
+{"text": "search the web for syllabus of upsc", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "syllabus of upsc"}}]}
+{"text": "search the web for recipe for butter chicken", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "recipe for butter chicken"}}]}
+{"text": "google recipe for butter chicken", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "recipe for butter chicken"}}]}
+{"text": "search for recipe for butter chicken", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "recipe for butter chicken"}}]}
+{"text": "search the web for recipe for pasta", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "recipe for pasta"}}]}
+{"text": "search the web for recipe for chocolate cake", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "recipe for chocolate cake"}}]}
+{"text": "google recipe for chocolate cake", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "recipe for chocolate cake"}}]}
+{"text": "search the web for the nearest gas station", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "the nearest gas station"}}]}
+{"text": "google the nearest gas station", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "the nearest gas station"}}]}
+{"text": "search the web for the nearest hospital", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "the nearest hospital"}}]}
+{"text": "search the web for the nearest coffee shop", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "the nearest coffee shop"}}]}
+{"text": "google the nearest coffee shop", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "the nearest coffee shop"}}]}
+{"text": "search the web for doctors near me", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "doctors near me"}}]}
+{"text": "search the web for pharmacies near me", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "pharmacies near me"}}]}
+{"text": "search the web for gyms near me", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "gyms near me"}}]}
+{"text": "search the web for salons near me", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "salons near me"}}]}
+{"text": "search the web for how to make chai", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to make chai"}}]}
+{"text": "search the web for how to write a resume", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to write a resume"}}]}
+{"text": "google how to write a resume", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to write a resume"}}]}
+{"text": "search the web for how to impress in an interview", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to impress in an interview"}}]}
+{"text": "search the web for how to fix a leaky tap", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to fix a leaky tap"}}]}
+{"text": "search the web for how to change a tire", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to change a tire"}}]}
+{"text": "search the web for how to potty train a puppy", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to potty train a puppy"}}]}
+{"text": "search the web for how to grow tomatoes", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to grow tomatoes"}}]}
+{"text": "search the web for how to invest in stocks", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to invest in stocks"}}]}
+{"text": "google how to invest in stocks", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to invest in stocks"}}]}
+{"text": "search the web for what is chatgpt", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "what is chatgpt"}}]}
+{"text": "google what is chatgpt", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "what is chatgpt"}}]}
+{"text": "search the web for what is blockchain", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "what is blockchain"}}]}
+{"text": "search the web for what is quantum computing", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "what is quantum computing"}}]}
+{"text": "search for python decorators in brave", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "python decorators"}}]}
+{"text": "search python decorators in chrome", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "python decorators"}}]}
+{"text": "search for react hooks in brave", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "react hooks"}}]}
+{"text": "search react hooks in firefox", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "react hooks"}}]}
+{"text": "search for kubernetes tutorial in chrome", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "kubernetes tutorial"}}]}
+{"text": "search kubernetes tutorial in brave", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "kubernetes tutorial"}}]}
+{"text": "search for swift concurrency in chrome", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "swift concurrency"}}]}
+{"text": "search swift concurrency in brave", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "swift concurrency"}}]}
+{"text": "search for jailer 2 songs in youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jailer 2 songs"}}]}
+{"text": "search jailer 2 songs in youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jailer 2 songs"}}]}
+{"text": "search for animal songs in youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "animal songs"}}]}
+{"text": "search for jawan songs in youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jawan songs"}}]}
+{"text": "search for pathaan songs in youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "pathaan songs"}}]}
+{"text": "open youtube and search for guitar solo", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "guitar solo"}}]}
+{"text": "open youtube and search for piano covers", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "piano covers"}}]}
+{"text": "open youtube and search for edm mix", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "edm mix"}}]}
+{"text": "open youtube and search for tech review", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "tech review"}}]}
+{"text": "open youtube and search for space documentary", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "space documentary"}}]}
+{"text": "open youtube and search for motivational speech", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "motivational speech"}}]}
+{"text": "open google and search for the price of bitcoin", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "the price of bitcoin"}}]}
+{"text": "open google and search for recipe for butter chicken", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "recipe for butter chicken"}}]}
+{"text": "open google and search for the nearest hospital", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "the nearest hospital"}}]}
+{"text": "open google and search for how to write a resume", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to write a resume"}}]}
+{"text": "search youtube for bollywood mashup", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "bollywood mashup"}}]}
+{"text": "search for bollywood mashup on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "bollywood mashup"}}]}
+{"text": "search youtube for hindi mashup", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "hindi mashup"}}]}
+{"text": "search youtube for tamil rap", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "tamil rap"}}]}
+{"text": "search youtube for telugu mashup", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "telugu mashup"}}]}
+{"text": "search youtube for punjabi hits", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "punjabi hits"}}]}
+{"text": "search youtube for indie folk", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "indie folk"}}]}
+{"text": "search youtube for acoustic covers", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "acoustic covers"}}]}
+{"text": "search for acoustic covers on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "acoustic covers"}}]}
+{"text": "search youtube for lofi hip hop radio", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "lofi hip hop radio"}}]}
+{"text": "search youtube for asmr sleep", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "asmr sleep"}}]}
+{"text": "search for asmr sleep on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "asmr sleep"}}]}
+{"text": "search youtube for white noise", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "white noise"}}]}
+{"text": "search youtube for thunderstorm sounds", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "thunderstorm sounds"}}]}
+{"text": "search youtube for kids rhymes", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "kids rhymes"}}]}
+{"text": "search for kids rhymes on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "kids rhymes"}}]}
+{"text": "search youtube for cartoon episodes", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "cartoon episodes"}}]}
+{"text": "search the web for train running status", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "train running status"}}]}
+{"text": "search the web for movie reviews", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "movie reviews"}}]}
+{"text": "search the web for imdb rating", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "imdb rating"}}]}
+{"text": "search the web for book recommendations", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "book recommendations"}}]}
+{"text": "google book recommendations", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "book recommendations"}}]}
+{"text": "search the web for best podcasts", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "best podcasts"}}]}
+{"text": "search the web for language learning apps", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "language learning apps"}}]}
+{"text": "search the web for online courses", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "online courses"}}]}
+{"text": "search the web for free udemy courses", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "free udemy courses"}}]}
+{"text": "search the web for scholarship for students", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "scholarship for students"}}]}

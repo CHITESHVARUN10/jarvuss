@@ -1,0 +1,161 @@
+{"text": "hey open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "hey open chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "hey close whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "hey volume up", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "hey mute", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "hey play my liked songs", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "hey whats the time", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "ok open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "ok close whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "ok volume up", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "ok mute", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "ok play my liked songs", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "alright open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "alright volume up", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "yo open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "yo volume up", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "bro open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "dude open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "man open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "listen open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "look open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open spotify yeah", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open chrome yeah", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "volume up yeah", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "open spotify ok", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open chrome ok", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "volume up ok", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "open spotify uh huh", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close whatsapp uh huh", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "now open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "now close whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "now volume up", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "now mute", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "now play my liked songs", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "then open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "well close whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "so volume up", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "so mute", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "open the spotify would you please", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close the whatsapp would you please", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "turn up the volume would you please", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "mute would you please", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "play my liked songs would you please", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "increase the brightness would you please", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "set the brightness to 50 would you please", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "whats the time would you please", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "please would you open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "please would you close whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "please would you volume up", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "please would you mute", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "kindly open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "kindly close whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "kindly volume up", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "kindly mute", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "kindly play my liked songs", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "open spotify kindly", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close whatsapp kindly", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "would be great if you open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "it would be great if you could open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "would be nice if you could open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open spotify if thats ok", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close whatsapp if thats ok", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "spoitfy", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "notes", "intents": [{"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "music", "intents": [{"name": "app.open", "args": {"name": "Music"}}]}
+{"text": "firefox", "intents": [{"name": "app.open", "args": {"name": "Firefox"}}]}
+{"text": "finder", "intents": [{"name": "app.open", "args": {"name": "Finder"}}]}
+{"text": "calendar", "intents": [{"name": "app.open", "args": {"name": "Calendar"}}]}
+{"text": "messages", "intents": [{"name": "app.open", "args": {"name": "Messages"}}]}
+{"text": "mail", "intents": [{"name": "app.open", "args": {"name": "Mail"}}]}
+{"text": "maps", "intents": [{"name": "app.open", "args": {"name": "Maps"}}]}
+{"text": "settings", "intents": [{"name": "app.open", "args": {"name": "System Settings"}}]}
+{"text": "app store", "intents": [{"name": "app.open", "args": {"name": "App Store"}}]}
+{"text": "github desktop", "intents": [{"name": "app.open", "args": {"name": "GitHub Desktop"}}]}
+{"text": "telegram", "intents": [{"name": "app.open", "args": {"name": "Telegram"}}]}
+{"text": "slack", "intents": [{"name": "app.open", "args": {"name": "Slack"}}]}
+{"text": "notion", "intents": [{"name": "app.open", "args": {"name": "Notion"}}]}
+{"text": "figma", "intents": [{"name": "app.open", "args": {"name": "Figma"}}]}
+{"text": "obs", "intents": [{"name": "app.open", "args": {"name": "OBS"}}]}
+{"text": "open the app", "intents": [{"name": "ai.query", "args": {"text": "open the app"}}]}
+{"text": "open app", "intents": [{"name": "ai.query", "args": {"text": "open app"}}]}
+{"text": "close the app", "intents": [{"name": "ai.query", "args": {"text": "close the app"}}]}
+{"text": "play that song", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "play this song", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "play this", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "play that", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "pause this", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "stop this", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "next one", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "previous one", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "skip this one", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "go back to this one", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "increase brightness 5 percent", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "increase brightness 10 percent", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "increase brightness 15 percent", "intents": [{"name": "display.brightness_up", "args": {"by": 15}}]}
+{"text": "increase brightness 20 percent", "intents": [{"name": "display.brightness_up", "args": {"by": 20}}]}
+{"text": "increase brightness 25 percent", "intents": [{"name": "display.brightness_up", "args": {"by": 25}}]}
+{"text": "decrease brightness 5 percent", "intents": [{"name": "display.brightness_down", "args": {"by": 5}}]}
+{"text": "decrease brightness 10 percent", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "decrease brightness 15 percent", "intents": [{"name": "display.brightness_down", "args": {"by": 15}}]}
+{"text": "decrease brightness 20 percent", "intents": [{"name": "display.brightness_down", "args": {"by": 20}}]}
+{"text": "decrease brightness 25 percent", "intents": [{"name": "display.brightness_down", "args": {"by": 25}}]}
+{"text": "increase volume 5 percent", "intents": [{"name": "volume.up", "args": {"by": 5}}]}
+{"text": "increase volume 10 percent", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "increase volume 15 percent", "intents": [{"name": "volume.up", "args": {"by": 15}}]}
+{"text": "increase volume 20 percent", "intents": [{"name": "volume.up", "args": {"by": 20}}]}
+{"text": "increase volume 25 percent", "intents": [{"name": "volume.up", "args": {"by": 25}}]}
+{"text": "decrease volume 5 percent", "intents": [{"name": "volume.down", "args": {"by": 5}}]}
+{"text": "decrease volume 10 percent", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "decrease volume 15 percent", "intents": [{"name": "volume.down", "args": {"by": 15}}]}
+{"text": "decrease volume 20 percent", "intents": [{"name": "volume.down", "args": {"by": 20}}]}
+{"text": "decrease volume 25 percent", "intents": [{"name": "volume.down", "args": {"by": 25}}]}
+{"text": "increase contrast 5 percent", "intents": [{"name": "display.contrast_up", "args": {"by": 5}}]}
+{"text": "increase contrast 10 percent", "intents": [{"name": "display.contrast_up", "args": {"by": 10}}]}
+{"text": "decrease contrast 5 percent", "intents": [{"name": "display.contrast_down", "args": {"by": 5}}]}
+{"text": "decrease contrast 10 percent", "intents": [{"name": "display.contrast_down", "args": {"by": 10}}]}
+{"text": "set brightness to 50 percent", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "set volume to 50 percent", "intents": [{"name": "volume.set", "args": {"level": 50}}]}
+{"text": "set contrast to 50 percent", "intents": [{"name": "display.contrast_set", "args": {"level": 50}}]}
+{"text": "set brightness to 75 percent", "intents": [{"name": "display.brightness_set", "args": {"level": 75}}]}
+{"text": "set volume to 75 percent", "intents": [{"name": "volume.set", "args": {"level": 75}}]}
+{"text": "set brightness to 25 percent", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "set volume to 25 percent", "intents": [{"name": "volume.set", "args": {"level": 25}}]}
+{"text": "brightness to 50 percent", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "volume to 50 percent", "intents": [{"name": "volume.set", "args": {"level": 50}}]}
+{"text": "brightness to 75 percent", "intents": [{"name": "display.brightness_set", "args": {"level": 75}}]}
+{"text": "volume to 75 percent", "intents": [{"name": "volume.set", "args": {"level": 75}}]}
+{"text": "open spotify i said", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close whatsapp i said", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "volume up i said", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "mute i said", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "i told you to open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "i told you open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "as i said open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "like i said open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open spotify already", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close whatsapp already", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "volume up already", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "mute already", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "go on open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "go on close whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "go on volume up", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "come on open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open spotify my friend", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close whatsapp my friend", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "open spotify buddy", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open spotify mate", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "what i need is spotify open", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "what i want is spotify open", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "need spotify open", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "want spotify open", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "need whatsapp closed", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "want whatsapp closed", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "whats the time like right now", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "whats the time right now please", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "whats the date like right now", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "whats the date right now please", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "tell me the time right now", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "tell me the date right now", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "whats my battery like right now", "intents": [{"name": "info.battery", "args": {}}]}
+{"text": "whats the volume at like right now", "intents": [{"name": "info.volume", "args": {}}]}

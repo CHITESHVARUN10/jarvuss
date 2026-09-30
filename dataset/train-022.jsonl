@@ -1,0 +1,161 @@
+{"text": "set brightness 33", "intents": [{"name": "display.brightness_set", "args": {"level": 33}}]}
+{"text": "brightness 33", "intents": [{"name": "display.brightness_set", "args": {"level": 33}}]}
+{"text": "set the brightness to 44", "intents": [{"name": "display.brightness_set", "args": {"level": 44}}]}
+{"text": "set brightness 44", "intents": [{"name": "display.brightness_set", "args": {"level": 44}}]}
+{"text": "set the brightness to 66", "intents": [{"name": "display.brightness_set", "args": {"level": 66}}]}
+{"text": "set brightness 66", "intents": [{"name": "display.brightness_set", "args": {"level": 66}}]}
+{"text": "set brightness 77", "intents": [{"name": "display.brightness_set", "args": {"level": 77}}]}
+{"text": "set brightness 88", "intents": [{"name": "display.brightness_set", "args": {"level": 88}}]}
+{"text": "set the brightness to 11", "intents": [{"name": "display.brightness_set", "args": {"level": 11}}]}
+{"text": "set the brightness to 22", "intents": [{"name": "display.brightness_set", "args": {"level": 22}}]}
+{"text": "set brightness to 3", "intents": [{"name": "display.brightness_set", "args": {"level": 3}}]}
+{"text": "set brightness to 8", "intents": [{"name": "display.brightness_set", "args": {"level": 8}}]}
+{"text": "set brightness to 24", "intents": [{"name": "display.brightness_set", "args": {"level": 24}}]}
+{"text": "set brightness to 36", "intents": [{"name": "display.brightness_set", "args": {"level": 36}}]}
+{"text": "set brightness to 48", "intents": [{"name": "display.brightness_set", "args": {"level": 48}}]}
+{"text": "set brightness to 57", "intents": [{"name": "display.brightness_set", "args": {"level": 57}}]}
+{"text": "set brightness to 64", "intents": [{"name": "display.brightness_set", "args": {"level": 64}}]}
+{"text": "set brightness to 78", "intents": [{"name": "display.brightness_set", "args": {"level": 78}}]}
+{"text": "set brightness to 87", "intents": [{"name": "display.brightness_set", "args": {"level": 87}}]}
+{"text": "set brightness to 94", "intents": [{"name": "display.brightness_set", "args": {"level": 94}}]}
+{"text": "increase brightness by 3", "intents": [{"name": "display.brightness_up", "args": {"by": 3}}]}
+{"text": "increase brightness by 8", "intents": [{"name": "display.brightness_up", "args": {"by": 8}}]}
+{"text": "increase brightness by 13", "intents": [{"name": "display.brightness_up", "args": {"by": 13}}]}
+{"text": "increase brightness by 17", "intents": [{"name": "display.brightness_up", "args": {"by": 17}}]}
+{"text": "increase brightness by 23", "intents": [{"name": "display.brightness_up", "args": {"by": 23}}]}
+{"text": "increase brightness by 27", "intents": [{"name": "display.brightness_up", "args": {"by": 27}}]}
+{"text": "increase brightness by 33", "intents": [{"name": "display.brightness_up", "args": {"by": 33}}]}
+{"text": "increase brightness by 42", "intents": [{"name": "display.brightness_up", "args": {"by": 42}}]}
+{"text": "decrease brightness by 3", "intents": [{"name": "display.brightness_down", "args": {"by": 3}}]}
+{"text": "decrease brightness by 8", "intents": [{"name": "display.brightness_down", "args": {"by": 8}}]}
+{"text": "decrease brightness by 13", "intents": [{"name": "display.brightness_down", "args": {"by": 13}}]}
+{"text": "decrease brightness by 17", "intents": [{"name": "display.brightness_down", "args": {"by": 17}}]}
+{"text": "decrease brightness by 23", "intents": [{"name": "display.brightness_down", "args": {"by": 23}}]}
+{"text": "decrease brightness by 27", "intents": [{"name": "display.brightness_down", "args": {"by": 27}}]}
+{"text": "decrease brightness by 33", "intents": [{"name": "display.brightness_down", "args": {"by": 33}}]}
+{"text": "set the contrast to 33", "intents": [{"name": "display.contrast_set", "args": {"level": 33}}]}
+{"text": "set contrast 33", "intents": [{"name": "display.contrast_set", "args": {"level": 33}}]}
+{"text": "set contrast to 44", "intents": [{"name": "display.contrast_set", "args": {"level": 44}}]}
+{"text": "set contrast to 77", "intents": [{"name": "display.contrast_set", "args": {"level": 77}}]}
+{"text": "set contrast to 22", "intents": [{"name": "display.contrast_set", "args": {"level": 22}}]}
+{"text": "set contrast to 17", "intents": [{"name": "display.contrast_set", "args": {"level": 17}}]}
+{"text": "set contrast to 28", "intents": [{"name": "display.contrast_set", "args": {"level": 28}}]}
+{"text": "set contrast to 39", "intents": [{"name": "display.contrast_set", "args": {"level": 39}}]}
+{"text": "set contrast to 52", "intents": [{"name": "display.contrast_set", "args": {"level": 52}}]}
+{"text": "set contrast to 64", "intents": [{"name": "display.contrast_set", "args": {"level": 64}}]}
+{"text": "set contrast to 71", "intents": [{"name": "display.contrast_set", "args": {"level": 71}}]}
+{"text": "set contrast to 83", "intents": [{"name": "display.contrast_set", "args": {"level": 83}}]}
+{"text": "set contrast to 96", "intents": [{"name": "display.contrast_set", "args": {"level": 96}}]}
+{"text": "increase contrast by 3", "intents": [{"name": "display.contrast_up", "args": {"by": 3}}]}
+{"text": "increase contrast by 8", "intents": [{"name": "display.contrast_up", "args": {"by": 8}}]}
+{"text": "increase contrast by 13", "intents": [{"name": "display.contrast_up", "args": {"by": 13}}]}
+{"text": "increase contrast by 17", "intents": [{"name": "display.contrast_up", "args": {"by": 17}}]}
+{"text": "increase contrast by 23", "intents": [{"name": "display.contrast_up", "args": {"by": 23}}]}
+{"text": "increase contrast by 27", "intents": [{"name": "display.contrast_up", "args": {"by": 27}}]}
+{"text": "decrease contrast by 3", "intents": [{"name": "display.contrast_down", "args": {"by": 3}}]}
+{"text": "decrease contrast by 8", "intents": [{"name": "display.contrast_down", "args": {"by": 8}}]}
+{"text": "decrease contrast by 13", "intents": [{"name": "display.contrast_down", "args": {"by": 13}}]}
+{"text": "decrease contrast by 17", "intents": [{"name": "display.contrast_down", "args": {"by": 17}}]}
+{"text": "decrease contrast by 23", "intents": [{"name": "display.contrast_down", "args": {"by": 23}}]}
+{"text": "decrease contrast by 27", "intents": [{"name": "display.contrast_down", "args": {"by": 27}}]}
+{"text": "set the volume to 33", "intents": [{"name": "volume.set", "args": {"level": 33}}]}
+{"text": "set volume 33", "intents": [{"name": "volume.set", "args": {"level": 33}}]}
+{"text": "set volume to 44", "intents": [{"name": "volume.set", "args": {"level": 44}}]}
+{"text": "set volume to 22", "intents": [{"name": "volume.set", "args": {"level": 22}}]}
+{"text": "set volume to 11", "intents": [{"name": "volume.set", "args": {"level": 11}}]}
+{"text": "set volume to 5", "intents": [{"name": "volume.set", "args": {"level": 5}}]}
+{"text": "set volume to 13", "intents": [{"name": "volume.set", "args": {"level": 13}}]}
+{"text": "set volume to 28", "intents": [{"name": "volume.set", "args": {"level": 28}}]}
+{"text": "set volume to 37", "intents": [{"name": "volume.set", "args": {"level": 37}}]}
+{"text": "set volume to 48", "intents": [{"name": "volume.set", "args": {"level": 48}}]}
+{"text": "set volume to 57", "intents": [{"name": "volume.set", "args": {"level": 57}}]}
+{"text": "set volume to 64", "intents": [{"name": "volume.set", "args": {"level": 64}}]}
+{"text": "set volume to 72", "intents": [{"name": "volume.set", "args": {"level": 72}}]}
+{"text": "set volume to 83", "intents": [{"name": "volume.set", "args": {"level": 83}}]}
+{"text": "set volume to 91", "intents": [{"name": "volume.set", "args": {"level": 91}}]}
+{"text": "volume up 3", "intents": [{"name": "volume.up", "args": {"by": 3}}]}
+{"text": "volume up 8", "intents": [{"name": "volume.up", "args": {"by": 8}}]}
+{"text": "volume up 13", "intents": [{"name": "volume.up", "args": {"by": 13}}]}
+{"text": "volume up 17", "intents": [{"name": "volume.up", "args": {"by": 17}}]}
+{"text": "volume up 23", "intents": [{"name": "volume.up", "args": {"by": 23}}]}
+{"text": "volume up 27", "intents": [{"name": "volume.up", "args": {"by": 27}}]}
+{"text": "volume up 33", "intents": [{"name": "volume.up", "args": {"by": 33}}]}
+{"text": "volume up 45", "intents": [{"name": "volume.up", "args": {"by": 45}}]}
+{"text": "volume down 3", "intents": [{"name": "volume.down", "args": {"by": 3}}]}
+{"text": "volume down 8", "intents": [{"name": "volume.down", "args": {"by": 8}}]}
+{"text": "volume down 13", "intents": [{"name": "volume.down", "args": {"by": 13}}]}
+{"text": "volume down 17", "intents": [{"name": "volume.down", "args": {"by": 17}}]}
+{"text": "volume down 23", "intents": [{"name": "volume.down", "args": {"by": 23}}]}
+{"text": "volume down 27", "intents": [{"name": "volume.down", "args": {"by": 27}}]}
+{"text": "volume down 33", "intents": [{"name": "volume.down", "args": {"by": 33}}]}
+{"text": "play the song counting stars", "intents": [{"name": "media.play_song", "args": {"title": "counting stars"}}]}
+{"text": "play counting stars", "intents": [{"name": "media.play_song", "args": {"title": "counting stars"}}]}
+{"text": "play song counting stars", "intents": [{"name": "media.play_song", "args": {"title": "counting stars"}}]}
+{"text": "play the song demons", "intents": [{"name": "media.play_song", "args": {"title": "demons"}}]}
+{"text": "play demons", "intents": [{"name": "media.play_song", "args": {"title": "demons"}}]}
+{"text": "play the song radioactive", "intents": [{"name": "media.play_song", "args": {"title": "radioactive"}}]}
+{"text": "play radioactive", "intents": [{"name": "media.play_song", "args": {"title": "radioactive"}}]}
+{"text": "play the song thunder", "intents": [{"name": "media.play_song", "args": {"title": "thunder"}}]}
+{"text": "play thunder", "intents": [{"name": "media.play_song", "args": {"title": "thunder"}}]}
+{"text": "play the song whatever it takes", "intents": [{"name": "media.play_song", "args": {"title": "whatever it takes"}}]}
+{"text": "play whatever it takes", "intents": [{"name": "media.play_song", "args": {"title": "whatever it takes"}}]}
+{"text": "play the song memories", "intents": [{"name": "media.play_song", "args": {"title": "memories"}}]}
+{"text": "play memories", "intents": [{"name": "media.play_song", "args": {"title": "memories"}}]}
+{"text": "play the song sugar", "intents": [{"name": "media.play_song", "args": {"title": "sugar"}}]}
+{"text": "play sugar", "intents": [{"name": "media.play_song", "args": {"title": "sugar"}}]}
+{"text": "play the song girls like you", "intents": [{"name": "media.play_song", "args": {"title": "girls like you"}}]}
+{"text": "play girls like you", "intents": [{"name": "media.play_song", "args": {"title": "girls like you"}}]}
+{"text": "play the song payphone", "intents": [{"name": "media.play_song", "args": {"title": "payphone"}}]}
+{"text": "play payphone", "intents": [{"name": "media.play_song", "args": {"title": "payphone"}}]}
+{"text": "play the song she will be loved", "intents": [{"name": "media.play_song", "args": {"title": "she will be loved"}}]}
+{"text": "play she will be loved", "intents": [{"name": "media.play_song", "args": {"title": "she will be loved"}}]}
+{"text": "play the song maps", "intents": [{"name": "media.play_song", "args": {"title": "maps"}}]}
+{"text": "play maps maroon 5", "intents": [{"name": "media.play_song", "args": {"title": "maps maroon 5"}}]}
+{"text": "play playlist gym motivation", "intents": [{"name": "media.play_playlist", "args": {"name": "gym motivation"}}]}
+{"text": "play my playlist gym motivation", "intents": [{"name": "media.play_playlist", "args": {"name": "gym motivation"}}]}
+{"text": "play playlist road rage", "intents": [{"name": "media.play_playlist", "args": {"name": "road rage"}}]}
+{"text": "play playlist rainy day", "intents": [{"name": "media.play_playlist", "args": {"name": "rainy day"}}]}
+{"text": "play playlist sunny day", "intents": [{"name": "media.play_playlist", "args": {"name": "sunny day"}}]}
+{"text": "play playlist deep focus", "intents": [{"name": "media.play_playlist", "args": {"name": "deep focus"}}]}
+{"text": "play playlist dinner jazz", "intents": [{"name": "media.play_playlist", "args": {"name": "dinner jazz"}}]}
+{"text": "play playlist coding mode", "intents": [{"name": "media.play_playlist", "args": {"name": "coding mode"}}]}
+{"text": "play playlist reading time", "intents": [{"name": "media.play_playlist", "args": {"name": "reading time"}}]}
+{"text": "play playlist walking beats", "intents": [{"name": "media.play_playlist", "args": {"name": "walking beats"}}]}
+{"text": "play playlist summer hits", "intents": [{"name": "media.play_playlist", "args": {"name": "summer hits"}}]}
+{"text": "play playlist winter vibes", "intents": [{"name": "media.play_playlist", "args": {"name": "winter vibes"}}]}
+{"text": "play playlist 80s rewind", "intents": [{"name": "media.play_playlist", "args": {"name": "80s rewind"}}]}
+{"text": "play playlist 2000s hits", "intents": [{"name": "media.play_playlist", "args": {"name": "2000s hits"}}]}
+{"text": "play playlist hindi classics", "intents": [{"name": "media.play_playlist", "args": {"name": "hindi classics"}}]}
+{"text": "play playlist tamil melodies", "intents": [{"name": "media.play_playlist", "args": {"name": "tamil melodies"}}]}
+{"text": "play playlist workout pump", "intents": [{"name": "media.play_playlist", "args": {"name": "workout pump"}}]}
+{"text": "play playlist chill lofi", "intents": [{"name": "media.play_playlist", "args": {"name": "chill lofi"}}]}
+{"text": "play some chill lofi", "intents": [{"name": "media.play_playlist", "args": {"name": "chill lofi"}}]}
+{"text": "play some hindi classics", "intents": [{"name": "media.play_playlist", "args": {"name": "hindi classics"}}]}
+{"text": "play some dinner jazz", "intents": [{"name": "media.play_playlist", "args": {"name": "dinner jazz"}}]}
+{"text": "play some summer hits", "intents": [{"name": "media.play_playlist", "args": {"name": "summer hits"}}]}
+{"text": "continue the song", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "skip the song", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "skip the track", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "skip to next song", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "skip to the next track", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "go to the next track", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "play the next track", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "go to the previous song", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "play the previous track", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "go back to the previous track", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "go back one track", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "put on liked songs on spotify", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "start liked songs on spotify", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "play my spotify favorites", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "set the brightness to 33 and set the volume to 66", "intents": [{"name": "display.brightness_set", "args": {"level": 33}}, {"name": "volume.set", "args": {"level": 66}}]}
+{"text": "set brightness to 44 and set volume to 88", "intents": [{"name": "display.brightness_set", "args": {"level": 44}}, {"name": "volume.set", "args": {"level": 88}}]}
+{"text": "increase brightness by 13 and increase volume by 13", "intents": [{"name": "display.brightness_up", "args": {"by": 13}}, {"name": "volume.up", "args": {"by": 13}}]}
+{"text": "decrease brightness by 17 and decrease volume by 17", "intents": [{"name": "display.brightness_down", "args": {"by": 17}}, {"name": "volume.down", "args": {"by": 17}}]}
+{"text": "set contrast to 28 and set brightness to 72", "intents": [{"name": "display.contrast_set", "args": {"level": 28}}, {"name": "display.brightness_set", "args": {"level": 72}}]}
+{"text": "set contrast to 39 and set volume to 61", "intents": [{"name": "display.contrast_set", "args": {"level": 39}}, {"name": "volume.set", "args": {"level": 61}}]}
+{"text": "increase contrast by 23 and increase brightness by 23", "intents": [{"name": "display.contrast_up", "args": {"by": 23}}, {"name": "display.brightness_up", "args": {"by": 23}}]}
+{"text": "decrease contrast by 27 and decrease brightness by 27", "intents": [{"name": "display.contrast_down", "args": {"by": 27}}, {"name": "display.brightness_down", "args": {"by": 27}}]}
+{"text": "play the song counting stars and volume up 13", "intents": [{"name": "media.play_song", "args": {"title": "counting stars"}}, {"name": "volume.up", "args": {"by": 13}}]}
+{"text": "play memories and set volume to 44", "intents": [{"name": "media.play_song", "args": {"title": "memories"}}, {"name": "volume.set", "args": {"level": 44}}]}
+{"text": "play playlist coding mode and set volume to 33", "intents": [{"name": "media.play_playlist", "args": {"name": "coding mode"}}, {"name": "volume.set", "args": {"level": 33}}]}
+{"text": "play playlist deep focus and decrease brightness", "intents": [{"name": "media.play_playlist", "args": {"name": "deep focus"}}, {"name": "display.brightness_down", "args": {"by": 10}}]}

@@ -1,0 +1,393 @@
+{"text": "open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open spotify.", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open spotify?", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open spotify!", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open spotify please", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "please open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "can you open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "could you open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "would you open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "will you open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open spotify for me", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open up spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open up spotify for me", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "launch spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "launch spotify.", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "launch the spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "start spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "start up spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "run spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "run spotify for me", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "start the spotify app", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open the spotify app", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open the spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open my spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "i want spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "i want to open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "get spotify open", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "spotify please", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open spotifi", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open spotfy", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open spotfy.", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "uh open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "um open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "hey jarvis open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "jarvis open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "jarvis, open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open spotify now", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "just open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "go and open spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open spotify app", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open chrome.", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open chrome please", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "please open chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "can you open chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "could you open chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open chrome for me", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open up chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "launch chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "launch google chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "start chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "run chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open google chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open google chrome.", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open the chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open the chrome browser", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open chrome browser", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open my chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "chrome please", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open googlechrom", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open gooogle chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open chrone", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "uh open chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "hey jarvis open chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "jarvis open chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open chrome now", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "just open chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "i want to open chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open safari", "intents": [{"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "open safari.", "intents": [{"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "open safari please", "intents": [{"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "please open safari", "intents": [{"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "can you open safari", "intents": [{"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "could you open safari", "intents": [{"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "open safari for me", "intents": [{"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "open up safari", "intents": [{"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "launch safari", "intents": [{"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "launch the safari", "intents": [{"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "start safari", "intents": [{"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "run safari", "intents": [{"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "open apple safari", "intents": [{"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "open safri", "intents": [{"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "open safarai", "intents": [{"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "safari", "intents": [{"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "safari please", "intents": [{"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "open the safari browser", "intents": [{"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "um open safari", "intents": [{"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "jarvis open safari", "intents": [{"name": "app.open", "args": {"name": "Safari"}}]}
+{"text": "open whatsapp", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "open whatsapp.", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "open whatsapp please", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "please open whatsapp", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "can you open whatsapp", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "could you open whatsapp", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "open whatsapp for me", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "open up whatsapp", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "launch whatsapp", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "start whatsapp", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "run whatsapp", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "open whats app", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "open watsapp", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "open whatsap", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "open whtasapp", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "whatsapp", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "whatsapp please", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "open whatsapp web", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "hey jarvis open whatsapp", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "jarvis open whatsapp", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "open whatsapp now", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "open the whatsapp app", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "open brave", "intents": [{"name": "app.open", "args": {"name": "Brave Browser"}}]}
+{"text": "open brave.", "intents": [{"name": "app.open", "args": {"name": "Brave Browser"}}]}
+{"text": "open brave please", "intents": [{"name": "app.open", "args": {"name": "Brave Browser"}}]}
+{"text": "please open brave", "intents": [{"name": "app.open", "args": {"name": "Brave Browser"}}]}
+{"text": "can you open brave", "intents": [{"name": "app.open", "args": {"name": "Brave Browser"}}]}
+{"text": "open brave for me", "intents": [{"name": "app.open", "args": {"name": "Brave Browser"}}]}
+{"text": "launch brave", "intents": [{"name": "app.open", "args": {"name": "Brave Browser"}}]}
+{"text": "start brave", "intents": [{"name": "app.open", "args": {"name": "Brave Browser"}}]}
+{"text": "run brave", "intents": [{"name": "app.open", "args": {"name": "Brave Browser"}}]}
+{"text": "open the brave browser", "intents": [{"name": "app.open", "args": {"name": "Brave Browser"}}]}
+{"text": "open the brave", "intents": [{"name": "app.open", "args": {"name": "Brave Browser"}}]}
+{"text": "brave", "intents": [{"name": "app.open", "args": {"name": "Brave Browser"}}]}
+{"text": "open brav browser", "intents": [{"name": "app.open", "args": {"name": "Brave Browser"}}]}
+{"text": "open vscode", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "open vscode.", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "open vscode please", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "please open vscode", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "can you open vscode", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "open vscode for me", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "open vs code", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "open vs code.", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "open visual studio code", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "open visual studio code.", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "launch vscode", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "start vscode", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "run vscode", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "vscode", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "open vs cod", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "open vsode", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "open visual code", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "open the vs code", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "open terminal", "intents": [{"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "open terminal.", "intents": [{"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "open terminal please", "intents": [{"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "please open terminal", "intents": [{"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "can you open terminal", "intents": [{"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "open terminal for me", "intents": [{"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "launch terminal", "intents": [{"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "start terminal", "intents": [{"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "run terminal", "intents": [{"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "open the terminal", "intents": [{"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "terminal", "intents": [{"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "open termial", "intents": [{"name": "app.open", "args": {"name": "Terminal"}}]}
+{"text": "open finder", "intents": [{"name": "app.open", "args": {"name": "Finder"}}]}
+{"text": "open finder.", "intents": [{"name": "app.open", "args": {"name": "Finder"}}]}
+{"text": "open finder please", "intents": [{"name": "app.open", "args": {"name": "Finder"}}]}
+{"text": "please open finder", "intents": [{"name": "app.open", "args": {"name": "Finder"}}]}
+{"text": "can you open finder", "intents": [{"name": "app.open", "args": {"name": "Finder"}}]}
+{"text": "open finder for me", "intents": [{"name": "app.open", "args": {"name": "Finder"}}]}
+{"text": "launch finder", "intents": [{"name": "app.open", "args": {"name": "Finder"}}]}
+{"text": "start finder", "intents": [{"name": "app.open", "args": {"name": "Finder"}}]}
+{"text": "open the finder", "intents": [{"name": "app.open", "args": {"name": "Finder"}}]}
+{"text": "open mail", "intents": [{"name": "app.open", "args": {"name": "Mail"}}]}
+{"text": "open mail.", "intents": [{"name": "app.open", "args": {"name": "Mail"}}]}
+{"text": "open mail please", "intents": [{"name": "app.open", "args": {"name": "Mail"}}]}
+{"text": "please open mail", "intents": [{"name": "app.open", "args": {"name": "Mail"}}]}
+{"text": "can you open mail", "intents": [{"name": "app.open", "args": {"name": "Mail"}}]}
+{"text": "open apple mail", "intents": [{"name": "app.open", "args": {"name": "Mail"}}]}
+{"text": "open the mail app", "intents": [{"name": "app.open", "args": {"name": "Mail"}}]}
+{"text": "launch mail", "intents": [{"name": "app.open", "args": {"name": "Mail"}}]}
+{"text": "open my mail", "intents": [{"name": "app.open", "args": {"name": "Mail"}}]}
+{"text": "open email", "intents": [{"name": "app.open", "args": {"name": "Mail"}}]}
+{"text": "open notes", "intents": [{"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "open notes.", "intents": [{"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "open notes please", "intents": [{"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "please open notes", "intents": [{"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "can you open notes", "intents": [{"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "open apple notes", "intents": [{"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "open the notes app", "intents": [{"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "launch notes", "intents": [{"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "open note", "intents": [{"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "open my notes", "intents": [{"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "open music", "intents": [{"name": "app.open", "args": {"name": "Music"}}]}
+{"text": "open music.", "intents": [{"name": "app.open", "args": {"name": "Music"}}]}
+{"text": "open music please", "intents": [{"name": "app.open", "args": {"name": "Music"}}]}
+{"text": "please open music", "intents": [{"name": "app.open", "args": {"name": "Music"}}]}
+{"text": "can you open music", "intents": [{"name": "app.open", "args": {"name": "Music"}}]}
+{"text": "open apple music", "intents": [{"name": "app.open", "args": {"name": "Music"}}]}
+{"text": "open the music app", "intents": [{"name": "app.open", "args": {"name": "Music"}}]}
+{"text": "launch music", "intents": [{"name": "app.open", "args": {"name": "Music"}}]}
+{"text": "open the music", "intents": [{"name": "app.open", "args": {"name": "Music"}}]}
+{"text": "open photos", "intents": [{"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "open photos.", "intents": [{"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "open Photos.", "intents": [{"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "open photos please", "intents": [{"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "please open photos", "intents": [{"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "can you open photos", "intents": [{"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "open the photos app", "intents": [{"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "open apple photos", "intents": [{"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "launch photos", "intents": [{"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "open my photos", "intents": [{"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "open photo", "intents": [{"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "photos", "intents": [{"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "open calendar", "intents": [{"name": "app.open", "args": {"name": "Calendar"}}]}
+{"text": "open calendar.", "intents": [{"name": "app.open", "args": {"name": "Calendar"}}]}
+{"text": "open calendar please", "intents": [{"name": "app.open", "args": {"name": "Calendar"}}]}
+{"text": "please open calendar", "intents": [{"name": "app.open", "args": {"name": "Calendar"}}]}
+{"text": "can you open calendar", "intents": [{"name": "app.open", "args": {"name": "Calendar"}}]}
+{"text": "open the calendar", "intents": [{"name": "app.open", "args": {"name": "Calendar"}}]}
+{"text": "open apple calendar", "intents": [{"name": "app.open", "args": {"name": "Calendar"}}]}
+{"text": "open my calendar", "intents": [{"name": "app.open", "args": {"name": "Calendar"}}]}
+{"text": "launch calendar", "intents": [{"name": "app.open", "args": {"name": "Calendar"}}]}
+{"text": "open messages", "intents": [{"name": "app.open", "args": {"name": "Messages"}}]}
+{"text": "open messages.", "intents": [{"name": "app.open", "args": {"name": "Messages"}}]}
+{"text": "open messages please", "intents": [{"name": "app.open", "args": {"name": "Messages"}}]}
+{"text": "please open messages", "intents": [{"name": "app.open", "args": {"name": "Messages"}}]}
+{"text": "can you open messages", "intents": [{"name": "app.open", "args": {"name": "Messages"}}]}
+{"text": "open imessage", "intents": [{"name": "app.open", "args": {"name": "Messages"}}]}
+{"text": "open the messages app", "intents": [{"name": "app.open", "args": {"name": "Messages"}}]}
+{"text": "launch messages", "intents": [{"name": "app.open", "args": {"name": "Messages"}}]}
+{"text": "open message", "intents": [{"name": "app.open", "args": {"name": "Messages"}}]}
+{"text": "open maps", "intents": [{"name": "app.open", "args": {"name": "Maps"}}]}
+{"text": "open maps.", "intents": [{"name": "app.open", "args": {"name": "Maps"}}]}
+{"text": "open maps please", "intents": [{"name": "app.open", "args": {"name": "Maps"}}]}
+{"text": "please open maps", "intents": [{"name": "app.open", "args": {"name": "Maps"}}]}
+{"text": "can you open maps", "intents": [{"name": "app.open", "args": {"name": "Maps"}}]}
+{"text": "open apple maps", "intents": [{"name": "app.open", "args": {"name": "Maps"}}]}
+{"text": "open the maps app", "intents": [{"name": "app.open", "args": {"name": "Maps"}}]}
+{"text": "open map", "intents": [{"name": "app.open", "args": {"name": "Maps"}}]}
+{"text": "launch maps", "intents": [{"name": "app.open", "args": {"name": "Maps"}}]}
+{"text": "open system settings", "intents": [{"name": "app.open", "args": {"name": "System Settings"}}]}
+{"text": "open system settings.", "intents": [{"name": "app.open", "args": {"name": "System Settings"}}]}
+{"text": "open settings", "intents": [{"name": "app.open", "args": {"name": "System Settings"}}]}
+{"text": "open settings please", "intents": [{"name": "app.open", "args": {"name": "System Settings"}}]}
+{"text": "please open settings", "intents": [{"name": "app.open", "args": {"name": "System Settings"}}]}
+{"text": "can you open system settings", "intents": [{"name": "app.open", "args": {"name": "System Settings"}}]}
+{"text": "open the settings", "intents": [{"name": "app.open", "args": {"name": "System Settings"}}]}
+{"text": "open system setting", "intents": [{"name": "app.open", "args": {"name": "System Settings"}}]}
+{"text": "launch settings", "intents": [{"name": "app.open", "args": {"name": "System Settings"}}]}
+{"text": "open app store", "intents": [{"name": "app.open", "args": {"name": "App Store"}}]}
+{"text": "open app store.", "intents": [{"name": "app.open", "args": {"name": "App Store"}}]}
+{"text": "open the app store", "intents": [{"name": "app.open", "args": {"name": "App Store"}}]}
+{"text": "open appstore", "intents": [{"name": "app.open", "args": {"name": "App Store"}}]}
+{"text": "launch app store", "intents": [{"name": "app.open", "args": {"name": "App Store"}}]}
+{"text": "open app store please", "intents": [{"name": "app.open", "args": {"name": "App Store"}}]}
+{"text": "open github desktop", "intents": [{"name": "app.open", "args": {"name": "GitHub Desktop"}}]}
+{"text": "open github desktop.", "intents": [{"name": "app.open", "args": {"name": "GitHub Desktop"}}]}
+{"text": "open github", "intents": [{"name": "app.open", "args": {"name": "GitHub Desktop"}}]}
+{"text": "open git hub desktop", "intents": [{"name": "app.open", "args": {"name": "GitHub Desktop"}}]}
+{"text": "launch github desktop", "intents": [{"name": "app.open", "args": {"name": "GitHub Desktop"}}]}
+{"text": "open github desktop please", "intents": [{"name": "app.open", "args": {"name": "GitHub Desktop"}}]}
+{"text": "open telegram", "intents": [{"name": "app.open", "args": {"name": "Telegram"}}]}
+{"text": "open telegram.", "intents": [{"name": "app.open", "args": {"name": "Telegram"}}]}
+{"text": "open telegram please", "intents": [{"name": "app.open", "args": {"name": "Telegram"}}]}
+{"text": "please open telegram", "intents": [{"name": "app.open", "args": {"name": "Telegram"}}]}
+{"text": "launch telegram", "intents": [{"name": "app.open", "args": {"name": "Telegram"}}]}
+{"text": "open telegrm", "intents": [{"name": "app.open", "args": {"name": "Telegram"}}]}
+{"text": "open slack", "intents": [{"name": "app.open", "args": {"name": "Slack"}}]}
+{"text": "open slack.", "intents": [{"name": "app.open", "args": {"name": "Slack"}}]}
+{"text": "open slack please", "intents": [{"name": "app.open", "args": {"name": "Slack"}}]}
+{"text": "launch slack", "intents": [{"name": "app.open", "args": {"name": "Slack"}}]}
+{"text": "open notion", "intents": [{"name": "app.open", "args": {"name": "Notion"}}]}
+{"text": "open notion.", "intents": [{"name": "app.open", "args": {"name": "Notion"}}]}
+{"text": "open notion please", "intents": [{"name": "app.open", "args": {"name": "Notion"}}]}
+{"text": "launch notion", "intents": [{"name": "app.open", "args": {"name": "Notion"}}]}
+{"text": "open figma", "intents": [{"name": "app.open", "args": {"name": "Figma"}}]}
+{"text": "open figma.", "intents": [{"name": "app.open", "args": {"name": "Figma"}}]}
+{"text": "open figma please", "intents": [{"name": "app.open", "args": {"name": "Figma"}}]}
+{"text": "launch figma", "intents": [{"name": "app.open", "args": {"name": "Figma"}}]}
+{"text": "open obs", "intents": [{"name": "app.open", "args": {"name": "OBS"}}]}
+{"text": "open obs.", "intents": [{"name": "app.open", "args": {"name": "OBS"}}]}
+{"text": "open obs please", "intents": [{"name": "app.open", "args": {"name": "OBS"}}]}
+{"text": "close spotify", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "close spotify.", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "close spotify please", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "please close spotify", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "can you close spotify", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "could you close spotify", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "quit spotify", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "quit spotify.", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "quit spotify please", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "shut down spotify", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "shut off spotify", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "close the spotify", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "close spotify app", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "close my spotify", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "close spotify for me", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "exit spotify", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "close spotifi", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "close spotfy", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "uh close spotify", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "jarvis close spotify", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "close chrome", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "close chrome.", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "close chrome please", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "please close chrome", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "can you close chrome", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "quit chrome", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "quit chrome.", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "quit google chrome", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "shut chrome", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "shut down chrome", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "close the chrome", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "close the chrome browser", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "close chrome browser", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "close google chrome", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "close my chrome", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "exit chrome", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "jarvis close chrome", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "close safari", "intents": [{"name": "app.close", "args": {"name": "Safari"}}]}
+{"text": "close safari.", "intents": [{"name": "app.close", "args": {"name": "Safari"}}]}
+{"text": "close safari please", "intents": [{"name": "app.close", "args": {"name": "Safari"}}]}
+{"text": "please close safari", "intents": [{"name": "app.close", "args": {"name": "Safari"}}]}
+{"text": "can you close safari", "intents": [{"name": "app.close", "args": {"name": "Safari"}}]}
+{"text": "quit safari", "intents": [{"name": "app.close", "args": {"name": "Safari"}}]}
+{"text": "quit safri", "intents": [{"name": "app.close", "args": {"name": "Safari"}}]}
+{"text": "shut safari", "intents": [{"name": "app.close", "args": {"name": "Safari"}}]}
+{"text": "shut down safari", "intents": [{"name": "app.close", "args": {"name": "Safari"}}]}
+{"text": "close the safari", "intents": [{"name": "app.close", "args": {"name": "Safari"}}]}
+{"text": "close safri", "intents": [{"name": "app.close", "args": {"name": "Safari"}}]}
+{"text": "exit safari", "intents": [{"name": "app.close", "args": {"name": "Safari"}}]}
+{"text": "close whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "close whatsapp.", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "close whatsapp please", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "please close whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "can you close whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "quit whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "quit whats app", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "shut whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "shut down whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "close the whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "close whatsap", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "close watsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "exit whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "jarvis close whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "close vscode", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}]}
+{"text": "close vscode.", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}]}
+{"text": "close vscode please", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}]}
+{"text": "close vs code", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}]}
+{"text": "quit vscode", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}]}
+{"text": "quit vs code", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}]}
+{"text": "quit visual studio code", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}]}
+{"text": "close visual studio code", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}]}
+{"text": "shut down vscode", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}]}
+{"text": "exit vscode", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}]}
+{"text": "close terminal", "intents": [{"name": "app.close", "args": {"name": "Terminal"}}]}
+{"text": "close terminal.", "intents": [{"name": "app.close", "args": {"name": "Terminal"}}]}
+{"text": "close terminal please", "intents": [{"name": "app.close", "args": {"name": "Terminal"}}]}
+{"text": "quit terminal", "intents": [{"name": "app.close", "args": {"name": "Terminal"}}]}
+{"text": "shut down terminal", "intents": [{"name": "app.close", "args": {"name": "Terminal"}}]}
+{"text": "close the terminal", "intents": [{"name": "app.close", "args": {"name": "Terminal"}}]}
+{"text": "exit terminal", "intents": [{"name": "app.close", "args": {"name": "Terminal"}}]}
+{"text": "close brave", "intents": [{"name": "app.close", "args": {"name": "Brave Browser"}}]}
+{"text": "close brave.", "intents": [{"name": "app.close", "args": {"name": "Brave Browser"}}]}
+{"text": "close brave please", "intents": [{"name": "app.close", "args": {"name": "Brave Browser"}}]}
+{"text": "quit brave", "intents": [{"name": "app.close", "args": {"name": "Brave Browser"}}]}
+{"text": "close the brave browser", "intents": [{"name": "app.close", "args": {"name": "Brave Browser"}}]}
+{"text": "shut down brave", "intents": [{"name": "app.close", "args": {"name": "Brave Browser"}}]}
+{"text": "close photos", "intents": [{"name": "app.close", "args": {"name": "Photos"}}]}
+{"text": "close photos.", "intents": [{"name": "app.close", "args": {"name": "Photos"}}]}
+{"text": "close photos please", "intents": [{"name": "app.close", "args": {"name": "Photos"}}]}
+{"text": "quit photos", "intents": [{"name": "app.close", "args": {"name": "Photos"}}]}
+{"text": "close the photos app", "intents": [{"name": "app.close", "args": {"name": "Photos"}}]}
+{"text": "close music", "intents": [{"name": "app.close", "args": {"name": "Music"}}]}
+{"text": "close music.", "intents": [{"name": "app.close", "args": {"name": "Music"}}]}
+{"text": "close music please", "intents": [{"name": "app.close", "args": {"name": "Music"}}]}
+{"text": "quit music", "intents": [{"name": "app.close", "args": {"name": "Music"}}]}
+{"text": "close the music app", "intents": [{"name": "app.close", "args": {"name": "Music"}}]}
+{"text": "close mail", "intents": [{"name": "app.close", "args": {"name": "Mail"}}]}
+{"text": "close mail.", "intents": [{"name": "app.close", "args": {"name": "Mail"}}]}
+{"text": "quit mail", "intents": [{"name": "app.close", "args": {"name": "Mail"}}]}
+{"text": "close notes", "intents": [{"name": "app.close", "args": {"name": "Notes"}}]}
+{"text": "close notes.", "intents": [{"name": "app.close", "args": {"name": "Notes"}}]}
+{"text": "quit notes", "intents": [{"name": "app.close", "args": {"name": "Notes"}}]}
+{"text": "close messages", "intents": [{"name": "app.close", "args": {"name": "Messages"}}]}
+{"text": "close messages.", "intents": [{"name": "app.close", "args": {"name": "Messages"}}]}
+{"text": "quit messages", "intents": [{"name": "app.close", "args": {"name": "Messages"}}]}
+{"text": "close calendar", "intents": [{"name": "app.close", "args": {"name": "Calendar"}}]}
+{"text": "close calendar.", "intents": [{"name": "app.close", "args": {"name": "Calendar"}}]}
+{"text": "quit calendar", "intents": [{"name": "app.close", "args": {"name": "Calendar"}}]}
+{"text": "close maps", "intents": [{"name": "app.close", "args": {"name": "Maps"}}]}
+{"text": "quit maps", "intents": [{"name": "app.close", "args": {"name": "Maps"}}]}
+{"text": "close finder", "intents": [{"name": "app.close", "args": {"name": "Finder"}}]}
+{"text": "quit finder", "intents": [{"name": "app.close", "args": {"name": "Finder"}}]}
+{"text": "close telegram", "intents": [{"name": "app.close", "args": {"name": "Telegram"}}]}
+{"text": "quit telegram", "intents": [{"name": "app.close", "args": {"name": "Telegram"}}]}
+{"text": "close slack", "intents": [{"name": "app.close", "args": {"name": "Slack"}}]}
+{"text": "quit slack", "intents": [{"name": "app.close", "args": {"name": "Slack"}}]}
+{"text": "close notion", "intents": [{"name": "app.close", "args": {"name": "Notion"}}]}
+{"text": "close figma", "intents": [{"name": "app.close", "args": {"name": "Figma"}}]}
+{"text": "close obs", "intents": [{"name": "app.close", "args": {"name": "OBS"}}]}

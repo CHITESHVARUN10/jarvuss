@@ -1,0 +1,106 @@
+{"text": "close telegram and open slack", "intents": [{"name": "app.close", "args": {"name": "Telegram"}}, {"name": "app.open", "args": {"name": "Slack"}}]}
+{"text": "close telegram then open slack", "intents": [{"name": "app.close", "args": {"name": "Telegram"}}, {"name": "app.open", "args": {"name": "Slack"}}]}
+{"text": "close slack and open notion", "intents": [{"name": "app.close", "args": {"name": "Slack"}}, {"name": "app.open", "args": {"name": "Notion"}}]}
+{"text": "close slack then open notion", "intents": [{"name": "app.close", "args": {"name": "Slack"}}, {"name": "app.open", "args": {"name": "Notion"}}]}
+{"text": "close notion and open figma", "intents": [{"name": "app.close", "args": {"name": "Notion"}}, {"name": "app.open", "args": {"name": "Figma"}}]}
+{"text": "close notion then open figma", "intents": [{"name": "app.close", "args": {"name": "Notion"}}, {"name": "app.open", "args": {"name": "Figma"}}]}
+{"text": "close figma and open obs", "intents": [{"name": "app.close", "args": {"name": "Figma"}}, {"name": "app.open", "args": {"name": "OBS"}}]}
+{"text": "close figma then open obs", "intents": [{"name": "app.close", "args": {"name": "Figma"}}, {"name": "app.open", "args": {"name": "OBS"}}]}
+{"text": "close obs and open telegram", "intents": [{"name": "app.close", "args": {"name": "OBS"}}, {"name": "app.open", "args": {"name": "Telegram"}}]}
+{"text": "close obs then open telegram", "intents": [{"name": "app.close", "args": {"name": "OBS"}}, {"name": "app.open", "args": {"name": "Telegram"}}]}
+{"text": "close github desktop and open vscode", "intents": [{"name": "app.close", "args": {"name": "GitHub Desktop"}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "close github desktop then open vscode", "intents": [{"name": "app.close", "args": {"name": "GitHub Desktop"}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "close app store and open system settings", "intents": [{"name": "app.close", "args": {"name": "App Store"}}, {"name": "app.open", "args": {"name": "System Settings"}}]}
+{"text": "close app store then open system settings", "intents": [{"name": "app.close", "args": {"name": "App Store"}}, {"name": "app.open", "args": {"name": "System Settings"}}]}
+{"text": "close system settings and open app store", "intents": [{"name": "app.close", "args": {"name": "System Settings"}}, {"name": "app.open", "args": {"name": "App Store"}}]}
+{"text": "close system settings then open app store", "intents": [{"name": "app.close", "args": {"name": "System Settings"}}, {"name": "app.open", "args": {"name": "App Store"}}]}
+{"text": "close maps and open photos", "intents": [{"name": "app.close", "args": {"name": "Maps"}}, {"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "close maps then open photos", "intents": [{"name": "app.close", "args": {"name": "Maps"}}, {"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "close messages and open mail", "intents": [{"name": "app.close", "args": {"name": "Messages"}}, {"name": "app.open", "args": {"name": "Mail"}}]}
+{"text": "close messages then open mail", "intents": [{"name": "app.close", "args": {"name": "Messages"}}, {"name": "app.open", "args": {"name": "Mail"}}]}
+{"text": "close calendar and open notes", "intents": [{"name": "app.close", "args": {"name": "Calendar"}}, {"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "close calendar then open notes", "intents": [{"name": "app.close", "args": {"name": "Calendar"}}, {"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "open telegram and open slack", "intents": [{"name": "app.open", "args": {"name": "Telegram"}}, {"name": "app.open", "args": {"name": "Slack"}}]}
+{"text": "open slack and open notion", "intents": [{"name": "app.open", "args": {"name": "Slack"}}, {"name": "app.open", "args": {"name": "Notion"}}]}
+{"text": "open notion and open figma", "intents": [{"name": "app.open", "args": {"name": "Notion"}}, {"name": "app.open", "args": {"name": "Figma"}}]}
+{"text": "open figma and open obs", "intents": [{"name": "app.open", "args": {"name": "Figma"}}, {"name": "app.open", "args": {"name": "OBS"}}]}
+{"text": "open maps and open calendar", "intents": [{"name": "app.open", "args": {"name": "Maps"}}, {"name": "app.open", "args": {"name": "Calendar"}}]}
+{"text": "open messages and open mail", "intents": [{"name": "app.open", "args": {"name": "Messages"}}, {"name": "app.open", "args": {"name": "Mail"}}]}
+{"text": "close telegram and close slack", "intents": [{"name": "app.close", "args": {"name": "Telegram"}}, {"name": "app.close", "args": {"name": "Slack"}}]}
+{"text": "close slack and close notion", "intents": [{"name": "app.close", "args": {"name": "Slack"}}, {"name": "app.close", "args": {"name": "Notion"}}]}
+{"text": "close notion and close figma", "intents": [{"name": "app.close", "args": {"name": "Notion"}}, {"name": "app.close", "args": {"name": "Figma"}}]}
+{"text": "close figma and close obs", "intents": [{"name": "app.close", "args": {"name": "Figma"}}, {"name": "app.close", "args": {"name": "OBS"}}]}
+{"text": "close maps and close calendar", "intents": [{"name": "app.close", "args": {"name": "Maps"}}, {"name": "app.close", "args": {"name": "Calendar"}}]}
+{"text": "close messages and close mail", "intents": [{"name": "app.close", "args": {"name": "Messages"}}, {"name": "app.close", "args": {"name": "Mail"}}]}
+{"text": "open telegram and set brightness to 25", "intents": [{"name": "app.open", "args": {"name": "Telegram"}}, {"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "open telegram and set the volume to 25", "intents": [{"name": "app.open", "args": {"name": "Telegram"}}, {"name": "volume.set", "args": {"level": 25}}]}
+{"text": "open telegram and mute", "intents": [{"name": "app.open", "args": {"name": "Telegram"}}, {"name": "volume.mute", "args": {}}]}
+{"text": "open telegram and volume up 15", "intents": [{"name": "app.open", "args": {"name": "Telegram"}}, {"name": "volume.up", "args": {"by": 15}}]}
+{"text": "open slack and set brightness to 35", "intents": [{"name": "app.open", "args": {"name": "Slack"}}, {"name": "display.brightness_set", "args": {"level": 35}}]}
+{"text": "open slack and set the volume to 35", "intents": [{"name": "app.open", "args": {"name": "Slack"}}, {"name": "volume.set", "args": {"level": 35}}]}
+{"text": "open slack and mute", "intents": [{"name": "app.open", "args": {"name": "Slack"}}, {"name": "volume.mute", "args": {}}]}
+{"text": "open slack and volume up 25", "intents": [{"name": "app.open", "args": {"name": "Slack"}}, {"name": "volume.up", "args": {"by": 25}}]}
+{"text": "open notion and set brightness to 45", "intents": [{"name": "app.open", "args": {"name": "Notion"}}, {"name": "display.brightness_set", "args": {"level": 45}}]}
+{"text": "open notion and set the volume to 45", "intents": [{"name": "app.open", "args": {"name": "Notion"}}, {"name": "volume.set", "args": {"level": 45}}]}
+{"text": "open notion and mute", "intents": [{"name": "app.open", "args": {"name": "Notion"}}, {"name": "volume.mute", "args": {}}]}
+{"text": "open figma and set brightness to 55", "intents": [{"name": "app.open", "args": {"name": "Figma"}}, {"name": "display.brightness_set", "args": {"level": 55}}]}
+{"text": "open figma and set the volume to 55", "intents": [{"name": "app.open", "args": {"name": "Figma"}}, {"name": "volume.set", "args": {"level": 55}}]}
+{"text": "open figma and mute", "intents": [{"name": "app.open", "args": {"name": "Figma"}}, {"name": "volume.mute", "args": {}}]}
+{"text": "open obs and set brightness to 65", "intents": [{"name": "app.open", "args": {"name": "OBS"}}, {"name": "display.brightness_set", "args": {"level": 65}}]}
+{"text": "open obs and set the volume to 65", "intents": [{"name": "app.open", "args": {"name": "OBS"}}, {"name": "volume.set", "args": {"level": 65}}]}
+{"text": "open obs and mute", "intents": [{"name": "app.open", "args": {"name": "OBS"}}, {"name": "volume.mute", "args": {}}]}
+{"text": "open maps and set brightness to 75", "intents": [{"name": "app.open", "args": {"name": "Maps"}}, {"name": "display.brightness_set", "args": {"level": 75}}]}
+{"text": "open maps and volume up 35", "intents": [{"name": "app.open", "args": {"name": "Maps"}}, {"name": "volume.up", "args": {"by": 35}}]}
+{"text": "open calendar and set the volume to 85", "intents": [{"name": "app.open", "args": {"name": "Calendar"}}, {"name": "volume.set", "args": {"level": 85}}]}
+{"text": "open calendar and mute", "intents": [{"name": "app.open", "args": {"name": "Calendar"}}, {"name": "volume.mute", "args": {}}]}
+{"text": "open messages and set brightness to 85", "intents": [{"name": "app.open", "args": {"name": "Messages"}}, {"name": "display.brightness_set", "args": {"level": 85}}]}
+{"text": "open messages and volume up 45", "intents": [{"name": "app.open", "args": {"name": "Messages"}}, {"name": "volume.up", "args": {"by": 45}}]}
+{"text": "open app store and set brightness to 95", "intents": [{"name": "app.open", "args": {"name": "App Store"}}, {"name": "display.brightness_set", "args": {"level": 95}}]}
+{"text": "open app store and mute", "intents": [{"name": "app.open", "args": {"name": "App Store"}}, {"name": "volume.mute", "args": {}}]}
+{"text": "open system settings and set the volume to 15", "intents": [{"name": "app.open", "args": {"name": "System Settings"}}, {"name": "volume.set", "args": {"level": 15}}]}
+{"text": "open system settings and mute", "intents": [{"name": "app.open", "args": {"name": "System Settings"}}, {"name": "volume.mute", "args": {}}]}
+{"text": "open github desktop and set brightness to 20", "intents": [{"name": "app.open", "args": {"name": "GitHub Desktop"}}, {"name": "display.brightness_set", "args": {"level": 20}}]}
+{"text": "open github desktop and mute", "intents": [{"name": "app.open", "args": {"name": "GitHub Desktop"}}, {"name": "volume.mute", "args": {}}]}
+{"text": "close telegram and set brightness to 30", "intents": [{"name": "app.close", "args": {"name": "Telegram"}}, {"name": "display.brightness_set", "args": {"level": 30}}]}
+{"text": "close telegram and mute", "intents": [{"name": "app.close", "args": {"name": "Telegram"}}, {"name": "volume.mute", "args": {}}]}
+{"text": "close slack and set the volume to 60", "intents": [{"name": "app.close", "args": {"name": "Slack"}}, {"name": "volume.set", "args": {"level": 60}}]}
+{"text": "close slack and mute", "intents": [{"name": "app.close", "args": {"name": "Slack"}}, {"name": "volume.mute", "args": {}}]}
+{"text": "close notion and set brightness to 70", "intents": [{"name": "app.close", "args": {"name": "Notion"}}, {"name": "display.brightness_set", "args": {"level": 70}}]}
+{"text": "close notion and mute", "intents": [{"name": "app.close", "args": {"name": "Notion"}}, {"name": "volume.mute", "args": {}}]}
+{"text": "close figma and set the volume to 80", "intents": [{"name": "app.close", "args": {"name": "Figma"}}, {"name": "volume.set", "args": {"level": 80}}]}
+{"text": "close figma and mute", "intents": [{"name": "app.close", "args": {"name": "Figma"}}, {"name": "volume.mute", "args": {}}]}
+{"text": "close obs and set brightness to 90", "intents": [{"name": "app.close", "args": {"name": "OBS"}}, {"name": "display.brightness_set", "args": {"level": 90}}]}
+{"text": "close obs and mute", "intents": [{"name": "app.close", "args": {"name": "OBS"}}, {"name": "volume.mute", "args": {}}]}
+{"text": "play the song havana and volume up 15", "intents": [{"name": "media.play_song", "args": {"title": "havana"}}, {"name": "volume.up", "args": {"by": 15}}]}
+{"text": "play the song senorita and volume up 25", "intents": [{"name": "media.play_song", "args": {"title": "senorita"}}, {"name": "volume.up", "args": {"by": 25}}]}
+{"text": "play the song bad guy and set volume to 35", "intents": [{"name": "media.play_song", "args": {"title": "bad guy"}}, {"name": "volume.set", "args": {"level": 35}}]}
+{"text": "play the song old town road and set brightness to 45", "intents": [{"name": "media.play_song", "args": {"title": "old town road"}}, {"name": "display.brightness_set", "args": {"level": 45}}]}
+{"text": "play the song take on me and mute", "intents": [{"name": "media.play_song", "args": {"title": "take on me"}}, {"name": "volume.mute", "args": {}}]}
+{"text": "play the song let it be and open notes", "intents": [{"name": "media.play_song", "args": {"title": "let it be"}}, {"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "play the song hey jude and open vscode", "intents": [{"name": "media.play_song", "args": {"title": "hey jude"}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "play the song imagine and volume down 15", "intents": [{"name": "media.play_song", "args": {"title": "imagine"}}, {"name": "volume.down", "args": {"by": 15}}]}
+{"text": "play playlist acoustic covers and volume up 25", "intents": [{"name": "media.play_playlist", "args": {"name": "acoustic covers"}}, {"name": "volume.up", "args": {"by": 25}}]}
+{"text": "play playlist indie folk and set brightness to 35", "intents": [{"name": "media.play_playlist", "args": {"name": "indie folk"}}, {"name": "display.brightness_set", "args": {"level": 35}}]}
+{"text": "play playlist lofi hip hop and set volume to 45", "intents": [{"name": "media.play_playlist", "args": {"name": "lofi hip hop"}}, {"name": "volume.set", "args": {"level": 45}}]}
+{"text": "play playlist piano bar and mute", "intents": [{"name": "media.play_playlist", "args": {"name": "piano bar"}}, {"name": "volume.mute", "args": {}}]}
+{"text": "play playlist sunset chill and open vscode", "intents": [{"name": "media.play_playlist", "args": {"name": "sunset chill"}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "play playlist morning coffee and open notes", "intents": [{"name": "media.play_playlist", "args": {"name": "morning coffee"}}, {"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "play playlist night drive and volume up 35", "intents": [{"name": "media.play_playlist", "args": {"name": "night drive"}}, {"name": "volume.up", "args": {"by": 35}}]}
+{"text": "play playlist epic cinematic and set brightness to 55", "intents": [{"name": "media.play_playlist", "args": {"name": "epic cinematic"}}, {"name": "display.brightness_set", "args": {"level": 55}}]}
+{"text": "play playlist workout beats and volume up 45", "intents": [{"name": "media.play_playlist", "args": {"name": "workout beats"}}, {"name": "volume.up", "args": {"by": 45}}]}
+{"text": "play playlist study session and open vscode", "intents": [{"name": "media.play_playlist", "args": {"name": "study session"}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "search youtube for how to paint a wall and open chrome", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "how to paint a wall"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "search the web for iphone 17 price and mute", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "iphone 17 price"}}, {"name": "volume.mute", "args": {}}]}
+{"text": "search the web for weather in chennai and set brightness to 25", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "weather in chennai"}}, {"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "search the web for cheap flights to goa and open chrome", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "cheap flights to goa"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "whats the time and set the volume to 25", "intents": [{"name": "info.time", "args": {}}, {"name": "volume.set", "args": {"level": 25}}]}
+{"text": "whats the date and set brightness to 35", "intents": [{"name": "info.date", "args": {}}, {"name": "display.brightness_set", "args": {"level": 35}}]}
+{"text": "whats my battery and volume up 15", "intents": [{"name": "info.battery", "args": {}}, {"name": "volume.up", "args": {"by": 15}}]}
+{"text": "whats the brightness and mute", "intents": [{"name": "info.brightness", "args": {}}, {"name": "volume.mute", "args": {}}]}
+{"text": "whats the volume and unmute", "intents": [{"name": "info.volume", "args": {}}, {"name": "volume.unmute", "args": {}}]}
+{"text": "create file ideas and set brightness to 45", "intents": [{"name": "file.create", "args": {"name": "ideas"}}, {"name": "display.brightness_set", "args": {"level": 45}}]}
+{"text": "create folder media and set the volume to 55", "intents": [{"name": "folder.create", "args": {"name": "media"}}, {"name": "volume.set", "args": {"level": 55}}]}
+{"text": "open the pictures folder and volume up 25", "intents": [{"name": "folder.open", "args": {"name": "pictures"}}, {"name": "volume.up", "args": {"by": 25}}]}
+{"text": "install tmux using homebrew and set brightness to 65", "intents": [{"name": "install.preview", "args": {"package": "tmux", "source": "homebrew"}}, {"name": "display.brightness_set", "args": {"level": 65}}]}
+{"text": "what is the largest desert and open notes", "intents": [{"name": "ai.query", "args": {"text": "what is the largest desert"}}, {"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "who wrote the odyssey and mute", "intents": [{"name": "ai.query", "args": {"text": "who wrote the odyssey"}}, {"name": "volume.mute", "args": {}}]}

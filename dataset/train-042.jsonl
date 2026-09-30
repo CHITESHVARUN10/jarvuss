@@ -1,0 +1,121 @@
+{"text": "play the song astronaut in the ocean", "intents": [{"name": "media.play_song", "args": {"title": "astronaut in the ocean"}}]}
+{"text": "play astronaut in the ocean", "intents": [{"name": "media.play_song", "args": {"title": "astronaut in the ocean"}}]}
+{"text": "play the song drivers license", "intents": [{"name": "media.play_song", "args": {"title": "drivers license"}}]}
+{"text": "play drivers license", "intents": [{"name": "media.play_song", "args": {"title": "drivers license"}}]}
+{"text": "play the song montero", "intents": [{"name": "media.play_song", "args": {"title": "montero"}}]}
+{"text": "play montero", "intents": [{"name": "media.play_song", "args": {"title": "montero"}}]}
+{"text": "play the song save your tears", "intents": [{"name": "media.play_song", "args": {"title": "save your tears"}}]}
+{"text": "play save your tears", "intents": [{"name": "media.play_song", "args": {"title": "save your tears"}}]}
+{"text": "play the song positions", "intents": [{"name": "media.play_song", "args": {"title": "positions"}}]}
+{"text": "play positions", "intents": [{"name": "media.play_song", "args": {"title": "positions"}}]}
+{"text": "play the song willow", "intents": [{"name": "media.play_song", "args": {"title": "willow"}}]}
+{"text": "play willow", "intents": [{"name": "media.play_song", "args": {"title": "willow"}}]}
+{"text": "play the song cardigan", "intents": [{"name": "media.play_song", "args": {"title": "cardigan"}}]}
+{"text": "play cardigan", "intents": [{"name": "media.play_song", "args": {"title": "cardigan"}}]}
+{"text": "play the song watermelon sugar", "intents": [{"name": "media.play_song", "args": {"title": "watermelon sugar"}}]}
+{"text": "play watermelon sugar", "intents": [{"name": "media.play_song", "args": {"title": "watermelon sugar"}}]}
+{"text": "play the song late night talking", "intents": [{"name": "media.play_song", "args": {"title": "late night talking"}}]}
+{"text": "play late night talking", "intents": [{"name": "media.play_song", "args": {"title": "late night talking"}}]}
+{"text": "play the song sunflower", "intents": [{"name": "media.play_song", "args": {"title": "sunflower"}}]}
+{"text": "play sunflower", "intents": [{"name": "media.play_song", "args": {"title": "sunflower"}}]}
+{"text": "play the song havana", "intents": [{"name": "media.play_song", "args": {"title": "havana"}}]}
+{"text": "play havana", "intents": [{"name": "media.play_song", "args": {"title": "havana"}}]}
+{"text": "play the song senorita", "intents": [{"name": "media.play_song", "args": {"title": "senorita"}}]}
+{"text": "play senorita", "intents": [{"name": "media.play_song", "args": {"title": "senorita"}}]}
+{"text": "play the song bad guy", "intents": [{"name": "media.play_song", "args": {"title": "bad guy"}}]}
+{"text": "play bad guy", "intents": [{"name": "media.play_song", "args": {"title": "bad guy"}}]}
+{"text": "play the song old town road", "intents": [{"name": "media.play_song", "args": {"title": "old town road"}}]}
+{"text": "play old town road", "intents": [{"name": "media.play_song", "args": {"title": "old town road"}}]}
+{"text": "play the song take on me", "intents": [{"name": "media.play_song", "args": {"title": "take on me"}}]}
+{"text": "play take on me", "intents": [{"name": "media.play_song", "args": {"title": "take on me"}}]}
+{"text": "play the song sweet child o mine", "intents": [{"name": "media.play_song", "args": {"title": "sweet child o mine"}}]}
+{"text": "play sweet child o mine", "intents": [{"name": "media.play_song", "args": {"title": "sweet child o mine"}}]}
+{"text": "play the song smells like teen spirit", "intents": [{"name": "media.play_song", "args": {"title": "smells like teen spirit"}}]}
+{"text": "play smells like teen spirit", "intents": [{"name": "media.play_song", "args": {"title": "smells like teen spirit"}}]}
+{"text": "play the song wish you were here", "intents": [{"name": "media.play_song", "args": {"title": "wish you were here"}}]}
+{"text": "play wish you were here", "intents": [{"name": "media.play_song", "args": {"title": "wish you were here"}}]}
+{"text": "play the song losing my religion", "intents": [{"name": "media.play_song", "args": {"title": "losing my religion"}}]}
+{"text": "play losing my religion", "intents": [{"name": "media.play_song", "args": {"title": "losing my religion"}}]}
+{"text": "play the song creep", "intents": [{"name": "media.play_song", "args": {"title": "creep"}}]}
+{"text": "play creep", "intents": [{"name": "media.play_song", "args": {"title": "creep"}}]}
+{"text": "play the song let it be", "intents": [{"name": "media.play_song", "args": {"title": "let it be"}}]}
+{"text": "play let it be", "intents": [{"name": "media.play_song", "args": {"title": "let it be"}}]}
+{"text": "play the song hey jude", "intents": [{"name": "media.play_song", "args": {"title": "hey jude"}}]}
+{"text": "play hey jude", "intents": [{"name": "media.play_song", "args": {"title": "hey jude"}}]}
+{"text": "play the song imagine", "intents": [{"name": "media.play_song", "args": {"title": "imagine"}}]}
+{"text": "play imagine", "intents": [{"name": "media.play_song", "args": {"title": "imagine"}}]}
+{"text": "play the song yellow submarine", "intents": [{"name": "media.play_song", "args": {"title": "yellow submarine"}}]}
+{"text": "play yellow submarine", "intents": [{"name": "media.play_song", "args": {"title": "yellow submarine"}}]}
+{"text": "play the song come as you are", "intents": [{"name": "media.play_song", "args": {"title": "come as you are"}}]}
+{"text": "play come as you are", "intents": [{"name": "media.play_song", "args": {"title": "come as you are"}}]}
+{"text": "play the song panama", "intents": [{"name": "media.play_song", "args": {"title": "panama"}}]}
+{"text": "play panama", "intents": [{"name": "media.play_song", "args": {"title": "panama"}}]}
+{"text": "play playlist acoustic covers", "intents": [{"name": "media.play_playlist", "args": {"name": "acoustic covers"}}]}
+{"text": "play my playlist acoustic covers", "intents": [{"name": "media.play_playlist", "args": {"name": "acoustic covers"}}]}
+{"text": "play playlist indie folk", "intents": [{"name": "media.play_playlist", "args": {"name": "indie folk"}}]}
+{"text": "play my playlist indie folk", "intents": [{"name": "media.play_playlist", "args": {"name": "indie folk"}}]}
+{"text": "play playlist lofi hip hop", "intents": [{"name": "media.play_playlist", "args": {"name": "lofi hip hop"}}]}
+{"text": "play my playlist lofi hip hop", "intents": [{"name": "media.play_playlist", "args": {"name": "lofi hip hop"}}]}
+{"text": "play playlist piano bar", "intents": [{"name": "media.play_playlist", "args": {"name": "piano bar"}}]}
+{"text": "play my playlist piano bar", "intents": [{"name": "media.play_playlist", "args": {"name": "piano bar"}}]}
+{"text": "play playlist sunset chill", "intents": [{"name": "media.play_playlist", "args": {"name": "sunset chill"}}]}
+{"text": "play my playlist sunset chill", "intents": [{"name": "media.play_playlist", "args": {"name": "sunset chill"}}]}
+{"text": "play playlist morning coffee", "intents": [{"name": "media.play_playlist", "args": {"name": "morning coffee"}}]}
+{"text": "play my playlist morning coffee", "intents": [{"name": "media.play_playlist", "args": {"name": "morning coffee"}}]}
+{"text": "play playlist night drive", "intents": [{"name": "media.play_playlist", "args": {"name": "night drive"}}]}
+{"text": "play my playlist night drive", "intents": [{"name": "media.play_playlist", "args": {"name": "night drive"}}]}
+{"text": "play playlist epic cinematic", "intents": [{"name": "media.play_playlist", "args": {"name": "epic cinematic"}}]}
+{"text": "play my playlist epic cinematic", "intents": [{"name": "media.play_playlist", "args": {"name": "epic cinematic"}}]}
+{"text": "play playlist workout beats", "intents": [{"name": "media.play_playlist", "args": {"name": "workout beats"}}]}
+{"text": "play my playlist workout beats", "intents": [{"name": "media.play_playlist", "args": {"name": "workout beats"}}]}
+{"text": "play playlist study session", "intents": [{"name": "media.play_playlist", "args": {"name": "study session"}}]}
+{"text": "play my playlist study session", "intents": [{"name": "media.play_playlist", "args": {"name": "study session"}}]}
+{"text": "play playlist party anthems", "intents": [{"name": "media.play_playlist", "args": {"name": "party anthems"}}]}
+{"text": "play my playlist party anthems", "intents": [{"name": "media.play_playlist", "args": {"name": "party anthems"}}]}
+{"text": "play playlist throwback thursday", "intents": [{"name": "media.play_playlist", "args": {"name": "throwback thursday"}}]}
+{"text": "play playlist fresh finds", "intents": [{"name": "media.play_playlist", "args": {"name": "fresh finds"}}]}
+{"text": "play playlist discover weekly", "intents": [{"name": "media.play_playlist", "args": {"name": "discover weekly"}}]}
+{"text": "play playlist release radar", "intents": [{"name": "media.play_playlist", "args": {"name": "release radar"}}]}
+{"text": "play playlist chill hits", "intents": [{"name": "media.play_playlist", "args": {"name": "chill hits"}}]}
+{"text": "play playlist mood booster", "intents": [{"name": "media.play_playlist", "args": {"name": "mood booster"}}]}
+{"text": "play playlist peaceful piano", "intents": [{"name": "media.play_playlist", "args": {"name": "peaceful piano"}}]}
+{"text": "search youtube for how to make sushi", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "how to make sushi"}}]}
+{"text": "search for how to make sushi on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "how to make sushi"}}]}
+{"text": "search youtube for how to paint a wall", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "how to paint a wall"}}]}
+{"text": "search youtube for how to train for a marathon", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "how to train for a marathon"}}]}
+{"text": "search youtube for how to start a blog", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "how to start a blog"}}]}
+{"text": "search the web for best restaurants in bangalore", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "best restaurants in bangalore"}}]}
+{"text": "google best restaurants in bangalore", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "best restaurants in bangalore"}}]}
+{"text": "search the web for iphone 17 price", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "iphone 17 price"}}]}
+{"text": "google iphone 17 price", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "iphone 17 price"}}]}
+{"text": "search the web for tesla stock price", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "tesla stock price"}}]}
+{"text": "google tesla stock price", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "tesla stock price"}}]}
+{"text": "search the web for dog adoption near me", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "dog adoption near me"}}]}
+{"text": "search the web for cat care tips", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "cat care tips"}}]}
+{"text": "search the web for how to fix a broken pipe", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to fix a broken pipe"}}]}
+{"text": "search the web for how to learn python", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to learn python"}}]}
+{"text": "search the web for how to make money from home", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to make money from home"}}]}
+{"text": "search the web for weather in chennai", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "weather in chennai"}}]}
+{"text": "google weather in chennai", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "weather in chennai"}}]}
+{"text": "search the web for weather in kolkata", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "weather in kolkata"}}]}
+{"text": "search the web for weather in pune", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "weather in pune"}}]}
+{"text": "search the web for news about cricket", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "news about cricket"}}]}
+{"text": "search the web for news about elections", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "news about elections"}}]}
+{"text": "search the web for stock market news", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "stock market news"}}]}
+{"text": "search the web for movie releases this week", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "movie releases this week"}}]}
+{"text": "search the web for best netflix shows", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "best netflix shows"}}]}
+{"text": "search the web for cheap flights to goa", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "cheap flights to goa"}}]}
+{"text": "search the web for train from delhi to mumbai", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "train from delhi to mumbai"}}]}
+{"text": "search the web for bus from bangalore to chennai", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "bus from bangalore to chennai"}}]}
+{"text": "open the song watermelon sugar and volume up", "intents": [{"name": "media.play_song", "args": {"title": "watermelon sugar"}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "play havana and set volume to 50", "intents": [{"name": "media.play_song", "args": {"title": "havana"}}, {"name": "volume.set", "args": {"level": 50}}]}
+{"text": "play bad guy and mute", "intents": [{"name": "media.play_song", "args": {"title": "bad guy"}}, {"name": "volume.mute", "args": {}}]}
+{"text": "play playlist night drive and volume up 20", "intents": [{"name": "media.play_playlist", "args": {"name": "night drive"}}, {"name": "volume.up", "args": {"by": 20}}]}
+{"text": "play playlist sunset chill and set brightness to 30", "intents": [{"name": "media.play_playlist", "args": {"name": "sunset chill"}}, {"name": "display.brightness_set", "args": {"level": 30}}]}
+{"text": "play playlist mood booster and open vscode", "intents": [{"name": "media.play_playlist", "args": {"name": "mood booster"}}, {"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "search youtube for how to make sushi and open chrome", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "how to make sushi"}}, {"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "search the web for tesla stock price and mute", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "tesla stock price"}}, {"name": "volume.mute", "args": {}}]}
+{"text": "open spotify and play the song sunflower", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_song", "args": {"title": "sunflower"}}]}
+{"text": "open spotify and play the song willow", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_song", "args": {"title": "willow"}}]}
+{"text": "open spotify and play playlist night drive", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_playlist", "args": {"name": "night drive"}}]}
+{"text": "open spotify and play playlist piano bar", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_playlist", "args": {"name": "piano bar"}}]}

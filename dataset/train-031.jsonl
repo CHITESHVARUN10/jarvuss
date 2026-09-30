@@ -1,0 +1,29 @@
+{"text": "set the brightness to 75", "intents": [{"name": "display.brightness_set", "args": {"level": 75}}]}
+{"text": "set brightness to 16", "intents": [{"name": "display.brightness_set", "args": {"level": 16}}]}
+{"text": "set brightness to 26", "intents": [{"name": "display.brightness_set", "args": {"level": 26}}]}
+{"text": "set brightness to 56", "intents": [{"name": "display.brightness_set", "args": {"level": 56}}]}
+{"text": "set brightness to 66", "intents": [{"name": "display.brightness_set", "args": {"level": 66}}]}
+{"text": "set brightness to 96", "intents": [{"name": "display.brightness_set", "args": {"level": 96}}]}
+{"text": "set brightness to 6", "intents": [{"name": "display.brightness_set", "args": {"level": 6}}]}
+{"text": "set volume to 16", "intents": [{"name": "volume.set", "args": {"level": 16}}]}
+{"text": "set volume to 26", "intents": [{"name": "volume.set", "args": {"level": 26}}]}
+{"text": "set volume to 36", "intents": [{"name": "volume.set", "args": {"level": 36}}]}
+{"text": "set volume to 46", "intents": [{"name": "volume.set", "args": {"level": 46}}]}
+{"text": "set volume to 56", "intents": [{"name": "volume.set", "args": {"level": 56}}]}
+{"text": "set volume to 76", "intents": [{"name": "volume.set", "args": {"level": 76}}]}
+{"text": "set volume to 86", "intents": [{"name": "volume.set", "args": {"level": 86}}]}
+{"text": "set volume to 96", "intents": [{"name": "volume.set", "args": {"level": 96}}]}
+{"text": "decrease brightness by 25", "intents": [{"name": "display.brightness_down", "args": {"by": 25}}]}
+{"text": "decrease brightness by 45", "intents": [{"name": "display.brightness_down", "args": {"by": 45}}]}
+{"text": "increase contrast by 35", "intents": [{"name": "display.contrast_up", "args": {"by": 35}}]}
+{"text": "increase contrast by 45", "intents": [{"name": "display.contrast_up", "args": {"by": 45}}]}
+{"text": "decrease contrast by 15", "intents": [{"name": "display.contrast_down", "args": {"by": 15}}]}
+{"text": "decrease contrast by 35", "intents": [{"name": "display.contrast_down", "args": {"by": 35}}]}
+{"text": "decrease contrast by 45", "intents": [{"name": "display.contrast_down", "args": {"by": 45}}]}
+{"text": "volume down 45", "intents": [{"name": "volume.down", "args": {"by": 45}}]}
+{"text": "whats my battery", "intents": [{"name": "info.battery", "args": {}}]}
+{"text": "whats the brightness", "intents": [{"name": "info.brightness", "args": {}}]}
+{"text": "whats the contrast", "intents": [{"name": "info.contrast", "args": {}}]}
+{"text": "whats the volume", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "whats the wifi status", "intents": [{"name": "info.wifi", "args": {}}]}
+{"text": "whats the bluetooth status", "intents": [{"name": "info.bluetooth", "args": {}}]}

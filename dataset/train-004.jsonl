@@ -1,0 +1,295 @@
+{"text": "set the brightness to 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "set brightness to 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "set brightness 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "brightness to 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "set the brightness at 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "brightness at 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "set my brightness to 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "set screen brightness to 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "set the screen brightness to 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "change the brightness to 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "change brightness to 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "make the brightness 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "make brightness 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "make the brightness 25 percent", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "adjust the brightness to 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "adjust brightness to 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "put the brightness to 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "put brightness at 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "keep the brightness at 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "turn the brightness to 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "turn brightness to 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "i want brightness at 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "i want the brightness at 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "i want brightness 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "brightness 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "brightness 25 percent", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "set brightness to 25%", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "set the brightness to 25%", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "can you set the brightness to 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "could you set brightness to 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "please set the brightness to 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "set the brightness to 25 please", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "set the brightness to twenty five", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "set brightness to twenty five", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "set the brightness to 25.", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "set brightness to 25.", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "uh set the brightness to 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "jarvis set the brightness to 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "set birghtness to 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "set brighness to 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "set the brightnes to 25", "intents": [{"name": "display.brightness_set", "args": {"level": 25}}]}
+{"text": "set the brightness to 60", "intents": [{"name": "display.brightness_set", "args": {"level": 60}}]}
+{"text": "set brightness to 60", "intents": [{"name": "display.brightness_set", "args": {"level": 60}}]}
+{"text": "set brightness 60", "intents": [{"name": "display.brightness_set", "args": {"level": 60}}]}
+{"text": "brightness to 60", "intents": [{"name": "display.brightness_set", "args": {"level": 60}}]}
+{"text": "set the brightness at 60", "intents": [{"name": "display.brightness_set", "args": {"level": 60}}]}
+{"text": "make the brightness 60", "intents": [{"name": "display.brightness_set", "args": {"level": 60}}]}
+{"text": "change the brightness to 60", "intents": [{"name": "display.brightness_set", "args": {"level": 60}}]}
+{"text": "put the brightness at 60", "intents": [{"name": "display.brightness_set", "args": {"level": 60}}]}
+{"text": "set my brightness to 60", "intents": [{"name": "display.brightness_set", "args": {"level": 60}}]}
+{"text": "set screen brightness 60", "intents": [{"name": "display.brightness_set", "args": {"level": 60}}]}
+{"text": "brightness 60", "intents": [{"name": "display.brightness_set", "args": {"level": 60}}]}
+{"text": "brightness 60 percent", "intents": [{"name": "display.brightness_set", "args": {"level": 60}}]}
+{"text": "set brightness to 60%", "intents": [{"name": "display.brightness_set", "args": {"level": 60}}]}
+{"text": "set the brightness to sixty", "intents": [{"name": "display.brightness_set", "args": {"level": 60}}]}
+{"text": "set brightness to sixty", "intents": [{"name": "display.brightness_set", "args": {"level": 60}}]}
+{"text": "can you set the brightness to 60", "intents": [{"name": "display.brightness_set", "args": {"level": 60}}]}
+{"text": "please set brightness to 60", "intents": [{"name": "display.brightness_set", "args": {"level": 60}}]}
+{"text": "set the brightness to 60 please", "intents": [{"name": "display.brightness_set", "args": {"level": 60}}]}
+{"text": "set the brightness to 60.", "intents": [{"name": "display.brightness_set", "args": {"level": 60}}]}
+{"text": "i want the brightness at 60", "intents": [{"name": "display.brightness_set", "args": {"level": 60}}]}
+{"text": "turn the brightness to 60", "intents": [{"name": "display.brightness_set", "args": {"level": 60}}]}
+{"text": "adjust brightness to 60", "intents": [{"name": "display.brightness_set", "args": {"level": 60}}]}
+{"text": "set the brightness to 90", "intents": [{"name": "display.brightness_set", "args": {"level": 90}}]}
+{"text": "set brightness to 90", "intents": [{"name": "display.brightness_set", "args": {"level": 90}}]}
+{"text": "brightness to 90", "intents": [{"name": "display.brightness_set", "args": {"level": 90}}]}
+{"text": "set brightness 90", "intents": [{"name": "display.brightness_set", "args": {"level": 90}}]}
+{"text": "make the brightness 90", "intents": [{"name": "display.brightness_set", "args": {"level": 90}}]}
+{"text": "brightness 90 percent", "intents": [{"name": "display.brightness_set", "args": {"level": 90}}]}
+{"text": "set the brightness to ninety", "intents": [{"name": "display.brightness_set", "args": {"level": 90}}]}
+{"text": "set my brightness to 90", "intents": [{"name": "display.brightness_set", "args": {"level": 90}}]}
+{"text": "can you set brightness to 90", "intents": [{"name": "display.brightness_set", "args": {"level": 90}}]}
+{"text": "set the brightness to 5", "intents": [{"name": "display.brightness_set", "args": {"level": 5}}]}
+{"text": "set brightness to 5", "intents": [{"name": "display.brightness_set", "args": {"level": 5}}]}
+{"text": "brightness to 5", "intents": [{"name": "display.brightness_set", "args": {"level": 5}}]}
+{"text": "set brightness 5", "intents": [{"name": "display.brightness_set", "args": {"level": 5}}]}
+{"text": "make the brightness 5", "intents": [{"name": "display.brightness_set", "args": {"level": 5}}]}
+{"text": "set the brightness to five", "intents": [{"name": "display.brightness_set", "args": {"level": 5}}]}
+{"text": "set the brightness to 7", "intents": [{"name": "display.brightness_set", "args": {"level": 7}}]}
+{"text": "set brightness to 7", "intents": [{"name": "display.brightness_set", "args": {"level": 7}}]}
+{"text": "brightness to 7", "intents": [{"name": "display.brightness_set", "args": {"level": 7}}]}
+{"text": "set the brightness to 33", "intents": [{"name": "display.brightness_set", "args": {"level": 33}}]}
+{"text": "set brightness to 33", "intents": [{"name": "display.brightness_set", "args": {"level": 33}}]}
+{"text": "brightness to 33", "intents": [{"name": "display.brightness_set", "args": {"level": 33}}]}
+{"text": "set the brightness to 45", "intents": [{"name": "display.brightness_set", "args": {"level": 45}}]}
+{"text": "set brightness to 45", "intents": [{"name": "display.brightness_set", "args": {"level": 45}}]}
+{"text": "brightness 45", "intents": [{"name": "display.brightness_set", "args": {"level": 45}}]}
+{"text": "set the brightness to 55", "intents": [{"name": "display.brightness_set", "args": {"level": 55}}]}
+{"text": "set brightness to 55", "intents": [{"name": "display.brightness_set", "args": {"level": 55}}]}
+{"text": "brightness to 55", "intents": [{"name": "display.brightness_set", "args": {"level": 55}}]}
+{"text": "set the brightness to 70", "intents": [{"name": "display.brightness_set", "args": {"level": 70}}]}
+{"text": "set brightness to 70", "intents": [{"name": "display.brightness_set", "args": {"level": 70}}]}
+{"text": "brightness 70", "intents": [{"name": "display.brightness_set", "args": {"level": 70}}]}
+{"text": "set the brightness to 80", "intents": [{"name": "display.brightness_set", "args": {"level": 80}}]}
+{"text": "set brightness to 80", "intents": [{"name": "display.brightness_set", "args": {"level": 80}}]}
+{"text": "brightness to 80", "intents": [{"name": "display.brightness_set", "args": {"level": 80}}]}
+{"text": "set the brightness to 85", "intents": [{"name": "display.brightness_set", "args": {"level": 85}}]}
+{"text": "set brightness to 85", "intents": [{"name": "display.brightness_set", "args": {"level": 85}}]}
+{"text": "set the brightness to 95", "intents": [{"name": "display.brightness_set", "args": {"level": 95}}]}
+{"text": "set brightness to 95", "intents": [{"name": "display.brightness_set", "args": {"level": 95}}]}
+{"text": "set the brightness to 15", "intents": [{"name": "display.brightness_set", "args": {"level": 15}}]}
+{"text": "set brightness to 15", "intents": [{"name": "display.brightness_set", "args": {"level": 15}}]}
+{"text": "set the brightness to 35", "intents": [{"name": "display.brightness_set", "args": {"level": 35}}]}
+{"text": "set brightness to 35", "intents": [{"name": "display.brightness_set", "args": {"level": 35}}]}
+{"text": "set the brightness to 42", "intents": [{"name": "display.brightness_set", "args": {"level": 42}}]}
+{"text": "set brightness to 42", "intents": [{"name": "display.brightness_set", "args": {"level": 42}}]}
+{"text": "set the brightness to 77", "intents": [{"name": "display.brightness_set", "args": {"level": 77}}]}
+{"text": "set brightness to 77", "intents": [{"name": "display.brightness_set", "args": {"level": 77}}]}
+{"text": "set the brightness to 88", "intents": [{"name": "display.brightness_set", "args": {"level": 88}}]}
+{"text": "set brightness to 88", "intents": [{"name": "display.brightness_set", "args": {"level": 88}}]}
+{"text": "set the brightness to 100", "intents": [{"name": "display.brightness_set", "args": {"level": 100}}]}
+{"text": "set brightness to 100", "intents": [{"name": "display.brightness_set", "args": {"level": 100}}]}
+{"text": "set the brightness to 100 percent", "intents": [{"name": "display.brightness_set", "args": {"level": 100}}]}
+{"text": "brightness to 100", "intents": [{"name": "display.brightness_set", "args": {"level": 100}}]}
+{"text": "max the brightness", "intents": [{"name": "display.brightness_set", "args": {"level": 100}}]}
+{"text": "max out the brightness", "intents": [{"name": "display.brightness_set", "args": {"level": 100}}]}
+{"text": "brightness all the way up", "intents": [{"name": "display.brightness_set", "args": {"level": 100}}]}
+{"text": "set the brightness to 0", "intents": [{"name": "display.brightness_set", "args": {"level": 0}}]}
+{"text": "set brightness to 0", "intents": [{"name": "display.brightness_set", "args": {"level": 0}}]}
+{"text": "brightness all the way down", "intents": [{"name": "display.brightness_set", "args": {"level": 0}}]}
+{"text": "min the brightness", "intents": [{"name": "display.brightness_set", "args": {"level": 0}}]}
+{"text": "increase the brightness by 5", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "increase brightness by 5", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "increase brightness 5", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "increase the brightness by 5%", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "increase brightness 5%", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "brightness up by 5", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "brightness up 5", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "brightness up 5 percent", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "turn up the brightness by 5", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "turn the brightness up by 5", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "turn brightness up 5", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "raise the brightness by 5", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "raise brightness by 5", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "raise the brightness 5", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "bump the brightness by 5", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "bump brightness by 5", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "go up 5 on brightness", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "up the brightness by 5", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "add 5 to the brightness", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "make the brightness 5 higher", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "make the screen 5 percent brighter", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "increase the brightness by 5 percent", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "can you increase the brightness by 5", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "please increase brightness by 5", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "increase the brightness by 5 please", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "increase the brightnes by 5", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "incresae brightness by 5", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "increase the brightness by 10", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "increase brightness by 10", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "increase brightness 10", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "increase the brightness by 10%", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "increase brightness 10%", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "brightness up by 10", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "brightness up 10", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "turn up the brightness by 10", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "turn the brightness up 10", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "turn brightness up by 10", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "raise the brightness by 10", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "raise brightness 10", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "bump the brightness 10", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "up the brightness 10", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "add 10 to brightness", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "make the screen 10 percent brighter", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "make brightness 10 higher", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "increase the brightness by 10 percent", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "can you increase the brightness by 10", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "increase the brightness by 15", "intents": [{"name": "display.brightness_up", "args": {"by": 15}}]}
+{"text": "increase brightness by 15", "intents": [{"name": "display.brightness_up", "args": {"by": 15}}]}
+{"text": "increase screen brightness by 15", "intents": [{"name": "display.brightness_up", "args": {"by": 15}}]}
+{"text": "brightness up 15", "intents": [{"name": "display.brightness_up", "args": {"by": 15}}]}
+{"text": "raise the brightness by 15", "intents": [{"name": "display.brightness_up", "args": {"by": 15}}]}
+{"text": "turn up brightness 15", "intents": [{"name": "display.brightness_up", "args": {"by": 15}}]}
+{"text": "increase the brightness by 20", "intents": [{"name": "display.brightness_up", "args": {"by": 20}}]}
+{"text": "increase brightness by 20", "intents": [{"name": "display.brightness_up", "args": {"by": 20}}]}
+{"text": "brightness up 20", "intents": [{"name": "display.brightness_up", "args": {"by": 20}}]}
+{"text": "raise brightness by 20", "intents": [{"name": "display.brightness_up", "args": {"by": 20}}]}
+{"text": "turn the brightness up by 20", "intents": [{"name": "display.brightness_up", "args": {"by": 20}}]}
+{"text": "increase the brightness by 25", "intents": [{"name": "display.brightness_up", "args": {"by": 25}}]}
+{"text": "increase brightness by 25", "intents": [{"name": "display.brightness_up", "args": {"by": 25}}]}
+{"text": "brightness up 25", "intents": [{"name": "display.brightness_up", "args": {"by": 25}}]}
+{"text": "raise the brightness by 25", "intents": [{"name": "display.brightness_up", "args": {"by": 25}}]}
+{"text": "increase the brightness by 30", "intents": [{"name": "display.brightness_up", "args": {"by": 30}}]}
+{"text": "increase brightness by 30", "intents": [{"name": "display.brightness_up", "args": {"by": 30}}]}
+{"text": "brightness up 30", "intents": [{"name": "display.brightness_up", "args": {"by": 30}}]}
+{"text": "make the brightness higher by 30", "intents": [{"name": "display.brightness_up", "args": {"by": 30}}]}
+{"text": "increase the brightness", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "increase brightness", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "increase the brightness please", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "brightness up", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "brightness up please", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "turn up the brightness", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "turn the brightness up", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "turn brightness up", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "raise the brightness", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "raise brightness", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "make it brighter", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "make the screen brighter", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "make it a bit brighter", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "a bit more brightness", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "more brightness", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "a little brighter", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "up the brightness", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "can you increase the brightness", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "please increase the brightness", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "decrease the brightness by 5", "intents": [{"name": "display.brightness_down", "args": {"by": 5}}]}
+{"text": "decrease brightness by 5", "intents": [{"name": "display.brightness_down", "args": {"by": 5}}]}
+{"text": "decrease brightness 5", "intents": [{"name": "display.brightness_down", "args": {"by": 5}}]}
+{"text": "decrease the brightness by 5%", "intents": [{"name": "display.brightness_down", "args": {"by": 5}}]}
+{"text": "brightness down by 5", "intents": [{"name": "display.brightness_down", "args": {"by": 5}}]}
+{"text": "brightness down 5", "intents": [{"name": "display.brightness_down", "args": {"by": 5}}]}
+{"text": "lower the brightness by 5", "intents": [{"name": "display.brightness_down", "args": {"by": 5}}]}
+{"text": "lower brightness by 5", "intents": [{"name": "display.brightness_down", "args": {"by": 5}}]}
+{"text": "lower brightness 5", "intents": [{"name": "display.brightness_down", "args": {"by": 5}}]}
+{"text": "reduce the brightness by 5", "intents": [{"name": "display.brightness_down", "args": {"by": 5}}]}
+{"text": "reduce brightness by 5", "intents": [{"name": "display.brightness_down", "args": {"by": 5}}]}
+{"text": "reduce brightness 5", "intents": [{"name": "display.brightness_down", "args": {"by": 5}}]}
+{"text": "turn down the brightness by 5", "intents": [{"name": "display.brightness_down", "args": {"by": 5}}]}
+{"text": "turn brightness down 5", "intents": [{"name": "display.brightness_down", "args": {"by": 5}}]}
+{"text": "dim the screen by 5", "intents": [{"name": "display.brightness_down", "args": {"by": 5}}]}
+{"text": "dim brightness by 5", "intents": [{"name": "display.brightness_down", "args": {"by": 5}}]}
+{"text": "dim the brightness 5", "intents": [{"name": "display.brightness_down", "args": {"by": 5}}]}
+{"text": "subtract 5 from the brightness", "intents": [{"name": "display.brightness_down", "args": {"by": 5}}]}
+{"text": "make the screen 5 percent dimmer", "intents": [{"name": "display.brightness_down", "args": {"by": 5}}]}
+{"text": "decrease the brightnes by 5", "intents": [{"name": "display.brightness_down", "args": {"by": 5}}]}
+{"text": "decrease the brightness by 10", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "decrease brightness by 10", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "decrease brightness 10", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "decrease the brightness by 10%", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "brightness down by 10", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "brightness down 10", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "lower the brightness by 10", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "lower brightness 10", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "reduce the brightness by 10", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "reduce brightness 10", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "turn down the brightness by 10", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "turn the brightness down 10", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "dim the screen by 10", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "dim brightness 10", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "make the screen 10 percent dimmer", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "decrease the brightness by 15", "intents": [{"name": "display.brightness_down", "args": {"by": 15}}]}
+{"text": "decrease brightness by 15", "intents": [{"name": "display.brightness_down", "args": {"by": 15}}]}
+{"text": "brightness down 15", "intents": [{"name": "display.brightness_down", "args": {"by": 15}}]}
+{"text": "lower the brightness by 15", "intents": [{"name": "display.brightness_down", "args": {"by": 15}}]}
+{"text": "dim brightness 15", "intents": [{"name": "display.brightness_down", "args": {"by": 15}}]}
+{"text": "reduce brightness by 15", "intents": [{"name": "display.brightness_down", "args": {"by": 15}}]}
+{"text": "decrease the brightness by 20", "intents": [{"name": "display.brightness_down", "args": {"by": 20}}]}
+{"text": "decrease brightness by 20", "intents": [{"name": "display.brightness_down", "args": {"by": 20}}]}
+{"text": "brightness down 20", "intents": [{"name": "display.brightness_down", "args": {"by": 20}}]}
+{"text": "lower the brightness by 20", "intents": [{"name": "display.brightness_down", "args": {"by": 20}}]}
+{"text": "turn brightness down by 20", "intents": [{"name": "display.brightness_down", "args": {"by": 20}}]}
+{"text": "decrease the brightness by 25", "intents": [{"name": "display.brightness_down", "args": {"by": 25}}]}
+{"text": "reduce brightness 25", "intents": [{"name": "display.brightness_down", "args": {"by": 25}}]}
+{"text": "lower brightness by 25", "intents": [{"name": "display.brightness_down", "args": {"by": 25}}]}
+{"text": "decrease the brightness by 30", "intents": [{"name": "display.brightness_down", "args": {"by": 30}}]}
+{"text": "lower the brightness by 30", "intents": [{"name": "display.brightness_down", "args": {"by": 30}}]}
+{"text": "brightness down 30", "intents": [{"name": "display.brightness_down", "args": {"by": 30}}]}
+{"text": "decrease the brightness", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "decrease brightness", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "brightness down", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "lower the brightness", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "lower brightness", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "reduce the brightness", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "turn down the brightness", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "turn the brightness down", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "turn brightness down", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "make it dimmer", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "make the screen dimmer", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "make it a bit dimmer", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "a bit less brightness", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "a little dimmer", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "dim it down", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "can you decrease the brightness", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "please lower the brightness", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "set brightness minus 15", "intents": [{"name": "display.brightness_down", "args": {"by": 15}}]}
+{"text": "brightness minus 10", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "brightness minus 5", "intents": [{"name": "display.brightness_down", "args": {"by": 5}}]}
+{"text": "brightness plus 15", "intents": [{"name": "display.brightness_up", "args": {"by": 15}}]}
+{"text": "brightness plus 10", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "set brightness plus 5", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "decrease the brightness to 14", "intents": [{"name": "display.brightness_set", "args": {"level": 14}}]}
+{"text": "decrease brightness to 14", "intents": [{"name": "display.brightness_set", "args": {"level": 14}}]}
+{"text": "lower the brightness to 14", "intents": [{"name": "display.brightness_set", "args": {"level": 14}}]}
+{"text": "reduce brightness to 14", "intents": [{"name": "display.brightness_set", "args": {"level": 14}}]}
+{"text": "turn the brightness down to 14", "intents": [{"name": "display.brightness_set", "args": {"level": 14}}]}
+{"text": "dim the screen to 14", "intents": [{"name": "display.brightness_set", "args": {"level": 14}}]}
+{"text": "increase the brightness to 65", "intents": [{"name": "display.brightness_set", "args": {"level": 65}}]}
+{"text": "increase brightness to 65", "intents": [{"name": "display.brightness_set", "args": {"level": 65}}]}
+{"text": "raise the brightness to 65", "intents": [{"name": "display.brightness_set", "args": {"level": 65}}]}
+{"text": "turn the brightness up to 65", "intents": [{"name": "display.brightness_set", "args": {"level": 65}}]}
+{"text": "set the brightness to 200", "intents": [{"name": "display.brightness_set", "args": {"level": 200}}]}
+{"text": "set brightness to 200", "intents": [{"name": "display.brightness_set", "args": {"level": 200}}]}
+{"text": "set the brightness to 150", "intents": [{"name": "display.brightness_set", "args": {"level": 150}}]}
+{"text": "brightness to 300", "intents": [{"name": "display.brightness_set", "args": {"level": 300}}]}
+{"text": "set brightness to minus 5", "intents": [{"name": "display.brightness_set", "args": {"level": -5}}]}

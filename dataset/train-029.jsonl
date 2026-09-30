@@ -1,0 +1,151 @@
+{"text": "open the spotify app for me", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open the chrome app for me", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open the whatsapp app for me", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "open the vscode app for me", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "open the notes app for me", "intents": [{"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "close the spotify app for me", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "close the chrome app for me", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "close the whatsapp app for me", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "the spotify app open please", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "the chrome app open please", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "the whatsapp app close please", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "open i want the spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open i want the chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "close i want the whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "open want to spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close want to whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "open need to spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close need to whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "spotify i want to open", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "whatsapp i want to close", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "brightness increase", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "brightness decrease", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "brightness increase 10", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "brightness decrease 10", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "brightness increase 20", "intents": [{"name": "display.brightness_up", "args": {"by": 20}}]}
+{"text": "brightness decrease 20", "intents": [{"name": "display.brightness_down", "args": {"by": 20}}]}
+{"text": "volume increase", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "volume decrease", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "volume increase 10", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "volume decrease 10", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "volume increase 20", "intents": [{"name": "volume.up", "args": {"by": 20}}]}
+{"text": "volume decrease 20", "intents": [{"name": "volume.down", "args": {"by": 20}}]}
+{"text": "contrast increase", "intents": [{"name": "display.contrast_up", "args": {"by": 10}}]}
+{"text": "contrast decrease", "intents": [{"name": "display.contrast_down", "args": {"by": 10}}]}
+{"text": "contrast increase 10", "intents": [{"name": "display.contrast_up", "args": {"by": 10}}]}
+{"text": "contrast decrease 10", "intents": [{"name": "display.contrast_down", "args": {"by": 10}}]}
+{"text": "brightness upping", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "brightness downing", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "voluming up", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "voluming down", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "make brighter the screen", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "make dimmer the screen", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "make louder the volume", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "make quieter the volume", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "the screen brighter make", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "the volume louder make", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "set to 50 the brightness", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "set to 50 the volume", "intents": [{"name": "volume.set", "args": {"level": 50}}]}
+{"text": "to 50 set brightness", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "to 50 set volume", "intents": [{"name": "volume.set", "args": {"level": 50}}]}
+{"text": "brightness 50 to set", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "volume 50 to set", "intents": [{"name": "volume.set", "args": {"level": 50}}]}
+{"text": "playing the liked songs", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "playing liked songs", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "songs liked playing", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "pausing the music", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "pausing music", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "music pausing", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "resuming the music", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "resuming music", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "skipping the song", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "skipping song", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "going back one song", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "going back one track", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "opening spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "opening chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "opening whatsapp", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "opening vscode", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "closing spotify", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "closing chrome", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "closing whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "closing vscode", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}]}
+{"text": "muting the sound", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "muting sound", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "unmuting the sound", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "unmuting sound", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "telling me the time", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "telling me the date", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "whats the time telling me", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "whats the date telling me", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "searching youtube for jailer 2", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jailer 2"}}]}
+{"text": "searching the web for news", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "news"}}]}
+{"text": "creating a file called notes", "intents": [{"name": "file.create", "args": {"name": "notes"}}]}
+{"text": "creating a folder called work", "intents": [{"name": "folder.create", "args": {"name": "work"}}]}
+{"text": "opening the downloads folder", "intents": [{"name": "folder.open", "args": {"name": "downloads"}}]}
+{"text": "installing node using homebrew", "intents": [{"name": "install.preview", "args": {"package": "node", "source": "homebrew"}}]}
+{"text": "increase brightness by 5 precent", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "increase brightness by 5 precnt", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "increase brightness by 5 precente", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "decrease brightness by 5 precent", "intents": [{"name": "display.brightness_down", "args": {"by": 5}}]}
+{"text": "increase volume by 5 precent", "intents": [{"name": "volume.up", "args": {"by": 5}}]}
+{"text": "decrease volume by 5 precent", "intents": [{"name": "volume.down", "args": {"by": 5}}]}
+{"text": "set brightness to 50 percnt", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "set volume to 50 percnt", "intents": [{"name": "volume.set", "args": {"level": 50}}]}
+{"text": "set brightness to 50 per cent", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "set volume to 50 per cent", "intents": [{"name": "volume.set", "args": {"level": 50}}]}
+{"text": "open spotifty app", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open spoify app", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open sptoify app", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open chroem app", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open chome app", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "open whtasapp app", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "open watspp app", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}]}
+{"text": "open vscod app", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "open vcsode app", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "open noets app", "intents": [{"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "open phtos app", "intents": [{"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "open musci app", "intents": [{"name": "app.open", "args": {"name": "Music"}}]}
+{"text": "close spoify app", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "close chroem app", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "close whtasapp app", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "close vscod app", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}]}
+{"text": "play my liked song", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "play my like songs", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "play my liekd song", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "pause th msuic", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "stop the msuic", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "resume the msuic", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "nxt trak", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "nex song", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "previus trak", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "prevous song", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "mute the soud", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "mute te soud", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "unmute the soud", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "vol up", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "vol down", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "set the voulme to 50", "intents": [{"name": "volume.set", "args": {"level": 50}}]}
+{"text": "set the voluem to 50", "intents": [{"name": "volume.set", "args": {"level": 50}}]}
+{"text": "set the brighntess to 50", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "set the brightnes to 50", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "increase the brghtness", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "decrease the brghtness", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "whats the tiem", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "whats the tiem now", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "whats the daet", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "whats the daet today", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "whats my batery", "intents": [{"name": "info.battery", "args": {}}]}
+{"text": "whats my battr", "intents": [{"name": "info.battery", "args": {}}]}
+{"text": "serach youtube for jailer 2", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jailer 2"}}]}
+{"text": "seach the web for news", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "news"}}]}
+{"text": "searhc the web for news", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "news"}}]}
+{"text": "creat file notes", "intents": [{"name": "file.create", "args": {"name": "notes"}}]}
+{"text": "crate file notes", "intents": [{"name": "file.create", "args": {"name": "notes"}}]}
+{"text": "creat folder work", "intents": [{"name": "folder.create", "args": {"name": "work"}}]}
+{"text": "crate folder work", "intents": [{"name": "folder.create", "args": {"name": "work"}}]}
+{"text": "open the dwnloads folder", "intents": [{"name": "folder.open", "args": {"name": "downloads"}}]}
+{"text": "open the documets folder", "intents": [{"name": "folder.open", "args": {"name": "documents"}}]}
+{"text": "open the desktp folder", "intents": [{"name": "folder.open", "args": {"name": "desktop"}}]}
+{"text": "instal node using homebrew", "intents": [{"name": "install.preview", "args": {"package": "node", "source": "homebrew"}}]}
+{"text": "instll node using homebrew", "intents": [{"name": "install.preview", "args": {"package": "node", "source": "homebrew"}}]}

@@ -1,0 +1,40 @@
+{"text": "set the brightness at 50", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "adjust the brightness to 50", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "put the brightness to 50", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "brightness 50 percent", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "set brightness to 50%", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "set birghtness to 50", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "set brighness 50", "intents": [{"name": "display.brightness_set", "args": {"level": 50}}]}
+{"text": "set brightness to 75", "intents": [{"name": "display.brightness_set", "args": {"level": 75}}]}
+{"text": "set the screen brightness to 65", "intents": [{"name": "display.brightness_set", "args": {"level": 65}}]}
+{"text": "make screen brightness 80", "intents": [{"name": "display.brightness_set", "args": {"level": 80}}]}
+{"text": "screen brightness to 20", "intents": [{"name": "display.brightness_set", "args": {"level": 20}}]}
+{"text": "turn the brightness to 40", "intents": [{"name": "display.brightness_set", "args": {"level": 40}}]}
+{"text": "bump brightness 5", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "increase brightness by 10%", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "raise the brightness 10", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "increase brightness by 25%", "intents": [{"name": "display.brightness_up", "args": {"by": 25}}]}
+{"text": "turn down the brightness 5", "intents": [{"name": "display.brightness_down", "args": {"by": 5}}]}
+{"text": "decrease brightness by 10%", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "incresae brightness by 10", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "decrease the brightnes by 20", "intents": [{"name": "display.brightness_down", "args": {"by": 20}}]}
+{"text": "contrast to 30", "intents": [{"name": "display.contrast_set", "args": {"level": 30}}]}
+{"text": "set my contrast to 45", "intents": [{"name": "display.contrast_set", "args": {"level": 45}}]}
+{"text": "change contrast to 60", "intents": [{"name": "display.contrast_set", "args": {"level": 60}}]}
+{"text": "set contrast 0", "intents": [{"name": "display.contrast_set", "args": {"level": 0}}]}
+{"text": "set the contras to 55", "intents": [{"name": "display.contrast_set", "args": {"level": 55}}]}
+{"text": "set contrast minus 10", "intents": [{"name": "display.contrast_down", "args": {"by": 10}}]}
+{"text": "set volume 30", "intents": [{"name": "volume.set", "args": {"level": 30}}]}
+{"text": "set my volume to 20", "intents": [{"name": "volume.set", "args": {"level": 20}}]}
+{"text": "set the volume to 200", "intents": [{"name": "volume.set", "args": {"level": 200}}]}
+{"text": "open Spotify.", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "open netflix", "intents": [{"name": "url.open", "args": {"url": "https://www.netflix.com"}}]}
+{"text": "open youtube", "intents": [{"name": "url.open", "args": {"url": "https://www.youtube.com"}}]}
+{"text": "open google", "intents": [{"name": "url.open", "args": {"url": "https://www.google.com"}}]}
+{"text": "open twitter", "intents": [{"name": "url.open", "args": {"url": "https://twitter.com"}}]}
+{"text": "open reddit", "intents": [{"name": "url.open", "args": {"url": "https://www.reddit.com"}}]}
+{"text": "open gmail", "intents": [{"name": "url.open", "args": {"url": "https://mail.google.com"}}]}
+{"text": "open google maps", "intents": [{"name": "url.open", "args": {"url": "https://maps.google.com"}}]}
+{"text": "search for claude code in youtube.", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "claude code"}}]}
+{"text": "search youtube for jailer 2 teaser", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jailer 2 teaser"}}]}
+{"text": "set brightness 60 and open the photos app", "intents": [{"name": "display.brightness_set", "args": {"level": 60}}, {"name": "app.open", "args": {"name": "Photos"}}]}

@@ -7,42 +7,40 @@ struct StatusBadge: View {
 
     private var label: String {
         if sessionState == .active && state == .listening {
-            return "SESSION ACTIVE (FOLLOW-UP)"
+            return "Session active"
         }
-        return state.rawValue.uppercased()
+        return state.rawValue
     }
 
     private var dotColor: Color {
         if sessionState == .active && (state == .listening || state == .recording) {
-            return Color(red: 0.35, green: 0.85, blue: 1.0)
+            return JarvisColor.accent
         }
         switch state {
-        case .idle:       return Color(red: 0.55, green: 0.55, blue: 0.65)
-        case .listening:  return Color(red: 0.55, green: 0.88, blue: 1.0)
-        case .recording:  return Color(red: 1.0, green: 0.38, blue: 0.55)
-        case .processing: return Color(red: 1.0, green: 0.78, blue: 0.2)
-        case .executing:  return Color(red: 0.25, green: 0.90, blue: 0.65)
+        case .idle:       return JarvisColor.textTertiary
+        case .listening:  return JarvisColor.accent
+        case .recording:  return JarvisColor.danger
+        case .processing: return JarvisColor.attention
+        case .executing:  return JarvisColor.ok
         }
     }
 
     var body: some View {
-        HStack(spacing: 7) {
+        HStack(spacing: 6) {
             Circle()
                 .fill(dotColor)
-                .frame(width: 7, height: 7)
-                .shadow(color: dotColor.opacity(0.85), radius: 5)
+                .frame(width: 6, height: 6)
                 .modifier(PulsingModifier(active: state == .listening || state == .recording || sessionState == .active))
 
             Text(label)
-                .font(.system(size: 10, weight: .bold, design: .monospaced))
-                .tracking(1.8)
-                .foregroundStyle(dotColor)
+                .font(JarvisType.caption)
+                .foregroundStyle(JarvisColor.textSecondary)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
-        .background(dotColor.opacity(0.12))
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(JarvisColor.surface)
         .clipShape(Capsule())
-        .overlay(Capsule().strokeBorder(dotColor.opacity(0.35), lineWidth: 0.8))
+        .overlay(Capsule().strokeBorder(JarvisColor.hairline, lineWidth: 1))
     }
 }
 

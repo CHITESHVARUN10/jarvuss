@@ -1,0 +1,35 @@
+{"text": "set the brightness to 63 and open youtube and search for interstellar review", "intents": [{"name": "display.brightness_set", "args": {"level": 63}}, {"name": "web.search", "args": {"engine": "YouTube", "query": "interstellar review"}}]}
+{"text": "brightness up 20 then open spotify then play liked songs", "intents": [{"name": "display.brightness_up", "args": {"by": 20}}, {"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_liked", "args": {}}]}
+{"text": "turn the brightness all the way up", "intents": [{"name": "display.brightness_set", "args": {"level": 100}}]}
+{"text": "turn the brightness all the way down", "intents": [{"name": "display.brightness_set", "args": {"level": 0}}]}
+{"text": "set brightness to 12", "intents": [{"name": "display.brightness_set", "args": {"level": 12}}]}
+{"text": "reduce brightness to 12", "intents": [{"name": "display.brightness_set", "args": {"level": 12}}]}
+{"text": "can you make the screen a bit dimmer", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "jarvis set the brightness to 55", "intents": [{"name": "display.brightness_set", "args": {"level": 55}}]}
+{"text": "open spotifty", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "close spotify and shut the music", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}, {"name": "media.pause", "args": {}}]}
+{"text": "search for the video of jailer movie in youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "the video of jailer movie"}}]}
+{"text": "search that song from titanic on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "that song from titanic"}}]}
+{"text": "google what is the meaning of life", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "what is the meaning of life"}}]}
+{"text": "search on the internet for cute puppies", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "cute puppies"}}]}
+{"text": "search claude code in brave browser", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "claude code"}}]}
+{"text": "open google and search for flights to tokyo", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "flights to tokyo"}}]}
+{"text": "set volume to 250", "intents": [{"name": "volume.set", "args": {"level": 250}}]}
+{"text": "volume up by 50", "intents": [{"name": "volume.up", "args": {"by": 50}}]}
+{"text": "mute the mic", "intents": [{"name": "ai.query", "args": {"text": "mute the mic"}}]}
+{"text": "what is my name", "intents": [{"name": "ai.query", "args": {"text": "what is my name"}}]}
+{"text": "play playlist top hits 2020", "intents": [{"name": "media.play_playlist", "args": {"name": "top hits 2020"}}]}
+{"text": "play the song bohemian rhapsody and volume down", "intents": [{"name": "media.play_song", "args": {"title": "bohemian rhapsody"}}, {"name": "volume.down", "args": {"by": 10}}]}
+{"text": "set contrast to 55 and brightness to 66", "intents": [{"name": "display.contrast_set", "args": {"level": 55}}, {"name": "display.brightness_set", "args": {"level": 66}}]}
+{"text": "whats the contrast at right now", "intents": [{"name": "info.contrast", "args": {}}]}
+{"text": "open documents folder", "intents": [{"name": "folder.open", "args": {"name": "documents"}}]}
+{"text": "open the most recent file in movies", "intents": [{"name": "file.open_latest", "args": {"folder": "movies"}}]}
+{"text": "create folder screenshots backup", "intents": [{"name": "folder.create", "args": {"name": "screenshots backup"}}]}
+{"text": "install ffmpeg with homebrew", "intents": [{"name": "install.preview", "args": {"package": "ffmpeg", "source": "homebrew"}}]}
+{"text": "explain the theory of relativity", "intents": [{"name": "ai.query", "args": {"text": "explain the theory of relativity"}}]}
+{"text": "um so basically increase brightness by like 5 percent", "intents": [{"name": "display.brightness_up", "args": {"by": 5}}]}
+{"text": "brightness to 88 and open photos.", "intents": [{"name": "display.brightness_set", "args": {"level": 88}}, {"name": "app.open", "args": {"name": "Photos"}}]}
+{"text": "open terminal and open spotify", "intents": [{"name": "app.open", "args": {"name": "Terminal"}}, {"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "whats 2 plus 2", "intents": [{"name": "ai.query", "args": {"text": "whats 2 plus 2"}}]}
+{"text": "set the contrast to 41 then mute the sound", "intents": [{"name": "display.contrast_set", "args": {"level": 41}}, {"name": "volume.mute", "args": {}}]}
+{"text": "play some jazz on spotify", "intents": [{"name": "media.play_playlist", "args": {"name": "jazz"}}]}

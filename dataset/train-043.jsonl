@@ -1,0 +1,179 @@
+{"text": "set the brightness to 1", "intents": [{"name": "display.brightness_set", "args": {"level": 1}}]}
+{"text": "set the brightness to 2", "intents": [{"name": "display.brightness_set", "args": {"level": 2}}]}
+{"text": "set the brightness to 4", "intents": [{"name": "display.brightness_set", "args": {"level": 4}}]}
+{"text": "set the brightness to 9", "intents": [{"name": "display.brightness_set", "args": {"level": 9}}]}
+{"text": "set the brightness to 13", "intents": [{"name": "display.brightness_set", "args": {"level": 13}}]}
+{"text": "set the brightness to 14", "intents": [{"name": "display.brightness_set", "args": {"level": 14}}]}
+{"text": "set the brightness to 17", "intents": [{"name": "display.brightness_set", "args": {"level": 17}}]}
+{"text": "set the brightness to 19", "intents": [{"name": "display.brightness_set", "args": {"level": 19}}]}
+{"text": "set the brightness to 21", "intents": [{"name": "display.brightness_set", "args": {"level": 21}}]}
+{"text": "set the brightness to 23", "intents": [{"name": "display.brightness_set", "args": {"level": 23}}]}
+{"text": "set the brightness to 24", "intents": [{"name": "display.brightness_set", "args": {"level": 24}}]}
+{"text": "set the brightness to 27", "intents": [{"name": "display.brightness_set", "args": {"level": 27}}]}
+{"text": "set the brightness to 29", "intents": [{"name": "display.brightness_set", "args": {"level": 29}}]}
+{"text": "set the brightness to 31", "intents": [{"name": "display.brightness_set", "args": {"level": 31}}]}
+{"text": "set the brightness to 32", "intents": [{"name": "display.brightness_set", "args": {"level": 32}}]}
+{"text": "set the brightness to 34", "intents": [{"name": "display.brightness_set", "args": {"level": 34}}]}
+{"text": "set the brightness to 38", "intents": [{"name": "display.brightness_set", "args": {"level": 38}}]}
+{"text": "set the brightness to 39", "intents": [{"name": "display.brightness_set", "args": {"level": 39}}]}
+{"text": "set the brightness to 41", "intents": [{"name": "display.brightness_set", "args": {"level": 41}}]}
+{"text": "set the brightness to 43", "intents": [{"name": "display.brightness_set", "args": {"level": 43}}]}
+{"text": "set the brightness to 47", "intents": [{"name": "display.brightness_set", "args": {"level": 47}}]}
+{"text": "set the brightness to 48", "intents": [{"name": "display.brightness_set", "args": {"level": 48}}]}
+{"text": "set the brightness to 49", "intents": [{"name": "display.brightness_set", "args": {"level": 49}}]}
+{"text": "set the brightness to 51", "intents": [{"name": "display.brightness_set", "args": {"level": 51}}]}
+{"text": "set the brightness to 52", "intents": [{"name": "display.brightness_set", "args": {"level": 52}}]}
+{"text": "set the brightness to 53", "intents": [{"name": "display.brightness_set", "args": {"level": 53}}]}
+{"text": "set the brightness to 54", "intents": [{"name": "display.brightness_set", "args": {"level": 54}}]}
+{"text": "set the brightness to 56", "intents": [{"name": "display.brightness_set", "args": {"level": 56}}]}
+{"text": "set the brightness to 57", "intents": [{"name": "display.brightness_set", "args": {"level": 57}}]}
+{"text": "set the brightness to 58", "intents": [{"name": "display.brightness_set", "args": {"level": 58}}]}
+{"text": "set the brightness to 59", "intents": [{"name": "display.brightness_set", "args": {"level": 59}}]}
+{"text": "set the brightness to 61", "intents": [{"name": "display.brightness_set", "args": {"level": 61}}]}
+{"text": "set the brightness to 62", "intents": [{"name": "display.brightness_set", "args": {"level": 62}}]}
+{"text": "set the brightness to 63", "intents": [{"name": "display.brightness_set", "args": {"level": 63}}]}
+{"text": "set the brightness to 64", "intents": [{"name": "display.brightness_set", "args": {"level": 64}}]}
+{"text": "set the brightness to 67", "intents": [{"name": "display.brightness_set", "args": {"level": 67}}]}
+{"text": "set the brightness to 68", "intents": [{"name": "display.brightness_set", "args": {"level": 68}}]}
+{"text": "set the brightness to 69", "intents": [{"name": "display.brightness_set", "args": {"level": 69}}]}
+{"text": "set the brightness to 71", "intents": [{"name": "display.brightness_set", "args": {"level": 71}}]}
+{"text": "set the brightness to 73", "intents": [{"name": "display.brightness_set", "args": {"level": 73}}]}
+{"text": "set the brightness to 74", "intents": [{"name": "display.brightness_set", "args": {"level": 74}}]}
+{"text": "set the brightness to 76", "intents": [{"name": "display.brightness_set", "args": {"level": 76}}]}
+{"text": "set the brightness to 78", "intents": [{"name": "display.brightness_set", "args": {"level": 78}}]}
+{"text": "set the brightness to 79", "intents": [{"name": "display.brightness_set", "args": {"level": 79}}]}
+{"text": "set the brightness to 81", "intents": [{"name": "display.brightness_set", "args": {"level": 81}}]}
+{"text": "set the brightness to 83", "intents": [{"name": "display.brightness_set", "args": {"level": 83}}]}
+{"text": "set the brightness to 84", "intents": [{"name": "display.brightness_set", "args": {"level": 84}}]}
+{"text": "set the brightness to 87", "intents": [{"name": "display.brightness_set", "args": {"level": 87}}]}
+{"text": "set the brightness to 89", "intents": [{"name": "display.brightness_set", "args": {"level": 89}}]}
+{"text": "set the brightness to 91", "intents": [{"name": "display.brightness_set", "args": {"level": 91}}]}
+{"text": "set the brightness to 93", "intents": [{"name": "display.brightness_set", "args": {"level": 93}}]}
+{"text": "set the brightness to 94", "intents": [{"name": "display.brightness_set", "args": {"level": 94}}]}
+{"text": "set the brightness to 96", "intents": [{"name": "display.brightness_set", "args": {"level": 96}}]}
+{"text": "set the brightness to 97", "intents": [{"name": "display.brightness_set", "args": {"level": 97}}]}
+{"text": "set the brightness to 98", "intents": [{"name": "display.brightness_set", "args": {"level": 98}}]}
+{"text": "brightness to 13", "intents": [{"name": "display.brightness_set", "args": {"level": 13}}]}
+{"text": "brightness to 17", "intents": [{"name": "display.brightness_set", "args": {"level": 17}}]}
+{"text": "brightness to 23", "intents": [{"name": "display.brightness_set", "args": {"level": 23}}]}
+{"text": "brightness to 29", "intents": [{"name": "display.brightness_set", "args": {"level": 29}}]}
+{"text": "brightness to 34", "intents": [{"name": "display.brightness_set", "args": {"level": 34}}]}
+{"text": "brightness to 41", "intents": [{"name": "display.brightness_set", "args": {"level": 41}}]}
+{"text": "brightness to 47", "intents": [{"name": "display.brightness_set", "args": {"level": 47}}]}
+{"text": "brightness to 53", "intents": [{"name": "display.brightness_set", "args": {"level": 53}}]}
+{"text": "brightness to 59", "intents": [{"name": "display.brightness_set", "args": {"level": 59}}]}
+{"text": "brightness to 67", "intents": [{"name": "display.brightness_set", "args": {"level": 67}}]}
+{"text": "brightness to 73", "intents": [{"name": "display.brightness_set", "args": {"level": 73}}]}
+{"text": "brightness to 79", "intents": [{"name": "display.brightness_set", "args": {"level": 79}}]}
+{"text": "brightness to 83", "intents": [{"name": "display.brightness_set", "args": {"level": 83}}]}
+{"text": "brightness to 89", "intents": [{"name": "display.brightness_set", "args": {"level": 89}}]}
+{"text": "brightness to 97", "intents": [{"name": "display.brightness_set", "args": {"level": 97}}]}
+{"text": "set the volume to 1", "intents": [{"name": "volume.set", "args": {"level": 1}}]}
+{"text": "set the volume to 2", "intents": [{"name": "volume.set", "args": {"level": 2}}]}
+{"text": "set the volume to 4", "intents": [{"name": "volume.set", "args": {"level": 4}}]}
+{"text": "set the volume to 9", "intents": [{"name": "volume.set", "args": {"level": 9}}]}
+{"text": "set the volume to 13", "intents": [{"name": "volume.set", "args": {"level": 13}}]}
+{"text": "set the volume to 17", "intents": [{"name": "volume.set", "args": {"level": 17}}]}
+{"text": "set the volume to 23", "intents": [{"name": "volume.set", "args": {"level": 23}}]}
+{"text": "set the volume to 29", "intents": [{"name": "volume.set", "args": {"level": 29}}]}
+{"text": "set the volume to 34", "intents": [{"name": "volume.set", "args": {"level": 34}}]}
+{"text": "set the volume to 41", "intents": [{"name": "volume.set", "args": {"level": 41}}]}
+{"text": "set the volume to 47", "intents": [{"name": "volume.set", "args": {"level": 47}}]}
+{"text": "set the volume to 53", "intents": [{"name": "volume.set", "args": {"level": 53}}]}
+{"text": "set the volume to 59", "intents": [{"name": "volume.set", "args": {"level": 59}}]}
+{"text": "set the volume to 67", "intents": [{"name": "volume.set", "args": {"level": 67}}]}
+{"text": "set the volume to 73", "intents": [{"name": "volume.set", "args": {"level": 73}}]}
+{"text": "set the volume to 79", "intents": [{"name": "volume.set", "args": {"level": 79}}]}
+{"text": "set the volume to 83", "intents": [{"name": "volume.set", "args": {"level": 83}}]}
+{"text": "set the volume to 89", "intents": [{"name": "volume.set", "args": {"level": 89}}]}
+{"text": "set the volume to 97", "intents": [{"name": "volume.set", "args": {"level": 97}}]}
+{"text": "volume to 13", "intents": [{"name": "volume.set", "args": {"level": 13}}]}
+{"text": "volume to 23", "intents": [{"name": "volume.set", "args": {"level": 23}}]}
+{"text": "volume to 34", "intents": [{"name": "volume.set", "args": {"level": 34}}]}
+{"text": "volume to 47", "intents": [{"name": "volume.set", "args": {"level": 47}}]}
+{"text": "volume to 59", "intents": [{"name": "volume.set", "args": {"level": 59}}]}
+{"text": "volume to 73", "intents": [{"name": "volume.set", "args": {"level": 73}}]}
+{"text": "volume to 89", "intents": [{"name": "volume.set", "args": {"level": 89}}]}
+{"text": "set the contrast to 13", "intents": [{"name": "display.contrast_set", "args": {"level": 13}}]}
+{"text": "set the contrast to 23", "intents": [{"name": "display.contrast_set", "args": {"level": 23}}]}
+{"text": "set the contrast to 34", "intents": [{"name": "display.contrast_set", "args": {"level": 34}}]}
+{"text": "set the contrast to 41", "intents": [{"name": "display.contrast_set", "args": {"level": 41}}]}
+{"text": "set the contrast to 47", "intents": [{"name": "display.contrast_set", "args": {"level": 47}}]}
+{"text": "set the contrast to 53", "intents": [{"name": "display.contrast_set", "args": {"level": 53}}]}
+{"text": "set the contrast to 59", "intents": [{"name": "display.contrast_set", "args": {"level": 59}}]}
+{"text": "set the contrast to 67", "intents": [{"name": "display.contrast_set", "args": {"level": 67}}]}
+{"text": "set the contrast to 73", "intents": [{"name": "display.contrast_set", "args": {"level": 73}}]}
+{"text": "set the contrast to 79", "intents": [{"name": "display.contrast_set", "args": {"level": 79}}]}
+{"text": "set the contrast to 83", "intents": [{"name": "display.contrast_set", "args": {"level": 83}}]}
+{"text": "set the contrast to 89", "intents": [{"name": "display.contrast_set", "args": {"level": 89}}]}
+{"text": "set the contrast to 97", "intents": [{"name": "display.contrast_set", "args": {"level": 97}}]}
+{"text": "increase brightness by 4", "intents": [{"name": "display.brightness_up", "args": {"by": 4}}]}
+{"text": "increase brightness by 6", "intents": [{"name": "display.brightness_up", "args": {"by": 6}}]}
+{"text": "increase brightness by 9", "intents": [{"name": "display.brightness_up", "args": {"by": 9}}]}
+{"text": "increase brightness by 14", "intents": [{"name": "display.brightness_up", "args": {"by": 14}}]}
+{"text": "increase brightness by 16", "intents": [{"name": "display.brightness_up", "args": {"by": 16}}]}
+{"text": "increase brightness by 19", "intents": [{"name": "display.brightness_up", "args": {"by": 19}}]}
+{"text": "increase brightness by 21", "intents": [{"name": "display.brightness_up", "args": {"by": 21}}]}
+{"text": "increase brightness by 24", "intents": [{"name": "display.brightness_up", "args": {"by": 24}}]}
+{"text": "increase brightness by 26", "intents": [{"name": "display.brightness_up", "args": {"by": 26}}]}
+{"text": "increase brightness by 28", "intents": [{"name": "display.brightness_up", "args": {"by": 28}}]}
+{"text": "increase brightness by 31", "intents": [{"name": "display.brightness_up", "args": {"by": 31}}]}
+{"text": "increase brightness by 34", "intents": [{"name": "display.brightness_up", "args": {"by": 34}}]}
+{"text": "increase brightness by 37", "intents": [{"name": "display.brightness_up", "args": {"by": 37}}]}
+{"text": "increase brightness by 39", "intents": [{"name": "display.brightness_up", "args": {"by": 39}}]}
+{"text": "decrease brightness by 4", "intents": [{"name": "display.brightness_down", "args": {"by": 4}}]}
+{"text": "decrease brightness by 6", "intents": [{"name": "display.brightness_down", "args": {"by": 6}}]}
+{"text": "decrease brightness by 9", "intents": [{"name": "display.brightness_down", "args": {"by": 9}}]}
+{"text": "decrease brightness by 14", "intents": [{"name": "display.brightness_down", "args": {"by": 14}}]}
+{"text": "decrease brightness by 16", "intents": [{"name": "display.brightness_down", "args": {"by": 16}}]}
+{"text": "decrease brightness by 19", "intents": [{"name": "display.brightness_down", "args": {"by": 19}}]}
+{"text": "decrease brightness by 21", "intents": [{"name": "display.brightness_down", "args": {"by": 21}}]}
+{"text": "decrease brightness by 24", "intents": [{"name": "display.brightness_down", "args": {"by": 24}}]}
+{"text": "decrease brightness by 26", "intents": [{"name": "display.brightness_down", "args": {"by": 26}}]}
+{"text": "decrease brightness by 28", "intents": [{"name": "display.brightness_down", "args": {"by": 28}}]}
+{"text": "decrease brightness by 31", "intents": [{"name": "display.brightness_down", "args": {"by": 31}}]}
+{"text": "decrease brightness by 34", "intents": [{"name": "display.brightness_down", "args": {"by": 34}}]}
+{"text": "decrease brightness by 37", "intents": [{"name": "display.brightness_down", "args": {"by": 37}}]}
+{"text": "decrease brightness by 39", "intents": [{"name": "display.brightness_down", "args": {"by": 39}}]}
+{"text": "volume up 4", "intents": [{"name": "volume.up", "args": {"by": 4}}]}
+{"text": "volume up 6", "intents": [{"name": "volume.up", "args": {"by": 6}}]}
+{"text": "volume up 9", "intents": [{"name": "volume.up", "args": {"by": 9}}]}
+{"text": "volume up 14", "intents": [{"name": "volume.up", "args": {"by": 14}}]}
+{"text": "volume up 16", "intents": [{"name": "volume.up", "args": {"by": 16}}]}
+{"text": "volume up 19", "intents": [{"name": "volume.up", "args": {"by": 19}}]}
+{"text": "volume up 21", "intents": [{"name": "volume.up", "args": {"by": 21}}]}
+{"text": "volume up 24", "intents": [{"name": "volume.up", "args": {"by": 24}}]}
+{"text": "volume up 26", "intents": [{"name": "volume.up", "args": {"by": 26}}]}
+{"text": "volume up 28", "intents": [{"name": "volume.up", "args": {"by": 28}}]}
+{"text": "volume up 31", "intents": [{"name": "volume.up", "args": {"by": 31}}]}
+{"text": "volume up 34", "intents": [{"name": "volume.up", "args": {"by": 34}}]}
+{"text": "volume up 37", "intents": [{"name": "volume.up", "args": {"by": 37}}]}
+{"text": "volume up 39", "intents": [{"name": "volume.up", "args": {"by": 39}}]}
+{"text": "volume down 4", "intents": [{"name": "volume.down", "args": {"by": 4}}]}
+{"text": "volume down 6", "intents": [{"name": "volume.down", "args": {"by": 6}}]}
+{"text": "volume down 9", "intents": [{"name": "volume.down", "args": {"by": 9}}]}
+{"text": "volume down 14", "intents": [{"name": "volume.down", "args": {"by": 14}}]}
+{"text": "volume down 16", "intents": [{"name": "volume.down", "args": {"by": 16}}]}
+{"text": "volume down 19", "intents": [{"name": "volume.down", "args": {"by": 19}}]}
+{"text": "volume down 21", "intents": [{"name": "volume.down", "args": {"by": 21}}]}
+{"text": "volume down 24", "intents": [{"name": "volume.down", "args": {"by": 24}}]}
+{"text": "volume down 26", "intents": [{"name": "volume.down", "args": {"by": 26}}]}
+{"text": "volume down 28", "intents": [{"name": "volume.down", "args": {"by": 28}}]}
+{"text": "volume down 31", "intents": [{"name": "volume.down", "args": {"by": 31}}]}
+{"text": "volume down 34", "intents": [{"name": "volume.down", "args": {"by": 34}}]}
+{"text": "volume down 37", "intents": [{"name": "volume.down", "args": {"by": 37}}]}
+{"text": "volume down 39", "intents": [{"name": "volume.down", "args": {"by": 39}}]}
+{"text": "increase contrast by 4", "intents": [{"name": "display.contrast_up", "args": {"by": 4}}]}
+{"text": "increase contrast by 6", "intents": [{"name": "display.contrast_up", "args": {"by": 6}}]}
+{"text": "increase contrast by 9", "intents": [{"name": "display.contrast_up", "args": {"by": 9}}]}
+{"text": "increase contrast by 14", "intents": [{"name": "display.contrast_up", "args": {"by": 14}}]}
+{"text": "increase contrast by 16", "intents": [{"name": "display.contrast_up", "args": {"by": 16}}]}
+{"text": "increase contrast by 19", "intents": [{"name": "display.contrast_up", "args": {"by": 19}}]}
+{"text": "increase contrast by 21", "intents": [{"name": "display.contrast_up", "args": {"by": 21}}]}
+{"text": "decrease contrast by 4", "intents": [{"name": "display.contrast_down", "args": {"by": 4}}]}
+{"text": "decrease contrast by 6", "intents": [{"name": "display.contrast_down", "args": {"by": 6}}]}
+{"text": "decrease contrast by 9", "intents": [{"name": "display.contrast_down", "args": {"by": 9}}]}
+{"text": "decrease contrast by 14", "intents": [{"name": "display.contrast_down", "args": {"by": 14}}]}
+{"text": "decrease contrast by 16", "intents": [{"name": "display.contrast_down", "args": {"by": 16}}]}
+{"text": "decrease contrast by 19", "intents": [{"name": "display.contrast_down", "args": {"by": 19}}]}
+{"text": "decrease contrast by 21", "intents": [{"name": "display.contrast_down", "args": {"by": 21}}]}

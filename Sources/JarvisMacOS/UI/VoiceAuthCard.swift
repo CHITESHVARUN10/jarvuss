@@ -12,11 +12,11 @@ struct VoiceAuthCard: View {
     private var isWarning: Bool { status.contains("⚠️") }
 
     private var accentColor: Color {
-        if isStrong   { return Color(red: 0.25, green: 0.90, blue: 0.65) }
-        if isLowConf  { return Color(red: 1.0,  green: 0.78, blue: 0.20) }
-        if isVerified { return Color(red: 0.25, green: 0.90, blue: 0.65) }
-        if isWarning  { return Color(red: 1.0,  green: 0.78, blue: 0.20) }
-        return Color(red: 0.75, green: 0.35, blue: 1.0)
+        if isStrong   { return JarvisColor.ok }
+        if isLowConf  { return JarvisColor.attention }
+        if isVerified { return JarvisColor.ok }
+        if isWarning  { return JarvisColor.attention }
+        return JarvisColor.accent
     }
 
     private var iconName: String {
@@ -42,63 +42,58 @@ struct VoiceAuthCard: View {
                     .font(.system(size: 14))
                     .foregroundStyle(accentColor)
 
-                Text("VOICE AUTH")
-                    .font(.system(size: 9, weight: .bold, design: .monospaced))
-                    .tracking(2)
-                    .foregroundStyle(accentColor.opacity(0.8))
+                Text("Voice auth")
+                    .font(JarvisType.title)
+                    .foregroundStyle(JarvisColor.textPrimary)
 
                 Spacer()
 
                 Text(cleanStatus)
-                    .font(.system(size: 10, weight: .semibold))
+                    .font(JarvisType.dataSmall)
                     .foregroundStyle(accentColor)
             }
 
-            // Sample progress bar
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text("Samples")
-                        .font(.system(size: 10))
-                        .foregroundStyle(Color.white.opacity(0.4))
+                        .font(JarvisType.caption)
+                        .foregroundStyle(JarvisColor.textSecondary)
                     Spacer()
                     Text("\(samplesCount)/\(samplesTarget)")
-                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                        .font(JarvisType.dataSmall)
                         .foregroundStyle(accentColor)
                 }
 
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 3)
-                            .fill(Color.white.opacity(0.07))
-                            .frame(height: 5)
-                        RoundedRectangle(cornerRadius: 3)
+                        Capsule()
+                            .fill(JarvisColor.surfaceRaised)
+                            .frame(height: 4)
+                        Capsule()
                             .fill(accentColor.opacity(0.8))
-                            .frame(width: geo.size.width * sampleProgress, height: 5)
+                            .frame(width: geo.size.width * sampleProgress, height: 4)
                             .animation(.easeOut(duration: 0.5), value: samplesCount)
                     }
                 }
-                .frame(height: 5)
+                .frame(height: 4)
             }
 
-            // Similarity + Confidence row
             HStack {
                 Text("Similarity")
-                    .font(.system(size: 10))
-                    .foregroundStyle(Color.white.opacity(0.4))
+                    .font(JarvisType.caption)
+                    .foregroundStyle(JarvisColor.textSecondary)
                 Spacer()
 
-                // Confidence badge
-                Text(confidenceLabel.uppercased())
-                    .font(.system(size: 7, weight: .bold, design: .monospaced))
-                    .tracking(1)
+                Text(confidenceLabel)
+                    .font(JarvisType.dataSmall)
                     .foregroundStyle(accentColor)
-                    .padding(.horizontal, 5)
+                    .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(accentColor.opacity(0.12))
                     .clipShape(Capsule())
 
                 Text(String(format: "%.0f%%", similarity * 100))
-                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .font(JarvisType.dataSmall)
                     .foregroundStyle(accentColor)
             }
         }

@@ -1,0 +1,124 @@
+{"text": "get me spotify opened", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "get me chrome opened", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "have spotify start", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "have chrome start", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "start up spotify for me", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "start up chrome for me", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "boot up spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "boot up chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "boot up vscode", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "wake up spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "wake up chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "bring spotify to the front", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "bring chrome to the front", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "switch to spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "switch to chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "switch to vscode", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "move to spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "move to chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "go to spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "go to chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "go to vscode", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "take me to spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "take me to chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "load spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "load chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "load up spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "load up chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "fire up spotify", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "fire up chrome", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}]}
+{"text": "fire up vscode", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "spin up vscode", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}]}
+{"text": "shut spotify down", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "shut whatsapp down", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "shut chrome down", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "close out spotify", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "close out whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "close out chrome", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}]}
+{"text": "end spotify", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "end whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "terminate spotify", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "terminate whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "terminate vscode", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}]}
+{"text": "put spotify away", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "put whatsapp away", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "dismiss spotify", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "dismiss whatsapp", "intents": [{"name": "app.close", "args": {"name": "WhatsApp"}}]}
+{"text": "turn the screen brightness up", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "turn the screen brightness down", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "lift the brightness", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "drop the brightness", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "push the brightness up", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "pull the brightness down", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "nudge the brightness up", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}]}
+{"text": "nudge the brightness down", "intents": [{"name": "display.brightness_down", "args": {"by": 10}}]}
+{"text": "nudge the volume up", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "nudge the volume down", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "lift the volume", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "drop the volume", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "push the volume up", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "pull the volume down", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "lift the contrast", "intents": [{"name": "display.contrast_up", "args": {"by": 10}}]}
+{"text": "drop the contrast", "intents": [{"name": "display.contrast_down", "args": {"by": 10}}]}
+{"text": "push the contrast up", "intents": [{"name": "display.contrast_up", "args": {"by": 10}}]}
+{"text": "pull the contrast down", "intents": [{"name": "display.contrast_down", "args": {"by": 10}}]}
+{"text": "throw on my liked songs", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "throw on the song havana", "intents": [{"name": "media.play_song", "args": {"title": "havana"}}]}
+{"text": "throw on the song senorita", "intents": [{"name": "media.play_song", "args": {"title": "senorita"}}]}
+{"text": "throw on playlist night drive", "intents": [{"name": "media.play_playlist", "args": {"name": "night drive"}}]}
+{"text": "toss on my liked songs", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "toss on the song bad guy", "intents": [{"name": "media.play_song", "args": {"title": "bad guy"}}]}
+{"text": "get my liked songs going", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "get the music going", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "get the song going", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "start the music up", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "stop the music now", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "halt the playback", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "jump to the next song", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "jump to the next track", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "jump back one song", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "jump back one track", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "hop to the next song", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "hop back one song", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "go forward one song", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "go forward one track", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "give me a time check", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "give me a date check", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "give me a battery check", "intents": [{"name": "info.battery", "args": {}}]}
+{"text": "give me a brightness check", "intents": [{"name": "info.brightness", "args": {}}]}
+{"text": "give me a volume check", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "give me a contrast check", "intents": [{"name": "info.contrast", "args": {}}]}
+{"text": "give me a wifi check", "intents": [{"name": "info.wifi", "args": {}}]}
+{"text": "give me a bluetooth check", "intents": [{"name": "info.bluetooth", "args": {}}]}
+{"text": "time check", "intents": [{"name": "info.time", "args": {}}]}
+{"text": "date check", "intents": [{"name": "info.date", "args": {}}]}
+{"text": "battery check", "intents": [{"name": "info.battery", "args": {}}]}
+{"text": "brightness check", "intents": [{"name": "info.brightness", "args": {}}]}
+{"text": "volume check", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "contrast check", "intents": [{"name": "info.contrast", "args": {}}]}
+{"text": "wifi check", "intents": [{"name": "info.wifi", "args": {}}]}
+{"text": "bluetooth check", "intents": [{"name": "info.bluetooth", "args": {}}]}
+{"text": "look up how to make sushi on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "how to make sushi"}}]}
+{"text": "look up tesla stock price on the web", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "tesla stock price"}}]}
+{"text": "look up weather in chennai on the web", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "weather in chennai"}}]}
+{"text": "hunt for cheap flights to goa", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "cheap flights to goa"}}]}
+{"text": "hunt for weather in chennai", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "weather in chennai"}}]}
+{"text": "hunt for news about cricket", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "news about cricket"}}]}
+{"text": "find me how to make sushi on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "how to make sushi"}}]}
+{"text": "find me tesla stock price", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "tesla stock price"}}]}
+{"text": "find me cheap flights to goa", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "cheap flights to goa"}}]}
+{"text": "spin up a file called notes", "intents": [{"name": "file.create", "args": {"name": "notes"}}]}
+{"text": "whip up a file called notes", "intents": [{"name": "file.create", "args": {"name": "notes"}}]}
+{"text": "whip up a folder called work", "intents": [{"name": "folder.create", "args": {"name": "work"}}]}
+{"text": "whip up a file called report", "intents": [{"name": "file.create", "args": {"name": "report"}}]}
+{"text": "pop open the downloads folder", "intents": [{"name": "folder.open", "args": {"name": "downloads"}}]}
+{"text": "pop open the documents folder", "intents": [{"name": "folder.open", "args": {"name": "documents"}}]}
+{"text": "pop open the desktop folder", "intents": [{"name": "folder.open", "args": {"name": "desktop"}}]}
+{"text": "grab the latest file in downloads", "intents": [{"name": "file.open_latest", "args": {"folder": "downloads"}}]}
+{"text": "grab the latest file in documents", "intents": [{"name": "file.open_latest", "args": {"folder": "documents"}}]}
+{"text": "get node installed with homebrew", "intents": [{"name": "install.preview", "args": {"package": "node", "source": "homebrew"}}]}
+{"text": "get python installed with homebrew", "intents": [{"name": "install.preview", "args": {"package": "python", "source": "homebrew"}}]}
+{"text": "get git installed with homebrew", "intents": [{"name": "install.preview", "args": {"package": "git", "source": "homebrew"}}]}
+{"text": "what is the largest island", "intents": [{"name": "ai.query", "args": {"text": "what is the largest island"}}]}
+{"text": "what is the smallest planet", "intents": [{"name": "ai.query", "args": {"text": "what is the smallest planet"}}]}
+{"text": "who discovered penicillin", "intents": [{"name": "ai.query", "args": {"text": "who discovered penicillin"}}]}

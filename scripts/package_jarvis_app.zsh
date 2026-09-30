@@ -54,6 +54,15 @@ if [[ -f "$BACKEND_SRC/embeddings.npy" ]]; then
   cp "$BACKEND_SRC/embeddings.npy" "$BACKEND_DEST/embeddings.npy"
 fi
 
+# ── Learned intent model (fine-tuned t5-small, int8 ONNX, ~196 MB) ────────
+# Served by voice_auth_service's /parse_intent; the backend resolves it
+# relative to its own directory (JARVIS_INTENT_MODEL_DIR overrides).
+if [[ -d "$BACKEND_SRC/models" ]]; then
+  mkdir -p "$BACKEND_DEST/models"
+  echo "[Package] Syncing intent model ($(du -sh "$BACKEND_SRC/models" | awk '{print $1}'))..."
+  rsync -a --delete "$BACKEND_SRC/models/" "$BACKEND_DEST/models/"
+fi
+
 # ── Python venv: create once, reinstall only if requirements changed ──────
 REQ_HASH_FILE="$BACKEND_DEST/venv/.req_hash"
 

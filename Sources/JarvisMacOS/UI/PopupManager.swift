@@ -75,11 +75,11 @@ private struct FloatResultView: View {
     var body: some View {
         VStack(spacing: 12) {
             Image(systemName: icon)
-                .font(.system(size: 38, weight: .light))
-                .foregroundStyle(.white.opacity(0.85))
+                .font(.system(size: 34, weight: .light))
+                .foregroundStyle(JarvisColor.textSecondary)
             Text(message)
-                .font(.system(size: 30, weight: .semibold, design: .rounded))
-                .foregroundStyle(.white)
+                .font(.system(size: 26, weight: .regular))
+                .foregroundStyle(JarvisColor.textPrimary)
                 .multilineTextAlignment(.center)
                 .lineLimit(3)
                 .padding(.horizontal, 8)
@@ -98,8 +98,8 @@ private struct FloatResultView: View {
                     .fill(
                         LinearGradient(
                             colors: [
-                                Color(red: 0.35, green: 0.35, blue: 1.0).opacity(0.25),
-                                Color(red: 0.6, green: 0.3, blue: 1.0).opacity(0.15)
+                                Color(red: 0.35, green: 0.35, blue: 1.0).opacity(0.18),
+                                Color(red: 0.6, green: 0.3, blue: 1.0).opacity(0.10)
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
@@ -109,7 +109,7 @@ private struct FloatResultView: View {
                     .strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
             }
         )
-        .shadow(color: Color(red: 0.4, green: 0.4, blue: 1.0).opacity(0.35), radius: 40, x: 0, y: 10)
+        .shadow(color: Color(red: 0.4, green: 0.4, blue: 1.0).opacity(0.25), radius: 40, x: 0, y: 10)
     }
 }
 

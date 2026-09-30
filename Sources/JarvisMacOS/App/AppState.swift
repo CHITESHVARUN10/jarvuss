@@ -448,7 +448,7 @@ final class AppState: ObservableObject {
         appendLog("Microphone stopped.")
     }
 
-    func startEnrollment() {
+    func startEnrollment(resetStore: Bool = true) {
         enrollmentIndex = 0
         enrollmentMatchedCount = 0
         enrollmentAttemptCount = 0
@@ -463,6 +463,12 @@ final class AppState: ObservableObject {
         enrollmentCompleted = false
         persistEnrollmentCompleted(false)
         appendLog("Voice enrollment started. Repeat each phrase \(enrollmentRequiredMatchesPerPhrase)x.")
+
+        guard resetStore else {
+            appendLog("Enrolling from a clean slate (0/\(voiceEnrollmentSampleTarget)) — only these new samples will be used.")
+            return
+        }
+
         appendLog("Existing voice profile is preserved until new samples are collected.")
         // Reset the backend store so re-enrollment starts from a clean slate —
         // the store is append-only, so without this every re-run stacks on the
@@ -479,6 +485,29 @@ final class AppState: ObservableObject {
             } catch {
                 await MainActor.run {
                     appendLog("[Voice] Profile reset failed (\(error.localizedDescription)) — old samples preserved; scores may skew high-N. POST /reset manually to clear.")
+                }
+            }
+        }
+    }
+
+    /// Wipe every previously stored voice sample, then start a fresh enrollment
+    /// so verification uses ONLY the new recordings. Aborts (without touching
+    /// the old samples) if the backend wipe fails.
+    func retrainVoiceProfile() {
+        guard !enrollmentActive else { return }
+        Task {
+            do {
+                try await voiceAuthClient.reset()
+                await MainActor.run {
+                    backendEnrollmentSampleCount = 0
+                    persistBackendSampleCount(0)
+                    voiceVerificationStatus = "No Voice Profile ❌"
+                    appendLog("Voice profile wiped — all \(voiceEnrollmentSampleTarget)-sample history deleted. Starting fresh enrollment.")
+                    startEnrollment(resetStore: false)
+                }
+            } catch {
+                await MainActor.run {
+                    appendLog("[Voice] Retrain aborted — could not wipe old samples: \(error.localizedDescription)")
                 }
             }
         }
@@ -1345,7 +1374,20 @@ final class AppState: ObservableObject {
     private func runCommand(_ command: String) async {
         guard !command.isEmpty else { return }
         var succeeded = false
-        defer { StatsRecorder.shared.recordCommand(success: succeeded) }
+        // One id for this whole utterance — ties the model_hit/model_miss,
+        // plan branch and execute events together in intent_router.jsonl.
+        let intentRequestID = UUID()
+        defer {
+            StatsRecorder.shared.recordCommand(success: succeeded)
+            // Final outcome line for every utterance (RL corpus): input, and
+            // whether the chosen pipeline actually executed it.
+            IntentRouterLog.shared.append([
+                "event": "execute_command",
+                "request_id": intentRequestID.uuidString,
+                "text": command,
+                "success": succeeded,
+            ])
+        }
 
         if let match = matchedAutomation(for: command) {
             appendLog("[Automation] Triggered keyword: '\(match.automation.keyword)'")
@@ -1406,7 +1448,9 @@ final class AppState: ObservableObject {
         lastRecognizedSpeech = command
         appendLog("[Plan] Planning: '\(command)'")
 
-        let plan = await actionPlanner.plan(from: command)
+        // One id ties the model_hit/model_miss, plan branch and execute
+        // events together in intent_router.jsonl (RL corpus).
+        let plan = await actionPlanner.plan(from: command, requestID: intentRequestID)
 
         // ✅ Log the detected intent so the pipeline is fully traceable
         if let first = plan.first {
@@ -1455,6 +1499,14 @@ final class AppState: ObservableObject {
                         let prefix = result.success ? "✓" : "✗"
                         self.appendLog("  \(prefix) \(result.message)")
                         stepResults.append(result.message)
+                        IntentRouterLog.shared.append([
+                            "event": "execute_step",
+                            "request_id": intentRequestID.uuidString,
+                            "text": command,
+                            "action": result.action.description,
+                            "success": result.success,
+                            "message": result.message,
+                        ])
                         ResponseEngine.shared.respond(
                             action: result.action,
                             result: result,

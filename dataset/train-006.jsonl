@@ -1,0 +1,212 @@
+{"text": "play", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "play.", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "play please", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "play the music", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "play music", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "play the song", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "play the song.", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "resume", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "resume.", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "resume the song", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "resume the music", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "resume playback", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "continue playing", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "continue the music", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "start playing", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "start the music", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "start the song", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "can you play the music", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "please play", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "plya", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "plya the music", "intents": [{"name": "media.play", "args": {}}]}
+{"text": "pause", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "pause.", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "pause please", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "pause the music", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "pause the song", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "pause music", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "pause playback", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "stop", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "stop.", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "stop the music", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "stop the song", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "stop music", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "stop the music please", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "can you pause the music", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "please pause", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "hold the music", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "puse the music", "intents": [{"name": "media.pause", "args": {}}]}
+{"text": "next", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "next.", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "next song", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "next song.", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "next track", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "next track.", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "skip", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "skip.", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "skip this song", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "skip this track", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "skip to the next song", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "go to the next song", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "go to next track", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "play the next song", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "play next", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "next track please", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "can you skip this song", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "paly next song", "intents": [{"name": "media.next", "args": {}}]}
+{"text": "previous", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "previous.", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "previous song", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "previous track", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "prev", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "go back to the previous song", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "go back one song", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "go to the previous track", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "play the previous song", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "last song", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "previous track please", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "can you go back one song", "intents": [{"name": "media.previous", "args": {}}]}
+{"text": "play liked songs", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "play my liked songs", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "play the liked songs", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "play liked songs.", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "play my liked songs on spotify", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "play liked songs on spotify", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "play my favorites", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "play my liked songs please", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "can you play my liked songs", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "start my liked songs", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "play song never gonna give you up", "intents": [{"name": "media.play_song", "args": {"title": "never gonna give you up"}}]}
+{"text": "play the song never gonna give you up", "intents": [{"name": "media.play_song", "args": {"title": "never gonna give you up"}}]}
+{"text": "play never gonna give you up", "intents": [{"name": "media.play_song", "args": {"title": "never gonna give you up"}}]}
+{"text": "play the song yellow", "intents": [{"name": "media.play_song", "args": {"title": "yellow"}}]}
+{"text": "play song yellow", "intents": [{"name": "media.play_song", "args": {"title": "yellow"}}]}
+{"text": "play yellow", "intents": [{"name": "media.play_song", "args": {"title": "yellow"}}]}
+{"text": "play yellow by coldplay", "intents": [{"name": "media.play_song", "args": {"title": "yellow by coldplay"}}]}
+{"text": "play the song blinding lights", "intents": [{"name": "media.play_song", "args": {"title": "blinding lights"}}]}
+{"text": "play song blinding lights", "intents": [{"name": "media.play_song", "args": {"title": "blinding lights"}}]}
+{"text": "play blinding lights", "intents": [{"name": "media.play_song", "args": {"title": "blinding lights"}}]}
+{"text": "play blinding lights by the weeknd", "intents": [{"name": "media.play_song", "args": {"title": "blinding lights by the weeknd"}}]}
+{"text": "play shape of you", "intents": [{"name": "media.play_song", "args": {"title": "shape of you"}}]}
+{"text": "play the song shape of you", "intents": [{"name": "media.play_song", "args": {"title": "shape of you"}}]}
+{"text": "play song shape of you", "intents": [{"name": "media.play_song", "args": {"title": "shape of you"}}]}
+{"text": "play the song despacito", "intents": [{"name": "media.play_song", "args": {"title": "despacito"}}]}
+{"text": "play song despacito", "intents": [{"name": "media.play_song", "args": {"title": "despacito"}}]}
+{"text": "play bohemian rhapsody", "intents": [{"name": "media.play_song", "args": {"title": "bohemian rhapsody"}}]}
+{"text": "play the song bohemian rhapsody", "intents": [{"name": "media.play_song", "args": {"title": "bohemian rhapsody"}}]}
+{"text": "play song bohemian rhapsody", "intents": [{"name": "media.play_song", "args": {"title": "bohemian rhapsody"}}]}
+{"text": "play hotel california", "intents": [{"name": "media.play_song", "args": {"title": "hotel california"}}]}
+{"text": "play the song hotel california", "intents": [{"name": "media.play_song", "args": {"title": "hotel california"}}]}
+{"text": "play stairway to heaven", "intents": [{"name": "media.play_song", "args": {"title": "stairway to heaven"}}]}
+{"text": "play the song stairway to heaven", "intents": [{"name": "media.play_song", "args": {"title": "stairway to heaven"}}]}
+{"text": "play the song turkish kavak yelleri", "intents": [{"name": "media.play_song", "args": {"title": "turkish kavak yelleri"}}]}
+{"text": "play turkish kavak yelleri", "intents": [{"name": "media.play_song", "args": {"title": "turkish kavak yelleri"}}]}
+{"text": "play kesariya", "intents": [{"name": "media.play_song", "args": {"title": "kesariya"}}]}
+{"text": "play the song kesariya", "intents": [{"name": "media.play_song", "args": {"title": "kesariya"}}]}
+{"text": "play channa mereya", "intents": [{"name": "media.play_song", "args": {"title": "channa mereya"}}]}
+{"text": "play the song channa mereya", "intents": [{"name": "media.play_song", "args": {"title": "channa mereya"}}]}
+{"text": "play tum hi ho", "intents": [{"name": "media.play_song", "args": {"title": "tum hi ho"}}]}
+{"text": "play the song tum hi ho", "intents": [{"name": "media.play_song", "args": {"title": "tum hi ho"}}]}
+{"text": "play vaathi coming", "intents": [{"name": "media.play_song", "args": {"title": "vaathi coming"}}]}
+{"text": "play the song vaathi coming", "intents": [{"name": "media.play_song", "args": {"title": "vaathi coming"}}]}
+{"text": "play interstellar main theme", "intents": [{"name": "media.play_song", "args": {"title": "interstellar main theme"}}]}
+{"text": "play the interstellar theme", "intents": [{"name": "media.play_song", "args": {"title": "interstellar theme"}}]}
+{"text": "play perfect by ed sheeran", "intents": [{"name": "media.play_song", "args": {"title": "perfect by ed sheeran"}}]}
+{"text": "play the song believer", "intents": [{"name": "media.play_song", "args": {"title": "believer"}}]}
+{"text": "play believer", "intents": [{"name": "media.play_song", "args": {"title": "believer"}}]}
+{"text": "play faded by alan walker", "intents": [{"name": "media.play_song", "args": {"title": "faded by alan walker"}}]}
+{"text": "play the song faded", "intents": [{"name": "media.play_song", "args": {"title": "faded"}}]}
+{"text": "play song levitating", "intents": [{"name": "media.play_song", "args": {"title": "levitating"}}]}
+{"text": "play levitating", "intents": [{"name": "media.play_song", "args": {"title": "levitating"}}]}
+{"text": "play playlist chill vibes", "intents": [{"name": "media.play_playlist", "args": {"name": "chill vibes"}}]}
+{"text": "play my playlist chill vibes", "intents": [{"name": "media.play_playlist", "args": {"name": "chill vibes"}}]}
+{"text": "play the playlist chill vibes", "intents": [{"name": "media.play_playlist", "args": {"name": "chill vibes"}}]}
+{"text": "play chill vibes playlist", "intents": [{"name": "media.play_playlist", "args": {"name": "chill vibes"}}]}
+{"text": "play playlist gym mix", "intents": [{"name": "media.play_playlist", "args": {"name": "gym mix"}}]}
+{"text": "play my playlist gym mix", "intents": [{"name": "media.play_playlist", "args": {"name": "gym mix"}}]}
+{"text": "play the gym mix playlist", "intents": [{"name": "media.play_playlist", "args": {"name": "gym mix"}}]}
+{"text": "play playlist lofi beats", "intents": [{"name": "media.play_playlist", "args": {"name": "lofi beats"}}]}
+{"text": "play my lofi beats playlist", "intents": [{"name": "media.play_playlist", "args": {"name": "lofi beats"}}]}
+{"text": "play the playlist lofi beats", "intents": [{"name": "media.play_playlist", "args": {"name": "lofi beats"}}]}
+{"text": "play playlist road trip", "intents": [{"name": "media.play_playlist", "args": {"name": "road trip"}}]}
+{"text": "play my road trip playlist", "intents": [{"name": "media.play_playlist", "args": {"name": "road trip"}}]}
+{"text": "play my playlist focus mode", "intents": [{"name": "media.play_playlist", "args": {"name": "focus mode"}}]}
+{"text": "play playlist hindi hits", "intents": [{"name": "media.play_playlist", "args": {"name": "hindi hits"}}]}
+{"text": "play my hindi hits playlist", "intents": [{"name": "media.play_playlist", "args": {"name": "hindi hits"}}]}
+{"text": "play playlist tamil hits", "intents": [{"name": "media.play_playlist", "args": {"name": "tamil hits"}}]}
+{"text": "play playlist workout", "intents": [{"name": "media.play_playlist", "args": {"name": "workout"}}]}
+{"text": "play my workout playlist", "intents": [{"name": "media.play_playlist", "args": {"name": "workout"}}]}
+{"text": "play playlist party", "intents": [{"name": "media.play_playlist", "args": {"name": "party"}}]}
+{"text": "play playlist sleep sounds", "intents": [{"name": "media.play_playlist", "args": {"name": "sleep sounds"}}]}
+{"text": "play some jazz", "intents": [{"name": "media.play_playlist", "args": {"name": "jazz"}}]}
+{"text": "play some lofi", "intents": [{"name": "media.play_playlist", "args": {"name": "lofi"}}]}
+{"text": "play some classical music", "intents": [{"name": "media.play_playlist", "args": {"name": "classical music"}}]}
+{"text": "play some rock", "intents": [{"name": "media.play_playlist", "args": {"name": "rock"}}]}
+{"text": "play some podcast", "intents": [{"name": "media.play_playlist", "args": {"name": "podcast"}}]}
+{"text": "can you play playlist chill vibes", "intents": [{"name": "media.play_playlist", "args": {"name": "chill vibes"}}]}
+{"text": "put on my gym mix playlist", "intents": [{"name": "media.play_playlist", "args": {"name": "gym mix"}}]}
+{"text": "put on the lofi beats playlist", "intents": [{"name": "media.play_playlist", "args": {"name": "lofi beats"}}]}
+{"text": "shuffle my liked songs", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "play my spotify liked songs", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "liked songs", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "my liked songs", "intents": [{"name": "media.play_liked", "args": {}}]}
+{"text": "play the song as it was", "intents": [{"name": "media.play_song", "args": {"title": "as it was"}}]}
+{"text": "play as it was", "intents": [{"name": "media.play_song", "args": {"title": "as it was"}}]}
+{"text": "play heat waves", "intents": [{"name": "media.play_song", "args": {"title": "heat waves"}}]}
+{"text": "play the song heat waves", "intents": [{"name": "media.play_song", "args": {"title": "heat waves"}}]}
+{"text": "play stay by justin bieber", "intents": [{"name": "media.play_song", "args": {"title": "stay by justin bieber"}}]}
+{"text": "play the song stay", "intents": [{"name": "media.play_song", "args": {"title": "stay"}}]}
+{"text": "play abcdefu", "intents": [{"name": "media.play_song", "args": {"title": "abcdefu"}}]}
+{"text": "play good 4 u", "intents": [{"name": "media.play_song", "args": {"title": "good 4 u"}}]}
+{"text": "play somebody that i used to know", "intents": [{"name": "media.play_song", "args": {"title": "somebody that i used to know"}}]}
+{"text": "play the song somebody that i used to know", "intents": [{"name": "media.play_song", "args": {"title": "somebody that i used to know"}}]}
+{"text": "play skyfall", "intents": [{"name": "media.play_song", "args": {"title": "skyfall"}}]}
+{"text": "play the song skyfall", "intents": [{"name": "media.play_song", "args": {"title": "skyfall"}}]}
+{"text": "play zara sa", "intents": [{"name": "media.play_song", "args": {"title": "zara sa"}}]}
+{"text": "play kun faya kun", "intents": [{"name": "media.play_song", "args": {"title": "kun faya kun"}}]}
+{"text": "play the song kun faya kun", "intents": [{"name": "media.play_song", "args": {"title": "kun faya kun"}}]}
+{"text": "play apna bana le", "intents": [{"name": "media.play_song", "args": {"title": "apna bana le"}}]}
+{"text": "play maan meri jaan", "intents": [{"name": "media.play_song", "args": {"title": "maan meri jaan"}}]}
+{"text": "play the song maan meri jaan", "intents": [{"name": "media.play_song", "args": {"title": "maan meri jaan"}}]}
+{"text": "play arabic kuthu", "intents": [{"name": "media.play_song", "args": {"title": "arabic kuthu"}}]}
+{"text": "play the song arabic kuthu", "intents": [{"name": "media.play_song", "args": {"title": "arabic kuthu"}}]}
+{"text": "play mundirane", "intents": [{"name": "media.play_song", "args": {"title": "mundirane"}}]}
+{"text": "play the song hukum", "intents": [{"name": "media.play_song", "args": {"title": "hukum"}}]}
+{"text": "play naatu naatu", "intents": [{"name": "media.play_song", "args": {"title": "naatu naatu"}}]}
+{"text": "play the song naatu naatu", "intents": [{"name": "media.play_song", "args": {"title": "naatu naatu"}}]}
+{"text": "play why this kolaveri di", "intents": [{"name": "media.play_song", "args": {"title": "why this kolaveri di"}}]}
+{"text": "play the song why this kolaveri di", "intents": [{"name": "media.play_song", "args": {"title": "why this kolaveri di"}}]}
+{"text": "pause the music and close spotify", "intents": [{"name": "media.pause", "args": {}}, {"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "pause music then close spotify", "intents": [{"name": "media.pause", "args": {}}, {"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "stop the music and close spotify", "intents": [{"name": "media.pause", "args": {}}, {"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "pause the song and quit spotify", "intents": [{"name": "media.pause", "args": {}}, {"name": "app.close", "args": {"name": "Spotify"}}]}
+{"text": "next song and volume up", "intents": [{"name": "media.next", "args": {}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "next track and turn up the volume", "intents": [{"name": "media.next", "args": {}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "skip this song and volume up 10", "intents": [{"name": "media.next", "args": {}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "previous song and volume down", "intents": [{"name": "media.previous", "args": {}}, {"name": "volume.down", "args": {"by": 10}}]}
+{"text": "go back one song and lower the volume", "intents": [{"name": "media.previous", "args": {}}, {"name": "volume.down", "args": {"by": 10}}]}
+{"text": "turn up the volume and play the music", "intents": [{"name": "volume.up", "args": {"by": 10}}, {"name": "media.play", "args": {}}]}
+{"text": "turn up the volume then play", "intents": [{"name": "volume.up", "args": {"by": 10}}, {"name": "media.play", "args": {}}]}
+{"text": "volume up and play", "intents": [{"name": "volume.up", "args": {"by": 10}}, {"name": "media.play", "args": {}}]}
+{"text": "volume down and pause the music", "intents": [{"name": "volume.down", "args": {"by": 10}}, {"name": "media.pause", "args": {}}]}
+{"text": "lower the volume and pause", "intents": [{"name": "volume.down", "args": {"by": 10}}, {"name": "media.pause", "args": {}}]}
+{"text": "mute and pause the music", "intents": [{"name": "volume.mute", "args": {}}, {"name": "media.pause", "args": {}}]}
+{"text": "pause the music and mute", "intents": [{"name": "media.pause", "args": {}}, {"name": "volume.mute", "args": {}}]}
+{"text": "open spotify and play my liked songs", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_liked", "args": {}}]}
+{"text": "open spotify and play liked songs", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_liked", "args": {}}]}
+{"text": "open spotify then play my liked songs", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_liked", "args": {}}]}
+{"text": "launch spotify and play my liked songs", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_liked", "args": {}}]}
+{"text": "open spotify and play the song yellow", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_song", "args": {"title": "yellow"}}]}
+{"text": "open spotify then play the song yellow", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_song", "args": {"title": "yellow"}}]}
+{"text": "open spotify and play blinding lights", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_song", "args": {"title": "blinding lights"}}]}
+{"text": "open spotify and play despacito", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_song", "args": {"title": "despacito"}}]}
+{"text": "open spotify and play playlist chill vibes", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_playlist", "args": {"name": "chill vibes"}}]}
+{"text": "open spotify then play my gym mix playlist", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_playlist", "args": {"name": "gym mix"}}]}
+{"text": "open spotify and play some jazz", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play_playlist", "args": {"name": "jazz"}}]}
+{"text": "open music and play the song yellow", "intents": [{"name": "app.open", "args": {"name": "Music"}}, {"name": "media.play_song", "args": {"title": "yellow"}}]}
+{"text": "play kesariya and set the volume to 30", "intents": [{"name": "media.play_song", "args": {"title": "kesariya"}}, {"name": "volume.set", "args": {"level": 30}}]}
+{"text": "play my liked songs and set volume to 40", "intents": [{"name": "media.play_liked", "args": {}}, {"name": "volume.set", "args": {"level": 40}}]}
+{"text": "play playlist workout and volume up 20", "intents": [{"name": "media.play_playlist", "args": {"name": "workout"}}, {"name": "volume.up", "args": {"by": 20}}]}
+{"text": "open spotify and resume", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play", "args": {}}]}
+{"text": "open spotify and press play", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.play", "args": {}}]}
+{"text": "open spotify then next song", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "media.next", "args": {}}]}

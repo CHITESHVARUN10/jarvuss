@@ -1,0 +1,164 @@
+{"text": "search youtube for jailer 2", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jailer 2"}}]}
+{"text": "search on youtube for jailer 2", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jailer 2"}}]}
+{"text": "search for jailer 2 on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jailer 2"}}]}
+{"text": "search jailer 2 on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jailer 2"}}]}
+{"text": "search jailer 2 in youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jailer 2"}}]}
+{"text": "search for jailer 2 in youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jailer 2"}}]}
+{"text": "search the youtube for jailer 2", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jailer 2"}}]}
+{"text": "look up jailer 2 on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jailer 2"}}]}
+{"text": "find jailer 2 on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jailer 2"}}]}
+{"text": "youtube search for jailer 2", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jailer 2"}}]}
+{"text": "search jailer 2.", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "jailer 2"}}]}
+{"text": "search for jailer 2", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "jailer 2"}}]}
+{"text": "search youtube for the video of jailer 2", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "the video of jailer 2"}}]}
+{"text": "search for the video of jailer on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "the video of jailer"}}]}
+{"text": "search the video of jailer in youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "the video of jailer"}}]}
+{"text": "search on youtube for the video of jailer", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "the video of jailer"}}]}
+{"text": "search youtube for interstellar trailer", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "interstellar trailer"}}]}
+{"text": "search on youtube for interstellar trailer", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "interstellar trailer"}}]}
+{"text": "search for interstellar trailer on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "interstellar trailer"}}]}
+{"text": "search interstellar trailer on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "interstellar trailer"}}]}
+{"text": "look up interstellar trailer on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "interstellar trailer"}}]}
+{"text": "find interstellar trailer on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "interstellar trailer"}}]}
+{"text": "youtube search for interstellar trailer", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "interstellar trailer"}}]}
+{"text": "search the youtube for interstellar trailer", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "interstellar trailer"}}]}
+{"text": "search youtube for avengers trailer", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "avengers trailer"}}]}
+{"text": "search for avengers trailer on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "avengers trailer"}}]}
+{"text": "search on youtube for avengers trailer", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "avengers trailer"}}]}
+{"text": "search youtube for jailer teaser", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jailer teaser"}}]}
+{"text": "search for jailer teaser on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jailer teaser"}}]}
+{"text": "search youtube for cat videos", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "cat videos"}}]}
+{"text": "search for cat videos on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "cat videos"}}]}
+{"text": "search on youtube for cat videos", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "cat videos"}}]}
+{"text": "search youtube for funny cat videos", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "funny cat videos"}}]}
+{"text": "search for funny cat videos on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "funny cat videos"}}]}
+{"text": "search youtube for bohemian rhapsody", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "bohemian rhapsody"}}]}
+{"text": "search for bohemian rhapsody on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "bohemian rhapsody"}}]}
+{"text": "search on youtube for bohemian rhapsody", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "bohemian rhapsody"}}]}
+{"text": "search youtube for the song shape of you", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "the song shape of you"}}]}
+{"text": "search for the song shape of you on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "the song shape of you"}}]}
+{"text": "search on youtube for a song called yellow", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "a song called yellow"}}]}
+{"text": "search youtube for that song from titanic", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "that song from titanic"}}]}
+{"text": "search for that song from titanic on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "that song from titanic"}}]}
+{"text": "search something about cats on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "something about cats"}}]}
+{"text": "search youtube for cooking recipes", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "cooking recipes"}}]}
+{"text": "search for cooking recipes on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "cooking recipes"}}]}
+{"text": "search on youtube for guitar tutorial", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "guitar tutorial"}}]}
+{"text": "search youtube for workout video", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "workout video"}}]}
+{"text": "search for workout video on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "workout video"}}]}
+{"text": "search youtube for cricket highlights", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "cricket highlights"}}]}
+{"text": "search for cricket highlights on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "cricket highlights"}}]}
+{"text": "search on youtube for interstellar review", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "interstellar review"}}]}
+{"text": "search youtube for movie review of jailer", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "movie review of jailer"}}]}
+{"text": "search youtube for funny videos", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "funny videos"}}]}
+{"text": "search for funny videos on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "funny videos"}}]}
+{"text": "search on youtube for lofi hip hop", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "lofi hip hop"}}]}
+{"text": "search youtube for news today", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "news today"}}]}
+{"text": "search youtube for cloud code", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "cloud code"}}]}
+{"text": "search for cloud code on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "cloud code"}}]}
+{"text": "search for cloud code in youtube.", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "cloud code"}}]}
+{"text": "search cloud code in youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "cloud code"}}]}
+{"text": "search on the internet for twitter", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "twitter"}}]}
+{"text": "search on internet for twitter", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "twitter"}}]}
+{"text": "search the internet for twitter", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "twitter"}}]}
+{"text": "search for twitter on the internet", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "twitter"}}]}
+{"text": "search the web for twitter", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "twitter"}}]}
+{"text": "search on the web for twitter", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "twitter"}}]}
+{"text": "google twitter", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "twitter"}}]}
+{"text": "search google for twitter", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "twitter"}}]}
+{"text": "search on the internet for weather today", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "weather today"}}]}
+{"text": "search the internet for weather today", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "weather today"}}]}
+{"text": "search for weather today on the internet", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "weather today"}}]}
+{"text": "search google for weather tomorrow", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "weather tomorrow"}}]}
+{"text": "search for weather tomorrow", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "weather tomorrow"}}]}
+{"text": "google weather tomorrow", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "weather tomorrow"}}]}
+{"text": "search the web for weather tomorrow", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "weather tomorrow"}}]}
+{"text": "search the web for swift concurrency", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "swift concurrency"}}]}
+{"text": "search on the web for swift concurrency", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "swift concurrency"}}]}
+{"text": "search for swift concurrency", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "swift concurrency"}}]}
+{"text": "google swift concurrency", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "swift concurrency"}}]}
+{"text": "search google for swift concurrency", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "swift concurrency"}}]}
+{"text": "search the web for how to make pancakes", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to make pancakes"}}]}
+{"text": "google how to make pancakes", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to make pancakes"}}]}
+{"text": "search google for how to make pancakes", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to make pancakes"}}]}
+{"text": "search how to make pancakes on google", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to make pancakes"}}]}
+{"text": "search for how to make pancakes", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to make pancakes"}}]}
+{"text": "search on the internet for how to make pancakes", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to make pancakes"}}]}
+{"text": "search the web for nearest pizza place", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "nearest pizza place"}}]}
+{"text": "google nearest pizza place", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "nearest pizza place"}}]}
+{"text": "search for nearest pizza place", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "nearest pizza place"}}]}
+{"text": "search the web for flights to tokyo", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "flights to tokyo"}}]}
+{"text": "google flights to tokyo", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "flights to tokyo"}}]}
+{"text": "search for flights to tokyo", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "flights to tokyo"}}]}
+{"text": "search the internet for cute puppies", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "cute puppies"}}]}
+{"text": "google cute puppies", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "cute puppies"}}]}
+{"text": "search for claude code in brave", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "claude code"}}]}
+{"text": "search claude code in brave", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "claude code"}}]}
+{"text": "search claude code on brave", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "claude code"}}]}
+{"text": "search for claude code in brave browser", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "claude code"}}]}
+{"text": "search for claude code in chrome", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "claude code"}}]}
+{"text": "search claude code in chrome", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "claude code"}}]}
+{"text": "search claude code on chrome", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "claude code"}}]}
+{"text": "search for claude code in safari", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "claude code"}}]}
+{"text": "search claude code in safari", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "claude code"}}]}
+{"text": "search for rust programming in brave", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "rust programming"}}]}
+{"text": "search rust programming in chrome", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "rust programming"}}]}
+{"text": "search for machine learning in chrome", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "machine learning"}}]}
+{"text": "search machine learning in brave", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "machine learning"}}]}
+{"text": "search for the capital of france in chrome", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "the capital of france"}}]}
+{"text": "search the capital of france on google", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "the capital of france"}}]}
+{"text": "google the capital of france", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "the capital of france"}}]}
+{"text": "search for the capital of france", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "the capital of france"}}]}
+{"text": "search on the internet for the capital of france", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "the capital of france"}}]}
+{"text": "search google for what is the meaning of life", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "what is the meaning of life"}}]}
+{"text": "search for what is the meaning of life", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "what is the meaning of life"}}]}
+{"text": "search on the web for what is the meaning of life", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "what is the meaning of life"}}]}
+{"text": "search youtube for songs of arijit singh", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "songs of arijit singh"}}]}
+{"text": "search for songs of arijit singh on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "songs of arijit singh"}}]}
+{"text": "search youtube for trailer of jawan", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "trailer of jawan"}}]}
+{"text": "search for trailer of jawan on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "trailer of jawan"}}]}
+{"text": "search on youtube for trailer of kgf", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "trailer of kgf"}}]}
+{"text": "search youtube for python tutorial", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "python tutorial"}}]}
+{"text": "search for python tutorial on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "python tutorial"}}]}
+{"text": "search on youtube for swift ui tutorial", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "swift ui tutorial"}}]}
+{"text": "search youtube for meditation music", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "meditation music"}}]}
+{"text": "search for meditation music on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "meditation music"}}]}
+{"text": "search in youtube for interstellar", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "interstellar"}}]}
+{"text": "search interstellar in youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "interstellar"}}]}
+{"text": "search youtube for interstellar", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "interstellar"}}]}
+{"text": "search for interstellar on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "interstellar"}}]}
+{"text": "search the web for python decorators", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "python decorators"}}]}
+{"text": "google python decorators", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "python decorators"}}]}
+{"text": "search for python decorators", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "python decorators"}}]}
+{"text": "search the web for the price of gold", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "the price of gold"}}]}
+{"text": "google the price of gold", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "the price of gold"}}]}
+{"text": "search for the price of gold", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "the price of gold"}}]}
+{"text": "search the web for restaurants near me", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "restaurants near me"}}]}
+{"text": "google restaurants near me", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "restaurants near me"}}]}
+{"text": "search for restaurants near me", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "restaurants near me"}}]}
+{"text": "search on the internet for restaurants near me", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "restaurants near me"}}]}
+{"text": "open youtube and search for jailer trailer", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jailer trailer"}}]}
+{"text": "open youtube and search for interstellar trailer", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "interstellar trailer"}}]}
+{"text": "open youtube and search for cat videos", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "cat videos"}}]}
+{"text": "open youtube and search for bohemian rhapsody", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "bohemian rhapsody"}}]}
+{"text": "open youtube then search for avengers trailer", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "avengers trailer"}}]}
+{"text": "open youtube and search the video of jailer", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "the video of jailer"}}]}
+{"text": "open youtube search for avengers trailer", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "avengers trailer"}}]}
+{"text": "open google then search for flights to tokyo", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "flights to tokyo"}}]}
+{"text": "open google and search for the capital of france", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "the capital of france"}}]}
+{"text": "open google and search for weather tomorrow", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "weather tomorrow"}}]}
+{"text": "search on youtube for jailer2", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jailer2"}}]}
+{"text": "search youtube for jailer2", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jailer2"}}]}
+{"text": "search for jailer2 on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jailer2"}}]}
+{"text": "search on you tube for jailer 2", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jailer 2"}}]}
+{"text": "search you tube for interstellar trailer", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "interstellar trailer"}}]}
+{"text": "search youtub for cat videos", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "cat videos"}}]}
+{"text": "uh search youtube for jailer 2", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jailer 2"}}]}
+{"text": "um search for interstellar trailer on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "interstellar trailer"}}]}
+{"text": "can you search youtube for jailer 2", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jailer 2"}}]}
+{"text": "please search for interstellar trailer on youtube", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "interstellar trailer"}}]}
+{"text": "search youtube for jailer 2 please", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jailer 2"}}]}
+{"text": "jarvis search youtube for jailer 2", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "jailer 2"}}]}
+{"text": "search on google for how to make pancakes", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to make pancakes"}}]}
+{"text": "search in google for how to make pancakes", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to make pancakes"}}]}
+{"text": "search how to make pancakes in google", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to make pancakes"}}]}
