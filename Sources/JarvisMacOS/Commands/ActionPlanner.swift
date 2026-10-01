@@ -18,6 +18,7 @@ enum PlannedAction: Equatable, CustomStringConvertible {
     case aiQuery(String)
     case installPreview(package: String, source: String)
     case displayControl(DisplayAction)
+    case fileQuery(FileQuery)
 
     var description: String {
         switch self {
@@ -35,7 +36,27 @@ enum PlannedAction: Equatable, CustomStringConvertible {
         case .aiQuery(let q):              return "AI query: '\(q)'"
         case .installPreview(let p, _):    return "Install preview: '\(p)'"
         case .displayControl(let a):       return "Display: \(a)"
+        case .fileQuery(let q):            return "Files: \(q)"
         }
+    }
+}
+
+/// One file-exploration request: an operation over a spoken folder, with an
+/// optional extension filter.
+struct FileQuery: Equatable, CustomStringConvertible {
+    let op: FileQueryOp
+    let folder: String
+    let ext: String
+
+    init(op: FileQueryOp, folder: String, ext: String = "") {
+        self.op = op
+        self.folder = folder
+        self.ext = ext
+    }
+
+    var description: String {
+        let extPart = ext.isEmpty ? "" : " [\(ext)]"
+        return "\(op.rawValue) in '\(folder)'\(extPart)"
     }
 }
 
@@ -327,12 +348,38 @@ enum FastPathRouter {
 
 // MARK: - ActionPlanner
 
+// MARK: - Test hooks
+
+/// Exposes the parsing internals to the test suite. These are thin wrappers —
+/// no behaviour lives here.
+extension ActionPlanner {
+    func debugSplitByConjunction(_ text: String) -> [String] {
+        splitByConjunctionForTesting(text)
+    }
+
+    func debugMediaCommand(_ text: String) -> PlannedAction? {
+        mediaCommandForTesting(text)
+    }
+
+    func debugFileQuery(_ text: String) -> PlannedAction? {
+        fileQueryForTesting(text)
+    }
+}
+
 /// Rule-based intent parser.  Ollama is called ONLY when the input
 /// cannot be parsed by any rule and is also not a known single command.
 final class ActionPlanner {
 
     private let ollamaClient = OllamaClient(model: JarvisModel.name)
     private let intentModelRouter = IntentModelRouter()
+
+    // Thin internal wrappers over the private parsers, used only by tests.
+    func splitByConjunctionForTesting(_ text: String) -> [String] { splitByConjunction(text) }
+    func mediaCommandForTesting(_ text: String) -> PlannedAction? { parseMediaCommand(text) }
+    func fileQueryForTesting(_ text: String) -> PlannedAction? { parseFileQuery(text) }
+    func rulePlanForTesting(_ text: String) -> [PlannedAction]? {
+        ruleBasedPlan(cleaned: text, lower: text.lowercased())
+    }
 
     // ── Public entry point ──────────────────────────────────────────
 
@@ -346,7 +393,13 @@ final class ActionPlanner {
         // 1b. Local state reads — "what is the current brightness/volume
         // level" is answered from hardware, NEVER sent to Ollama (the
         // code-dump bug: Qwen answered a hardware question with Java).
-        if let local = answerLocalStateQuery(cleaned: cleaned, lower: lower) {
+        if JarvisFlags.useRustPipeline {
+            if let rustLocal = coreResolveLocalState(cleaned: cleaned) {
+                let local = RustPipeline.map(rustLocal)
+                logPlanEvent(branch: "local", text: cleaned, requestID: requestID, actions: local)
+                return local
+            }
+        } else if let local = answerLocalStateQuery(cleaned: cleaned, lower: lower) {
             logPlanEvent(branch: "local", text: cleaned, requestID: requestID, actions: local)
             return local
         }
@@ -372,13 +425,74 @@ final class ActionPlanner {
         // to intent_router.jsonl for RL and returns nil — the regex pipeline
         // below (FastPathRouter → rules → Qwen) stays as the safety net.
         if let learned = await intentModelRouter.route(cleaned, requestID: requestID) {
-            NSLog("[Plan] Intent model: %@", learned.map(\.description).joined(separator: ", "))
-            logPlanEvent(branch: "model", text: cleaned, requestID: requestID, actions: learned)
-            return learned
+            // Truncation guard: a compound utterance with N action verbs must
+            // come back with (roughly) N actions. The model sometimes stops
+            // early on long chains — "open spotify, open whatsapp and also open
+            // youtube and in spotify play a song" returned 3 of the 4 clauses,
+            // silently dropping "play a song". When that happens the rule
+            // splitter is the more reliable path.
+            //
+            // "open youtube and search for X" legitimately collapses to ONE
+            // web.search, so each search in the answer forgives one verb.
+            let verbCount = actionVerbCount(cleaned)
+            if verbCount >= 2 {
+                let searches = learned.filter {
+                    if case .searchWeb = $0 { return true }
+                    return false
+                }.count
+                let expected = max(1, verbCount - searches)
+                if learned.count < expected {
+                    NSLog("[Plan] model truncated: %d actions for %d action verbs — falling through to rules",
+                          learned.count, verbCount)
+                    IntentRouterLog.shared.append([
+                        "event": "model_miss",
+                        "request_id": requestID.uuidString,
+                        "text": cleaned,
+                        "reason": "truncated_chain",
+                        "raw": learned.map(\.description).joined(separator: ", "),
+                        "confidence": 0,
+                        "total_ms": 0,
+                    ])
+                } else {
+                    NSLog("[Plan] Intent model: %@", learned.map(\.description).joined(separator: ", "))
+                    logPlanEvent(branch: "model", text: cleaned, requestID: requestID, actions: learned)
+                    return learned
+                }
+            } else {
+                NSLog("[Plan] Intent model: %@", learned.map(\.description).joined(separator: ", "))
+                logPlanEvent(branch: "model", text: cleaned, requestID: requestID, actions: learned)
+                return learned
+            }
         }
 
-        // 2b. Fast-path router — simple intents execute with ZERO model
-        // load. Only .needsModel falls through to rules/Ollama below.
+        // 2b. Post-model flow — fast-path router, then the strict priority
+        // rules. With the migration flag ON this whole block is decided by
+        // the Rust core; OFF keeps the Swift path and logs a shadow
+        // comparison so parity can be verified from real usage.
+        if JarvisFlags.useRustPipeline {
+            let rust = corePlanAfterModel(cleaned: cleaned)
+            if rust.needsOllama {
+                // Rust owns the Ollama planner fallback (tools prompt +
+                // Shape A parsing); unparseable output becomes a single
+                // aiQuery exactly like the Swift path.
+                let outcome = await RustPipeline.runBlocking { coreOllamaPlan(cleaned: cleaned) }
+                if outcome.error == nil {
+                    StatsRecorder.shared.recordLLM(promptChars: Int(outcome.promptChars),
+                                                   responseChars: Int(outcome.responseChars))
+                }
+                let actions = RustPipeline.map(outcome.actions)
+                NSLog("[Plan] Rust+Ollama (\(outcome.parsed ? "parsed" : "fallback")): %@",
+                      actions.map(\.description).joined(separator: ", "))
+                logPlanEvent(branch: "qwen", text: cleaned, requestID: requestID, actions: actions)
+                return actions
+            }
+            let rustActions = RustPipeline.map(rust.actions)
+            NSLog("[Plan] Rust (%@): %@", rust.branch,
+                  rustActions.map(\.description).joined(separator: ", "))
+            logPlanEvent(branch: rust.branch, text: cleaned, requestID: requestID, actions: rustActions)
+            return rustActions
+        }
+
         switch FastPathRouter.route(cleaned) {
         case .execute(let actions):
             if !actions.isEmpty {
@@ -387,6 +501,9 @@ final class ActionPlanner {
                 NSLog("[Plan] Fast-path: dropped noise without model")
             }
             logPlanEvent(branch: "rule", text: cleaned, requestID: requestID, actions: actions)
+            RustPipeline.shadowCompare(cleaned: cleaned, swiftActions: actions,
+                                       swiftBranch: actions.isEmpty ? "drop" : "fastpath",
+                                       requestID: requestID)
             return actions
         case .needsModel:
             NSLog("[Plan] Fast-path miss — full pipeline")
@@ -398,34 +515,32 @@ final class ActionPlanner {
         if let actions = ruleBasedPlan(cleaned: cleaned, lower: lower) {
             NSLog("[Plan] Rule-based: %@", actions.map(\.description).joined(separator: ", "))
             logPlanEvent(branch: "rule", text: cleaned, requestID: requestID, actions: actions)
+            RustPipeline.shadowCompare(cleaned: cleaned, swiftActions: actions,
+                                       swiftBranch: "rule", requestID: requestID)
             return actions
         }
 
-        // 5. Fallback to Ollama only for complex/unrecognised input
-        // Guard: only route to Ollama when input is substantial (≥ 4 tokens)
-        // and doesn't look like a media/volume/search command that we missed.
-        // ── Fix #9: Block system-like commands from reaching Ollama ───────────────
-        // If the unmatched input contains a system keyword it was a misfire,
-        // not a genuine AI question. DROP it — do not send to AI.
-        let systemIntentKeywords = [
-            "open", "close", "launch", "start", "run",
-            "volume", "mute", "unmute", "play", "pause", "next", "previous", "skip",
-            "search", "create"
-        ]
-        if systemIntentKeywords.contains(where: { lower.split(separator: " ").map(String.init).contains($0) }) {
-            NSLog("[Block] system-intent keyword detected — dropping instead of routing to AI: '%@'", cleaned)
-            return []
-        }
-
+        // 5. Fallback to Ollama for complex/unrecognised input.
+        // Unmatched system-looking commands used to be DROPPED here — that is
+        // what turned "open spotify, open whatsapp and also open youtube and
+        // in spotify play a song" into "Invalid command skipped" with no
+        // explanation. A command the rules could not parse is exactly the case
+        // Qwen exists for, and `ollamaFallback` degrades to a spoken aiQuery
+        // answer by itself, so this branch can never end in silence.
         let tokenCount = lower.split(separator: " ").count
         if tokenCount < 4 {
             NSLog("[Plan] Short unrecognised input (%d tokens) — treating as AI query without Ollama call", tokenCount)
-            return [.aiQuery(cleaned)]
+            let short = [PlannedAction.aiQuery(cleaned)]
+            RustPipeline.shadowCompare(cleaned: cleaned, swiftActions: short,
+                                       swiftBranch: "ai", requestID: requestID)
+            return short
         }
 
         NSLog("[Intent] AI: fallback")
         NSLog("[Plan] → Routing to Ollama: '%@'", cleaned)
         let qwenPlan = await ollamaFallback(cleaned)
+        RustPipeline.shadowCompare(cleaned: cleaned, swiftActions: qwenPlan,
+                                   swiftBranch: "qwen", requestID: requestID)
         logPlanEvent(branch: "qwen", text: cleaned, requestID: requestID, actions: qwenPlan)
         return qwenPlan
     }
@@ -446,6 +561,64 @@ final class ActionPlanner {
     // MARK: - Rule-based planner
 
     private func ruleBasedPlan(cleaned: String, lower: String) -> [PlannedAction]? {
+
+        // ── Compound commands FIRST ─────────────────────────────────
+        // A multi-clause utterance must never be parsed as one giant target:
+        // "open notes and increase the volume by 20 percent" used to become
+        // openApp("notes and increase the volume by 20 percent"). Split
+        // before any whole-string rule sees it.
+        let conjuncts = splitByConjunction(lower)
+        if conjuncts.count > 1 {
+            var actions: [PlannedAction] = []
+            for part in conjuncts {
+                let partTrimmed = part.trimmingCharacters(in: .whitespaces)
+                // Try volume first on each part
+                if let vol = parseVolumeCommand(partTrimmed) {
+                    actions.append(vol)
+                    continue
+                }
+                if let info = parseInfoCommand(partTrimmed) {
+                    actions.append(.systemInfo(info))
+                    continue
+                }
+                // Try media on each part
+                if let media = parseMediaCommand(partTrimmed) {
+                    actions.append(media)
+                    continue
+                }
+                // Or a file-exploration question ("…and how many folders are in downloads")
+                if let files = parseFileQuery(partTrimmed) {
+                    actions.append(files)
+                    continue
+                }
+                // Display on each part ("…and increase the brightness by 5 percent")
+                if let display = parseDisplayCommand(partTrimmed) {
+                    actions.append(display)
+                    continue
+                }
+                // Search on each part ("…and in that search for iphone")
+                if let searchActions = parseSearchQuery(partTrimmed) {
+                    actions.append(contentsOf: searchActions)
+                    continue
+                }
+                // Close on each part
+                if partTrimmed.hasPrefix("close ") {
+                    let t = String(partTrimmed.dropFirst("close ".count))
+                    actions.append(.closeApp(resolveApp(t)))
+                    continue
+                }
+                let subActions = parseSinglePhrase(partTrimmed, originalRaw: cleaned)
+                actions.append(contentsOf: subActions)
+            }
+            if let controlOnly = preferredSingleControlAction(from: actions) {
+                NSLog("[Plan] Collapsing conjunction to single control action: %@", controlOnly.description)
+                return [controlOnly]
+            }
+            if !actions.isEmpty {
+                NSLog("[Voice] split into %d commands via conjunction", actions.count)
+            }
+            return actions.isEmpty ? nil : actions
+        }
 
         if let system = parseSystemCommand(lower) {
             NSLog("[Intent] SYSTEM: %@", lower)
@@ -476,43 +649,9 @@ final class ActionPlanner {
             return searchActions
         }
 
-        // ── "open X and play Y" / conjunction splits ─────────────────
-        let conjuncts = splitByConjunction(lower)
-        if conjuncts.count > 1 {
-            var actions: [PlannedAction] = []
-            for part in conjuncts {
-                let partTrimmed = part.trimmingCharacters(in: .whitespaces)
-                // Try volume first on each part
-                if let vol = parseVolumeCommand(partTrimmed) {
-                    actions.append(vol)
-                    continue
-                }
-                if let info = parseInfoCommand(partTrimmed) {
-                    actions.append(.systemInfo(info))
-                    continue
-                }
-                // Try media on each part
-                if let media = parseMediaCommand(partTrimmed) {
-                    actions.append(media)
-                    continue
-                }
-                // Close on each part
-                if partTrimmed.hasPrefix("close ") {
-                    let t = String(partTrimmed.dropFirst("close ".count))
-                    actions.append(.closeApp(resolveApp(t)))
-                    continue
-                }
-                let subActions = parseSinglePhrase(partTrimmed, originalRaw: cleaned)
-                actions.append(contentsOf: subActions)
-            }
-            if let controlOnly = preferredSingleControlAction(from: actions) {
-                NSLog("[Plan] Collapsing conjunction to single control action: %@", controlOnly.description)
-                return [controlOnly]
-            }
-            if !actions.isEmpty {
-                NSLog("[Voice] split into %d commands via conjunction", actions.count)
-            }
-            return actions.isEmpty ? nil : actions
+        // ── File exploration (counts, listing, sizes, oldest/newest) ─
+        if let files = parseFileQuery(lower) {
+            return [files]
         }
 
         // ── Single-phrase parse ─────────────────────────────────────
@@ -812,9 +951,71 @@ final class ActionPlanner {
             return .mediaControl(.playPlaylist(playlistName))
         }
 
-        let songName = extractSongName(normalizedIntent)
+        // A sentence that merely CONTAINS "play" and "song" is not a song
+        // title. "in spotify, could you play a song for me?" used to become
+        // playSong("in spotify, could you a for me?") — every content word is
+        // a trigger/filler, so it is a plain "start playing" request.
+        if mediaContentTokens(compact).isEmpty {
+            NSLog("[Intent] detected: play (no title in '%@')", compact)
+            return .mediaControl(.play)
+        }
+
+        let songName = cleanSongTitle(extractSongName(normalizedIntent))
+        guard !songName.isEmpty else {
+            NSLog("[Intent] detected: play (empty title after cleanup)")
+            return .mediaControl(.play)
+        }
         NSLog("[Intent] detected: play_song → '%@'", songName)
         return .mediaControl(.playSong(songName))
+    }
+
+    /// Words that carry no song-title information: the media triggers
+    /// themselves, question/politeness filler, and app/context nouns.
+    /// Deliberately excludes short words that appear inside real titles
+    /// ("of" in "shape of you").
+    private static let mediaNonTitleWords: Set<String> = [
+        "play", "plays", "playing", "song", "songs", "music", "track", "tracks",
+        "playlist", "playlists", "tune", "tunes", "some", "any", "something",
+        "anything", "one", "it", "that", "this", "these", "those",
+        "a", "an", "the", "in", "on", "to", "at", "for", "me", "us", "my", "your",
+        "could", "would", "can", "will", "please", "kindly", "just", "now",
+        "again", "aloud", "jarvis", "spotify", "app", "application", "player",
+        "like", "want", "wanna", "need", "let", "have", "got", "get", "give",
+        "put", "start", "starting", "hear", "listen", "listening", "back",
+        "do", "does", "did", "is", "are", "was", "were", "be", "you", "i",
+    ]
+
+    /// Content words of the utterance that could name a song.
+    private func mediaContentTokens(_ text: String) -> [String] {
+        text
+            .split(whereSeparator: { $0 == " " || $0 == "\t" || $0 == "\n" })
+            .map { $0.trimmingCharacters(in: CharacterSet.alphanumerics.inverted).lowercased() }
+            .filter { !$0.isEmpty }
+            .filter { !Self.mediaNonTitleWords.contains($0) }
+    }
+
+    /// Strip leading articles/possessives and trailing "on spotify"-style
+    /// context so the title sent to Spotify is the name the user spoke.
+    private func cleanSongTitle(_ raw: String) -> String {
+        var words = raw
+            .split(whereSeparator: { $0 == " " || $0 == "\t" || $0 == "\n" })
+            .map { String($0).trimmingCharacters(in: CharacterSet.alphanumerics.inverted) }
+            .filter { !$0.isEmpty }
+
+        let leadingNoise: Set<String> = ["a", "an", "the", "my", "some", "that", "this", "please"]
+        while let first = words.first?.lowercased(), leadingNoise.contains(first) {
+            words.removeFirst()
+        }
+
+        let trailingNoise: Set<String> = ["spotify", "app", "player", "music", "song", "track", "please"]
+        while let last = words.last?.lowercased(), trailingNoise.contains(last) {
+            words.removeLast()
+            if words.last?.lowercased() == "on" || words.last?.lowercased() == "in" || words.last?.lowercased() == "from" {
+                words.removeLast()
+            }
+        }
+
+        return words.joined(separator: " ")
     }
 
     private func normalizeMediaIntentText(_ text: String) -> String {
@@ -846,6 +1047,15 @@ final class ActionPlanner {
     }
 
     private func preferredSingleControlAction(from actions: [PlannedAction]) -> PlannedAction? {
+        // Only collapse when the utterance is media control and NOTHING else.
+        // Otherwise "open spotify, open whatsapp and play a song" would be
+        // reduced to just `play`, silently dropping the app opens.
+        let allMedia = actions.allSatisfy { action in
+            if case .mediaControl = action { return true }
+            return false
+        }
+        guard allMedia, actions.count > 1 else { return nil }
+
         let controlOrder: [MediaAction] = [.nextTrack, .previousTrack, .pause, .play]
         let mediaActions = actions.compactMap { action -> MediaAction? in
             if case .mediaControl(let media) = action { return media }
@@ -1270,48 +1480,239 @@ final class ActionPlanner {
         return nil
     }
 
+    // MARK: - File exploration
+
+    /// Spoken file questions → one `FileQuery`. Answers come from FileManager,
+    /// so these never touch the shell and never reach the LLM.
+    private func parseFileQuery(_ lower: String) -> PlannedAction? {
+        let text = lower.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return nil }
+
+        let folderWords = ["downloads", "download", "documents", "document", "docs",
+                           "desktop", "pictures", "photos", "images", "movies",
+                           "videos", "music", "home folder", "home directory"]
+        let hasFolderWord = folderWords.contains { text.contains($0) }
+        let hasFileWord = text.contains("file") || text.contains("folder")
+            || text.contains("pdf") || text.contains("ppt") || text.contains("doc")
+            || text.contains("spreadsheet") || text.contains("image") || text.contains("photo")
+        guard hasFolderWord || hasFileWord else { return nil }
+
+        // Anything that opens an app or a website is not a file question.
+        if text.hasPrefix("open app ") || text.contains("youtube") || text.contains("google search") {
+            return nil
+        }
+
+        let ext = detectFileExtension(text)
+        let folder = detectFolderName(text) ?? "downloads"
+
+        // ── Open the newest / oldest file ───────────────────────────
+        let openVerb = text.hasPrefix("open ") || text.hasPrefix("show me ") || text.contains("open the ")
+        if openVerb && (containsAnyWord(text, words: ["latest", "newest", "recent", "recently", "last"])
+                        || text.contains("most recent")) {
+            return .fileQuery(FileQuery(op: .openNewest, folder: folder, ext: ext))
+        }
+        if openVerb && containsAnyWord(text, words: ["oldest", "earliest", "first"]) {
+            return .fileQuery(FileQuery(op: .openOldest, folder: folder, ext: ext))
+        }
+
+        // ── Counts ──────────────────────────────────────────────────
+        let countish = text.contains("how many") || text.contains("number of")
+            || text.hasPrefix("count ") || text.contains("count the")
+            || text.contains("total number")
+        if countish {
+            return .fileQuery(FileQuery(op: wantsFolders(text) ? .countFolders : .count,
+                                        folder: folder, ext: ext))
+        }
+
+        // ── Sizes ───────────────────────────────────────────────────
+        if containsAnyWord(text, words: ["biggest", "largest", "heaviest"]) {
+            return .fileQuery(FileQuery(op: .largest, folder: folder, ext: ext))
+        }
+        if text.contains("how much space") || text.contains("total size")
+            || text.contains("size of all") || text.contains("take up") || text.contains("total space") {
+            return .fileQuery(FileQuery(op: .totalSize, folder: folder, ext: ext))
+        }
+
+        // ── Oldest / newest ─────────────────────────────────────────
+        if containsAnyWord(text, words: ["oldest", "earliest"]) {
+            return .fileQuery(FileQuery(op: .oldest, folder: folder, ext: ext))
+        }
+        if containsAnyWord(text, words: ["latest", "newest", "recent", "recently"])
+            || text.contains("most recent") {
+            return .fileQuery(FileQuery(op: .newest, folder: folder, ext: ext))
+        }
+
+        // ── Listing ─────────────────────────────────────────────────
+        let listingVerb = text.hasPrefix("list ") || text.hasPrefix("show ")
+            || text.hasPrefix("tell me ") || text.hasPrefix("what ")
+            || text.hasPrefix("which ") || text.contains("name of")
+            || text.hasPrefix("give me ")
+        if listingVerb || text.contains("what are the files") {
+            return .fileQuery(FileQuery(op: wantsFolders(text) ? .listFolders : .list,
+                                        folder: folder, ext: ext))
+        }
+
+        return nil
+    }
+
+    /// True when the QUESTION is about folders. The plural is what
+    /// distinguishes "how many folders are in my downloads folder" (a folder
+    /// count) from "the files in my documents folder" (a file list) — the
+    /// singular "folder" is usually just the location noun.
+    private func wantsFolders(_ text: String) -> Bool {
+        containsAnyWord(text, words: ["folders", "subfolder", "subfolders", "directories", "directory"])
+            || text.contains("how many folder ")
+            || text.contains("number of folder ")
+    }
+
+    /// Extensions the user actually names out loud.
+    private func detectFileExtension(_ text: String) -> String {
+        let known = ["pdf", "pptx", "ppt", "docx", "doc", "xlsx", "xls", "csv",
+                     "txt", "md", "json", "png", "jpg", "jpeg", "gif", "heic",
+                     "mp4", "mov", "mp3", "zip", "swift", "py"]
+        for ext in known where containsAnyWord(text, words: [ext]) {
+            // "ppt" is how people say pptx; match either.
+            if ext == "ppt" { return "pptx" }
+            if ext == "doc" { return "docx" }
+            if ext == "xls" { return "xlsx" }
+            if ext == "jpeg" { return "jpg" }
+            return ext
+        }
+        if containsAnyWord(text, words: ["image", "images", "photo", "photos", "picture", "pictures"]) {
+            return "png"
+        }
+        if containsAnyWord(text, words: ["spreadsheet", "spreadsheets"]) { return "xlsx" }
+        if containsAnyWord(text, words: ["presentation", "presentations", "deck", "decks", "slides"]) { return "pptx" }
+        if containsAnyWord(text, words: ["video", "videos", "movie", "movies"]) { return "mp4" }
+        return ""
+    }
+
+    /// The folder the question is about, or nil when the user did not say.
+    private func detectFolderName(_ text: String) -> String? {
+        let ordered = ["downloads", "download", "documents", "docs", "desktop",
+                       "pictures", "photos", "images", "movies", "videos", "music"]
+        for word in ordered where text.contains(word) {
+            return word
+        }
+        if text.contains("home folder") || text.contains("home directory") { return "home" }
+        return nil
+    }
+
     // MARK: - Conjunction splitter
 
     private func splitByConjunction(_ lower: String) -> [String] {
+        // A comma only starts a new clause when the next words are a fresh
+        // action ("open spotify, open whatsapp") — a comma inside a search
+        // query or a title ("search for iPhone 18 Pro, blue colour") must
+        // stay in the same intent.
+        let verbLookahead = "open|close|launch|quit|play|pause|resume|stop|next|previous|prev|skip|"
+            + "search|google|find|list|count|show|tell|create|run|start|increase|decrease|set|turn|"
+            + "mute|unmute|make|check|calculate"
+
         var parts = lower
             .replacingOccurrences(of: ", and ", with: " && ")
             .replacingOccurrences(of: " and then ", with: " && ")
             .replacingOccurrences(of: ", then ", with: " && ")
-            .replacingOccurrences(of: " then ", with: " && ")
+            .replacingOccurrences(
+                of: ",\\s*(?=(?:also\\s+|plus\\s+|then\\s+)?(?:\(verbLookahead))\\b)",
+                with: " && ",
+                options: [.regularExpression, .caseInsensitive]
+            )
             .replacingOccurrences(of: " and ", with: " && ")
+            .replacingOccurrences(of: " then ", with: " && ")
             .components(separatedBy: " && ")
-            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .map { dropLeadingConnectors($0.trimmingCharacters(in: .whitespaces)) }
             .filter { !$0.isEmpty }
 
         guard parts.count > 1 else { return parts }
 
-        // Propagate leading verb to parts that lack one
-        // e.g. "open chrome and spotify" → ["open chrome", "open spotify"]
+        // Propagate the leading verb to parts that carry NO action verb at all
+        // ("open chrome and spotify" → ["open chrome", "open spotify"]).
         let verbs = ["open ", "close ", "launch ", "play ", "search ", "create ", "run ", "start "]
         let firstVerb = verbs.first { parts[0].hasPrefix($0) }
         if let verb = firstVerb {
             parts = parts.map { part -> String in
-                let hasVerb = verbs.contains { part.hasPrefix($0) }
-                return hasVerb ? part : verb + part
+                // A file question has no verb but is a complete intent.
+                if hasActionVerb(part) || parseFileQuery(part) != nil { return part }
+                return verb + part
             }
         }
 
-        // Fix #4: STRICT validation — every part MUST have a recognized action verb
-        // or be an exact media command. Noun-only parts ("chrome", "whatsapp") are
-        // silently dropped instead of routed to AI.
+        // Every part must still carry an action verb, otherwise it was noise.
         let exactCommands: Set<String> = [
             "play", "pause", "next", "previous", "prev", "skip", "resume", "mute", "unmute"
         ]
         let validated = parts.filter { part in
-            let hasVerb = verbs.contains { part.hasPrefix($0) }
-            let isExact = exactCommands.contains(part)
-            if !hasVerb && !isExact {
-                NSLog("[Intent] Dropped noun-only conjunction part (no action verb): '%@'", part)
-            }
-            return hasVerb || isExact
+            if hasActionVerb(part) || exactCommands.contains(part) { return true }
+            if parseFileQuery(part) != nil { return true }
+            NSLog("[Intent] Dropped conjunction part without an action: '%@'", part)
+            return false
         }
 
         return validated
+    }
+
+    /// Strip clause preamble so each part starts at its action:
+    ///   "also open youtube"          → "open youtube"
+    ///   "in chrome open youtube"     → "open youtube"
+    ///   "in that search for iphone"  → "search for iphone"
+    private func dropLeadingConnectors(_ text: String) -> String {
+        let connectors = ["and also ", "and then ", "and ", "also ", "plus ", "then ", "please "]
+        var result = text
+        var changed = true
+        while changed {
+            changed = false
+            for connector in connectors where result.hasPrefix(connector) {
+                result = String(result.dropFirst(connector.count))
+                changed = true
+            }
+        }
+
+        result = result.trimmingCharacters(in: .whitespaces)
+
+        // Not starting at an action? Drop the preamble up to the first verb.
+        if !startsWithActionVerb(result) {
+            let tokens = result.split(separator: " ").map(String.init)
+            if let index = tokens.firstIndex(where: { isActionVerbToken($0) }), index > 0 {
+                result = tokens[index...].joined(separator: " ")
+            }
+        }
+        return result
+    }
+
+    private static let actionVerbTokens: Set<String> = [
+        "open", "close", "launch", "quit", "play", "pause", "resume", "stop",
+        "next", "previous", "prev", "skip", "search", "google", "find", "list",
+        "count", "show", "tell", "create", "run", "start", "increase", "decrease",
+        "set", "turn", "mute", "unmute", "make", "check", "calculate",
+    ]
+
+    private func isActionVerbToken(_ token: String) -> Bool {
+        Self.actionVerbTokens.contains(
+            token.trimmingCharacters(in: CharacterSet.alphanumerics.inverted).lowercased()
+        )
+    }
+
+    /// How many action verbs the utterance contains, counting repeats:
+    /// "open spotify, open whatsapp and play a song" → 3 clauses.
+    private func actionVerbCount(_ text: String) -> Int {
+        text
+            .split(whereSeparator: { $0 == " " || $0 == "\t" || $0 == "\n" })
+            .filter { isActionVerbToken(String($0)) }
+            .count
+    }
+
+    private func startsWithActionVerb(_ text: String) -> Bool {
+        guard let first = text.split(separator: " ").first else { return false }
+        return isActionVerbToken(String(first))
+    }
+
+    /// True when any token of the part is an action verb — position-free, so
+    /// "in spotify play a song" counts as an action.
+    private func hasActionVerb(_ text: String) -> Bool {
+        text
+            .split(whereSeparator: { $0 == " " || $0 == "\t" || $0 == "\n" })
+            .contains { isActionVerbToken(String($0)) }
     }
 
     // MARK: - Helpers

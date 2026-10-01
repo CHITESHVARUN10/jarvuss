@@ -401,6 +401,17 @@ final class CommandNormalizer {
     // MARK: - Ollama fallback (complex / unrecognised input only)
 
     private func ollamaFallback(_ cleaned: String, raw: String) async -> NormalizedCommand {
+        // Migration cut-over: Rust owns the HTTP call + Shape B parsing
+        // (falls back to a single aiQuery on unparseable output, same as Swift).
+        if JarvisFlags.useRustPipeline {
+            let outcome = await RustPipeline.runBlocking { coreOllamaNormalize(cleaned: cleaned) }
+            if outcome.error == nil {
+                StatsRecorder.shared.recordLLM(promptChars: Int(outcome.promptChars),
+                                               responseChars: Int(outcome.responseChars))
+            }
+            return RustPipeline.map(outcome, rawText: raw)
+        }
+
         // X (user words) + shared tools prompt in, Y (executor JSON) out.
         let prompt = JarvisToolsPrompt.text + "Respond with Shape B.\n\nUser: \(cleaned)"
 

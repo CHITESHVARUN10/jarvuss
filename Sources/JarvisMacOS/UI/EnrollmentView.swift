@@ -136,55 +136,57 @@ struct EnrollmentView: View {
                         }
                     }
                 }
+            }
 
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 8) {
-                        Button {
-                            appState.startEnrollment()
-                        } label: {
-                            Label("Start", systemImage: "play.fill")
-                        }
-                        .disabled(!appState.micActive || appState.enrollmentActive)
-                        .buttonStyle(JarvisButtonStyle(color: JarvisColor.accent, compact: true))
-
-                        Button {
-                            appState.stopEnrollment()
-                        } label: {
-                            Label("Stop", systemImage: "stop.fill")
-                        }
-                        .disabled(!appState.enrollmentActive)
-                        .buttonStyle(JarvisButtonStyle(color: JarvisColor.danger, compact: true))
-
-                        Spacer()
+            // Always visible — including once the profile is ready, so the
+            // voice can be re-enrolled/retrained at any time.
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
+                    Button {
+                        appState.startEnrollment()
+                    } label: {
+                        Label("Start", systemImage: "play.fill")
                     }
+                    .disabled(!appState.micActive || appState.enrollmentActive)
+                    .buttonStyle(JarvisButtonStyle(color: JarvisColor.accent, compact: true))
 
-                    HStack(spacing: 8) {
-                        Button {
-                            appState.retrainVoiceProfile()
-                        } label: {
-                            Label("Retrain voice", systemImage: "arrow.triangle.2.circlepath")
-                        }
-                        .disabled(!appState.micActive || appState.enrollmentActive)
-                        .buttonStyle(JarvisButtonStyle(color: JarvisColor.attention, compact: true))
-                        .help("Deletes ALL stored voice samples, then starts a fresh enrollment so only the new samples are used")
-
-                        Button {
-                            appState.resetVoiceProfile()
-                        } label: {
-                            Label("Clear", systemImage: "trash.fill")
-                        }
-                        .disabled(appState.enrollmentActive)
-                        .buttonStyle(JarvisButtonStyle(color: JarvisColor.textSecondary, compact: true))
-                        .help("Clear stored voice embeddings (POST /reset) without starting a new enrollment")
-
-                        Spacer()
+                    Button {
+                        appState.stopEnrollment()
+                    } label: {
+                        Label("Stop", systemImage: "stop.fill")
                     }
+                    .disabled(!appState.enrollmentActive)
+                    .buttonStyle(JarvisButtonStyle(color: JarvisColor.danger, compact: true))
 
-                    Text("Retrain wipes old samples first — verify against the new enrollment only.")
-                        .font(JarvisType.micro)
-                        .foregroundStyle(JarvisColor.textTertiary)
-                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer()
                 }
+
+                HStack(spacing: 8) {
+                    Button {
+                        appState.retrainVoiceProfile()
+                    } label: {
+                        Label("Retrain voice", systemImage: "arrow.triangle.2.circlepath")
+                    }
+                    .disabled(!appState.micActive || appState.enrollmentActive)
+                    .buttonStyle(JarvisButtonStyle(color: JarvisColor.attention, compact: true))
+                    .help("Deletes ALL stored voice samples, then starts a fresh enrollment so only the new samples are used")
+
+                    Button {
+                        appState.resetVoiceProfile()
+                    } label: {
+                        Label("Clear", systemImage: "trash.fill")
+                    }
+                    .disabled(appState.enrollmentActive)
+                    .buttonStyle(JarvisButtonStyle(color: JarvisColor.textSecondary, compact: true))
+                    .help("Clear stored voice embeddings (POST /reset) without starting a new enrollment")
+
+                    Spacer()
+                }
+
+                Text("Retrain wipes old samples first — verify against the new enrollment only.")
+                    .font(JarvisType.micro)
+                    .foregroundStyle(JarvisColor.textTertiary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
 

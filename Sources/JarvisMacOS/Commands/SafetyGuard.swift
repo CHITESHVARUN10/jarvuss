@@ -35,6 +35,10 @@ enum SafetyGuard {
 
     /// Validate a raw text command before it enters the pipeline.
     static func validate(rawCommand command: String) -> SafetyVerdict {
+        // Migration cut-over: the Rust core runs the same blocklists/verdicts.
+        if JarvisFlags.useRustPipeline {
+            return RustPipeline.map(coreCheckSafety(raw: command))
+        }
         let lower = command.lowercased()
         return runChecks(on: lower, original: command)
     }
@@ -57,6 +61,11 @@ enum SafetyGuard {
             return checkPath(path)
         case .openLatestFile(let folder):
             return checkPath(folder)
+        case .fileQuery:
+            // Folder names resolve through a fixed whitelist (Downloads,
+            // Documents, Desktop, Pictures, Movies, Music) and the executor
+            // uses FileManager, never a shell — nothing to sanitize.
+            return .allowed
         case .mediaControl:
             return .allowed   // media controls are inherently safe
         case .volumeControl:

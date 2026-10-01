@@ -46,6 +46,12 @@ final class AppState: ObservableObject {
     @Published var actionPillRequiresVerify: Bool = UserDefaults.standard.object(forKey: "jarvis.actionPillRequiresVerify") as? Bool ?? true {
         didSet { UserDefaults.standard.set(actionPillRequiresVerify, forKey: "jarvis.actionPillRequiresVerify") }
     }
+    /// Swift → Rust migration flag: command understanding routed through the
+    /// Rust core (validator, safety, app aliases, fast-path + rules). OFF keeps
+    /// the Swift pipeline and logs shadow-parity lines for comparison.
+    @Published var useRustPipeline: Bool = JarvisFlags.useRustPipeline {
+        didSet { JarvisFlags.useRustPipeline = useRustPipeline }
+    }
     @Published var voiceVerificationStatus = "Unknown Voice ❌"
     @Published var lastVoiceSimilarity = 0.0
     @Published var backendEnrollmentSampleCount = 0
@@ -58,6 +64,26 @@ final class AppState: ObservableObject {
     @Published var spotifyLinked: Bool = false
     @Published var spotifyExpired: Bool = true
     @Published var spotifyStatusText: String = "Not connected"
+    // MARK: - Connectors (PostgreSQL)
+    /// True once GET /postgres/status reports a configured backend PG.
+    @Published var postgresConfigured: Bool = false
+    @Published var postgresStatusText: String = "Not configured"
+    @Published var postgresMissingKeys: [String] = []
+    /// Local Ollama server reachability (GET /api/tags probe).
+    @Published var ollamaReachable: Bool = false
+    @Published var ollamaStatusText: String = "qwen2.5-coder · 1.5b"
+    /// Reads the backend's configured values (never the password) for
+    /// prefilling the Connections pane form.
+    @Published var postgresForm = PostgresForm()
+    /// Event-logging switch (UserDefaults-backed) — gates all PG writes.
+    @Published var eventLoggingEnabled: Bool = UserDefaults.standard.object(forKey: "jarvis.eventLogging.enabled") as? Bool ?? true {
+        didSet {
+            UserDefaults.standard.set(eventLoggingEnabled, forKey: "jarvis.eventLogging.enabled")
+            dbManager.loggingEnabled = eventLoggingEnabled
+        }
+    }
+    /// Recent commands ring (last 5) for the Assistant pane.
+    @Published var recentCommands: [String] = []
     /// When true, Jarvis speaks its responses aloud via AVSpeechSynthesizer.
     @Published var voiceResponseEnabled: Bool = false
     /// Current display brightness level (0-100) for UI display and controls.
@@ -109,6 +135,7 @@ final class AppState: ObservableObject {
     private let commandNormalizer = CommandNormalizer(model: JarvisModel.name)
     private let voiceAuthClient = VoiceAuthClient()
     let spotifyClient = SpotifyClient()
+    let postgresClient = PostgresClient()
     private let actionPlanner = ActionPlanner()
     private let backendServiceManager = BackendServiceManager()
     private let displayController = DisplayController()
@@ -165,6 +192,10 @@ final class AppState: ObservableObject {
     /// same rate removes a resample-variance source between enroll-time
     /// and verify-time embeddings and keeps clips comparable sample-for-sample.
     private static let voiceSampleRate = 16_000.0
+
+    /// Read-only surfaces for the Assistant pane (threshold display, profile row).
+    var voiceVerifyThreshold: Double { voiceVerificationThreshold }
+    var displayProfileName: String { displayController.profileName }
 
     var voiceEnrollmentSampleTarget: Int {
         enrollmentPhrases.count * enrollmentRequiredMatchesPerPhrase
@@ -243,6 +274,7 @@ final class AppState: ObservableObject {
         }
 
         self.automations = automationStore.load()
+        dbManager.loggingEnabled = eventLoggingEnabled
         refreshBrightness()
         refreshContrast()
         // Usage stats: Postgres primary, local JSON buffer when PG is off.
@@ -369,6 +401,8 @@ final class AppState: ObservableObject {
         } else {
             appendLog("PostgreSQL logging disabled (optional). To enable: export PGHOST=127.0.0.1 PGPORT=5432 PGDATABASE=jarvis_db PGUSER=jarvis_user — missing: \(DBManager.missingEnvKeys.joined(separator: ","))")
         }
+        await refreshPostgresStatus()
+        await refreshOllamaStatus()
 
         restoreEnrollmentStateFast()
         await reconcileEnrollmentFromDB()
@@ -597,6 +631,81 @@ final class AppState: ObservableObject {
             spotifyLinked = false
             spotifyStatusText = "Backend unreachable"
             appendLog("[Spotify] Status check failed: \(error.localizedDescription)")
+        }
+    }
+
+    // MARK: - Connectors (PostgreSQL)
+
+    /// Refresh from GET /postgres/status; prefills the Connections form
+    /// (host/port/db/user — never the password) for editing.
+    func refreshPostgresStatus() async {
+        do {
+            let st = try await postgresClient.status()
+            postgresConfigured = st.configured
+            postgresMissingKeys = st.missing
+            postgresStatusText = st.configured ? "Configured"
+                : st.missing.isEmpty ? "Not configured"
+                : "Missing: \(st.missing.joined(separator: ", "))"
+            if postgresConfigured {
+                postgresForm = PostgresForm(
+                    host: st.host, port: st.port,
+                    database: st.database, user: st.user,
+                    password: ""
+                )
+            }
+            dbManager.reloadConfiguration()
+            appendLog("[Postgres] Status: \(postgresStatusText)")
+        } catch {
+            postgresConfigured = false
+            postgresStatusText = "Backend unreachable"
+            appendLog("[Postgres] Status check failed: \(error.localizedDescription)")
+        }
+    }
+
+    func savePostgresCredentials() async -> String {
+        do {
+            let msg = try await postgresClient.save(
+                host: postgresForm.host, port: postgresForm.port,
+                database: postgresForm.database, user: postgresForm.user,
+                password: postgresForm.password
+            )
+            postgresForm.password = ""
+            dbManager.reloadConfiguration()
+            await refreshPostgresStatus()
+            return msg
+        } catch {
+            return error.localizedDescription
+        }
+    }
+
+    func testPostgresConnection() async -> String {
+        do {
+            return try await postgresClient.test()
+        } catch {
+            return error.localizedDescription
+        }
+    }
+
+    /// Probe GET /api/tags (2 s timeout) — drives the Ollama chip.
+    func refreshOllamaStatus() async {
+        guard let url = URL(string: "http://127.0.0.1:11434/api/tags") else { return }
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 2
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            ollamaReachable = ((response as? HTTPURLResponse)?.statusCode ?? 0) / 100 == 2
+        } catch {
+            ollamaReachable = false
+        }
+        ollamaStatusText = ollamaReachable ? "qwen2.5-coder · 1.5b" : "Ollama offline"
+    }
+
+    /// Keeps the last 5 executed commands for the Assistant pane's Recent card.
+    private func trackRecentCommand(_ command: String) {
+        recentCommands.removeAll { $0 == command }
+        recentCommands.insert(command, at: 0)
+        if recentCommands.count > 5 {
+            recentCommands = Array(recentCommands.prefix(5))
         }
     }
 
@@ -1248,6 +1357,18 @@ final class AppState: ObservableObject {
     }
 
     private func matchedAutomation(for command: String) -> (automation: VoiceAutomation, isOffVariant: Bool)? {
+        // Migration cut-over: Rust core owns the matching decision.
+        if JarvisFlags.useRustPipeline {
+            let keywords = automations.map {
+                CoreAutomationKeywords(keyword: $0.keyword, offKeyword: $0.offKeyword)
+            }
+            if let match = coreMatchAutomation(text: command, keywords: keywords),
+               Int(match.index) < automations.count {
+                return (automations[Int(match.index)], match.isOffVariant)
+            }
+            return nil
+        }
+
         let lower = command.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
         guard !lower.isEmpty else { return nil }
 
@@ -1310,6 +1431,11 @@ final class AppState: ObservableObject {
                         }
                     }
                 )
+            } else {
+                // Never skip silently: an action whose value is empty used to
+                // vanish here with no trace, which read as "the routine ran
+                // but the second step never happened".
+                appendLog("[Automation][ERROR] Skipped \(action.type.rawValue) — no value configured")
             }
 
             let delayMs = UInt64(Int.random(in: 100...300))
@@ -1373,6 +1499,7 @@ final class AppState: ObservableObject {
 
     private func runCommand(_ command: String) async {
         guard !command.isEmpty else { return }
+        trackRecentCommand(command)
         var succeeded = false
         // One id for this whole utterance — ties the model_hit/model_miss,
         // plan branch and execute events together in intent_router.jsonl.

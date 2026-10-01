@@ -26,6 +26,23 @@ final class IntentModelRouter {
             return nil
         }
 
+        // Migration cut-over: Rust owns the HTTP call, the confidence gate,
+        // the strict mapping, and the hit/miss lines in the RL corpus.
+        if JarvisFlags.useRustPipeline {
+            let outcome = await RustPipeline.runBlocking {
+                coreRouteIntent(text: text, requestId: requestID.uuidString, baseUrl: nil)
+            }
+            guard outcome.hit else {
+                NSLog("[IntentModel] miss (rust, %@): '%@'", outcome.reason ?? "unknown", text)
+                return nil
+            }
+            let actions = RustPipeline.map(outcome.actions)
+            NSLog("[IntentModel] hit (rust, %.2f, %dms): %@",
+                  outcome.confidence, outcome.totalMs,
+                  actions.map(\.description).joined(separator: ", "))
+            return actions
+        }
+
         let start = Date()
         do {
             let response = try await client.parse(text: text)

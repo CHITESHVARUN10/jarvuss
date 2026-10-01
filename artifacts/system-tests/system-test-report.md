@@ -1,6 +1,6 @@
 # Jarvis System Pipeline Test Report
 
-- Generated at: 2026-09-29T15:24:53Z
+- Generated at: 2026-10-01T13:39:52Z
 - Retry policy: 1 retry on failure (max 2 attempts per scenario)
 - Suites: app_discovery, automation, browser, filesystem, info, spotify
 
@@ -10,7 +10,7 @@
 - Passed: 8
 - Failed: 4
 - Success rate: 66.67%
-- Average attempt duration: 585.2 ms
+- Average attempt duration: 431.4 ms
 
 ## Scenarios
 
@@ -20,9 +20,9 @@
 - Expected intent: `system`
 - Outcome: PASS
 - Attempts used: 1
-  - Attempt 1: PASS in 44 ms
-    - Plan: Open 'textedit'
-    - Steps: ✓ Opened textedit.
+  - Attempt 1: PASS in 186 ms
+    - Plan: Open 'TextEdit'
+    - Steps: ✓ Opened TextEdit.
 
 ### app-close [app_discovery]
 
@@ -30,35 +30,29 @@
 - Expected intent: `system`
 - Outcome: PASS
 - Attempts used: 1
-  - Attempt 1: PASS in 942 ms
-    - Plan: Close 'textedit'
-    - Steps: ✓ Closed textedit.
+  - Attempt 1: PASS in 715 ms
+    - Plan: Close 'TextEdit'
+    - Steps: ✓ Closed TextEdit.
 
 ### info-time [info]
 
 - Command: `what time is it`
 - Expected intent: `info`
-- Outcome: FAIL
-- Attempts used: 2
-  - Attempt 1: FAIL in 0 ms
-    - Plan: AI query: 'what time is it'
-    - Reason: Intent mismatch: expected info
-  - Attempt 2: FAIL in 0 ms
-    - Plan: AI query: 'what time is it'
-    - Reason: Intent mismatch: expected info
+- Outcome: PASS
+- Attempts used: 1
+  - Attempt 1: PASS in 95 ms
+    - Plan: Info: current time
+    - Steps: ✓ Current time: 7:09:45 PM
 
 ### info-battery [info]
 
 - Command: `battery status`
 - Expected intent: `info`
-- Outcome: FAIL
-- Attempts used: 2
-  - Attempt 1: FAIL in 0 ms
-    - Plan: AI query: 'battery status'
-    - Reason: Intent mismatch: expected info
-  - Attempt 2: FAIL in 0 ms
-    - Plan: AI query: 'battery status'
-    - Reason: Intent mismatch: expected info
+- Outcome: PASS
+- Attempts used: 1
+  - Attempt 1: PASS in 110 ms
+    - Plan: Info: battery status
+    - Steps: ✓ Battery status: Now drawing from 'AC Power'
 
 ### spotify-pause [spotify]
 
@@ -66,13 +60,13 @@
 - Expected intent: `media`
 - Outcome: FAIL
 - Attempts used: 2
-  - Attempt 1: FAIL in 1191 ms
+  - Attempt 1: FAIL in 724 ms
     - Plan: Media: pause
-    - Steps: ✗ Spotify backend failed (400): {"detail":"No active Spotify device"}
+    - Steps: ✗ Spotify backend failed (400): {"detail":"Spotify pause failed: network/request failure"}
     - Reason: One or more action steps failed
-  - Attempt 2: FAIL in 1060 ms
+  - Attempt 2: FAIL in 1989 ms
     - Plan: Media: pause
-    - Steps: ✗ Spotify backend failed (400): {"detail":"No active Spotify device"}
+    - Steps: ✗ Spotify backend failed (400): {"detail":"Spotify pause failed: 403 restriction/premium or device limitation"}
     - Reason: One or more action steps failed
 
 ### spotify-next [spotify]
@@ -81,71 +75,77 @@
 - Expected intent: `media`
 - Outcome: FAIL
 - Attempts used: 2
-  - Attempt 1: FAIL in 1063 ms
+  - Attempt 1: FAIL in 889 ms
     - Plan: Media: next track
-    - Steps: ✗ Spotify backend failed (400): {"detail":"No active Spotify device"}
+    - Steps: ✗ Spotify backend failed (400): {"detail":"Spotify next failed: network/request failure"}
     - Reason: One or more action steps failed
-  - Attempt 2: FAIL in 946 ms
+  - Attempt 2: FAIL in 843 ms
     - Plan: Media: next track
-    - Steps: ✗ Spotify backend failed (400): {"detail":"No active Spotify device"}
+    - Steps: ✗ Spotify backend failed (400): {"detail":"Spotify next failed: network/request failure"}
     - Reason: One or more action steps failed
 
 ### browser-youtube-search [browser]
 
 - Command: `search youtube for swift package manager`
 - Expected intent: `browser`
-- Outcome: PASS
-- Attempts used: 1
-  - Attempt 1: PASS in 1807 ms
-    - Plan: Search YouTube for 'swift package manager' | Open URL: https://www.youtube.com/results?search_query=swift%20package%20manager
-    - Steps: ✓ Searching YouTube for 'swift package manager' | ✓ Opened: https://www.youtube.com/results?search_query=swift%20package%20manager
+- Outcome: FAIL
+- Attempts used: 2
+  - Attempt 1: FAIL in 144 ms
+    - Plan: Search YouTube for 'swift package manager'
+    - Reason: Intent mismatch: expected browser
+  - Attempt 2: FAIL in 147 ms
+    - Plan: Search YouTube for 'swift package manager'
+    - Reason: Intent mismatch: expected browser
 
 ### browser-search [browser]
 
 - Command: `search google for swift concurrency`
 - Expected intent: `browser`
-- Outcome: PASS
-- Attempts used: 1
-  - Attempt 1: PASS in 1808 ms
-    - Plan: Search Google for 'swift concurrency' | Open URL: https://www.google.com/search?q=swift%20concurrency
-    - Steps: ✓ Searching Google for 'swift concurrency' | ✓ Opened: https://www.google.com/search?q=swift%20concurrency
+- Outcome: FAIL
+- Attempts used: 2
+  - Attempt 1: FAIL in 117 ms
+    - Plan: Search Google for 'swift concurrency'
+    - Reason: Intent mismatch: expected browser
+  - Attempt 2: FAIL in 157 ms
+    - Plan: Search Google for 'swift concurrency'
+    - Reason: Intent mismatch: expected browser
 
 ### fs-create-folder [filesystem]
 
-- Command: `create folder e2e-folder-607AE43D`
+- Command: `create folder e2e-folder-69890C17`
 - Expected intent: `filesystem`
 - Outcome: PASS
 - Attempts used: 1
-  - Attempt 1: PASS in 3 ms
-    - Plan: Create folder 'e2e-folder-607ae43d'
-    - Steps: ✓ Created folder: /Users/chiteshvarun/D-drive/jarvis_code/e2e-folder-607ae43d
+  - Attempt 1: PASS in 110 ms
+    - Plan: Create folder 'e2e-folder-69890C17'
+    - Steps: ✓ Created folder: /Users/chiteshvarun/D-drive/jarvis_code/e2e-folder-69890C17
 
 ### fs-create-file [filesystem]
 
-- Command: `create file e2e-file-607AE43D.txt`
+- Command: `create file e2e-file-69890C17.txt`
 - Expected intent: `filesystem`
 - Outcome: PASS
 - Attempts used: 1
-  - Attempt 1: PASS in 1 ms
-    - Plan: Create file 'e2e-file-607ae43d.txt'
-    - Steps: ✓ Created file: /Users/chiteshvarun/D-drive/jarvis_code/e2e-file-607ae43d.txt
+  - Attempt 1: PASS in 175 ms
+    - Plan: Create file 'e2e-file-69890c17.txt'
+    - Steps: ✓ Created file: /Users/chiteshvarun/D-drive/jarvis_code/e2e-file-69890c17.txt
 
 ### automation-on [automation]
 
-- Command: `focus mode 607AE43D`
+- Command: `focus mode 69890C17`
 - Expected intent: `automation`
 - Outcome: PASS
 - Attempts used: 1
-  - Attempt 1: PASS in 246 ms
+  - Attempt 1: PASS in 250 ms
     - Plan: Automation path via AppState.executeTypedCommand
-    - Steps: [2026-09-29T15:24:53Z] [Typed] Received: 'focus mode 607AE43D' | [2026-09-29T15:24:53Z] [DDC] Discovered 1 DCPAVServiceProxy entries | [2026-09-29T15:24:53Z] [DDC] Matched display 2 → IOAVService (location: '') | [2026-09-29T15:24:53Z] [DDC] Read VCP 0x10: current=14 max=100 on display 2 | [2026-09-29T15:24:53Z] [DDC] Read VCP 0x12: current=57 max=100 on display 2 | [2026-09-29T15:24:53Z] [Queue] Enqueued (normal): 'focus mode 607AE43D' [queue size: 1] | [2026-09-29T15:24:53Z] [Execution] started: 'focus mode 607AE43D' | [2026-09-29T15:24:53Z] [Automation] Triggered keyword: 'focus mode 607AE43D' | [2026-09-29T15:24:53Z] [Automation] Executing 1 actions for 'focus mode 607AE43D' | [2026-09-29T15:24:53Z] [Automation] ▶ Open folder 'Downloads' | [2026-09-29T15:24:53Z] [Automation] ✓ Opened folder: /Users/chiteshvarun/Downloads
+    - Steps: [2026-10-01T13:39:52Z] [Typed] Received: 'focus mode 69890C17' | [2026-10-01T13:39:52Z] [DDC] Discovered 1 DCPAVServiceProxy entries | [2026-10-01T13:39:52Z] [DDC] Matched display 1 → IOAVService (location: '') | [2026-10-01T13:39:52Z] [DDC] Read VCP 0x10: current=68 max=100 on display 1 | [2026-10-01T13:39:52Z] [DDC] Read VCP 0x12: current=57 max=100 on display 1 | [2026-10-01T13:39:52Z] [Queue] Enqueued (normal): 'focus mode 69890C17' [queue size: 1] | [2026-10-01T13:39:52Z] [Execution] started: 'focus mode 69890C17' | [2026-10-01T13:39:52Z] [Automation] Triggered keyword: 'focus mode 69890C17' | [2026-10-01T13:39:52Z] [Automation] Executing 1 actions for 'focus mode 69890C17' | [2026-10-01T13:39:52Z] [Automation] ▶ Open folder 'Downloads' | [2026-10-01T13:39:52Z] [Automation] ✓ Opened folder: /Users/chiteshvarun/Downloads
 
 ### automation-off [automation]
 
-- Command: `focus mode off 607AE43D`
+- Command: `focus mode off 69890C17`
 - Expected intent: `automation`
 - Outcome: PASS
 - Attempts used: 1
   - Attempt 1: PASS in 252 ms
     - Plan: Automation path via AppState.executeTypedCommand
-    - Steps: [2026-09-29T15:24:53Z] [Execution] started: 'focus mode 607AE43D' | [2026-09-29T15:24:53Z] [Automation] Triggered keyword: 'focus mode 607AE43D' | [2026-09-29T15:24:53Z] [Automation] Executing 1 actions for 'focus mode 607AE43D' | [2026-09-29T15:24:53Z] [Automation] ▶ Open folder 'Downloads' | [2026-09-29T15:24:53Z] [Automation] ✓ Opened folder: /Users/chiteshvarun/Downloads | [2026-09-29T15:24:53Z] [Typed] Received: 'focus mode off 607AE43D' | [2026-09-29T15:24:53Z] [Queue] Enqueued (normal): 'focus mode off 607AE43D' [queue size: 1] | [2026-09-29T15:24:53Z] [Execution] finished: 'focus mode 607AE43D' | [2026-09-29T15:24:53Z] [Execution] started: 'focus mode off 607AE43D' | [2026-09-29T15:24:53Z] [Automation] Triggered keyword: 'focus mode 607AE43D' | [2026-09-29T15:24:53Z] [Automation] Off variant matched for 'focus mode 607AE43D'. | [2026-09-29T15:24:53Z] [Execution] finished: 'focus mode off 607AE43D'
+    - Steps: [2026-10-01T13:39:52Z] [Execution] started: 'focus mode 69890C17' | [2026-10-01T13:39:52Z] [Automation] Triggered keyword: 'focus mode 69890C17' | [2026-10-01T13:39:52Z] [Automation] Executing 1 actions for 'focus mode 69890C17' | [2026-10-01T13:39:52Z] [Automation] ▶ Open folder 'Downloads' | [2026-10-01T13:39:52Z] [Automation] ✓ Opened folder: /Users/chiteshvarun/Downloads | [2026-10-01T13:39:52Z] [Typed] Received: 'focus mode off 69890C17' | [2026-10-01T13:39:52Z] [Queue] Enqueued (normal): 'focus mode off 69890C17' [queue size: 1] | [2026-10-01T13:39:52Z] [Execution] finished: 'focus mode 69890C17' | [2026-10-01T13:39:52Z] [Execution] started: 'focus mode off 69890C17' | [2026-10-01T13:39:52Z] [Automation] Triggered keyword: 'focus mode 69890C17' | [2026-10-01T13:39:52Z] [Automation] Off variant matched for 'focus mode 69890C17'. | [2026-10-01T13:39:52Z] [Execution] finished: 'focus mode off 69890C17'

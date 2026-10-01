@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 
 // MARK: - Action result
 
@@ -141,7 +142,39 @@ final class ActionExecutor {
             let msg = displayController.execute(displayAction)
             let success = !msg.lowercased().contains("fail") && !msg.lowercased().contains("error")
             return ActionResult(action: action, success: success, message: msg)
+
+        case .fileQuery(let query):
+            return executeFileQuery(query, action: action)
         }
+    }
+
+    /// File exploration — answered locally from FileManager, never via a
+    /// shell string, so a transcript can never inject a command.
+    private func executeFileQuery(_ query: FileQuery, action: PlannedAction) -> ActionResult {
+        guard let folder = FileExplorer.resolveFolder(query.folder) else {
+            let supported = "Downloads, Documents, Desktop, Pictures, Movies or Music"
+            return ActionResult(action: action, success: false,
+                                message: "I don't know the folder '\(query.folder)'. Try \(supported).")
+        }
+
+        var isDir: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: folder.path, isDirectory: &isDir), isDir.boolValue else {
+            return ActionResult(action: action, success: false,
+                                message: "\(folder.lastPathComponent) doesn't exist on this Mac.")
+        }
+
+        let result = FileExplorer.answer(op: query.op, folder: folder, ext: query.ext)
+
+        if let target = result.open {
+            // NSWorkspace picks the right app — Preview for PDFs and images,
+            // Keynote/PowerPoint for decks, QuickTime for video.
+            guard NSWorkspace.shared.open(target) else {
+                return ActionResult(action: action, success: false,
+                                    message: "\(result.message) I couldn't open it though — no app claimed that file type.")
+            }
+        }
+
+        return ActionResult(action: action, success: true, message: result.message)
     }
 
     private func executeSystemInfo(_ action: SystemInfoAction) -> ActionResult {

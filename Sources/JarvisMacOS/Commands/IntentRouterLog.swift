@@ -24,6 +24,15 @@ final class IntentRouterLog {
     }
 
     func append(_ event: [String: Any]) {
+        // Migration cut-over: Rust owns the append (same path, ts, sorted keys).
+        if JarvisFlags.useRustPipeline {
+            guard JSONSerialization.isValidJSONObject(event),
+                  let data = try? JSONSerialization.data(withJSONObject: event),
+                  let json = String(data: data, encoding: .utf8) else { return }
+            _ = coreRlAppend(eventJson: json)
+            return
+        }
+
         var payload = event
         payload["ts"] = ISO8601DateFormatter().string(from: Date())
         guard JSONSerialization.isValidJSONObject(payload),

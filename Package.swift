@@ -23,7 +23,7 @@ let package = Package(
         ),
         .executableTarget(
             name: "JarvisMacOS",
-            dependencies: ["CDDCShim", "STTCore"],
+            dependencies: ["CDDCShim", "STTCore", "RustCore"],
             path: "Sources/JarvisMacOS",
             exclude: ["Resources/Info.plist", "JarvisMacOS.entitlements"],
             linkerSettings: [
@@ -48,6 +48,12 @@ let package = Package(
         .binaryTarget(
             name: "STTCore",
             path: "STTCore.xcframework"
+        ),
+        // Prebuilt Rust command-pipeline core (UniFFI bindings). Rebuild via
+        // ./scripts/build_rust_core.sh [--release] — never checked in.
+        .binaryTarget(
+            name: "RustCore",
+            path: "RustCore.xcframework"
         ),
     ]
 )

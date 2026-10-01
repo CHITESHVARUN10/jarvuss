@@ -81,7 +81,20 @@ final class DBManager {
     static var missingEnvKeys: [String] { Config.missingEnvKeys }
 
     private let queue = DispatchQueue(label: "jarvis.postgres.queue")
-    private let config = Config.fromEnvironment()
+    private var config = Config.fromEnvironment()
+
+    /// Kill-switch for the event-logging toggle in the Connections pane.
+    /// When false, all PG writes are no-ops (local stats buffer unaffected).
+    var loggingEnabled: Bool = true
+
+    /// Re-read process env + the discovered `.env` after credentials are
+    /// saved through the Connections pane. Serializes on the PG queue so no
+    /// in-flight write observes a half-replaced config.
+    func reloadConfiguration() {
+        queue.sync { [weak self] in
+            self?.config = Config.fromEnvironment()
+        }
+    }
 
     var isConfigured: Bool {
         config != nil
@@ -136,7 +149,7 @@ final class DBManager {
         executionResult: String? = nil,
         metadata: [String: String]? = nil
     ) {
-        guard let config else { return }
+        guard loggingEnabled, let config else { return }
 
         let sql = """
         INSERT INTO jarvis_recognition_events (
@@ -168,7 +181,7 @@ final class DBManager {
     }
 
     func upsertDailyStats(_ bucket: DayBucket) {
-        guard let config else { return }
+        guard loggingEnabled, let config else { return }
         let sql = """
         INSERT INTO jarvis_usage_stats (
             day, talk_secs, sessions, chars_dictated,

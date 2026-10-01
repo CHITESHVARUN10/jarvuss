@@ -103,18 +103,30 @@ final class AutomationStore {
     }
 
     func load() -> [VoiceAutomation] {
+        // Migration cut-over: Rust owns the file I/O (same path/JSON contract).
+        if JarvisFlags.useRustPipeline,
+           let json = coreReadAutomationsJson(),
+           let data = json.data(using: .utf8) {
+            return (try? JSONDecoder().decode([VoiceAutomation].self, from: data)) ?? []
+        }
         guard let data = try? Data(contentsOf: fileURL) else { return [] }
         guard let decoded = try? JSONDecoder().decode([VoiceAutomation].self, from: data) else { return [] }
         return decoded
     }
 
     func save(_ automations: [VoiceAutomation]) throws {
-        let parent = fileURL.deletingLastPathComponent()
-        try FileManager.default.createDirectory(at: parent, withIntermediateDirectories: true)
-
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let data = try encoder.encode(automations)
+
+        // Migration cut-over: Rust validates + atomically writes the file.
+        if JarvisFlags.useRustPipeline, let json = String(data: data, encoding: .utf8) {
+            try coreWriteAutomationsJson(json: json)
+            return
+        }
+
+        let parent = fileURL.deletingLastPathComponent()
+        try FileManager.default.createDirectory(at: parent, withIntermediateDirectories: true)
         try data.write(to: fileURL, options: .atomic)
     }
 }

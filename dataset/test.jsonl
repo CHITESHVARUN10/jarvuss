@@ -33,3 +33,13 @@
 {"text": "whats 2 plus 2", "intents": [{"name": "ai.query", "args": {"text": "whats 2 plus 2"}}]}
 {"text": "set the contrast to 41 then mute the sound", "intents": [{"name": "display.contrast_set", "args": {"level": 41}}, {"name": "volume.mute", "args": {}}]}
 {"text": "play some jazz on spotify", "intents": [{"name": "media.play_playlist", "args": {"name": "jazz"}}]}
+{"text": "how many files are sitting in the desktop folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "desktop", "ext": ""}}]}
+{"text": "give me the number of folders in my movies folder", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "movies", "ext": ""}}]}
+{"text": "tell me the names of the folders in music", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "music", "ext": ""}}]}
+{"text": "how much space do my zip files take in downloads", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "downloads", "ext": "zip"}}]}
+{"text": "what is the earliest docx in my documents folder", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "documents", "ext": "docx"}}]}
+{"text": "open the most recent mp4 in movies", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "movies", "ext": "mp4"}}]}
+{"text": "open calendar and search google for best laptops 2026", "intents": [{"name": "app.open", "args": {"name": "Calendar"}}, {"name": "web.search", "args": {"engine": "Google", "query": "best laptops 2026"}}]}
+{"text": "close safari, open brave browser and play some music", "intents": [{"name": "app.close", "args": {"name": "Safari"}}, {"name": "app.open", "args": {"name": "Brave Browser"}}, {"name": "media.play", "args": {}}]}
+{"text": "open downloads, open the latest xlsx and tell me how many folders are in downloads", "intents": [{"name": "folder.open", "args": {"name": "downloads"}}, {"name": "files.query", "args": {"op": "openNewest", "folder": "downloads", "ext": "xlsx"}}, {"name": "files.query", "args": {"op": "countFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "open whatsapp, open telegram, open mail and increase the volume by 15 percent", "intents": [{"name": "app.open", "args": {"name": "WhatsApp"}}, {"name": "app.open", "args": {"name": "Telegram"}}, {"name": "app.open", "args": {"name": "Mail"}}, {"name": "volume.up", "args": {"by": 15}}]}

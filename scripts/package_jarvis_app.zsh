@@ -25,6 +25,9 @@ fi
 # ── Rust STT core → STTCore.xcframework + Swift bridge (required by swift build) ──
 ./scripts/build_stt.sh --release
 
+# ── Rust command core → RustCore.xcframework + UniFFI bindings (linked into the app) ──
+./scripts/build_rust_core.sh --release
+
 swift build
 
 NEW_BIN="$BUILD_DIR/jarvis"
@@ -122,6 +125,13 @@ fi
 # is what unlocks the macOS permission prompt — never `swift run`).
 # Source: Sources/JarvisMacOS/Resources/Info.plist
 cp "$ROOT_DIR/Sources/JarvisMacOS/Resources/Info.plist" "$APP_CONTENTS/Info.plist"
+
+# Re-sign ad-hoc AFTER all bundle contents are in place. macOS kills an app
+# whose bundle signature no longer matches its executable ("Killed: 9" at
+# launch) — which is exactly what a stale signature produces after a repackage.
+codesign --force --deep --sign - "$APP_BUNDLE" >/dev/null 2>&1 \
+  && echo "[Package] Re-signed $APP_BUNDLE (ad-hoc)" \
+  || echo "[Package][WARN] codesign failed — app launch may be killed by Gatekeeper"
 
 echo "Packaged app bundle: $APP_BUNDLE"
 open "$APP_BUNDLE"

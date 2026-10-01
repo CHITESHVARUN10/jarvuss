@@ -12,6 +12,8 @@ pub enum SystemInfoAction {
     BluetoothDevices,
     BatteryStatus,
     SystemVolume,
+    DisplayBrightness,
+    DisplayContrast,
 }
 
 impl SystemInfoAction {
@@ -23,6 +25,8 @@ impl SystemInfoAction {
             Self::BluetoothDevices => "bluetooth devices",
             Self::BatteryStatus => "battery status",
             Self::SystemVolume => "system volume",
+            Self::DisplayBrightness => "display brightness level",
+            Self::DisplayContrast => "display contrast level",
         }
     }
 }

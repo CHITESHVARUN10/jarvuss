@@ -37,6 +37,7 @@ from real usage patterns — **not** programmatically generated.
 | `file.create` / `folder.create` | `name` |
 | `folder.open` | `name` |
 | `file.open_latest` | `folder` |
+| `files.query` | `op` (count\|countFolders\|list\|listFolders\|largest\|oldest\|newest\|totalSize\|openNewest\|openOldest), `folder`, `ext` (`""` = any) |
 | `install.preview` | `package`, `source` |
 | `ai.query` | `text` |
 
@@ -59,6 +60,31 @@ from real usage patterns — **not** programmatically generated.
 - `train.jsonl` — main training set (broad coverage, noisy)
 - `valid.jsonl` — held-out phrasings for tuning
 - `test.jsonl` — held-out phrasings + multi-step for final eval
+- `train-061-files.jsonl` — file exploration (`files.query`), 1176 rows
+- `train-062-compound.jsonl` — compound multi-intent commands (2-4 ordered
+  intents), 704 rows
+
+The two generated shards are rebuilt by `training/generate_datasets.py`.
+Before them, **every example in this dataset was single-intent** — which is
+why compound speech ("open spotify, open whatsapp and also open youtube and
+in spotify play a song") never produced a plan.
+
+## Post-training / RL
+
+`training/post_train.py` closes the loop on the router's own log
+(`~/Library/Application Support/Jarvis/logs/intent_router.jsonl`):
+
+```
+python training/post_train.py --harvest            # log → training/data/rl_pairs.jsonl
+python training/post_train.py --train --epochs 3   # continue-train from training/out/best
+python training/post_train.py --eval               # reward-score the checkpoint
+```
+
+It continues from the existing checkpoint, so the model keeps the same
+architecture and vocab — no size growth. Harvested pairs pass three quality
+gates (schema-valid, no known-bad behaviour such as a sentence in a song-title
+slot, arguments consistent with the utterance) because a `model_hit` only
+means the router trusted the output, not that it was right.
 
 ## Future training notes (priority: FAST + ACCURATE)
 

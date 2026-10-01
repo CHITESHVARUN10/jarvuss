@@ -6,19 +6,18 @@ final class AudioGainController {
     var onLog: ((String) -> Void)?
 
     private let engine = AVAudioEngine()
-    private let inputNode: AVAudioInputNode
-    private let mainMixer: AVAudioMixerNode
-    private let outputNode: AVAudioOutputNode
+    // Node access is LAZY on purpose: merely touching `engine.inputNode`
+    // performs a blocking HAL round-trip (AVAudioEngineImpl::UpdateInputNode),
+    // and doing it in `init` hung app launch whenever the mic HAL was busy
+    // (wedged input device, active call, stale client). The nodes are only
+    // needed once the gain pipeline is actually engaged.
+    private var inputNode: AVAudioInputNode { engine.inputNode }
+    private var mainMixer: AVAudioMixerNode { engine.mainMixerNode }
+    private var outputNode: AVAudioOutputNode { engine.outputNode }
     private let queue = DispatchQueue(label: "com.jarvis.audio-gain", qos: .userInitiated)
 
     private var isRunning = false
     private var currentVolume: Float = 1.0
-
-    init() {
-        self.inputNode = engine.inputNode
-        self.mainMixer = engine.mainMixerNode
-        self.outputNode = engine.outputNode
-    }
 
     @discardableResult
     func startIfNeeded() -> Bool {

@@ -1,0 +1,1176 @@
+{"text": "hey jarvis what csv files do i have in desktop", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "desktop", "ext": "csv"}}]}
+{"text": "jarvis how many files do i have in pictures", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "pictures", "ext": "pdf"}}]}
+{"text": "jarvis open the earliest file in pictures", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "pictures", "ext": "docx"}}]}
+{"text": "please what is the oldest file in movies", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "movies", "ext": "pptx"}}]}
+{"text": "jarvis how big are the csv files in pictures altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "pictures", "ext": "csv"}}]}
+{"text": "please number of files in desktop", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "desktop", "ext": "png"}}]}
+{"text": "which is the oldest mp4 in my movies folder", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "movies", "ext": "mp4"}}]}
+{"text": "what pptx files do i have in music", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "music", "ext": "pptx"}}]}
+{"text": "jarvis total size of csv files in desktop", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "desktop", "ext": "csv"}}]}
+{"text": "hey jarvis give me the folder names in movies", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "movies", "ext": ""}}]}
+{"text": "what is the most recent txt in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "desktop", "ext": "txt"}}]}
+{"text": "show me the oldest png in desktop", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "desktop", "ext": "png"}}]}
+{"text": "list all the files in my music folder", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "music", "ext": "docx"}}]}
+{"text": "please show me the oldest pptx in desktop", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "desktop", "ext": "pptx"}}]}
+{"text": "please count the files in pictures", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "pictures", "ext": ""}}]}
+{"text": "hey jarvis show all folders inside downloads", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "open the oldest png in pictures", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "pictures", "ext": "png"}}]}
+{"text": "jarvis how many subfolders does downloads have", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "open the most recent pptx from my music folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "music", "ext": "pptx"}}]}
+{"text": "jarvis what is the earliest xlsx in movies", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "movies", "ext": "xlsx"}}]}
+{"text": "tell me the oldest csv in desktop", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "desktop", "ext": "csv"}}]}
+{"text": "show me the recent xlsx in documents", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "documents", "ext": "xlsx"}}]}
+{"text": "which is the biggest csv file in pictures", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "pictures", "ext": "csv"}}]}
+{"text": "how many folders are in my desktop", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "jarvis how many pptx files are in my documents", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "documents", "ext": "pptx"}}]}
+{"text": "what is the number of folders in documents", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "documents", "ext": ""}}]}
+{"text": "which is the oldest pdf in my movies folder", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "movies", "ext": "pdf"}}]}
+{"text": "how many files do i have in desktop", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "desktop", "ext": ""}}]}
+{"text": "please tell me the names of the files in downloads", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "downloads", "ext": "pdf"}}]}
+{"text": "hey jarvis open the recent pdf in my music folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "music", "ext": "pdf"}}]}
+{"text": "please which is the latest csv in documents", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "documents", "ext": "csv"}}]}
+{"text": "please which docx in movies is the oldest", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "movies", "ext": "docx"}}]}
+{"text": "how much space do my pdf files take in downloads", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "downloads", "ext": "pdf"}}]}
+{"text": "how many docx files do i have in movies", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "movies", "ext": "docx"}}]}
+{"text": "hey jarvis how many files are there in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "desktop", "ext": ""}}]}
+{"text": "which pdf did i add most recently in downloads", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "downloads", "ext": "pdf"}}]}
+{"text": "jarvis open the earliest file in desktop", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "desktop", "ext": "jpg"}}]}
+{"text": "please how many xlsx files are in my music", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "music", "ext": "xlsx"}}]}
+{"text": "please what is the total number of files in downloads", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": ""}}]}
+{"text": "lets see how many files are in documents", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "documents", "ext": "pdf"}}]}
+{"text": "jarvis count the folders in documents", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "documents", "ext": ""}}]}
+{"text": "jarvis show me the largest pdf in music", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "music", "ext": "pdf"}}]}
+{"text": "hey jarvis which is the oldest png in my movies folder", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "movies", "ext": "png"}}]}
+{"text": "please how many folders are there in my documents folder", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "documents", "ext": ""}}]}
+{"text": "hey jarvis list everything in movies", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "movies", "ext": "csv"}}]}
+{"text": "what is the heaviest file in documents", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "documents", "ext": ""}}]}
+{"text": "hey jarvis open the most recent txt from my music folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "music", "ext": "txt"}}]}
+{"text": "jarvis how many subfolders does music have", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "music", "ext": ""}}]}
+{"text": "what is the oldest docx i have in music", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "music", "ext": "docx"}}]}
+{"text": "how many zip files do i have in documents", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "documents", "ext": "zip"}}]}
+{"text": "list the pdf files in pictures", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "pictures", "ext": "pdf"}}]}
+{"text": "please how many folders does the downloads folder have", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "jarvis what is the oldest mp4 i have in pictures", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "pictures", "ext": "mp4"}}]}
+{"text": "total size of pdf files in downloads", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "downloads", "ext": "pdf"}}]}
+{"text": "count the files in pictures", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "pictures", "ext": "xlsx"}}]}
+{"text": "please count how many folders are in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "please tell me how many folders are in documents", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "documents", "ext": ""}}]}
+{"text": "what folders are in pictures", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "open the most recent docx from my pictures folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "pictures", "ext": "docx"}}]}
+{"text": "lets see how many files are in desktop", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "desktop", "ext": ""}}]}
+{"text": "jarvis open the oldest xlsx in pictures", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "pictures", "ext": "xlsx"}}]}
+{"text": "how big are the zip files in desktop altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "desktop", "ext": "zip"}}]}
+{"text": "jarvis give me the folder names in pictures", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "please which docx did i add most recently in pictures", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "pictures", "ext": "docx"}}]}
+{"text": "hey jarvis open the recent pdf in my documents folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "documents", "ext": "pdf"}}]}
+{"text": "please tell me how many files are in downloads", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": "csv"}}]}
+{"text": "list the subfolders in downloads", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "please show me the oldest png in pictures", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "pictures", "ext": "png"}}]}
+{"text": "please list the files in desktop", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "desktop", "ext": "csv"}}]}
+{"text": "which is the oldest pdf in my documents folder", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "documents", "ext": "pdf"}}]}
+{"text": "hey jarvis how many files are in the music folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "music", "ext": "mp4"}}]}
+{"text": "jarvis how many files are in the music folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "music", "ext": ""}}]}
+{"text": "what is the largest file in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "desktop", "ext": "docx"}}]}
+{"text": "open the oldest txt in movies", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "movies", "ext": "txt"}}]}
+{"text": "how many files are in documents", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "documents", "ext": "mp4"}}]}
+{"text": "jarvis open the earliest file in music", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "music", "ext": "xlsx"}}]}
+{"text": "jarvis count how many folders are in my movies folder", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "movies", "ext": ""}}]}
+{"text": "what is the oldest csv i have in pictures", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "pictures", "ext": "csv"}}]}
+{"text": "please open the latest mp4 in documents", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "documents", "ext": "mp4"}}]}
+{"text": "hey jarvis which png file in music is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "music", "ext": "png"}}]}
+{"text": "jarvis list every folder in my movies folder", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "movies", "ext": ""}}]}
+{"text": "jarvis how many xlsx files are in my downloads", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": "xlsx"}}]}
+{"text": "what is the heaviest file in pictures", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "pictures", "ext": "docx"}}]}
+{"text": "jarvis show me the oldest zip in music", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "music", "ext": "zip"}}]}
+{"text": "jarvis which pptx did i add most recently in documents", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "documents", "ext": "pptx"}}]}
+{"text": "hey jarvis list all the folders in my music folder", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "music", "ext": ""}}]}
+{"text": "please how big are the xlsx files in music altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "music", "ext": "xlsx"}}]}
+{"text": "please how many directories are in downloads", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "give me the list of files in music", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "music", "ext": "csv"}}]}
+{"text": "please number of files in downloads", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": "csv"}}]}
+{"text": "what is the oldest csv i have in desktop", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "desktop", "ext": "csv"}}]}
+{"text": "how big are the mp4 files in movies altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "movies", "ext": "mp4"}}]}
+{"text": "hey jarvis give me the number of folders in documents", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "documents", "ext": ""}}]}
+{"text": "hey jarvis how many folders does the desktop folder have", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "jarvis open the last jpg i downloaded", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "downloads", "ext": "jpg"}}]}
+{"text": "hey jarvis which txt file in pictures is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "pictures", "ext": "txt"}}]}
+{"text": "please what subfolders does documents have", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "documents", "ext": ""}}]}
+{"text": "please what files are in movies", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "movies", "ext": ""}}]}
+{"text": "how many folders do i have in movies", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "movies", "ext": ""}}]}
+{"text": "hey jarvis open the recent jpg in my pictures folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "pictures", "ext": "jpg"}}]}
+{"text": "what is the latest mp4 i have", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "documents", "ext": "mp4"}}]}
+{"text": "jarvis what folders do i have in documents", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "documents", "ext": ""}}]}
+{"text": "list every folder in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "please how many files are in pictures", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "pictures", "ext": "jpg"}}]}
+{"text": "hey jarvis how many folders sit inside desktop", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "hey jarvis what is the most recent mp4 in my pictures folder", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "pictures", "ext": "mp4"}}]}
+{"text": "hey jarvis open the earliest file in desktop", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "desktop", "ext": "zip"}}]}
+{"text": "please open the oldest csv in pictures", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "pictures", "ext": "csv"}}]}
+{"text": "total size of jpg files in documents", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "documents", "ext": "jpg"}}]}
+{"text": "what is the oldest docx i have in movies", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "movies", "ext": "docx"}}]}
+{"text": "how many files are there in my documents folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "documents", "ext": "docx"}}]}
+{"text": "jarvis how big are the txt files in movies altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "movies", "ext": "txt"}}]}
+{"text": "which is the biggest mp4 file in downloads", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "downloads", "ext": "mp4"}}]}
+{"text": "please name the folders in downloads", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "what is the oldest pptx i have in documents", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "documents", "ext": "pptx"}}]}
+{"text": "jarvis tell me the oldest docx in desktop", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "desktop", "ext": "docx"}}]}
+{"text": "jarvis which is the biggest pdf file in music", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "music", "ext": "pdf"}}]}
+{"text": "jarvis number of files in downloads", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": "pptx"}}]}
+{"text": "open the earliest file in desktop", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "desktop", "ext": "pdf"}}]}
+{"text": "please show me the oldest csv in pictures", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "pictures", "ext": "csv"}}]}
+{"text": "hey jarvis how many folders are in documents", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "documents", "ext": ""}}]}
+{"text": "what is the biggest file in documents", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "documents", "ext": "csv"}}]}
+{"text": "please what folders do i have in downloads", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "what are the folders in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "please show me the recent png in desktop", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "desktop", "ext": "png"}}]}
+{"text": "how many folders does the movies folder have", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "movies", "ext": ""}}]}
+{"text": "jarvis show me the oldest xlsx in music", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "music", "ext": "xlsx"}}]}
+{"text": "jarvis open the oldest mp4 in documents", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "documents", "ext": "mp4"}}]}
+{"text": "hey jarvis what is the latest docx in documents", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "documents", "ext": "docx"}}]}
+{"text": "total size of jpg files in pictures", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "pictures", "ext": "jpg"}}]}
+{"text": "hey jarvis lets see how many files are in documents", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "documents", "ext": ""}}]}
+{"text": "jarvis how many files are there in my pictures folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "pictures", "ext": "mp4"}}]}
+{"text": "please tell me the oldest docx in music", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "music", "ext": "docx"}}]}
+{"text": "open the oldest txt in desktop", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "desktop", "ext": "txt"}}]}
+{"text": "tell me the newest zip in music", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "music", "ext": "zip"}}]}
+{"text": "give me a list of folders in movies", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "movies", "ext": ""}}]}
+{"text": "please open the earliest file in music", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "music", "ext": "pdf"}}]}
+{"text": "open the oldest jpg in music", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "music", "ext": "jpg"}}]}
+{"text": "please how big are the xlsx files in downloads altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "downloads", "ext": "xlsx"}}]}
+{"text": "hey jarvis list the folders in desktop", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "hey jarvis what xlsx files do i have in movies", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "movies", "ext": "xlsx"}}]}
+{"text": "hey jarvis give me a list of folders in downloads", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "hey jarvis give me a list of folders in pictures", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "open the last txt i downloaded", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "pictures", "ext": "txt"}}]}
+{"text": "please which is the biggest pptx file in downloads", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "downloads", "ext": "pptx"}}]}
+{"text": "please what is the oldest xlsx i have in desktop", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "desktop", "ext": "xlsx"}}]}
+{"text": "what is the number of folders in music", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "music", "ext": ""}}]}
+{"text": "jarvis what is the total size of the files in downloads", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "downloads", "ext": "png"}}]}
+{"text": "jarvis give me the folder names in desktop", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "tell me the newest jpg in downloads", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "downloads", "ext": "jpg"}}]}
+{"text": "list all the folders in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "please which txt file in documents is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "documents", "ext": "txt"}}]}
+{"text": "jarvis tell me the folder count in desktop", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "jarvis open the latest zip in movies", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "movies", "ext": "zip"}}]}
+{"text": "please list all the files in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "desktop", "ext": "mp4"}}]}
+{"text": "jarvis open the most recent zip from my desktop folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "desktop", "ext": "zip"}}]}
+{"text": "list the docx files in desktop", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "desktop", "ext": "docx"}}]}
+{"text": "hey jarvis open the oldest pdf in documents", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "documents", "ext": "pdf"}}]}
+{"text": "hey jarvis how big are the txt files in pictures altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "pictures", "ext": "txt"}}]}
+{"text": "hey jarvis tell me the names of the files in documents", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "documents", "ext": "mp4"}}]}
+{"text": "open the most recent txt from my documents folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "documents", "ext": "txt"}}]}
+{"text": "show me the largest xlsx in desktop", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "desktop", "ext": "xlsx"}}]}
+{"text": "jarvis how much space do my docx files take in music", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "music", "ext": "docx"}}]}
+{"text": "hey jarvis count the mp4 files in my pictures folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "pictures", "ext": "mp4"}}]}
+{"text": "please what folders do i have in music", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "music", "ext": ""}}]}
+{"text": "jarvis open the most recent txt from my desktop folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "desktop", "ext": "txt"}}]}
+{"text": "hey jarvis give me the list of files in documents", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "documents", "ext": "pptx"}}]}
+{"text": "hey jarvis how big are the pdf files in desktop altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "desktop", "ext": "pdf"}}]}
+{"text": "please open the oldest file in my documents folder", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "documents", "ext": "pdf"}}]}
+{"text": "jarvis lets see how many files are in movies", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "movies", "ext": ""}}]}
+{"text": "how many csv files do i have in music", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "music", "ext": "csv"}}]}
+{"text": "please count the files in music", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "music", "ext": "xlsx"}}]}
+{"text": "please what is the earliest zip in music", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "music", "ext": "zip"}}]}
+{"text": "show me the oldest docx in downloads", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "downloads", "ext": "docx"}}]}
+{"text": "show me the largest pdf in documents", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "documents", "ext": "pdf"}}]}
+{"text": "how many folders are there in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "what is the oldest csv i have in downloads", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "downloads", "ext": "csv"}}]}
+{"text": "please what subfolders does pictures have", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "jarvis list every folder in my music folder", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "music", "ext": ""}}]}
+{"text": "please how many folders are in pictures", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "hey jarvis what is the total size of the files in music", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "music", "ext": "png"}}]}
+{"text": "open the most recent jpg from my documents folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "documents", "ext": "jpg"}}]}
+{"text": "please how many pptx files do i have in music", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "music", "ext": "pptx"}}]}
+{"text": "jarvis open the oldest jpg in pictures", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "pictures", "ext": "jpg"}}]}
+{"text": "what is the heaviest file in downloads", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "downloads", "ext": ""}}]}
+{"text": "total size of xlsx files in movies", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "movies", "ext": "xlsx"}}]}
+{"text": "jarvis total size of mp4 files in pictures", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "pictures", "ext": "mp4"}}]}
+{"text": "hey jarvis tell me the names of the folders in documents", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "documents", "ext": ""}}]}
+{"text": "jarvis how big are the xlsx files in pictures altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "pictures", "ext": "xlsx"}}]}
+{"text": "jarvis what is the largest file in my movies folder", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "movies", "ext": "csv"}}]}
+{"text": "please list the folders in movies", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "movies", "ext": ""}}]}
+{"text": "hey jarvis how many subfolders does pictures have", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "tell me the oldest mp4 in movies", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "movies", "ext": "mp4"}}]}
+{"text": "how many mp4 files do i have in downloads", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": "mp4"}}]}
+{"text": "please which mp4 file in movies is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "movies", "ext": "mp4"}}]}
+{"text": "what are the folders in my pictures folder", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "which pdf file in movies is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "movies", "ext": "pdf"}}]}
+{"text": "hey jarvis what is the latest jpg i have", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "documents", "ext": "jpg"}}]}
+{"text": "which jpg file in music is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "music", "ext": "jpg"}}]}
+{"text": "hey jarvis show me the files in desktop", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "desktop", "ext": "png"}}]}
+{"text": "please how much space do my pptx files take in pictures", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "pictures", "ext": "pptx"}}]}
+{"text": "which is the biggest pdf file in documents", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "documents", "ext": "pdf"}}]}
+{"text": "tell me the oldest zip in downloads", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "downloads", "ext": "zip"}}]}
+{"text": "show me the folders in downloads", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "hey jarvis open the latest mp4 in downloads", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "downloads", "ext": "mp4"}}]}
+{"text": "please what is the total number of files in movies", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "movies", "ext": "xlsx"}}]}
+{"text": "how many files are there in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": ""}}]}
+{"text": "show me the oldest csv in music", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "music", "ext": "csv"}}]}
+{"text": "please which is the oldest mp4 in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "downloads", "ext": "mp4"}}]}
+{"text": "count the zip files in my pictures folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "pictures", "ext": "zip"}}]}
+{"text": "how big are the pptx files in movies altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "movies", "ext": "pptx"}}]}
+{"text": "show me the oldest mp4 in movies", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "movies", "ext": "mp4"}}]}
+{"text": "please what is the latest pptx i have", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "pictures", "ext": "pptx"}}]}
+{"text": "hey jarvis show me the recent zip in pictures", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "pictures", "ext": "zip"}}]}
+{"text": "jarvis give me the list of files in desktop", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "desktop", "ext": ""}}]}
+{"text": "what is the number of folders in pictures", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "jarvis open the oldest pdf in downloads", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "downloads", "ext": "pdf"}}]}
+{"text": "jarvis how big are the docx files in downloads altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "downloads", "ext": "docx"}}]}
+{"text": "open the latest pdf in documents", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "documents", "ext": "pdf"}}]}
+{"text": "hey jarvis open the latest mp4 in music", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "music", "ext": "mp4"}}]}
+{"text": "please which is the biggest png file in downloads", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "downloads", "ext": "png"}}]}
+{"text": "open the most recent png from my music folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "music", "ext": "png"}}]}
+{"text": "hey jarvis how many folders are in music", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "music", "ext": ""}}]}
+{"text": "hey jarvis show me the folders in movies", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "movies", "ext": ""}}]}
+{"text": "hey jarvis open the recent xlsx in my music folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "music", "ext": "xlsx"}}]}
+{"text": "please list the docx files in music", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "music", "ext": "docx"}}]}
+{"text": "which is the oldest pptx in my movies folder", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "movies", "ext": "pptx"}}]}
+{"text": "jarvis which is the latest mp4 in documents", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "documents", "ext": "mp4"}}]}
+{"text": "please what is the earliest pptx in music", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "music", "ext": "pptx"}}]}
+{"text": "hey jarvis show me the largest pptx in movies", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "movies", "ext": "pptx"}}]}
+{"text": "count the mp4 files in my music folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "music", "ext": "mp4"}}]}
+{"text": "tell me the oldest txt in documents", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "documents", "ext": "txt"}}]}
+{"text": "show me the recent xlsx in music", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "music", "ext": "xlsx"}}]}
+{"text": "please how many folders do i have in downloads", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "tell me the newest txt in documents", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "documents", "ext": "txt"}}]}
+{"text": "how many sub folders are in my music folder", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "music", "ext": ""}}]}
+{"text": "jarvis show me the oldest jpg in desktop", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "desktop", "ext": "jpg"}}]}
+{"text": "jarvis what is the earliest xlsx in pictures", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "pictures", "ext": "xlsx"}}]}
+{"text": "open the latest txt in pictures", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "pictures", "ext": "txt"}}]}
+{"text": "which is the biggest csv file in documents", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "documents", "ext": "csv"}}]}
+{"text": "which png in music is the oldest", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "music", "ext": "png"}}]}
+{"text": "jarvis open the recent jpg in my movies folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "movies", "ext": "jpg"}}]}
+{"text": "hey jarvis show me the recent pdf in desktop", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "desktop", "ext": "pdf"}}]}
+{"text": "how many pdf files are in my downloads", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": "pdf"}}]}
+{"text": "hey jarvis list the folders in music", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "music", "ext": ""}}]}
+{"text": "show all pptx files in downloads", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "downloads", "ext": "pptx"}}]}
+{"text": "hey jarvis list the xlsx files in music", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "music", "ext": "xlsx"}}]}
+{"text": "show all pdf files in music", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "music", "ext": "pdf"}}]}
+{"text": "open the oldest file in my movies folder", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "movies", "ext": "pdf"}}]}
+{"text": "what is the earliest docx in pictures", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "pictures", "ext": "docx"}}]}
+{"text": "jarvis total size of xlsx files in documents", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "documents", "ext": "xlsx"}}]}
+{"text": "hey jarvis which is the latest zip in desktop", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "desktop", "ext": "zip"}}]}
+{"text": "jarvis open the newest file in downloads", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "downloads", "ext": "pdf"}}]}
+{"text": "jarvis show me the files in documents", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "documents", "ext": "jpg"}}]}
+{"text": "jarvis show all zip files in pictures", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "pictures", "ext": "zip"}}]}
+{"text": "hey jarvis tell me what folders are in documents", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "documents", "ext": ""}}]}
+{"text": "please show all folders inside documents", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "documents", "ext": ""}}]}
+{"text": "show me the oldest pdf in music", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "music", "ext": "pdf"}}]}
+{"text": "hey jarvis open the newest file in music", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "music", "ext": "zip"}}]}
+{"text": "show me the largest csv in desktop", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "desktop", "ext": "csv"}}]}
+{"text": "hey jarvis open the earliest file in music", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "music", "ext": "png"}}]}
+{"text": "hey jarvis tell me how many folders are in pictures", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "how many mp4 files are in my pictures", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "pictures", "ext": "mp4"}}]}
+{"text": "list the txt files in documents", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "documents", "ext": "txt"}}]}
+{"text": "how many folders are in my documents", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "documents", "ext": ""}}]}
+{"text": "jarvis total size of pptx files in documents", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "documents", "ext": "pptx"}}]}
+{"text": "jarvis which subfolders are in pictures", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "hey jarvis open the oldest csv in downloads", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "downloads", "ext": "csv"}}]}
+{"text": "what is the biggest file in downloads", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "downloads", "ext": "txt"}}]}
+{"text": "hey jarvis list the folders in documents", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "documents", "ext": ""}}]}
+{"text": "jarvis give me the number of folders in music", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "music", "ext": ""}}]}
+{"text": "please open the last png i downloaded", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "documents", "ext": "png"}}]}
+{"text": "what is the latest mp4 in desktop", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "desktop", "ext": "mp4"}}]}
+{"text": "open the most recent pdf from my music folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "music", "ext": "pdf"}}]}
+{"text": "please show me the largest zip in pictures", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "pictures", "ext": "zip"}}]}
+{"text": "open the most recent mp4 from my desktop folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "desktop", "ext": "mp4"}}]}
+{"text": "hey jarvis show me the recent csv in documents", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "documents", "ext": "csv"}}]}
+{"text": "hey jarvis which is the biggest txt file in desktop", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "desktop", "ext": "txt"}}]}
+{"text": "what is the total size of the files in movies", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "movies", "ext": "png"}}]}
+{"text": "hey jarvis tell me the names of the files in movies", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "movies", "ext": "xlsx"}}]}
+{"text": "how many zip files are in my downloads", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": "zip"}}]}
+{"text": "list the files in pictures", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "pictures", "ext": ""}}]}
+{"text": "show all mp4 files in music", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "music", "ext": "mp4"}}]}
+{"text": "hey jarvis how many files are in the downloads folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": "pdf"}}]}
+{"text": "which docx file in music is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "music", "ext": "docx"}}]}
+{"text": "what is the latest xlsx in documents", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "documents", "ext": "xlsx"}}]}
+{"text": "please tell me how many folders are in desktop", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "what is the most recent zip in my music folder", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "music", "ext": "zip"}}]}
+{"text": "please tell me the folder count in movies", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "movies", "ext": ""}}]}
+{"text": "tell me the newest pdf in desktop", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "desktop", "ext": "pdf"}}]}
+{"text": "hey jarvis tell me the oldest xlsx in documents", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "documents", "ext": "xlsx"}}]}
+{"text": "jarvis what is the oldest png i have in music", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "music", "ext": "png"}}]}
+{"text": "list everything in documents", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "documents", "ext": "docx"}}]}
+{"text": "hey jarvis open the recent jpg in my music folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "music", "ext": "jpg"}}]}
+{"text": "open the latest mp4 in desktop", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "desktop", "ext": "mp4"}}]}
+{"text": "jarvis show me the recent png in documents", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "documents", "ext": "png"}}]}
+{"text": "count subfolders in desktop", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "jarvis which txt in movies is the oldest", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "movies", "ext": "txt"}}]}
+{"text": "show me the largest zip in music", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "music", "ext": "zip"}}]}
+{"text": "how big are the png files in music altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "music", "ext": "png"}}]}
+{"text": "please list all the folders in my movies folder", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "movies", "ext": ""}}]}
+{"text": "hey jarvis count subfolders in downloads", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "tell me the folder count in music", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "music", "ext": ""}}]}
+{"text": "open the newest file in downloads", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "downloads", "ext": "xlsx"}}]}
+{"text": "jarvis tell me the oldest jpg in desktop", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "desktop", "ext": "jpg"}}]}
+{"text": "tell me the newest png in music", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "music", "ext": "png"}}]}
+{"text": "what is the most recent csv in my documents folder", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "documents", "ext": "csv"}}]}
+{"text": "please show me the oldest pdf in movies", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "movies", "ext": "pdf"}}]}
+{"text": "what is the oldest file in movies", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "movies", "ext": "png"}}]}
+{"text": "hey jarvis how many files are there in my pictures folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "pictures", "ext": ""}}]}
+{"text": "open the earliest file in music", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "music", "ext": "csv"}}]}
+{"text": "open the oldest csv in documents", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "documents", "ext": "csv"}}]}
+{"text": "please what is the most recent csv in my movies folder", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "movies", "ext": "csv"}}]}
+{"text": "hey jarvis which is the biggest csv file in movies", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "movies", "ext": "csv"}}]}
+{"text": "please what is the total size of the files in pictures", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "pictures", "ext": "docx"}}]}
+{"text": "hey jarvis tell me the oldest mp4 in desktop", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "desktop", "ext": "mp4"}}]}
+{"text": "hey jarvis what is the newest file in music", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "music", "ext": "csv"}}]}
+{"text": "please tell me the newest docx in music", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "music", "ext": "docx"}}]}
+{"text": "jarvis open the oldest pptx in movies", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "movies", "ext": "pptx"}}]}
+{"text": "hey jarvis what csv files do i have in music", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "music", "ext": "csv"}}]}
+{"text": "hey jarvis give me a list of folders in music", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "music", "ext": ""}}]}
+{"text": "please which is the biggest csv file in downloads", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "downloads", "ext": "csv"}}]}
+{"text": "hey jarvis open the earliest file in pictures", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "pictures", "ext": "pdf"}}]}
+{"text": "hey jarvis open the oldest docx in pictures", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "pictures", "ext": "docx"}}]}
+{"text": "jarvis show all docx files in desktop", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "desktop", "ext": "docx"}}]}
+{"text": "which csv did i add most recently in downloads", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "downloads", "ext": "csv"}}]}
+{"text": "how many folders do i have in documents", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "documents", "ext": ""}}]}
+{"text": "show me the oldest png in music", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "music", "ext": "png"}}]}
+{"text": "show me the oldest txt in music", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "music", "ext": "txt"}}]}
+{"text": "tell me the newest pdf in movies", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "movies", "ext": "pdf"}}]}
+{"text": "hey jarvis show me the largest docx in documents", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "documents", "ext": "docx"}}]}
+{"text": "please how many xlsx files do i have in pictures", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "pictures", "ext": "xlsx"}}]}
+{"text": "tell me the newest mp4 in pictures", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "pictures", "ext": "mp4"}}]}
+{"text": "hey jarvis what is the total number of files in documents", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "documents", "ext": "docx"}}]}
+{"text": "please how much space do my pptx files take in downloads", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "downloads", "ext": "pptx"}}]}
+{"text": "please how many xlsx files do i have in desktop", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "desktop", "ext": "xlsx"}}]}
+{"text": "how much space do my txt files take in pictures", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "pictures", "ext": "txt"}}]}
+{"text": "hey jarvis what is the latest csv in desktop", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "desktop", "ext": "csv"}}]}
+{"text": "hey jarvis how many csv files are in my documents", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "documents", "ext": "csv"}}]}
+{"text": "jarvis how many pdf files do i have in music", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "music", "ext": "pdf"}}]}
+{"text": "jarvis list everything in movies", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "movies", "ext": ""}}]}
+{"text": "please what is the earliest png in pictures", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "pictures", "ext": "png"}}]}
+{"text": "hey jarvis show me the oldest txt in movies", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "movies", "ext": "txt"}}]}
+{"text": "jarvis what is the oldest png i have in pictures", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "pictures", "ext": "png"}}]}
+{"text": "show me the recent mp4 in desktop", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "desktop", "ext": "mp4"}}]}
+{"text": "what folders are in documents", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "documents", "ext": ""}}]}
+{"text": "which subfolders are in desktop", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "jarvis how many png files are in my pictures", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "pictures", "ext": "png"}}]}
+{"text": "please what is the most recent csv in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "desktop", "ext": "csv"}}]}
+{"text": "hey jarvis tell me the newest xlsx in music", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "music", "ext": "xlsx"}}]}
+{"text": "hey jarvis open the oldest file in my documents folder", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "documents", "ext": "xlsx"}}]}
+{"text": "how many folders does the music folder have", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "music", "ext": ""}}]}
+{"text": "please list every folder in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "jarvis how much space do the files in music take up", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "music", "ext": "pptx"}}]}
+{"text": "how many directories are in music", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "music", "ext": ""}}]}
+{"text": "what is the earliest pdf in movies", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "movies", "ext": "pdf"}}]}
+{"text": "please show all jpg files in pictures", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "pictures", "ext": "jpg"}}]}
+{"text": "please what is the largest file in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "downloads", "ext": ""}}]}
+{"text": "what is the oldest xlsx i have in music", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "music", "ext": "xlsx"}}]}
+{"text": "hey jarvis which docx in downloads is the oldest", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "downloads", "ext": "docx"}}]}
+{"text": "please show all folders inside desktop", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "please which docx did i add most recently in movies", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "movies", "ext": "docx"}}]}
+{"text": "which docx in pictures is the oldest", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "pictures", "ext": "docx"}}]}
+{"text": "hey jarvis how many files are there in my music folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "music", "ext": "png"}}]}
+{"text": "please open the oldest txt in downloads", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "downloads", "ext": "txt"}}]}
+{"text": "jarvis what is the newest file in desktop", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "desktop", "ext": "pdf"}}]}
+{"text": "what is the latest zip i have", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "documents", "ext": "zip"}}]}
+{"text": "jarvis what files are in pictures", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "pictures", "ext": "zip"}}]}
+{"text": "jarvis total size of png files in desktop", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "desktop", "ext": "png"}}]}
+{"text": "which files are in my movies folder", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "movies", "ext": "pdf"}}]}
+{"text": "jarvis which jpg in music is the oldest", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "music", "ext": "jpg"}}]}
+{"text": "please how many files are there in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": "txt"}}]}
+{"text": "count how many folders are in my pictures folder", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "show me the recent pdf in movies", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "movies", "ext": "pdf"}}]}
+{"text": "please what is the biggest file in music", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "music", "ext": ""}}]}
+{"text": "which mp4 file in downloads is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "downloads", "ext": "mp4"}}]}
+{"text": "list the directories in movies", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "movies", "ext": ""}}]}
+{"text": "which is the oldest xlsx in my pictures folder", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "pictures", "ext": "xlsx"}}]}
+{"text": "jarvis which is the latest txt in movies", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "movies", "ext": "txt"}}]}
+{"text": "name the folders in pictures", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "hey jarvis open the latest pptx in downloads", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "downloads", "ext": "pptx"}}]}
+{"text": "jarvis tell me the oldest jpg in music", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "music", "ext": "jpg"}}]}
+{"text": "number of folders in my desktop", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "hey jarvis how much space do my txt files take in music", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "music", "ext": "txt"}}]}
+{"text": "please open the oldest file in my music folder", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "music", "ext": "pptx"}}]}
+{"text": "jarvis which docx in desktop is the oldest", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "desktop", "ext": "docx"}}]}
+{"text": "name the folders in music", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "music", "ext": ""}}]}
+{"text": "please how many folders sit inside movies", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "movies", "ext": ""}}]}
+{"text": "please list everything in pictures", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "pictures", "ext": "png"}}]}
+{"text": "please which is the biggest png file in desktop", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "desktop", "ext": "png"}}]}
+{"text": "hey jarvis how many txt files are in my music", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "music", "ext": "txt"}}]}
+{"text": "hey jarvis list all the folders in my documents folder", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "documents", "ext": ""}}]}
+{"text": "list every folder in my documents folder", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "documents", "ext": ""}}]}
+{"text": "please show me the oldest csv in desktop", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "desktop", "ext": "csv"}}]}
+{"text": "count the mp4 files in my movies folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "movies", "ext": "mp4"}}]}
+{"text": "total size of xlsx files in desktop", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "desktop", "ext": "xlsx"}}]}
+{"text": "please show me the folders in music", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "music", "ext": ""}}]}
+{"text": "jarvis open the oldest file in my documents folder", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "documents", "ext": "docx"}}]}
+{"text": "list the zip files in downloads", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "downloads", "ext": "zip"}}]}
+{"text": "please tell me the newest zip in desktop", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "desktop", "ext": "zip"}}]}
+{"text": "show all folders inside music", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "music", "ext": ""}}]}
+{"text": "hey jarvis which is the latest docx in downloads", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "downloads", "ext": "docx"}}]}
+{"text": "jarvis show me the oldest txt in pictures", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "pictures", "ext": "txt"}}]}
+{"text": "hey jarvis open the most recent csv from my documents folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "documents", "ext": "csv"}}]}
+{"text": "hey jarvis open the most recent xlsx from my movies folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "movies", "ext": "xlsx"}}]}
+{"text": "hey jarvis open the last xlsx i downloaded", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "downloads", "ext": "xlsx"}}]}
+{"text": "jarvis which is the oldest docx in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "desktop", "ext": "docx"}}]}
+{"text": "list the folders in pictures", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "how many subfolders does desktop have", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "count how many folders are in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "please how many files are in movies", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "movies", "ext": "docx"}}]}
+{"text": "please how many folders does the documents folder have", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "documents", "ext": ""}}]}
+{"text": "hey jarvis tell me the oldest txt in desktop", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "desktop", "ext": "txt"}}]}
+{"text": "please what is the latest xlsx in downloads", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "downloads", "ext": "xlsx"}}]}
+{"text": "which docx file in movies is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "movies", "ext": "docx"}}]}
+{"text": "what is the oldest jpg i have in music", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "music", "ext": "jpg"}}]}
+{"text": "which files are in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "downloads", "ext": ""}}]}
+{"text": "jarvis which xlsx file in pictures is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "pictures", "ext": "xlsx"}}]}
+{"text": "jarvis tell me the folder count in downloads", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "jarvis what files are in documents", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "documents", "ext": "mp4"}}]}
+{"text": "hey jarvis tell me the oldest pptx in downloads", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "downloads", "ext": "pptx"}}]}
+{"text": "count the csv files in my documents folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "documents", "ext": "csv"}}]}
+{"text": "hey jarvis how much space do the files in downloads take up", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "downloads", "ext": "docx"}}]}
+{"text": "tell me how many files are in documents", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "documents", "ext": "zip"}}]}
+{"text": "what is the oldest mp4 i have in music", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "music", "ext": "mp4"}}]}
+{"text": "how big are the pptx files in music altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "music", "ext": "pptx"}}]}
+{"text": "jarvis show me the largest pptx in downloads", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "downloads", "ext": "pptx"}}]}
+{"text": "show me the recent zip in documents", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "documents", "ext": "zip"}}]}
+{"text": "please how many folders are in my music", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "music", "ext": ""}}]}
+{"text": "open the recent mp4 in my movies folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "movies", "ext": "mp4"}}]}
+{"text": "open the newest file in pictures", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "pictures", "ext": "xlsx"}}]}
+{"text": "please show me the files in movies", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "movies", "ext": "txt"}}]}
+{"text": "jarvis which pptx file in movies is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "movies", "ext": "pptx"}}]}
+{"text": "which is the biggest jpg file in music", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "music", "ext": "jpg"}}]}
+{"text": "which subfolders are in downloads", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "open the recent pptx in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "desktop", "ext": "pptx"}}]}
+{"text": "give me a list of folders in documents", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "documents", "ext": ""}}]}
+{"text": "jarvis open the earliest file in documents", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "documents", "ext": "pdf"}}]}
+{"text": "jarvis what is the total size of the files in documents", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "documents", "ext": "docx"}}]}
+{"text": "hey jarvis what is the largest file in my movies folder", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "movies", "ext": "pptx"}}]}
+{"text": "which is the biggest txt file in movies", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "movies", "ext": "txt"}}]}
+{"text": "please open the most recent pptx from my desktop folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "desktop", "ext": "pptx"}}]}
+{"text": "total size of zip files in movies", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "movies", "ext": "zip"}}]}
+{"text": "jarvis which is the oldest txt in my music folder", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "music", "ext": "txt"}}]}
+{"text": "what is the total number of files in downloads", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": "xlsx"}}]}
+{"text": "hey jarvis which folders are in downloads", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "hey jarvis what is the heaviest file in desktop", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "desktop", "ext": "txt"}}]}
+{"text": "please how many files do i have in documents", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "documents", "ext": "xlsx"}}]}
+{"text": "how much space do my jpg files take in music", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "music", "ext": "jpg"}}]}
+{"text": "jarvis open the most recent xlsx from my documents folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "documents", "ext": "xlsx"}}]}
+{"text": "please which is the latest jpg in music", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "music", "ext": "jpg"}}]}
+{"text": "which jpg did i add most recently in desktop", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "desktop", "ext": "jpg"}}]}
+{"text": "jarvis which folders are in movies", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "movies", "ext": ""}}]}
+{"text": "how many txt files do i have in movies", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "movies", "ext": "txt"}}]}
+{"text": "hey jarvis open the recent mp4 in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "downloads", "ext": "mp4"}}]}
+{"text": "what is the latest pdf in movies", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "movies", "ext": "pdf"}}]}
+{"text": "jarvis give me the folder names in music", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "music", "ext": ""}}]}
+{"text": "hey jarvis how much space do my txt files take in desktop", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "desktop", "ext": "txt"}}]}
+{"text": "hey jarvis tell me the oldest pdf in pictures", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "pictures", "ext": "pdf"}}]}
+{"text": "please count the folders in downloads", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "hey jarvis how much space do my pdf files take in movies", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "movies", "ext": "pdf"}}]}
+{"text": "which files are in my documents folder", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "documents", "ext": ""}}]}
+{"text": "which txt did i add most recently in pictures", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "pictures", "ext": "txt"}}]}
+{"text": "jarvis how much space do my jpg files take in movies", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "movies", "ext": "jpg"}}]}
+{"text": "hey jarvis which mp4 file in pictures is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "pictures", "ext": "mp4"}}]}
+{"text": "please list everything in documents", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "documents", "ext": ""}}]}
+{"text": "hey jarvis what are the folders in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "which is the biggest pptx file in movies", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "movies", "ext": "pptx"}}]}
+{"text": "hey jarvis list all the files in my documents folder", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "documents", "ext": "pdf"}}]}
+{"text": "what are the files in my documents folder", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "documents", "ext": ""}}]}
+{"text": "jarvis how much space do my pptx files take in desktop", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "desktop", "ext": "pptx"}}]}
+{"text": "show me the oldest jpg in music", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "music", "ext": "jpg"}}]}
+{"text": "how many txt files do i have in pictures", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "pictures", "ext": "txt"}}]}
+{"text": "hey jarvis open the recent docx in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "downloads", "ext": "docx"}}]}
+{"text": "please which is the biggest docx file in music", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "music", "ext": "docx"}}]}
+{"text": "what is the earliest mp4 in pictures", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "pictures", "ext": "mp4"}}]}
+{"text": "please show all folders inside pictures", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "jarvis list all the folders in my pictures folder", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "jarvis open the most recent pdf from my documents folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "documents", "ext": "pdf"}}]}
+{"text": "what folders do i have in desktop", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "how much space do my zip files take in pictures", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "pictures", "ext": "zip"}}]}
+{"text": "please show me the largest png in movies", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "movies", "ext": "png"}}]}
+{"text": "please show me the oldest docx in pictures", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "pictures", "ext": "docx"}}]}
+{"text": "hey jarvis show me the oldest pptx in documents", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "documents", "ext": "pptx"}}]}
+{"text": "what is the oldest png i have in documents", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "documents", "ext": "png"}}]}
+{"text": "jarvis what is the latest pdf in music", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "music", "ext": "pdf"}}]}
+{"text": "how many folders are in my downloads", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "show me the oldest png in downloads", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "downloads", "ext": "png"}}]}
+{"text": "what folders do i have in movies", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "movies", "ext": ""}}]}
+{"text": "open the most recent csv from my movies folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "movies", "ext": "csv"}}]}
+{"text": "please what subfolders does movies have", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "movies", "ext": ""}}]}
+{"text": "jarvis what is the earliest mp4 in downloads", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "downloads", "ext": "mp4"}}]}
+{"text": "hey jarvis what is the oldest txt i have in desktop", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "desktop", "ext": "txt"}}]}
+{"text": "total size of csv files in downloads", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "downloads", "ext": "csv"}}]}
+{"text": "jarvis count the png files in my music folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "music", "ext": "png"}}]}
+{"text": "show me the oldest txt in documents", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "documents", "ext": "txt"}}]}
+{"text": "jarvis what is the latest csv in music", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "music", "ext": "csv"}}]}
+{"text": "show me the recent docx in music", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "music", "ext": "docx"}}]}
+{"text": "hey jarvis open the recent xlsx in my documents folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "documents", "ext": "xlsx"}}]}
+{"text": "hey jarvis how much space do my docx files take in movies", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "movies", "ext": "docx"}}]}
+{"text": "jarvis what is the oldest txt i have in music", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "music", "ext": "txt"}}]}
+{"text": "jarvis show me the oldest jpg in movies", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "movies", "ext": "jpg"}}]}
+{"text": "please which png did i add most recently in documents", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "documents", "ext": "png"}}]}
+{"text": "jarvis open the most recent jpg from my downloads folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "downloads", "ext": "jpg"}}]}
+{"text": "hey jarvis open the oldest mp4 in desktop", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "desktop", "ext": "mp4"}}]}
+{"text": "please list all the files in my pictures folder", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "pictures", "ext": ""}}]}
+{"text": "jarvis what is the most recent pdf in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "downloads", "ext": "pdf"}}]}
+{"text": "list the subfolders in desktop", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "please open the most recent jpg from my movies folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "movies", "ext": "jpg"}}]}
+{"text": "jarvis what is the oldest file in downloads", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "downloads", "ext": "png"}}]}
+{"text": "show me the oldest pptx in movies", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "movies", "ext": "pptx"}}]}
+{"text": "jarvis which is the latest xlsx in music", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "music", "ext": "xlsx"}}]}
+{"text": "jarvis how much space do my pdf files take in documents", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "documents", "ext": "pdf"}}]}
+{"text": "please how many folders have i got in movies", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "movies", "ext": ""}}]}
+{"text": "please show all jpg files in movies", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "movies", "ext": "jpg"}}]}
+{"text": "give me the folder names in downloads", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "please what is the earliest png in movies", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "movies", "ext": "png"}}]}
+{"text": "what is the newest file in pictures", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "pictures", "ext": "pptx"}}]}
+{"text": "hey jarvis tell me how many folders are in music", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "music", "ext": ""}}]}
+{"text": "hey jarvis how many folders have i got in music", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "music", "ext": ""}}]}
+{"text": "please total size of pdf files in documents", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "documents", "ext": "pdf"}}]}
+{"text": "hey jarvis total size of pptx files in pictures", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "pictures", "ext": "pptx"}}]}
+{"text": "hey jarvis tell me how many files are in pictures", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "pictures", "ext": "pdf"}}]}
+{"text": "please tell me the newest zip in movies", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "movies", "ext": "zip"}}]}
+{"text": "please number of files in music", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "music", "ext": "csv"}}]}
+{"text": "show me the recent jpg in movies", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "movies", "ext": "jpg"}}]}
+{"text": "hey jarvis open the most recent jpg from my pictures folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "pictures", "ext": "jpg"}}]}
+{"text": "show me the oldest txt in downloads", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "downloads", "ext": "txt"}}]}
+{"text": "number of files in documents", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "documents", "ext": ""}}]}
+{"text": "please show me the largest xlsx in pictures", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "pictures", "ext": "xlsx"}}]}
+{"text": "jarvis which is the oldest zip in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "desktop", "ext": "zip"}}]}
+{"text": "hey jarvis what is the latest png in documents", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "documents", "ext": "png"}}]}
+{"text": "jarvis what is the total number of files in downloads", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": "pptx"}}]}
+{"text": "please open the earliest file in pictures", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "pictures", "ext": "csv"}}]}
+{"text": "show all docx files in pictures", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "pictures", "ext": "docx"}}]}
+{"text": "please what is the latest docx in pictures", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "pictures", "ext": "docx"}}]}
+{"text": "which is the latest zip in documents", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "documents", "ext": "zip"}}]}
+{"text": "please what is the oldest pptx i have in downloads", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "downloads", "ext": "pptx"}}]}
+{"text": "hey jarvis total size of png files in downloads", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "downloads", "ext": "png"}}]}
+{"text": "tell me the oldest docx in movies", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "movies", "ext": "docx"}}]}
+{"text": "hey jarvis open the earliest file in downloads", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "downloads", "ext": "xlsx"}}]}
+{"text": "jarvis how many pptx files do i have in desktop", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "desktop", "ext": "pptx"}}]}
+{"text": "open the recent docx in my movies folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "movies", "ext": "docx"}}]}
+{"text": "please total size of txt files in pictures", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "pictures", "ext": "txt"}}]}
+{"text": "please what is the oldest zip i have in desktop", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "desktop", "ext": "zip"}}]}
+{"text": "please tell me how many folders are in movies", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "movies", "ext": ""}}]}
+{"text": "hey jarvis what is the total size of the files in desktop", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "desktop", "ext": "png"}}]}
+{"text": "jarvis open the oldest pptx in desktop", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "desktop", "ext": "pptx"}}]}
+{"text": "number of folders in my pictures", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "how much space do the files in pictures take up", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "pictures", "ext": "csv"}}]}
+{"text": "count the jpg files in my documents folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "documents", "ext": "jpg"}}]}
+{"text": "hey jarvis give me the number of folders in movies", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "movies", "ext": ""}}]}
+{"text": "please tell me the oldest xlsx in music", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "music", "ext": "xlsx"}}]}
+{"text": "please what files are in desktop", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "desktop", "ext": "zip"}}]}
+{"text": "hey jarvis open the oldest pptx in music", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "music", "ext": "pptx"}}]}
+{"text": "jarvis how many xlsx files do i have in downloads", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": "xlsx"}}]}
+{"text": "open the newest file in movies", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "movies", "ext": "docx"}}]}
+{"text": "jarvis how many zip files are in my documents", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "documents", "ext": "zip"}}]}
+{"text": "show me the files in documents", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "documents", "ext": "csv"}}]}
+{"text": "please which txt file in music is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "music", "ext": "txt"}}]}
+{"text": "open the earliest file in movies", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "movies", "ext": "pdf"}}]}
+{"text": "hey jarvis open the most recent mp4 from my documents folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "documents", "ext": "mp4"}}]}
+{"text": "jarvis how many files are in documents", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "documents", "ext": ""}}]}
+{"text": "what is the oldest png i have in movies", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "movies", "ext": "png"}}]}
+{"text": "please what is the heaviest file in pictures", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "pictures", "ext": ""}}]}
+{"text": "open the recent png in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "desktop", "ext": "png"}}]}
+{"text": "how many folders sit inside pictures", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "show me the largest csv in documents", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "documents", "ext": "csv"}}]}
+{"text": "list all the files in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "downloads", "ext": "txt"}}]}
+{"text": "what are the folders in my documents folder", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "documents", "ext": ""}}]}
+{"text": "show all csv files in desktop", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "desktop", "ext": "csv"}}]}
+{"text": "hey jarvis tell me the names of the files in pictures", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "pictures", "ext": "txt"}}]}
+{"text": "how many sub folders are in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "hey jarvis open the last pdf i downloaded", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "pictures", "ext": "pdf"}}]}
+{"text": "jarvis tell me how many files are in desktop", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "desktop", "ext": "txt"}}]}
+{"text": "please tell me how many files are in documents", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "documents", "ext": ""}}]}
+{"text": "open the latest docx in movies", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "movies", "ext": "docx"}}]}
+{"text": "please which is the latest pdf in music", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "music", "ext": "pdf"}}]}
+{"text": "hey jarvis open the oldest mp4 in music", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "music", "ext": "mp4"}}]}
+{"text": "hey jarvis list the directories in downloads", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "list the mp4 files in movies", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "movies", "ext": "mp4"}}]}
+{"text": "please total size of zip files in documents", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "documents", "ext": "zip"}}]}
+{"text": "open the recent pptx in my documents folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "documents", "ext": "pptx"}}]}
+{"text": "jarvis how much space do my docx files take in desktop", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "desktop", "ext": "docx"}}]}
+{"text": "jarvis tell me how many files are in downloads", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": "txt"}}]}
+{"text": "how many txt files are in my downloads", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": "txt"}}]}
+{"text": "which jpg did i add most recently in pictures", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "pictures", "ext": "jpg"}}]}
+{"text": "jarvis what is the most recent jpg in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "desktop", "ext": "jpg"}}]}
+{"text": "tell me the names of the folders in desktop", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "list the mp4 files in desktop", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "desktop", "ext": "mp4"}}]}
+{"text": "please tell me the oldest png in pictures", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "pictures", "ext": "png"}}]}
+{"text": "name the folders in movies", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "movies", "ext": ""}}]}
+{"text": "jarvis open the most recent pdf from my downloads folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "downloads", "ext": "pdf"}}]}
+{"text": "open the latest png in movies", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "movies", "ext": "png"}}]}
+{"text": "hey jarvis which txt in pictures is the oldest", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "pictures", "ext": "txt"}}]}
+{"text": "open the oldest png in documents", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "documents", "ext": "png"}}]}
+{"text": "please what is the most recent mp4 in my documents folder", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "documents", "ext": "mp4"}}]}
+{"text": "please what is the latest docx in movies", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "movies", "ext": "docx"}}]}
+{"text": "hey jarvis tell me what folders are in desktop", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "please what is the earliest zip in documents", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "documents", "ext": "zip"}}]}
+{"text": "jarvis number of folders in my music", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "music", "ext": ""}}]}
+{"text": "number of files in music", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "music", "ext": ""}}]}
+{"text": "please which xlsx did i add most recently in desktop", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "desktop", "ext": "xlsx"}}]}
+{"text": "hey jarvis list the files in pictures", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "pictures", "ext": "jpg"}}]}
+{"text": "hey jarvis what is the largest file in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "downloads", "ext": "zip"}}]}
+{"text": "how much space do my png files take in documents", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "documents", "ext": "png"}}]}
+{"text": "jarvis tell me the newest mp4 in desktop", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "desktop", "ext": "mp4"}}]}
+{"text": "please open the oldest mp4 in movies", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "movies", "ext": "mp4"}}]}
+{"text": "please list the directories in documents", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "documents", "ext": ""}}]}
+{"text": "list the zip files in pictures", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "pictures", "ext": "zip"}}]}
+{"text": "what is the oldest file in pictures", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "pictures", "ext": "pdf"}}]}
+{"text": "jarvis how much space do my csv files take in downloads", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "downloads", "ext": "csv"}}]}
+{"text": "please what is the oldest file in documents", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "documents", "ext": "pdf"}}]}
+{"text": "jarvis total size of csv files in movies", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "movies", "ext": "csv"}}]}
+{"text": "hey jarvis how many zip files are in my music", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "music", "ext": "zip"}}]}
+{"text": "what is the most recent docx in my documents folder", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "documents", "ext": "docx"}}]}
+{"text": "how many directories are in movies", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "movies", "ext": ""}}]}
+{"text": "hey jarvis which csv file in music is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "music", "ext": "csv"}}]}
+{"text": "show me the oldest docx in movies", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "movies", "ext": "docx"}}]}
+{"text": "what is the largest file in my music folder", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "music", "ext": "png"}}]}
+{"text": "which pptx file in documents is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "documents", "ext": "pptx"}}]}
+{"text": "give me the number of folders in pictures", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "hey jarvis how much space do my mp4 files take in desktop", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "desktop", "ext": "mp4"}}]}
+{"text": "hey jarvis open the latest jpg in downloads", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "downloads", "ext": "jpg"}}]}
+{"text": "hey jarvis how many folders do i have in music", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "music", "ext": ""}}]}
+{"text": "jarvis what is the most recent pdf in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "desktop", "ext": "pdf"}}]}
+{"text": "please open the oldest file in my movies folder", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "movies", "ext": "xlsx"}}]}
+{"text": "please which is the oldest jpg in my pictures folder", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "pictures", "ext": "jpg"}}]}
+{"text": "hey jarvis how many folders have i got in documents", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "documents", "ext": ""}}]}
+{"text": "jarvis what is the oldest file in pictures", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "pictures", "ext": "docx"}}]}
+{"text": "jarvis what is the most recent png in my movies folder", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "movies", "ext": "png"}}]}
+{"text": "jarvis what is the oldest mp4 i have in documents", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "documents", "ext": "mp4"}}]}
+{"text": "please what is the most recent zip in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "desktop", "ext": "zip"}}]}
+{"text": "which pdf in documents is the oldest", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "documents", "ext": "pdf"}}]}
+{"text": "please what are the folders in my music folder", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "music", "ext": ""}}]}
+{"text": "hey jarvis total size of zip files in music", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "music", "ext": "zip"}}]}
+{"text": "hey jarvis which is the oldest csv in my music folder", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "music", "ext": "csv"}}]}
+{"text": "please how many folders sit inside downloads", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "hey jarvis which mp4 file in music is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "music", "ext": "mp4"}}]}
+{"text": "please what is the oldest txt i have in pictures", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "pictures", "ext": "txt"}}]}
+{"text": "what is the heaviest file in desktop", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "desktop", "ext": ""}}]}
+{"text": "how many files are in the music folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "music", "ext": "pdf"}}]}
+{"text": "tell me what folders are in movies", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "movies", "ext": ""}}]}
+{"text": "hey jarvis show me the oldest csv in movies", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "movies", "ext": "csv"}}]}
+{"text": "jarvis open the newest file in desktop", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "desktop", "ext": "xlsx"}}]}
+{"text": "jarvis which is the biggest pdf file in pictures", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "pictures", "ext": "pdf"}}]}
+{"text": "jarvis list the folders in downloads", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "jarvis count the xlsx files in my documents folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "documents", "ext": "xlsx"}}]}
+{"text": "please list the subfolders in pictures", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "jarvis tell me what folders are in downloads", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "what is the latest txt i have", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "documents", "ext": "txt"}}]}
+{"text": "please count the files in movies", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "movies", "ext": "pdf"}}]}
+{"text": "please show me the oldest jpg in downloads", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "downloads", "ext": "jpg"}}]}
+{"text": "tell me the newest docx in movies", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "movies", "ext": "docx"}}]}
+{"text": "please open the oldest file in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "desktop", "ext": "png"}}]}
+{"text": "please what are the files in my movies folder", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "movies", "ext": "png"}}]}
+{"text": "jarvis which is the biggest jpg file in movies", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "movies", "ext": "jpg"}}]}
+{"text": "hey jarvis which pdf did i add most recently in pictures", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "pictures", "ext": "pdf"}}]}
+{"text": "hey jarvis what is the latest docx i have", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "downloads", "ext": "docx"}}]}
+{"text": "hey jarvis how big are the zip files in movies altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "movies", "ext": "zip"}}]}
+{"text": "please open the last csv i downloaded", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "downloads", "ext": "csv"}}]}
+{"text": "hey jarvis which is the oldest pptx in my music folder", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "music", "ext": "pptx"}}]}
+{"text": "open the recent pptx in my music folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "music", "ext": "pptx"}}]}
+{"text": "which xlsx in desktop is the oldest", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "desktop", "ext": "xlsx"}}]}
+{"text": "what is the most recent zip in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "downloads", "ext": "zip"}}]}
+{"text": "hey jarvis what is the latest jpg in downloads", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "downloads", "ext": "jpg"}}]}
+{"text": "jarvis tell me the names of the files in movies", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "movies", "ext": "png"}}]}
+{"text": "jarvis how much space do my xlsx files take in movies", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "movies", "ext": "xlsx"}}]}
+{"text": "list the files in movies", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "movies", "ext": "jpg"}}]}
+{"text": "jarvis how big are the mp4 files in downloads altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "downloads", "ext": "mp4"}}]}
+{"text": "what is the largest file in my documents folder", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "documents", "ext": ""}}]}
+{"text": "how big are the pptx files in documents altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "documents", "ext": "pptx"}}]}
+{"text": "please how much space do the files in movies take up", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "movies", "ext": "txt"}}]}
+{"text": "hey jarvis what is the oldest file in movies", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "movies", "ext": "docx"}}]}
+{"text": "please tell me the newest mp4 in downloads", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "downloads", "ext": "mp4"}}]}
+{"text": "please how many folders are there in my music folder", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "music", "ext": ""}}]}
+{"text": "jarvis how many docx files are in my downloads", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": "docx"}}]}
+{"text": "what is the oldest file in music", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "music", "ext": "pdf"}}]}
+{"text": "please show me the largest png in desktop", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "desktop", "ext": "png"}}]}
+{"text": "please open the oldest zip in desktop", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "desktop", "ext": "zip"}}]}
+{"text": "jarvis what is the earliest xlsx in music", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "music", "ext": "xlsx"}}]}
+{"text": "show me the oldest xlsx in desktop", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "desktop", "ext": "xlsx"}}]}
+{"text": "show all mp4 files in movies", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "movies", "ext": "mp4"}}]}
+{"text": "jarvis how many zip files are in my pictures", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "pictures", "ext": "zip"}}]}
+{"text": "jarvis list everything in downloads", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "downloads", "ext": ""}}]}
+{"text": "please how many folders sit inside music", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "music", "ext": ""}}]}
+{"text": "show me the oldest xlsx in pictures", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "pictures", "ext": "xlsx"}}]}
+{"text": "show me the oldest xlsx in documents", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "documents", "ext": "xlsx"}}]}
+{"text": "please how many sub folders are in my pictures folder", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "open the recent jpg in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "downloads", "ext": "jpg"}}]}
+{"text": "list everything in music", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "music", "ext": "pptx"}}]}
+{"text": "jarvis what is the latest png in downloads", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "downloads", "ext": "png"}}]}
+{"text": "how much space do my txt files take in downloads", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "downloads", "ext": "txt"}}]}
+{"text": "please open the oldest file in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "downloads", "ext": "csv"}}]}
+{"text": "please show me the oldest pdf in documents", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "documents", "ext": "pdf"}}]}
+{"text": "hey jarvis list the subfolders in movies", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "movies", "ext": ""}}]}
+{"text": "please how many docx files do i have in documents", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "documents", "ext": "docx"}}]}
+{"text": "how many docx files are in my pictures", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "pictures", "ext": "docx"}}]}
+{"text": "please tell me the names of the files in pictures", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "pictures", "ext": "mp4"}}]}
+{"text": "jarvis which is the latest docx in movies", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "movies", "ext": "docx"}}]}
+{"text": "please open the oldest zip in downloads", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "downloads", "ext": "zip"}}]}
+{"text": "jarvis open the last png i downloaded", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "downloads", "ext": "png"}}]}
+{"text": "please what is the total size of the files in documents", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "documents", "ext": "png"}}]}
+{"text": "hey jarvis how much space do my zip files take in downloads", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "downloads", "ext": "zip"}}]}
+{"text": "jarvis give me a list of folders in desktop", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "what is the latest png i have", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "documents", "ext": "png"}}]}
+{"text": "jarvis which png file in desktop is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "desktop", "ext": "png"}}]}
+{"text": "show me the recent pptx in music", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "music", "ext": "pptx"}}]}
+{"text": "what is the latest csv i have", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "documents", "ext": "csv"}}]}
+{"text": "what is the latest csv in movies", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "movies", "ext": "csv"}}]}
+{"text": "please which png did i add most recently in downloads", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "downloads", "ext": "png"}}]}
+{"text": "open the oldest file in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "desktop", "ext": "docx"}}]}
+{"text": "number of files in movies", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "movies", "ext": ""}}]}
+{"text": "open the most recent csv from my pictures folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "pictures", "ext": "csv"}}]}
+{"text": "jarvis how many pdf files are in my pictures", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "pictures", "ext": "pdf"}}]}
+{"text": "hey jarvis open the recent mp4 in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "desktop", "ext": "mp4"}}]}
+{"text": "hey jarvis which is the latest png in movies", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "movies", "ext": "png"}}]}
+{"text": "jarvis show me the recent pptx in downloads", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "downloads", "ext": "pptx"}}]}
+{"text": "jarvis how many folders have i got in pictures", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "please how big are the txt files in music altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "music", "ext": "txt"}}]}
+{"text": "please how big are the jpg files in music altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "music", "ext": "jpg"}}]}
+{"text": "please how many csv files are in my pictures", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "pictures", "ext": "csv"}}]}
+{"text": "hey jarvis which is the latest png in downloads", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "downloads", "ext": "png"}}]}
+{"text": "jarvis how big are the jpg files in documents altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "documents", "ext": "jpg"}}]}
+{"text": "number of folders in my documents", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "documents", "ext": ""}}]}
+{"text": "jarvis which zip file in downloads is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "downloads", "ext": "zip"}}]}
+{"text": "open the last pdf i downloaded", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "desktop", "ext": "pdf"}}]}
+{"text": "jarvis show me the oldest docx in desktop", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "desktop", "ext": "docx"}}]}
+{"text": "show me the largest jpg in documents", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "documents", "ext": "jpg"}}]}
+{"text": "please open the oldest docx in documents", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "documents", "ext": "docx"}}]}
+{"text": "please what is the most recent xlsx in my documents folder", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "documents", "ext": "xlsx"}}]}
+{"text": "hey jarvis tell me the names of the folders in movies", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "movies", "ext": ""}}]}
+{"text": "which jpg in documents is the oldest", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "documents", "ext": "jpg"}}]}
+{"text": "please how many files do i have in downloads", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": "png"}}]}
+{"text": "please total size of csv files in pictures", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "pictures", "ext": "csv"}}]}
+{"text": "please count the folders in music", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "music", "ext": ""}}]}
+{"text": "please how big are the csv files in documents altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "documents", "ext": "csv"}}]}
+{"text": "jarvis which is the biggest xlsx file in movies", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "movies", "ext": "xlsx"}}]}
+{"text": "jarvis how big are the docx files in desktop altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "desktop", "ext": "docx"}}]}
+{"text": "which is the biggest xlsx file in pictures", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "pictures", "ext": "xlsx"}}]}
+{"text": "please show me the recent csv in pictures", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "pictures", "ext": "csv"}}]}
+{"text": "how many folders have i got in downloads", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "list every folder in my pictures folder", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "open the most recent xlsx from my music folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "music", "ext": "xlsx"}}]}
+{"text": "open the latest xlsx in documents", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "documents", "ext": "xlsx"}}]}
+{"text": "please count the pdf files in my pictures folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "pictures", "ext": "pdf"}}]}
+{"text": "hey jarvis what is the biggest file in movies", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "movies", "ext": "csv"}}]}
+{"text": "please which xlsx did i add most recently in music", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "music", "ext": "xlsx"}}]}
+{"text": "show me the oldest mp4 in downloads", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "downloads", "ext": "mp4"}}]}
+{"text": "hey jarvis tell me the folder count in pictures", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "what is the number of folders in movies", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "movies", "ext": ""}}]}
+{"text": "please show all txt files in movies", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "movies", "ext": "txt"}}]}
+{"text": "hey jarvis tell me the newest jpg in desktop", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "desktop", "ext": "jpg"}}]}
+{"text": "show me the recent jpg in downloads", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "downloads", "ext": "jpg"}}]}
+{"text": "hey jarvis list the docx files in movies", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "movies", "ext": "docx"}}]}
+{"text": "what is the earliest docx in desktop", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "desktop", "ext": "docx"}}]}
+{"text": "please what is the oldest file in downloads", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "downloads", "ext": "docx"}}]}
+{"text": "show me the oldest docx in music", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "music", "ext": "docx"}}]}
+{"text": "what is the earliest csv in music", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "music", "ext": "csv"}}]}
+{"text": "jarvis what is the oldest docx i have in pictures", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "pictures", "ext": "docx"}}]}
+{"text": "jarvis open the most recent mp4 from my downloads folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "downloads", "ext": "mp4"}}]}
+{"text": "please what is the total size of the files in music", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "music", "ext": "docx"}}]}
+{"text": "please how many files do i have in pictures", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "pictures", "ext": "txt"}}]}
+{"text": "jarvis what are the files in my pictures folder", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "pictures", "ext": ""}}]}
+{"text": "please open the most recent zip from my downloads folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "downloads", "ext": "zip"}}]}
+{"text": "jarvis what jpg files do i have in documents", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "documents", "ext": "jpg"}}]}
+{"text": "which is the oldest jpg in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "desktop", "ext": "jpg"}}]}
+{"text": "which is the biggest zip file in movies", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "movies", "ext": "zip"}}]}
+{"text": "jarvis show me the largest png in documents", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "documents", "ext": "png"}}]}
+{"text": "what is the most recent pdf in my pictures folder", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "pictures", "ext": "pdf"}}]}
+{"text": "jarvis what is the latest pdf in downloads", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "downloads", "ext": "pdf"}}]}
+{"text": "hey jarvis open the latest png in music", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "music", "ext": "png"}}]}
+{"text": "please list all the files in my movies folder", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "movies", "ext": ""}}]}
+{"text": "hey jarvis which pptx did i add most recently in downloads", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "downloads", "ext": "pptx"}}]}
+{"text": "please list the directories in music", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "music", "ext": ""}}]}
+{"text": "tell me the names of the files in pictures", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "pictures", "ext": ""}}]}
+{"text": "hey jarvis list the csv files in desktop", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "desktop", "ext": "csv"}}]}
+{"text": "how many sub folders are in my movies folder", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "movies", "ext": ""}}]}
+{"text": "jarvis list the directories in desktop", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "hey jarvis what mp4 files do i have in movies", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "movies", "ext": "mp4"}}]}
+{"text": "please show all folders inside movies", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "movies", "ext": ""}}]}
+{"text": "jarvis show me the largest pptx in pictures", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "pictures", "ext": "pptx"}}]}
+{"text": "list the csv files in pictures", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "pictures", "ext": "csv"}}]}
+{"text": "hey jarvis count subfolders in pictures", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "jarvis list the subfolders in documents", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "documents", "ext": ""}}]}
+{"text": "tell me what folders are in music", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "music", "ext": ""}}]}
+{"text": "hey jarvis list the png files in desktop", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "desktop", "ext": "png"}}]}
+{"text": "please show me the files in downloads", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "downloads", "ext": "mp4"}}]}
+{"text": "jarvis how much space do my xlsx files take in documents", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "documents", "ext": "xlsx"}}]}
+{"text": "total size of pptx files in music", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "music", "ext": "pptx"}}]}
+{"text": "please open the most recent pdf from my movies folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "movies", "ext": "pdf"}}]}
+{"text": "which txt file in movies is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "movies", "ext": "txt"}}]}
+{"text": "jarvis tell me the newest txt in music", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "music", "ext": "txt"}}]}
+{"text": "how many folders are there in my pictures folder", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "which csv did i add most recently in pictures", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "pictures", "ext": "csv"}}]}
+{"text": "open the most recent jpg from my desktop folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "desktop", "ext": "jpg"}}]}
+{"text": "hey jarvis show me the recent docx in desktop", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "desktop", "ext": "docx"}}]}
+{"text": "hey jarvis tell me the names of the folders in music", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "music", "ext": ""}}]}
+{"text": "what folders do i have in pictures", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "hey jarvis what subfolders does music have", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "music", "ext": ""}}]}
+{"text": "jarvis open the most recent png from my movies folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "movies", "ext": "png"}}]}
+{"text": "hey jarvis what is the latest txt i have", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "downloads", "ext": "txt"}}]}
+{"text": "open the oldest docx in music", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "music", "ext": "docx"}}]}
+{"text": "what is the latest jpg i have", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "downloads", "ext": "jpg"}}]}
+{"text": "show me the largest docx in desktop", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "desktop", "ext": "docx"}}]}
+{"text": "hey jarvis what is the number of folders in downloads", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "hey jarvis what zip files do i have in downloads", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "downloads", "ext": "zip"}}]}
+{"text": "list the xlsx files in movies", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "movies", "ext": "xlsx"}}]}
+{"text": "please what is the latest docx i have", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "pictures", "ext": "docx"}}]}
+{"text": "hey jarvis open the latest docx in music", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "music", "ext": "docx"}}]}
+{"text": "hey jarvis which is the biggest mp4 file in music", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "music", "ext": "mp4"}}]}
+{"text": "jarvis count the csv files in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": "csv"}}]}
+{"text": "please how many folders sit inside documents", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "documents", "ext": ""}}]}
+{"text": "please lets see how many files are in downloads", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": ""}}]}
+{"text": "hey jarvis what files are in desktop", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "desktop", "ext": "mp4"}}]}
+{"text": "count the zip files in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": "zip"}}]}
+{"text": "open the oldest zip in music", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "music", "ext": "zip"}}]}
+{"text": "jarvis which files are in my pictures folder", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "pictures", "ext": "csv"}}]}
+{"text": "please which is the biggest jpg file in pictures", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "pictures", "ext": "jpg"}}]}
+{"text": "how many folders have i got in desktop", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "open the oldest xlsx in music", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "music", "ext": "xlsx"}}]}
+{"text": "jarvis how many folders are there in my movies folder", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "movies", "ext": ""}}]}
+{"text": "open the earliest file in pictures", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "pictures", "ext": "jpg"}}]}
+{"text": "jarvis show me the oldest png in movies", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "movies", "ext": "png"}}]}
+{"text": "hey jarvis list the txt files in downloads", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "downloads", "ext": "txt"}}]}
+{"text": "jarvis tell me the oldest mp4 in music", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "music", "ext": "mp4"}}]}
+{"text": "how much space do my csv files take in pictures", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "pictures", "ext": "csv"}}]}
+{"text": "please which png file in movies is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "movies", "ext": "png"}}]}
+{"text": "hey jarvis what folders are in music", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "music", "ext": ""}}]}
+{"text": "please show me the largest mp4 in desktop", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "desktop", "ext": "mp4"}}]}
+{"text": "jarvis how big are the mp4 files in pictures altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "pictures", "ext": "mp4"}}]}
+{"text": "jarvis how many csv files are in my music", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "music", "ext": "csv"}}]}
+{"text": "please show all zip files in downloads", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "downloads", "ext": "zip"}}]}
+{"text": "please tell me the newest csv in documents", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "documents", "ext": "csv"}}]}
+{"text": "please how many directories are in documents", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "documents", "ext": ""}}]}
+{"text": "jarvis count the pptx files in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": "pptx"}}]}
+{"text": "please show me the largest csv in pictures", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "pictures", "ext": "csv"}}]}
+{"text": "open the oldest file in my pictures folder", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "pictures", "ext": "pptx"}}]}
+{"text": "how many folders are in movies", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "movies", "ext": ""}}]}
+{"text": "hey jarvis open the oldest docx in downloads", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "downloads", "ext": "docx"}}]}
+{"text": "please how many files are in the movies folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "movies", "ext": "xlsx"}}]}
+{"text": "jarvis which jpg file in pictures is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "pictures", "ext": "jpg"}}]}
+{"text": "jarvis how much space do the files in desktop take up", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "desktop", "ext": "pdf"}}]}
+{"text": "jarvis what is the latest pptx i have", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "documents", "ext": "pptx"}}]}
+{"text": "open the latest mp4 in pictures", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "pictures", "ext": "mp4"}}]}
+{"text": "which jpg file in downloads is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "downloads", "ext": "jpg"}}]}
+{"text": "what folders are in movies", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "movies", "ext": ""}}]}
+{"text": "please list the directories in pictures", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "hey jarvis open the last mp4 i downloaded", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "movies", "ext": "mp4"}}]}
+{"text": "jarvis show me the oldest zip in downloads", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "downloads", "ext": "zip"}}]}
+{"text": "show me the recent pptx in documents", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "documents", "ext": "pptx"}}]}
+{"text": "show me the recent pdf in pictures", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "pictures", "ext": "pdf"}}]}
+{"text": "jarvis which is the latest pdf in documents", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "documents", "ext": "pdf"}}]}
+{"text": "jarvis what are the files in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "desktop", "ext": "mp4"}}]}
+{"text": "hey jarvis what subfolders does downloads have", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "hey jarvis how many subfolders does documents have", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "documents", "ext": ""}}]}
+{"text": "please total size of xlsx files in pictures", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "pictures", "ext": "xlsx"}}]}
+{"text": "how many directories are in pictures", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "hey jarvis total size of png files in movies", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "movies", "ext": "png"}}]}
+{"text": "jarvis how many png files do i have in pictures", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "pictures", "ext": "png"}}]}
+{"text": "what is the latest mp4 in documents", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "documents", "ext": "mp4"}}]}
+{"text": "please give me the list of files in downloads", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "downloads", "ext": "txt"}}]}
+{"text": "jarvis open the oldest zip in pictures", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "pictures", "ext": "zip"}}]}
+{"text": "please how much space do my zip files take in music", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "music", "ext": "zip"}}]}
+{"text": "please open the earliest file in downloads", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "downloads", "ext": "docx"}}]}
+{"text": "which folders are in music", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "music", "ext": ""}}]}
+{"text": "what jpg files do i have in movies", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "movies", "ext": "jpg"}}]}
+{"text": "open the most recent txt from my movies folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "movies", "ext": "txt"}}]}
+{"text": "please what is the newest file in movies", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "movies", "ext": "png"}}]}
+{"text": "please which csv file in desktop is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "desktop", "ext": "csv"}}]}
+{"text": "total size of pdf files in music", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "music", "ext": "pdf"}}]}
+{"text": "which is the biggest docx file in movies", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "movies", "ext": "docx"}}]}
+{"text": "please open the oldest pdf in music", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "music", "ext": "pdf"}}]}
+{"text": "jarvis give me the number of folders in downloads", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "what is the latest csv in pictures", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "pictures", "ext": "csv"}}]}
+{"text": "hey jarvis how much space do the files in music take up", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "music", "ext": "txt"}}]}
+{"text": "jarvis what is the total number of files in pictures", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "pictures", "ext": ""}}]}
+{"text": "how many folders are in my pictures", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "total size of txt files in downloads", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "downloads", "ext": "txt"}}]}
+{"text": "open the most recent mp4 from my movies folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "movies", "ext": "mp4"}}]}
+{"text": "what is the latest mp4 in music", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "music", "ext": "mp4"}}]}
+{"text": "please show me the oldest pdf in desktop", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "desktop", "ext": "pdf"}}]}
+{"text": "jarvis what is the total size of the files in pictures", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "pictures", "ext": "pdf"}}]}
+{"text": "hey jarvis which folders are in documents", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "documents", "ext": ""}}]}
+{"text": "how big are the zip files in pictures altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "pictures", "ext": "zip"}}]}
+{"text": "jarvis what is the biggest file in movies", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "movies", "ext": ""}}]}
+{"text": "jarvis which is the biggest mp4 file in documents", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "documents", "ext": "mp4"}}]}
+{"text": "please what is the earliest docx in movies", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "movies", "ext": "docx"}}]}
+{"text": "please how many folders are there in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "count subfolders in music", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "music", "ext": ""}}]}
+{"text": "jarvis open the oldest jpg in documents", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "documents", "ext": "jpg"}}]}
+{"text": "what folders are in downloads", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "jarvis open the last pptx i downloaded", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "documents", "ext": "pptx"}}]}
+{"text": "jarvis how many files are in the pictures folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "pictures", "ext": "jpg"}}]}
+{"text": "what files are in documents", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "documents", "ext": ""}}]}
+{"text": "show me the oldest jpg in documents", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "documents", "ext": "jpg"}}]}
+{"text": "show all pptx files in music", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "music", "ext": "pptx"}}]}
+{"text": "which zip file in movies is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "movies", "ext": "zip"}}]}
+{"text": "jarvis how big are the zip files in documents altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "documents", "ext": "zip"}}]}
+{"text": "jarvis how big are the txt files in desktop altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "desktop", "ext": "txt"}}]}
+{"text": "hey jarvis open the earliest file in movies", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "movies", "ext": "txt"}}]}
+{"text": "please which is the oldest png in my documents folder", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "documents", "ext": "png"}}]}
+{"text": "how many png files do i have in movies", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "movies", "ext": "png"}}]}
+{"text": "jarvis list the pptx files in downloads", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "downloads", "ext": "pptx"}}]}
+{"text": "how much space do the files in desktop take up", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "desktop", "ext": "pptx"}}]}
+{"text": "jarvis what is the most recent pdf in my movies folder", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "movies", "ext": "pdf"}}]}
+{"text": "hey jarvis which csv file in pictures is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "pictures", "ext": "csv"}}]}
+{"text": "show all txt files in documents", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "documents", "ext": "txt"}}]}
+{"text": "jarvis show all png files in documents", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "documents", "ext": "png"}}]}
+{"text": "jarvis count subfolders in movies", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "movies", "ext": ""}}]}
+{"text": "hey jarvis which is the latest pptx in desktop", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "desktop", "ext": "pptx"}}]}
+{"text": "hey jarvis show me the largest pptx in music", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "music", "ext": "pptx"}}]}
+{"text": "what is the heaviest file in music", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "music", "ext": "pptx"}}]}
+{"text": "please how big are the jpg files in movies altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "movies", "ext": "jpg"}}]}
+{"text": "which is the biggest jpg file in desktop", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "desktop", "ext": "jpg"}}]}
+{"text": "what folders are in desktop", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "jarvis list the files in documents", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "documents", "ext": "jpg"}}]}
+{"text": "hey jarvis how much space do my jpg files take in pictures", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "pictures", "ext": "jpg"}}]}
+{"text": "please what is the most recent png in my music folder", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "music", "ext": "png"}}]}
+{"text": "list the png files in downloads", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "downloads", "ext": "png"}}]}
+{"text": "jarvis open the oldest file in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "downloads", "ext": "mp4"}}]}
+{"text": "hey jarvis tell me the names of the files in music", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "music", "ext": "pdf"}}]}
+{"text": "open the recent txt in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "desktop", "ext": "txt"}}]}
+{"text": "tell me the oldest jpg in downloads", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "downloads", "ext": "jpg"}}]}
+{"text": "jarvis show me the oldest zip in desktop", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "desktop", "ext": "zip"}}]}
+{"text": "hey jarvis which xlsx file in downloads is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "downloads", "ext": "xlsx"}}]}
+{"text": "please which is the biggest png file in movies", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "movies", "ext": "png"}}]}
+{"text": "hey jarvis what jpg files do i have in downloads", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "downloads", "ext": "jpg"}}]}
+{"text": "show all mp4 files in pictures", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "pictures", "ext": "mp4"}}]}
+{"text": "hey jarvis show me the oldest pptx in pictures", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "pictures", "ext": "pptx"}}]}
+{"text": "hey jarvis how big are the csv files in desktop altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "desktop", "ext": "csv"}}]}
+{"text": "hey jarvis show me the largest txt in music", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "music", "ext": "txt"}}]}
+{"text": "please open the recent xlsx in my movies folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "movies", "ext": "xlsx"}}]}
+{"text": "please which files are in my pictures folder", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "pictures", "ext": "mp4"}}]}
+{"text": "count the files in movies", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "movies", "ext": "zip"}}]}
+{"text": "please which is the biggest xlsx file in downloads", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "downloads", "ext": "xlsx"}}]}
+{"text": "what is the latest pdf in desktop", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "desktop", "ext": "pdf"}}]}
+{"text": "count the docx files in my documents folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "documents", "ext": "docx"}}]}
+{"text": "hey jarvis count the folders in movies", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "movies", "ext": ""}}]}
+{"text": "count the docx files in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": "docx"}}]}
+{"text": "how big are the png files in desktop altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "desktop", "ext": "png"}}]}
+{"text": "jarvis which is the oldest pdf in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "desktop", "ext": "pdf"}}]}
+{"text": "please how many subfolders does movies have", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "movies", "ext": ""}}]}
+{"text": "how many files do i have in documents", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "documents", "ext": ""}}]}
+{"text": "open the oldest txt in documents", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "documents", "ext": "txt"}}]}
+{"text": "show all pdf files in pictures", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "pictures", "ext": "pdf"}}]}
+{"text": "please tell me the newest docx in desktop", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "desktop", "ext": "docx"}}]}
+{"text": "please what is the most recent xlsx in my pictures folder", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "pictures", "ext": "xlsx"}}]}
+{"text": "jarvis give me the list of files in movies", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "movies", "ext": "docx"}}]}
+{"text": "jarvis how many pptx files are in my pictures", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "pictures", "ext": "pptx"}}]}
+{"text": "jarvis which is the biggest txt file in documents", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "documents", "ext": "txt"}}]}
+{"text": "hey jarvis what is the earliest jpg in movies", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "movies", "ext": "jpg"}}]}
+{"text": "show me the largest csv in music", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "music", "ext": "csv"}}]}
+{"text": "jarvis open the last mp4 i downloaded", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "desktop", "ext": "mp4"}}]}
+{"text": "jarvis tell me the names of the files in desktop", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "desktop", "ext": "docx"}}]}
+{"text": "please list all the files in my documents folder", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "documents", "ext": ""}}]}
+{"text": "jarvis which is the biggest pptx file in documents", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "documents", "ext": "pptx"}}]}
+{"text": "tell me the oldest zip in pictures", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "pictures", "ext": "zip"}}]}
+{"text": "hey jarvis what is the heaviest file in music", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "music", "ext": ""}}]}
+{"text": "please which is the oldest docx in my movies folder", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "movies", "ext": "docx"}}]}
+{"text": "how big are the jpg files in downloads altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "downloads", "ext": "jpg"}}]}
+{"text": "hey jarvis what is the earliest csv in downloads", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "downloads", "ext": "csv"}}]}
+{"text": "please what is the oldest file in desktop", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "desktop", "ext": "docx"}}]}
+{"text": "jarvis what is the latest jpg in desktop", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "desktop", "ext": "jpg"}}]}
+{"text": "jarvis what is the biggest file in documents", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "documents", "ext": "png"}}]}
+{"text": "please open the recent xlsx in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "desktop", "ext": "xlsx"}}]}
+{"text": "hey jarvis how much space do my png files take in desktop", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "desktop", "ext": "png"}}]}
+{"text": "what is the oldest png i have in downloads", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "downloads", "ext": "png"}}]}
+{"text": "hey jarvis how big are the mp4 files in music altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "music", "ext": "mp4"}}]}
+{"text": "jarvis count the zip files in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "desktop", "ext": "zip"}}]}
+{"text": "please how many files do i have in music", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "music", "ext": "zip"}}]}
+{"text": "which is the biggest zip file in pictures", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "pictures", "ext": "zip"}}]}
+{"text": "please what is the oldest zip i have in documents", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "documents", "ext": "zip"}}]}
+{"text": "please show me the largest pdf in desktop", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "desktop", "ext": "pdf"}}]}
+{"text": "jarvis list the txt files in desktop", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "desktop", "ext": "txt"}}]}
+{"text": "list all the folders in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "open the earliest file in downloads", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "downloads", "ext": "pdf"}}]}
+{"text": "jarvis count how many folders are in my documents folder", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "documents", "ext": ""}}]}
+{"text": "how much space do my png files take in music", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "music", "ext": "png"}}]}
+{"text": "show me the oldest pptx in downloads", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "downloads", "ext": "pptx"}}]}
+{"text": "hey jarvis which is the latest zip in music", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "music", "ext": "zip"}}]}
+{"text": "show me the recent zip in downloads", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "downloads", "ext": "zip"}}]}
+{"text": "hey jarvis which zip did i add most recently in movies", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "movies", "ext": "zip"}}]}
+{"text": "hey jarvis open the recent mp4 in my pictures folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "pictures", "ext": "mp4"}}]}
+{"text": "how many pdf files do i have in desktop", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "desktop", "ext": "pdf"}}]}
+{"text": "give me the number of folders in desktop", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "jarvis show me the oldest docx in documents", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "documents", "ext": "docx"}}]}
+{"text": "jarvis which is the oldest csv in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "downloads", "ext": "csv"}}]}
+{"text": "please tell me the newest png in movies", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "movies", "ext": "png"}}]}
+{"text": "hey jarvis how many pptx files are in my downloads", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": "pptx"}}]}
+{"text": "please open the newest file in music", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "music", "ext": "pdf"}}]}
+{"text": "jarvis which is the oldest jpg in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "downloads", "ext": "jpg"}}]}
+{"text": "open the latest txt in desktop", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "desktop", "ext": "txt"}}]}
+{"text": "jarvis which is the biggest zip file in music", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "music", "ext": "zip"}}]}
+{"text": "list all the files in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "desktop", "ext": ""}}]}
+{"text": "what is the latest zip in music", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "music", "ext": "zip"}}]}
+{"text": "please what pptx files do i have in documents", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "documents", "ext": "pptx"}}]}
+{"text": "hey jarvis open the oldest file in my music folder", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "music", "ext": "docx"}}]}
+{"text": "total size of docx files in desktop", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "desktop", "ext": "docx"}}]}
+{"text": "jarvis how many sub folders are in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "open the recent jpg in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "desktop", "ext": "jpg"}}]}
+{"text": "what are the folders in my movies folder", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "movies", "ext": ""}}]}
+{"text": "please number of folders in my downloads", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "please total size of png files in documents", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "documents", "ext": "png"}}]}
+{"text": "hey jarvis which is the biggest mp4 file in desktop", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "desktop", "ext": "mp4"}}]}
+{"text": "how much space do my mp4 files take in pictures", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "pictures", "ext": "mp4"}}]}
+{"text": "total size of mp4 files in movies", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "movies", "ext": "mp4"}}]}
+{"text": "total size of mp4 files in downloads", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "downloads", "ext": "mp4"}}]}
+{"text": "how many docx files do i have in music", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "music", "ext": "docx"}}]}
+{"text": "tell me the names of the folders in pictures", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "how big are the zip files in music altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "music", "ext": "zip"}}]}
+{"text": "show me the oldest mp4 in pictures", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "pictures", "ext": "mp4"}}]}
+{"text": "hey jarvis count the txt files in my movies folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "movies", "ext": "txt"}}]}
+{"text": "hey jarvis show me the oldest xlsx in downloads", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "downloads", "ext": "xlsx"}}]}
+{"text": "how many xlsx files do i have in documents", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "documents", "ext": "xlsx"}}]}
+{"text": "please what is the earliest pptx in documents", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "documents", "ext": "pptx"}}]}
+{"text": "hey jarvis what csv files do i have in downloads", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "downloads", "ext": "csv"}}]}
+{"text": "hey jarvis lets see how many files are in movies", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "movies", "ext": "txt"}}]}
+{"text": "hey jarvis what is the largest file in my pictures folder", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "pictures", "ext": "mp4"}}]}
+{"text": "jarvis which pdf in movies is the oldest", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "movies", "ext": "pdf"}}]}
+{"text": "please what is the heaviest file in downloads", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "downloads", "ext": "docx"}}]}
+{"text": "please show me the folders in desktop", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "list the subfolders in music", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "music", "ext": ""}}]}
+{"text": "total size of pdf files in desktop", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "desktop", "ext": "pdf"}}]}
+{"text": "which is the biggest zip file in documents", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "documents", "ext": "zip"}}]}
+{"text": "show all txt files in pictures", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "pictures", "ext": "txt"}}]}
+{"text": "jarvis open the oldest file in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "desktop", "ext": "pptx"}}]}
+{"text": "jarvis which folders are in pictures", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "hey jarvis which png did i add most recently in desktop", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "desktop", "ext": "png"}}]}
+{"text": "jarvis show all jpg files in music", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "music", "ext": "jpg"}}]}
+{"text": "open the recent docx in my desktop folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "desktop", "ext": "docx"}}]}
+{"text": "jarvis show all mp4 files in downloads", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "downloads", "ext": "mp4"}}]}
+{"text": "which folders are in desktop", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "what are the files in my music folder", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "music", "ext": "jpg"}}]}
+{"text": "which is the latest pptx in movies", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "movies", "ext": "pptx"}}]}
+{"text": "jarvis total size of pdf files in pictures", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "pictures", "ext": "pdf"}}]}
+{"text": "show me the largest txt in movies", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "movies", "ext": "txt"}}]}
+{"text": "which pdf file in desktop is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "desktop", "ext": "pdf"}}]}
+{"text": "show me the largest mp4 in pictures", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "pictures", "ext": "mp4"}}]}
+{"text": "what is the number of folders in desktop", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "hey jarvis what is the latest png in pictures", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "pictures", "ext": "png"}}]}
+{"text": "please which xlsx file in movies is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "movies", "ext": "xlsx"}}]}
+{"text": "jarvis what is the latest pptx in downloads", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "downloads", "ext": "pptx"}}]}
+{"text": "hey jarvis show me the largest txt in documents", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "documents", "ext": "txt"}}]}
+{"text": "jarvis give me the folder names in documents", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "documents", "ext": ""}}]}
+{"text": "which is the latest jpg in pictures", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "pictures", "ext": "jpg"}}]}
+{"text": "please show me the oldest mp4 in desktop", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "desktop", "ext": "mp4"}}]}
+{"text": "count how many folders are in my music folder", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "music", "ext": ""}}]}
+{"text": "how many folders does the pictures folder have", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "hey jarvis list all the files in my movies folder", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "movies", "ext": "docx"}}]}
+{"text": "jarvis show me the largest png in pictures", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "pictures", "ext": "png"}}]}
+{"text": "count subfolders in documents", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "documents", "ext": ""}}]}
+{"text": "hey jarvis list the files in documents", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "documents", "ext": ""}}]}
+{"text": "count the folders in desktop", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "hey jarvis which pdf file in music is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "music", "ext": "pdf"}}]}
+{"text": "open the oldest jpg in desktop", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "desktop", "ext": "jpg"}}]}
+{"text": "jarvis how much space do my jpg files take in desktop", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "desktop", "ext": "jpg"}}]}
+{"text": "jarvis show all txt files in music", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "music", "ext": "txt"}}]}
+{"text": "jarvis which zip in documents is the oldest", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "documents", "ext": "zip"}}]}
+{"text": "hey jarvis how many files do i have in downloads", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": "txt"}}]}
+{"text": "please what is the earliest xlsx in documents", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "documents", "ext": "xlsx"}}]}
+{"text": "tell me the oldest txt in pictures", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "pictures", "ext": "txt"}}]}
+{"text": "hey jarvis open the oldest file in my movies folder", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "movies", "ext": "pptx"}}]}
+{"text": "please show all pdf files in movies", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "movies", "ext": "pdf"}}]}
+{"text": "hey jarvis tell me the newest jpg in music", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "music", "ext": "jpg"}}]}
+{"text": "total size of mp4 files in music", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "music", "ext": "mp4"}}]}
+{"text": "jarvis how much space do my xlsx files take in music", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "music", "ext": "xlsx"}}]}
+{"text": "show me the files in downloads", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "downloads", "ext": ""}}]}
+{"text": "hey jarvis open the last docx i downloaded", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "documents", "ext": "docx"}}]}
+{"text": "please which jpg file in desktop is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "desktop", "ext": "jpg"}}]}
+{"text": "hey jarvis how much space do the files in desktop take up", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "desktop", "ext": "docx"}}]}
+{"text": "hey jarvis number of folders in my movies", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "movies", "ext": ""}}]}
+{"text": "jarvis tell me the names of the files in documents", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "documents", "ext": ""}}]}
+{"text": "hey jarvis what is the earliest pdf in documents", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "documents", "ext": "pdf"}}]}
+{"text": "how many folders are in desktop", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "please which is the biggest xlsx file in music", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "music", "ext": "xlsx"}}]}
+{"text": "jarvis how many zip files do i have in downloads", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": "zip"}}]}
+{"text": "please show me the oldest mp4 in documents", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "documents", "ext": "mp4"}}]}
+{"text": "jarvis show me the oldest zip in pictures", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "pictures", "ext": "zip"}}]}
+{"text": "open the oldest csv in music", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "music", "ext": "csv"}}]}
+{"text": "tell me how many folders are in downloads", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "how much space do the files in movies take up", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "movies", "ext": "pdf"}}]}
+{"text": "please tell me the oldest pdf in documents", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "documents", "ext": "pdf"}}]}
+{"text": "how much space do my csv files take in music", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "music", "ext": "csv"}}]}
+{"text": "please which subfolders are in movies", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "movies", "ext": ""}}]}
+{"text": "show me the recent mp4 in movies", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "movies", "ext": "mp4"}}]}
+{"text": "which is the latest txt in desktop", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "desktop", "ext": "txt"}}]}
+{"text": "tell me the oldest jpg in pictures", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "pictures", "ext": "jpg"}}]}
+{"text": "hey jarvis open the latest txt in documents", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "documents", "ext": "txt"}}]}
+{"text": "hey jarvis show me the folders in pictures", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "jarvis how many folders do i have in pictures", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "jarvis show me the oldest xlsx in movies", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "movies", "ext": "xlsx"}}]}
+{"text": "open the recent txt in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "downloads", "ext": "txt"}}]}
+{"text": "show me the largest jpg in movies", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "movies", "ext": "jpg"}}]}
+{"text": "please show me the oldest csv in downloads", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "downloads", "ext": "csv"}}]}
+{"text": "please open the latest zip in music", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "music", "ext": "zip"}}]}
+{"text": "please what png files do i have in desktop", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "desktop", "ext": "png"}}]}
+{"text": "which pdf file in downloads is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "downloads", "ext": "pdf"}}]}
+{"text": "please open the earliest file in desktop", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "desktop", "ext": "pptx"}}]}
+{"text": "hey jarvis tell me the names of the files in desktop", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "desktop", "ext": "zip"}}]}
+{"text": "hey jarvis how much space do my csv files take in documents", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "documents", "ext": "csv"}}]}
+{"text": "how many txt files do i have in downloads", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": "txt"}}]}
+{"text": "please what is the earliest mp4 in documents", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "documents", "ext": "mp4"}}]}
+{"text": "what is the earliest jpg in downloads", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "downloads", "ext": "jpg"}}]}
+{"text": "jarvis show me the largest png in music", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "music", "ext": "png"}}]}
+{"text": "how many directories are in desktop", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "hey jarvis list the csv files in documents", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "documents", "ext": "csv"}}]}
+{"text": "jarvis which subfolders are in documents", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "documents", "ext": ""}}]}
+{"text": "which png file in documents is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "documents", "ext": "png"}}]}
+{"text": "which is the latest jpg in downloads", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "downloads", "ext": "jpg"}}]}
+{"text": "please what is the oldest csv i have in documents", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "documents", "ext": "csv"}}]}
+{"text": "jarvis what xlsx files do i have in desktop", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "desktop", "ext": "xlsx"}}]}
+{"text": "how much space do my jpg files take in downloads", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "downloads", "ext": "jpg"}}]}
+{"text": "list the jpg files in desktop", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "desktop", "ext": "jpg"}}]}
+{"text": "hey jarvis name the folders in desktop", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "which is the oldest docx in my documents folder", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "documents", "ext": "docx"}}]}
+{"text": "please which jpg in movies is the oldest", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "movies", "ext": "jpg"}}]}
+{"text": "please show me the oldest jpg in pictures", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "pictures", "ext": "jpg"}}]}
+{"text": "please which is the latest txt in music", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "music", "ext": "txt"}}]}
+{"text": "which xlsx did i add most recently in pictures", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "pictures", "ext": "xlsx"}}]}
+{"text": "total size of pptx files in downloads", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "downloads", "ext": "pptx"}}]}
+{"text": "jarvis open the last csv i downloaded", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "desktop", "ext": "csv"}}]}
+{"text": "tell me the oldest mp4 in downloads", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "downloads", "ext": "mp4"}}]}
+{"text": "hey jarvis open the last png i downloaded", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "desktop", "ext": "png"}}]}
+{"text": "please how many sub folders are in my documents folder", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "documents", "ext": ""}}]}
+{"text": "hey jarvis show me the folders in documents", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "documents", "ext": ""}}]}
+{"text": "jarvis which files are in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "downloads", "ext": "txt"}}]}
+{"text": "name the folders in documents", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "documents", "ext": ""}}]}
+{"text": "jarvis tell me the newest xlsx in desktop", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "desktop", "ext": "xlsx"}}]}
+{"text": "open the newest file in desktop", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "desktop", "ext": "csv"}}]}
+{"text": "hey jarvis list everything in desktop", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "desktop", "ext": "xlsx"}}]}
+{"text": "please which zip in desktop is the oldest", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "desktop", "ext": "zip"}}]}
+{"text": "jarvis how many files are in the downloads folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": ""}}]}
+{"text": "jarvis which is the latest csv in desktop", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "desktop", "ext": "csv"}}]}
+{"text": "which mp4 file in desktop is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "desktop", "ext": "mp4"}}]}
+{"text": "please show me the oldest zip in movies", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "movies", "ext": "zip"}}]}
+{"text": "please how many txt files do i have in desktop", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "desktop", "ext": "txt"}}]}
+{"text": "hey jarvis which xlsx in downloads is the oldest", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "downloads", "ext": "xlsx"}}]}
+{"text": "please tell me what folders are in pictures", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "total size of docx files in music", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "music", "ext": "docx"}}]}
+{"text": "tell me the folder count in documents", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "documents", "ext": ""}}]}
+{"text": "jarvis open the oldest xlsx in desktop", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "desktop", "ext": "xlsx"}}]}
+{"text": "count the xlsx files in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": "xlsx"}}]}
+{"text": "what is the oldest file in documents", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "documents", "ext": "zip"}}]}
+{"text": "jarvis number of files in desktop", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "desktop", "ext": "txt"}}]}
+{"text": "tell me the names of the folders in downloads", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "please how many docx files do i have in pictures", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "pictures", "ext": "docx"}}]}
+{"text": "jarvis what is the latest pdf i have", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "pictures", "ext": "pdf"}}]}
+{"text": "please total size of jpg files in movies", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "movies", "ext": "jpg"}}]}
+{"text": "show me the recent csv in music", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "music", "ext": "csv"}}]}
+{"text": "please which docx file in pictures is the biggest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "pictures", "ext": "docx"}}]}
+{"text": "jarvis list everything in music", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "music", "ext": ""}}]}
+{"text": "please which is the oldest mp4 in my documents folder", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "documents", "ext": "mp4"}}]}
+{"text": "hey jarvis how many folders are in downloads", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "downloads", "ext": ""}}]}
+{"text": "what subfolders does desktop have", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "hey jarvis which subfolders are in music", "intents": [{"name": "files.query", "args": {"op": "listFolders", "folder": "music", "ext": ""}}]}
+{"text": "jarvis open the newest file in pictures", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "pictures", "ext": "pdf"}}]}
+{"text": "how many folders do i have in desktop", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "desktop", "ext": ""}}]}
+{"text": "open the recent docx in my music folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "music", "ext": "docx"}}]}
+{"text": "show all csv files in music", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "music", "ext": "csv"}}]}
+{"text": "jarvis what is the earliest png in downloads", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "downloads", "ext": "png"}}]}
+{"text": "how big are the jpg files in pictures altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "pictures", "ext": "jpg"}}]}
+{"text": "please how many files are in the pictures folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "pictures", "ext": ""}}]}
+{"text": "please which txt in documents is the oldest", "intents": [{"name": "files.query", "args": {"op": "oldest", "folder": "documents", "ext": "txt"}}]}
+{"text": "how many files are in the movies folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "movies", "ext": "pdf"}}]}
+{"text": "open the most recent zip from my music folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "music", "ext": "zip"}}]}
+{"text": "please how many folders are in my movies", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "movies", "ext": ""}}]}
+{"text": "open the oldest mp4 in pictures", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "pictures", "ext": "mp4"}}]}
+{"text": "please how much space do my docx files take in downloads", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "downloads", "ext": "docx"}}]}
+{"text": "please how many docx files do i have in downloads", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": "docx"}}]}
+{"text": "please what is the latest mp4 in pictures", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "pictures", "ext": "mp4"}}]}
+{"text": "hey jarvis count the folders in pictures", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "pictures", "ext": ""}}]}
+{"text": "how many zip files do i have in desktop", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "desktop", "ext": "zip"}}]}
+{"text": "jarvis how big are the png files in pictures altogether", "intents": [{"name": "files.query", "args": {"op": "totalSize", "folder": "pictures", "ext": "png"}}]}
+{"text": "please what docx files do i have in movies", "intents": [{"name": "files.query", "args": {"op": "list", "folder": "movies", "ext": "docx"}}]}
+{"text": "open the recent txt in my documents folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "documents", "ext": "txt"}}]}

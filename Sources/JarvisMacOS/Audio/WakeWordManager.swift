@@ -8,10 +8,18 @@ final class WakeWordManager {
     }
 
     func isWakeWordDetected(in text: String) -> Bool {
-        text.lowercased().trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix(wakeWord)
+        // Migration cut-over: Rust core carries the same prefix rule.
+        if JarvisFlags.useRustPipeline {
+            return coreIsWakeWordDetected(text: text, wakeWord: wakeWord)
+        }
+        return text.lowercased().trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix(wakeWord)
     }
 
     func extractCommand(from text: String) -> String {
+        // Migration cut-over: Rust core carries the same strip rule.
+        if JarvisFlags.useRustPipeline {
+            return coreExtractWakeCommand(text: text, wakeWord: wakeWord)
+        }
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed.lowercased().hasPrefix(wakeWord) else {
             return trimmed

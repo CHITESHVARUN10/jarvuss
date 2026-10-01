@@ -36,6 +36,7 @@
     "folder.create":         { "args": ["name"],    "types": { "name": "str" } },
     "folder.open":           { "args": ["name"],    "types": { "name": "str" } },
     "file.open_latest":      { "args": ["folder"],  "types": { "folder": "str" } },
+    "files.query":           { "args": ["op", "folder", "ext"], "types": { "op": "str", "folder": "str", "ext": "str" } },
     "install.preview":       { "args": ["package", "source"], "types": { "package": "str", "source": "str" } },
     "ai.query":              { "args": ["text"],    "types": { "text": "str" } }
   }

@@ -166,6 +166,22 @@ struct ControlPanelView: View {
             .help("⌘⇧A action pill: verify voiceprint before running (ON), or run immediately on hotkey (OFF)")
 
             Button {
+                appState.useRustPipeline.toggle()
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: appState.useRustPipeline ? "gearshape.2.fill" : "gearshape.2")
+                        .font(.system(size: 13))
+                    Text(appState.useRustPipeline ? "Rust pipeline: on" : "Rust pipeline: off")
+                    Spacer()
+                }
+            }
+            .buttonStyle(JarvisButtonStyle(
+                color: appState.useRustPipeline ? JarvisColor.ok : JarvisColor.textTertiary,
+                compact: true
+            ))
+            .help("Swift → Rust migration: route command understanding through the Rust core. OFF = Swift rules with shadow-parity logging into intent_router.jsonl")
+
+            Button {
                 appState.voiceResponseEnabled.toggle()
                 if !appState.voiceResponseEnabled {
                     ResponseEngine.shared.stopSpeaking()
@@ -218,9 +234,11 @@ struct ControlPanelView: View {
                     appState.refreshContrast()
                 } label: {
                     Image(systemName: "arrow.clockwise")
-                        .font(.system(size: 10, weight: .semibold))
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(JarvisColor.textSecondary)
                 }
-                .buttonStyle(JarvisButtonStyle(color: JarvisColor.textSecondary, compact: true))
+                .buttonStyle(.plain)
+                .contentShape(Rectangle())
                 .help("Re-read the exact brightness/contrast from the display")
             }
 

@@ -15,9 +15,11 @@ training/*.log
 *.swp
 *.swo
 rust-core/target/
+rust-core/generated/
 stt-core/target/
 stt-core/generated/
 STTCore.xcframework/
+RustCore.xcframework/
 Sources/JarvisMacOS/Bridge/
 
 # Removed RAG/OCR/Bonsai local dirs (kept ignored one release cycle

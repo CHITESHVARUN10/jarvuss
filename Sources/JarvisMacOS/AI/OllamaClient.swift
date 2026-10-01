@@ -35,6 +35,17 @@ final class OllamaClient {
     }
 
     func generate(prompt: String) async -> String {
+        // Migration cut-over: Rust owns the HTTP call, keep-alive unload,
+        // timeout, and the process-wide single-flight guard.
+        if JarvisFlags.useRustPipeline {
+            let outcome = await RustPipeline.runBlocking { coreOllamaGenerate(prompt: prompt) }
+            if outcome.error == nil {
+                StatsRecorder.shared.recordLLM(promptChars: Int(outcome.promptChars),
+                                               responseChars: Int(outcome.responseChars))
+            }
+            return outcome.text
+        }
+
         OllamaClient.flightLock.lock()
         if let shared = OllamaClient.inFlight {
             OllamaClient.flightLock.unlock()

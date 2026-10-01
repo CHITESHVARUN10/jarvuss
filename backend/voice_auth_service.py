@@ -923,6 +923,96 @@ def spotify_token() -> Dict[str, Any]:
     }
 
 
+# ── Postgres connection management (Connections pane) ─────────────────
+# Same persistence mechanism as Spotify: values live in the backend .env
+# via _persist_env_updates. Status never echoes the password back.
+
+_PG_REQUIRED_KEYS = ["PGHOST", "PGPORT", "PGDATABASE", "PGUSER"]
+_PG_ALL_KEYS = ["PGHOST", "PGPORT", "PGDATABASE", "PGUSER", "PGPASSWORD"]
+
+
+def _postgres_values() -> dict[str, str]:
+    env = _load_env_values()
+    return {key: str(env.get(key, "") or "").strip() for key in _PG_ALL_KEYS}
+
+
+def _postgres_missing(values: dict[str, str]) -> list[str]:
+    return [key for key in _PG_REQUIRED_KEYS if not values.get(key)]
+
+
+@app.get("/postgres/status")
+def postgres_status() -> Dict[str, Any]:
+    values = _postgres_values()
+    missing = _postgres_missing(values)
+    return {
+        "status": "ok",
+        "configured": not missing,
+        "host": values["PGHOST"],
+        "port": values["PGPORT"] or "5432",
+        "database": values["PGDATABASE"],
+        "user": values["PGUSER"],
+        "password_present": bool(values["PGPASSWORD"]),
+        "missing": missing,
+    }
+
+
+@app.post("/postgres/credentials")
+def postgres_save_credentials(payload: Dict[str, Any]) -> Dict[str, Any]:
+    host = str(payload.get("host", "") or "").strip()
+    port = str(payload.get("port", "") or "").strip() or "5432"
+    database = str(payload.get("database", "") or "").strip()
+    user = str(payload.get("user", "") or "").strip()
+    password = str(payload.get("password", "") or "")
+    if not host or not database or not user:
+        raise HTTPException(
+            status_code=400, detail="host, database and user are required"
+        )
+    updates = {
+        "PGHOST": host,
+        "PGPORT": port,
+        "PGDATABASE": database,
+        "PGUSER": user,
+    }
+    if password:
+        updates["PGPASSWORD"] = password
+    _persist_env_updates(updates)
+    return {"status": "ok", "message": "Postgres credentials saved."}
+
+
+@app.post("/postgres/test")
+def postgres_test(payload: Dict[str, Any]) -> Dict[str, Any]:
+    import shutil
+    import subprocess
+
+    values = _postgres_values()
+    override_password = str(payload.get("password", "") or "")
+    missing = _postgres_missing(values)
+    if missing:
+        raise HTTPException(
+            status_code=400, detail=f"missing: {', '.join(missing)}"
+        )
+    psql = shutil.which("psql") or "/opt/homebrew/bin/psql"
+    if not shutil.which("psql") and not os.path.exists(psql):
+        psql = "/usr/bin/psql"
+    env = dict(os.environ)
+    env["PGPASSWORD"] = override_password or values["PGPASSWORD"]
+    try:
+        proc = subprocess.run(
+            [psql, "-h", values["PGHOST"], "-p", values["PGPORT"] or "5432",
+             "-d", values["PGDATABASE"], "-U", values["PGUSER"],
+             "-tAc", "SELECT 1"],
+            capture_output=True, text=True, timeout=10, env=env,
+        )
+    except subprocess.TimeoutExpired:
+        raise HTTPException(status_code=500, detail="connection timed out after 10s")
+    except OSError as exc:
+        raise HTTPException(status_code=500, detail=f"could not run psql: {exc}")
+    if proc.returncode != 0 or proc.stdout.strip() != "1":
+        detail = (proc.stderr or proc.stdout).strip()[:300] or "connection refused"
+        raise HTTPException(status_code=500, detail=detail)
+    return {"status": "ok", "message": "Connection OK — SELECT 1 returned 1."}
+
+
 @app.post("/spotify/play")
 def spotify_play() -> dict:
     token = _get_valid_spotify_access_token()

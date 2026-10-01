@@ -107,6 +107,14 @@ final class DisplayController {
 
     // MARK: - Brightness
 
+    /// Read-only surface for the System pane's Profile row: which display
+    /// the brightness/contrast controls are currently reading.
+    var profileName: String {
+        if builtIn.canChangeBrightness() { return "Built-in Retina" }
+        if !DDCController.externalDisplayIDs().isEmpty { return "External" }
+        return "No display"
+    }
+
     /// Returns current display brightness (0-100), checking built-in first then external DDC.
     func getCurrentBrightness() -> Int? {
         if builtIn.canChangeBrightness(), let b = builtIn.getBrightness() {

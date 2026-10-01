@@ -113,6 +113,10 @@ enum AppAliasResolver {
     /// Whisper appends sentence punctuation ("Open photos.", "Open city!").
     /// Strip it BEFORE resolve so "photos." hits the alias map.
     static func resolveSpoken(_ name: String) -> String {
+        // Migration cut-over: the Rust core carries the same alias table.
+        if JarvisFlags.useRustPipeline {
+            return coreResolveApp(name: name)
+        }
         let cleaned = name
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .trimmingCharacters(in: CharacterSet(charactersIn: "?.!,,;:"))

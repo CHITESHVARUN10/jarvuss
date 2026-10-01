@@ -114,6 +114,13 @@ enum IntentActionMapper {
             guard let folder = stringArg(args, "folder") else { return nil }
             return .openLatestFile(inFolder: folder)
 
+        case "files.query":
+            guard let opRaw = stringArg(args, "op"),
+                  let op = FileQueryOp(rawValue: opRaw) else { return nil }
+            let folder = stringArg(args, "folder") ?? "downloads"
+            let ext = (args["ext"] as? String) ?? ""
+            return .fileQuery(FileQuery(op: op, folder: folder, ext: ext))
+
         case "install.preview":
             guard let package = stringArg(args, "package") else { return nil }
             let source = stringArg(args, "source") ?? "homebrew"

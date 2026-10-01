@@ -34,3 +34,12 @@
 {"text": "increase the brightness and mute", "intents": [{"name": "display.brightness_up", "args": {"by": 10}}, {"name": "volume.mute", "args": {}}]}
 {"text": "open spotify and set the volume to 40", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "volume.set", "args": {"level": 40}}]}
 {"text": "uh open spotify.", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}]}
+{"text": "how many files live in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "count", "folder": "downloads", "ext": ""}}]}
+{"text": "how many subfolders does documents have", "intents": [{"name": "files.query", "args": {"op": "countFolders", "folder": "documents", "ext": ""}}]}
+{"text": "which file in downloads is the heaviest", "intents": [{"name": "files.query", "args": {"op": "largest", "folder": "downloads", "ext": ""}}]}
+{"text": "what is the most recent pptx in my documents folder", "intents": [{"name": "files.query", "args": {"op": "newest", "folder": "documents", "ext": "pptx"}}]}
+{"text": "open the recent pdf in my downloads folder", "intents": [{"name": "files.query", "args": {"op": "openNewest", "folder": "downloads", "ext": "pdf"}}]}
+{"text": "open the oldest image in pictures", "intents": [{"name": "files.query", "args": {"op": "openOldest", "folder": "pictures", "ext": "png"}}]}
+{"text": "open telegram and then play kesariya", "intents": [{"name": "app.open", "args": {"name": "Telegram"}}, {"name": "media.play_song", "args": {"title": "kesariya"}}]}
+{"text": "open notes and increase the brightness by 20 percent", "intents": [{"name": "app.open", "args": {"name": "Notes"}}, {"name": "display.brightness_up", "args": {"by": 20}}]}
+{"text": "open slack, open notion and set the volume to 45", "intents": [{"name": "app.open", "args": {"name": "Slack"}}, {"name": "app.open", "args": {"name": "Notion"}}, {"name": "volume.set", "args": {"level": 45}}]}

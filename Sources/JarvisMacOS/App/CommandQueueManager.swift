@@ -42,6 +42,9 @@ final class CommandQueueManager: ObservableObject {
     @Published private(set) var currentCommandText: String = ""
 
     private var activeTask: Task<Void, Never>?
+    /// Monotonic token identifying the current execution slot. A superseded
+    /// task compares its own token before mutating queue state.
+    private var generation: Int = 0
     private var queue: [QueuedCommand] = []
 
     // ── Time-based deduplication state ───────────────────────────────
@@ -133,6 +136,10 @@ final class CommandQueueManager: ObservableObject {
         guard let task = activeTask else { return }
         task.cancel()
         activeTask = nil
+        // Bump the generation so the superseded task's completion block can
+        // no longer clear `isExecuting`/`activeTask` while its replacement
+        // is still running (that used to let two commands overlap).
+        generation += 1
         log("[Queue] Cancelled current task — \(reason)")
         isExecuting = false
         currentCommandText = ""
@@ -169,12 +176,18 @@ final class CommandQueueManager: ObservableObject {
 
         log("[Execution] started: '\(cmd.text)'")
 
+        generation += 1
+        let myGeneration = generation
+
         activeTask = Task { [weak self] in
             guard let self else { return }
 
             await cmd.handler()
 
             await MainActor.run {
+                // A superseded task must not touch the bookkeeping of the
+                // command that replaced it.
+                guard myGeneration == self.generation else { return }
                 if !Task.isCancelled {
                     self.log("[Execution] finished: '\(cmd.text)'")
                 }
@@ -198,6 +211,14 @@ final class CommandQueueManager: ObservableObject {
 extension CommandPriority {
     /// Classify a raw command string into a priority level.
     static func classify(_ text: String) -> CommandPriority {
+        // Migration cut-over: Rust core carries the same keyword rules.
+        if JarvisFlags.useRustPipeline {
+            switch coreClassifyCommandPriority(text: text) {
+            case .high:   return .high
+            case .normal: return .normal
+            }
+        }
+
         let lower = text.lowercased()
 
         // Time / date — always high

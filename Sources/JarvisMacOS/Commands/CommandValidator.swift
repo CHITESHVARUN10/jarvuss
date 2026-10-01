@@ -23,11 +23,38 @@ enum CommandValidator {
 
     private static let minimumLength = 3
 
+    /// Trailing politeness / sign-off phrases. Stripped before the word-level
+    /// filler pass so "…play a song. Thank you." doesn't leak into the query.
+    private static let trailingPhrases = [
+        "thank you very much", "thank you so much", "thanks a lot", "thank you",
+        "thanks", "that's all", "thats all", "that will be all", "that's it",
+        "if you can", "if you could", "for me please", "please do", "for me",
+    ]
+
+    /// Action verbs used to tell a genuine multi-intent compound command
+    /// ("open X and play Y") from a single-verb garbled run-on.
+    private static let actionVerbs: Set<String> = [
+        "open", "close", "launch", "quit", "play", "pause", "resume", "stop",
+        "next", "previous", "prev", "skip", "search", "google", "find", "list",
+        "count", "show", "tell", "create", "make", "run", "start", "increase",
+        "decrease", "set", "turn", "mute", "unmute", "check", "calculate",
+        "summarise", "summarize", "rename", "move", "delete", "sort",
+    ]
+
     // MARK: - Public API
 
     /// Clean and validate a raw command string.
     /// - Returns: Cleaned string if valid, nil if the command should be rejected.
     static func validate(_ raw: String) -> String? {
+        // Migration cut-over: the Rust core runs the same cleaning rules.
+        if JarvisFlags.useRustPipeline {
+            let cleaned = coreValidateCommandString(raw: raw)
+            if cleaned == nil {
+                NSLog("[Validator] Rejected (rust): '%@'", raw)
+            }
+            return cleaned
+        }
+
         var cleaned = raw
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
@@ -38,7 +65,8 @@ enum CommandValidator {
             return nil
         }
 
-        // 2. Strip trailing filler words (repeat until stable)
+        // 2. Strip trailing politeness phrases, then trailing filler words
+        cleaned = stripTrailingPhrases(cleaned)
         cleaned = stripTrailingFillers(cleaned)
 
         // 3. Re-check emptiness after stripping
@@ -84,25 +112,63 @@ enum CommandValidator {
             return nil
         }
 
-        // 8. Hard absolute cap: any input > 15 words is almost certainly garbled speech
-        let wordCount = cleaned.split(separator: " ").count
-        if wordCount > 15 {
-            NSLog("[Validator] Rejected: too long (%d words): '%@'", wordCount, cleaned)
+        // 8. Word caps. Length alone is only suspicious when the utterance
+        // carries a SINGLE action — compound commands ("open X and play Y,
+        // then search Z") are legitimately long. Counting action verbs lets
+        // real multi-intent speech through while still rejecting run-on
+        // garbage that would otherwise waste a model call.
+        let tokens = lower
+            .split(separator: " ")
+            .map { $0.trimmingCharacters(in: CharacterSet.alphanumerics.inverted) }
+            .filter { !$0.isEmpty }
+        let wordCount = tokens.count
+        let verbCount = Set(tokens).intersection(actionVerbs).count
+        let isCompound = verbCount >= 2
+
+        let wordCap = isCompound ? 40 : 15
+        if wordCount > wordCap {
+            NSLog("[Validator] Rejected: too long (%d words, %d verbs): '%@'",
+                  wordCount, verbCount, cleaned)
             return nil
         }
 
-        // Fix #11: Word-count limit for system commands (> 10 words → likely garbage run-on).
-        // AI queries are exempt from this cap.
+        // Fix #11: single-action system commands stay tightly capped; compound
+        // commands are exempt because every clause is a separate intent.
         let systemPrefixes = ["open ", "close ", "play ", "search ", "launch ",
                               "run ", "create ", "start ", "next ", "previous ",
                               "increase ", "decrease ", "mute", "unmute", "pause"]
         let isSystemCommand = systemPrefixes.contains { lower.hasPrefix($0) }
-        if isSystemCommand && wordCount > 10 {
+        if isSystemCommand && !isCompound && wordCount > 10 {
             NSLog("[Validator] Rejected: system command too long (%d words): '%@'", wordCount, cleaned)
             return nil
         }
 
         return cleaned
+    }
+
+    // MARK: - Strip trailing politeness phrases (longest match first)
+
+    static func stripTrailingPhrases(_ input: String) -> String {
+        var current = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        var changed = true
+        while changed {
+            changed = false
+            let lower = current.lowercased()
+            for phrase in trailingPhrases {
+                for separator in [" ", ", ", ". ", "! "] {
+                    let suffix = separator + phrase
+                    if lower.hasSuffix(suffix) || lower.hasSuffix(suffix + ".") {
+                        let dropCount = lower.hasSuffix(suffix + ".") ? suffix.count + 1 : suffix.count
+                        current = String(current.dropLast(dropCount))
+                            .trimmingCharacters(in: CharacterSet.whitespacesAndNewlines.union(CharacterSet(charactersIn: ",.!?;")))
+                        changed = true
+                        break
+                    }
+                }
+                if changed { break }
+            }
+        }
+        return current
     }
 
     // MARK: - Strip trailing filler words (recursive until stable)

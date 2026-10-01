@@ -116,9 +116,11 @@ struct StatsView: View {
                     Task { await refresh() }
                 } label: {
                     Image(systemName: "arrow.clockwise")
-                        .font(.system(size: 10, weight: .semibold))
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(JarvisColor.textSecondary)
                 }
-                .buttonStyle(JarvisButtonStyle(color: JarvisColor.textSecondary, compact: true))
+                .buttonStyle(.plain)
+                .contentShape(Rectangle())
                 .help("Refresh usage stats")
             }
 

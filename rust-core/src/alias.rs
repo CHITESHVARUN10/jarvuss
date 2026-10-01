@@ -25,6 +25,23 @@ fn normalize(value: &str) -> String {
 fn alias_map() -> Vec<(&'static str, Vec<&'static str>)> {
     vec![
         ("Google Chrome", vec!["chrome", "google chrome", "googlechrom"]),
+        ("Spotify", vec!["spotify"]),
+        ("WhatsApp", vec!["whatsapp"]),
+        ("Safari", vec!["safari", "apple safari"]),
+        ("Photos", vec!["photos", "apple photos", "photo", "fotos"]),
+        (
+            "Brave Browser",
+            vec!["brave", "brave browser", "browser", "web browser"],
+        ),
+        ("Firefox", vec!["firefox", "mozilla firefox", "fox"]),
+        ("Mail", vec!["mail", "apple mail", "email"]),
+        ("Messages", vec!["messages", "imessage", "message"]),
+        ("Calendar", vec!["calendar", "apple calendar"]),
+        ("Notes", vec!["notes", "apple notes", "note"]),
+        ("Music", vec!["music", "apple music"]),
+        ("Maps", vec!["maps", "apple maps", "map"]),
+        ("App Store", vec!["app store", "appstore"]),
+        ("City", vec!["city"]),
         (
             "GitHub Desktop",
             vec![
@@ -46,17 +63,11 @@ fn alias_map() -> Vec<(&'static str, Vec<&'static str>)> {
             vec!["system settings", "settings", "system setting"],
         ),
         (
-            "Brave Browser",
-            vec!["brave", "brave browser", "browser", "web browser"],
-        ),
-        (
             "Visual Studio Code",
             vec!["vscode", "vs code", "visual studio code", "visual code"],
         ),
         ("Finder", vec!["finder"]),
         ("Terminal", vec!["terminal"]),
-        ("Spotify", vec!["spotify"]),
-        ("WhatsApp", vec!["whatsapp"]),
     ]
 }
 
@@ -80,10 +91,17 @@ pub fn levenshtein(a: &str, b: &str) -> usize {
 }
 
 /// Resolve a spoken app name to its canonical macOS application name.
+/// Mirrors Swift `AppAliasResolver.resolveSpoken` — Whisper sentence
+/// punctuation ("Open photos.", "Open city!") is stripped before lookup and
+/// before falling through to the unresolved name.
 pub fn resolve(name: &str) -> String {
-    let value = normalize(name);
+    let cleaned = name
+        .trim()
+        .trim_matches(|c: char| matches!(c, '?' | '.' | '!' | ',' | ';' | ':'))
+        .trim();
+    let value = normalize(cleaned);
     if value.is_empty() {
-        return name.to_string();
+        return cleaned.to_string();
     }
     for (canonical, aliases) in alias_map() {
         if aliases.iter().any(|a| *a == value) {
@@ -93,7 +111,7 @@ pub fn resolve(name: &str) -> String {
     if let Some(fuzzy) = fuzzy_resolve(&value) {
         return fuzzy;
     }
-    name.to_string()
+    cleaned.to_string()
 }
 
 fn fuzzy_resolve(value: &str) -> Option<String> {
