@@ -1,10 +1,19 @@
 import Foundation
 
-/// Single model for the whole app (user asked: Qwen 2.5 Coder 1.5B).
-/// Change here once — every planner, normalizer, and answer path follows.
+/// The app's single local LLM. Change here once — every planner, normalizer,
+/// answer path, and the ⌘⇧D polish pass follows.
 /// NEVER point this at mistral:7b or any 7B+ model: on a 24 GB Mac the
 /// 7B weights (~4.4 GB) plus Whisper (~1.6 GB resident) plus the app push
 /// unified memory past 10 GB and macOS starts compressing.
+///
+/// Why INSTRUCT, not a base model: every caller here asks the model to OBEY
+/// ("convert this to that JSON", "clean this up, change nothing else").
+/// A base model has no instruction-following tuning — it continues text in
+/// the style of its corpus, so it happily writes prose around a JSON request
+/// or silently drops fields, while an instruct model was post-trained on
+/// (instruction, correct answer) pairs and treats the prompt as a command.
+/// The trade-off runs the other way for raw creative completion, which
+/// nothing in this app needs.
 ///
 /// Memory guards live HERE, not at each call site:
 /// - keepAliveSeconds: unload the model after 60 s idle so VRAM returns.
@@ -12,7 +21,10 @@ import Foundation
 /// - Single-flight: only one generate at a time; concurrent callers share
 ///   the in-flight result instead of spawning parallel model loads.
 enum JarvisModel {
-    static let name = "qwen2.5-coder:1.5b-base"
+    static let name = "qwen2.5:1.5b-instruct"
+    /// Alias kept for the ⌘⇧D polish pass (`DictationPolisher`) — the same
+    /// model now serves the whole app, one resident model instead of two.
+    static let formattingName = name
     static let unloadAfterIdleSeconds = 60
     static let requestTimeoutSeconds: TimeInterval = 60
 }
@@ -28,10 +40,12 @@ final class OllamaClient {
     private static var inFlight: Task<String, Never>?
 
     init(model: String = JarvisModel.name) {
-        if model != JarvisModel.name {
+        if model != JarvisModel.name && model != JarvisModel.formattingName {
             NSLog("[Ollama] WARNING: non-canonical model '%@' requested — forcing '%@' (7B+ models OOM this Mac)", model, JarvisModel.name)
+            self.model = JarvisModel.name
+        } else {
+            self.model = model
         }
-        self.model = JarvisModel.name
     }
 
     func generate(prompt: String) async -> String {

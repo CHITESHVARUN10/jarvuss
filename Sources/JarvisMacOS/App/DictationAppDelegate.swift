@@ -8,6 +8,15 @@ import AppKit
 final class DictationAppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         setvbuf(stdout, nil, _IONBF, 0)
+
+        // Raise the window NOW, not in MainApp.init(). The init call happens
+        // before any window exists, and only a bundled launch gets a
+        // LaunchServices activation — so `swift run` produced a process with
+        // a dock icon and a full-size window stranded UNDER the terminal
+        // (looks exactly like "the app does not open"). did-finish-launching
+        // is the first point where SwiftUI's scenes exist to be raised.
+        NSApplication.shared.activate(ignoringOtherApps: true)
+
         DictationController.shared.launch()
         registerDictationHotkey()
         NSLog("[Jarvis] Dictation ready (⌘⇧D dictate · ⌘⇧A action)")

@@ -133,7 +133,7 @@ final class STTRouter {
         suppressCommandResult = true
         pendingPillAfterCommand = true
         pendingPillRetries = 0
-        // Mute VAD FIRST (before touching the utterance): the 4 s split's
+        // Mute VAD FIRST (before touching the utterance): the 8 s split's
         // immediate re-begin would otherwise re-claim .command before the
         // pill's claimForPill lands (seen in logs: preempt → split →
         // "core busy (owner: command)"). Meters keep running; claims don't.

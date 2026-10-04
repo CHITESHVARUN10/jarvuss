@@ -12,7 +12,7 @@ use serde_json::{json, Value};
 use std::sync::Mutex;
 use std::time::Duration;
 
-pub const MODEL: &str = "qwen2.5-coder:1.5b-base";
+pub const MODEL: &str = "qwen2.5:1.5b-instruct";
 pub const KEEP_ALIVE_SECONDS: i64 = 60;
 const TIMEOUT_SECONDS: u64 = 60;
 const ENDPOINT: &str = "http://127.0.0.1:11434/api/generate";

@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import SwiftUI
 
@@ -18,6 +19,8 @@ final class AppState: ObservableObject {
         case idle = "Idle"
         case active = "Session Active"
     }
+
+    static weak var shared: AppState?
 
     @Published var assistantState: AssistantState = .idle
     @Published var voiceSessionState: VoiceSessionState = .idle
@@ -71,7 +74,7 @@ final class AppState: ObservableObject {
     @Published var postgresMissingKeys: [String] = []
     /// Local Ollama server reachability (GET /api/tags probe).
     @Published var ollamaReachable: Bool = false
-    @Published var ollamaStatusText: String = "qwen2.5-coder · 1.5b"
+    @Published var ollamaStatusText: String = "qwen2.5 · 1.5b instruct"
     /// Reads the backend's configured values (never the password) for
     /// prefilling the Connections pane form.
     @Published var postgresForm = PostgresForm()
@@ -144,6 +147,9 @@ final class AppState: ObservableObject {
     private var previousVoiceDetected = false
     private var lastVoiceTimestamp = Date.distantPast
     private var smoothedAudioLevelDB: Float = -160.0
+    /// False until the first real level arrives after a mic (re)start — the
+    /// seed replaces the -160 dB cold start that delayed VAD onset ~250 ms.
+    private var smoothedAudioLevelSeeded = false
     private var recordingStartedAt = Date.distantPast
     private var lastFinalTranscriptAt = Date.distantPast
     /// Last text spoken aloud by TTS — used to suppress echo capture.
@@ -174,6 +180,9 @@ final class AppState: ObservableObject {
     private let enrollmentAcceptCooldown: TimeInterval = 1.4
     private let enrollmentAttemptThrottle: TimeInterval = 0.30
     private let voiceVerificationThreshold = 0.70
+    /// How long after hearing "Jarvis" a follow-up without the wake word is
+    /// still accepted as its command ("Jarvis" … pause … "open Spotify").
+    private static let pendingWakeWordGraceSeconds: TimeInterval = 4.0
     private static let verifyAudioSeconds = 3.5
     private static let enrollAudioSeconds = 3.5
     /// Minimum RMS of the verify clip — below this the buffer is silence and
@@ -215,13 +224,14 @@ final class AppState: ObservableObject {
     }
 
     init(
-        micManager: MicManager = MicManager(),
+        micManager: MicManager = MicManager.shared,
         logger: Logger = Logger(),
         dbManager: DBManager = DBManager()
     ) {
         self.micManager = micManager
         self.logger = logger
         self.dbManager = dbManager
+        AppState.shared = self
         commandQueue.onLog = { [weak self] msg in
             Task { @MainActor in self?.appendLog(msg) }
         }
@@ -389,6 +399,7 @@ final class AppState: ObservableObject {
         pendingWakeWordDetected      = false
         pendingWakeWordDetectedAt    = .distantPast
         lastFinalTranscriptAt        = .distantPast
+        smoothedAudioLevelSeeded     = false
         appendLog("[Voice] Pipeline state hard-reset.")
     }
 
@@ -407,7 +418,10 @@ final class AppState: ObservableObject {
         restoreEnrollmentStateFast()
         await reconcileEnrollmentFromDB()
         await syncVoiceProfileStatusFromBackend()
-        await startMicrophone()
+        // Listening is MANUAL by design: the mic stays cold until the user
+        // taps the orb or presses a hotkey. Wake word, VAD and dictation all
+        // come up from the same startMicrophone() — nothing to arm here.
+        appendLog("Ready. Tap the orb (or press ⌘⇧D / ⌘⇧A) to start listening.")
     }
 
     func shutdown() {
@@ -459,12 +473,29 @@ final class AppState: ObservableObject {
                         self?.handleAudioLevel(level)
                     }
                 },
-                onAudioBuffer: nil
+                onAudioBuffer: { buffer in
+                    // Acoustic wake-word engine (inert without SDK + key):
+                    // tap-thread ingest, internally locked.
+                    WakeWordDetector.shared.ingest(buffer: buffer)
+                }
             )
+
+            // Detection anchors the pre-roll window and arms the command —
+            // the follow-up utterance is then accepted even if "Jarvis"
+            // never survives transcription (Phase 3.3).
+            WakeWordDetector.shared.onDetection = { [weak self] in
+                self?.handleAcousticWakeWord()
+            }
 
             micActive = true
             assistantState = .listening
             appendLog("Microphone + Whisper recognizer started.")
+            // Surface the auto-paste grant in the app's own log: a stale
+            // grant (toggle ON, binary replaced by a rebuild) reads as
+            // "paste does nothing" with no other clue.
+            appendLog(has_accessibility_permission()
+                ? "[AX] Auto-paste permission: granted."
+                : "[AX] Auto-paste permission: MISSING — dictation will copy instead. Remove + re-add Jarvis in Privacy & Security → Accessibility.")
         } catch {
             micActive = false
             assistantState = .idle
@@ -474,12 +505,46 @@ final class AppState: ObservableObject {
 
     func stopMicrophone() {
         isStoppingMicrophone = true
+        micTransientAutoStart = false
         pendingWakeWordDetected = false
         WhisperCommandListener.shared.reset()
         micManager.stopListening()
         micActive = false
         assistantState = .idle
         appendLog("Microphone stopped.")
+    }
+
+    // MARK: - Transient mic (one-shot hotkey pills)
+
+    /// True when the mic was brought up ONLY so a ⌘⇧D/⌘⇧A press could record
+    /// — no manual listening was on. When that pill finishes, the pipeline
+    /// goes back down, so a hotkey never leaves the app live-listening.
+    private var micTransientAutoStart = false
+
+    /// True when the USER has listening on — not when a one-shot hotkey pill
+    /// (⌘⇧D / ⌘⇧A) borrowed the mic for its recording. The main-window orb
+    /// and stage text key off this, so a pill never lights up the live UI.
+    var isLiveListening: Bool { micActive && !micTransientAutoStart }
+
+    /// Called by the hotkey path right before it starts the mic for a pill.
+    func markTransientMicStart() {
+        micTransientAutoStart = true
+    }
+
+    /// The user started listening on purpose (orb tap / panel button): the
+    /// transient rule no longer applies — the mic stays up.
+    func noteManualMicStart() {
+        micTransientAutoStart = false
+    }
+
+    /// Called when a pill session ends. Stops the mic only when THIS session
+    /// was its reason to exist (see `markTransientMicStart`).
+    func restoreMicAfterTransientStartIfNeeded() {
+        guard micTransientAutoStart else { return }
+        micTransientAutoStart = false
+        guard micActive else { return }
+        appendLog("One-shot use finished — mic back to idle (listening stays manual).")
+        stopMicrophone()
     }
 
     func startEnrollment(resetStore: Bool = true) {
@@ -697,7 +762,7 @@ final class AppState: ObservableObject {
         } catch {
             ollamaReachable = false
         }
-        ollamaStatusText = ollamaReachable ? "qwen2.5-coder · 1.5b" : "Ollama offline"
+        ollamaStatusText = ollamaReachable ? "qwen2.5 · 1.5b instruct" : "Ollama offline"
     }
 
     /// Keeps the last 5 executed commands for the Assistant pane's Recent card.
@@ -878,15 +943,34 @@ final class AppState: ObservableObject {
                 .filter { !$0.isEmpty }
             appendLog("[Voice] segments count: \(rawSegments.count) (from wake-word split)")
             NSLog("[Voice] split into %d raw segments", rawSegments.count)
+
+            if rawSegments.isEmpty {
+                // "Jarvis." alone: the user is addressing us and paused before
+                // the command. Hold the wake state and ARM the session so the
+                // follow-up utterance is accepted WITHOUT a second "Jarvis".
+                // The old code cleared the flag at the end of this same call
+                // and dropped the transcript — exactly why wake + pause failed.
+                extendSessionTimeout(forCommand: "wake word only")
+                appendLog("[Voice] wake word alone — session armed, listening for the follow-up command.")
+                return
+            }
+            // Consumed by this transcript's command segments.
+            pendingWakeWordDetected = false
         } else if isSessionValid {
             rawSegments = [transcriptForCommand]
+            pendingWakeWordDetected = false
             appendLog("[VoiceSession] Processing in-session follow-up command: '\(transcriptForCommand)'")
-        } else if pendingWakeWordDetected && now.timeIntervalSince(pendingWakeWordDetectedAt) <= 4.0 {
+        } else if pendingWakeWordDetected,
+                  now.timeIntervalSince(pendingWakeWordDetectedAt) <= Self.pendingWakeWordGraceSeconds {
+            // Wake word was heard within the grace window but the session
+            // arming did not land (session reset races). Accept this as the
+            // follow-up command rather than dropping it.
             rawSegments = [transcriptForCommand]
+            pendingWakeWordDetected = false
             appendLog("[Voice] segments count: 1 (pending wake-word fallback)")
+        } else {
+            pendingWakeWordDetected = false
         }
-
-        pendingWakeWordDetected = false
 
         guard !rawSegments.isEmpty else {
             appendLog("[Voice] no segments — wake word not found, dropping transcript.")
@@ -1497,7 +1581,37 @@ final class AppState: ObservableObject {
         }
     }
 
+    /// Watchdog window for one command: beyond this, the pipeline is
+    /// declared wedged and the visible state is released. Longer than the
+    /// Ollama call timeout (60 s) so a legitimately slow answer never trips
+    /// it. Internal so tests can shorten it.
+    static var commandWatchdogSeconds: TimeInterval = 90
+
+    /// A command may await something that never returns (a blocked child
+    /// process was the real case — see Process.waitUntilExit(timeout:)).
+    /// Whatever the cause, the UI must not sit on "Working" forever: this
+    /// wrapper releases assistantState/currentCommand if the body overruns.
     private func runCommand(_ command: String) async {
+        let token = UUID()
+        activeCommandRunToken = token
+        let seconds = Self.commandWatchdogSeconds
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+            guard let self, self.activeCommandRunToken == token else { return }
+            self.activeCommandRunToken = nil
+            self.appendLog("⚠️ Command watchdog: '\(command)' still running after \(Int(seconds)) s — releasing the state (the action may be waiting on a system dialog).")
+            self.currentCommand = ""
+            if self.assistantState == .executing || self.assistantState == .processing {
+                self.assistantState = self.micActive ? .listening : .idle
+            }
+        }
+        await runCommandBody(command)
+        activeCommandRunToken = nil
+    }
+
+    private var activeCommandRunToken: UUID?
+
+    private func runCommandBody(_ command: String) async {
         guard !command.isEmpty else { return }
         trackRecentCommand(command)
         var succeeded = false
@@ -2187,21 +2301,63 @@ final class AppState: ObservableObject {
         return false
     }
 
-    private func handleAudioLevel(_ level: Float) {
-        smoothedAudioLevelDB = Self.smooth(
-            previous: smoothedAudioLevelDB,
-            current: level,
-            alpha: smoothingFactor
-        )
+    /// Acoustic wake word heard (only fires when a real engine is enabled —
+    /// see WakeWordDetector). Anchors the pending-wake state so the command
+    /// about to be spoken is accepted even if the transcript never contains
+    /// "Jarvis", and confirms audibly so the user knows the mic is hot.
+    private func handleAcousticWakeWord() {
+        guard micActive, voiceModeEnabled, !isStoppingMicrophone, !isTTSSpeaking else { return }
+        pendingWakeWordDetected = true
+        pendingWakeWordDetectedAt = Date()
+        appendLog("[Wake] Acoustic wake word detected — pre-roll anchored.")
+        // Tink is the system's subtle cue; NSSound plays nothing when the
+        // user's sound is off — that is their setting, not a failure.
+        NSSound(named: "Tink")?.play()
+    }
 
-        audioLevelDB = smoothedAudioLevelDB
-        audioLevelNormalized = Self.normalizeDB(smoothedAudioLevelDB)
+    private func handleAudioLevel(_ level: Float) {
+        // A pill owns this audio (⌘⇧D / ⌘⇧A recording): its own HUD and its
+        // own meter are the UI for it. Driving the main window from the same
+        // audio lit up the orb as "Recording"/"Processing" during every
+        // action command — the main stage must stay untouched until the
+        // pipeline is genuinely idle again.
+        if STTRouter.shared.pillSuppressesCommandVAD { return }
+
+        if smoothedAudioLevelSeeded {
+            smoothedAudioLevelDB = Self.smooth(
+                previous: smoothedAudioLevelDB,
+                current: level,
+                alpha: smoothingFactor
+            )
+        } else {
+            // Seed with the first observed level instead of smoothing up from
+            // -160 dB: crossing the -42 dB start threshold took ~5 callbacks
+            // (~250 ms) of ramp, which is the main reason VAD onset was late
+            // and the pre-roll had to exist at all.
+            smoothedAudioLevelDB = level
+            smoothedAudioLevelSeeded = true
+        }
+
+        // Publish dedupe: at ~60 Hz the raw values keep changing in
+        // sub-perceptual steps (the smoother converges asymptotically during
+        // silence), and every @Published write re-evaluates every view that
+        // observes AppState — a whole-UI redraw per audio tick. 0.5% / 0.5 dB
+        // steps are visually identical and let quiet audio stop the churn.
+        let normalized = Self.normalizeDB(smoothedAudioLevelDB)
+        let quantizedNormalized = (normalized * 200).rounded() / 200
+        if quantizedNormalized != audioLevelNormalized {
+            audioLevelNormalized = quantizedNormalized
+        }
+        let quantizedDB = (smoothedAudioLevelDB * 2).rounded() / 2
+        if quantizedDB != audioLevelDB {
+            audioLevelDB = quantizedDB
+        }
 
         let now = Date()
 
         // Whisper STT processes the utterance only when VAD sees silence.
         // Continuous speech NEVER ends the utterance on its own — the end
-        // comes from the 20 s WhisperCommandListener failsafe, and by then
+        // comes from the 30 s WhisperCommandListener failsafe, and by then
         // the tail is cut, the embedding is garbage, and nothing executes.
         // So: treat a long run of UNBROKEN voice as its own boundary.
         // Mid-speech split (8.0 s voiced): end the current utterance so its
@@ -2212,9 +2368,17 @@ final class AppState: ObservableObject {
             let voicedRun = now.timeIntervalSince(recordingStartedAt)
             if voicedRun >= Self.maxContinuousSpeechSeconds {
                 previousVoiceDetected = false
+                recordingStartedAt = now
+                lastVoiceTimestamp = now
                 assistantState = .processing
-                appendLog("Recording split (continuous speech \(String(format: "%.1f", voicedRun))s) — transcribing segment.")
+                appendLog("Recording split (continuous speech \(String(format: "%.1f", voicedRun))s) — transcribing segment; tail re-arms.")
                 WhisperCommandListener.shared.endUtterance()
+                // Re-arm NOW instead of waiting for a fresh rising edge: the
+                // user is still mid-sentence. The core is busy inferring the
+                // segment just ended, so this claim usually loses and the
+                // per-tick retry below opens the follow-up recording the
+                // moment it frees — pre-roll covering the inference gap.
+                WhisperCommandListener.shared.beginUtterance()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
                     guard let self else { return }
                     if self.assistantState != .executing {
@@ -2246,6 +2410,16 @@ final class AppState: ObservableObject {
                 if !STTRouter.shared.pillSuppressesCommandVAD {
                     WhisperCommandListener.shared.beginUtterance()
                 }
+            } else if !STTRouter.shared.pillSuppressesCommandVAD,
+                      !WhisperCommandListener.shared.isUtteranceActive {
+                // Core-busy retry: the rising edge tried to claim the core
+                // while it was busy (previous final inferring, model
+                // reloading) and the whole voiced run would otherwise be lost
+                // with no retry — the "phantom recording" (Swift shows
+                // Recording, Rust captured nothing). One cheap attempt per
+                // VAD tick; once the core frees, this lands and the pre-roll
+                // covers the gap since speech actually started.
+                WhisperCommandListener.shared.beginUtterance()
             }
             return
         }
@@ -2276,7 +2450,10 @@ final class AppState: ObservableObject {
             return
         }
 
-        if micActive && assistantState != .executing && assistantState != .processing {
+        // Only when the state actually needs to change: @Published emits on
+        // every assignment, equal or not, so re-setting .listening each tick
+        // would re-render every observer at audio rate while idle-listening.
+        if micActive && assistantState != .executing && assistantState != .processing && assistantState != .listening {
             assistantState = .listening
         }
     }

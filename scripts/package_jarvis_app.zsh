@@ -126,12 +126,30 @@ fi
 # Source: Sources/JarvisMacOS/Resources/Info.plist
 cp "$ROOT_DIR/Sources/JarvisMacOS/Resources/Info.plist" "$APP_CONTENTS/Info.plist"
 
-# Re-sign ad-hoc AFTER all bundle contents are in place. macOS kills an app
+# Re-sign AFTER all bundle contents are in place. macOS kills an app
 # whose bundle signature no longer matches its executable ("Killed: 9" at
 # launch) — which is exactly what a stale signature produces after a repackage.
-codesign --force --deep --sign - "$APP_BUNDLE" >/dev/null 2>&1 \
-  && echo "[Package] Re-signed $APP_BUNDLE (ad-hoc)" \
-  || echo "[Package][WARN] codesign failed — app launch may be killed by Gatekeeper"
+#
+# ── Signing identity and the Accessibility grant ────────────────────────────
+# With an AD-HOC signature (`-`), the TCC (Accessibility) grant is keyed to the
+# binary's cdhash — every repackage changes it, so the toggle stays ON in
+# System Settings while `AXIsProcessTrusted()` returns false for the new
+# build ("paste silently does nothing" after every rebuild). Signing with a
+# STABLE identity (any real certificate) yields a designated requirement that
+# outlives rebuilds, so the grant survives — the user re-adds the entry ONCE.
+# Prefer any available code-signing identity; fall back to ad-hoc.
+SIGN_IDENTITY="$(
+  security find-identity -v -p codesigning 2>/dev/null \
+    | awk -F'"' '/"/ { print $2; exit }'
+)"
+
+if [[ -n "${SIGN_IDENTITY:-}" ]] && codesign --force --deep --sign "$SIGN_IDENTITY" "$APP_BUNDLE" >/dev/null 2>&1; then
+  echo "[Package] Signed $APP_BUNDLE with '$SIGN_IDENTITY' (stable — AX grant survives rebuilds)"
+else
+  codesign --force --deep --sign - "$APP_BUNDLE" >/dev/null 2>&1 \
+    && echo "[Package][WARN] Signed ad-hoc — the Accessibility grant will NOT survive rebuilds (re-add Jarvis in Privacy & Security → Accessibility after each package)" \
+    || echo "[Package][WARN] codesign failed — app launch may be killed by Gatekeeper"
+fi
 
 echo "Packaged app bundle: $APP_BUNDLE"
 open "$APP_BUNDLE"

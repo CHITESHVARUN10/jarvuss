@@ -19,6 +19,11 @@ enum MicManagerError: LocalizedError {
 }
 
 final class MicManager {
+    /// Shared instance — AppState's default and the STT pre-roll need the
+    /// SAME audio ring: the pre-roll is only correct if it observes exactly
+    /// the samples captured by the tap that drives the VAD.
+    static let shared = MicManager()
+
     private let audioEngine = AVAudioEngine()
     private var isTapInstalled = false
     private var onLevelUpdate: ((Float) -> Void)?
@@ -123,14 +128,7 @@ final class MicManager {
     /// embeddings comparable — the backend's preprocess_wav would resample
     /// anyway, but at variable native rates that adds avoidable variance.
     func exportRecentAudioSample(durationSeconds: Double = 2.0, targetSampleRate: Double? = nil) throws -> URL {
-        let exported: (samples: [Float], sampleRate: Double) = recentAudioQueue.sync {
-            let sampleRate = max(recentSampleRate, 8_000)
-            let desiredCount = Int(sampleRate * durationSeconds)
-            let clipped = desiredCount > 0 && recentSamples.count > desiredCount
-                ? Array(recentSamples.suffix(desiredCount))
-                : recentSamples
-            return (clipped, sampleRate)
-        }
+        let exported = snapshotTail(durationSeconds: durationSeconds)
 
         guard !exported.samples.isEmpty else {
             throw MicManagerError.insufficientAudio
@@ -151,10 +149,38 @@ final class MicManager {
         return tempURL
     }
 
+    /// Copy of the ring's tail at the native rate — the one shared read path
+    /// under both the WAV exporter and the STT pre-roll.
+    private func snapshotTail(durationSeconds: Double) -> (samples: [Float], sampleRate: Double) {
+        recentAudioQueue.sync {
+            let sampleRate = max(recentSampleRate, 8_000)
+            let desiredCount = Int(sampleRate * durationSeconds)
+            let clipped = desiredCount > 0 && recentSamples.count > desiredCount
+                ? Array(recentSamples.suffix(desiredCount))
+                : recentSamples
+            return (clipped, sampleRate)
+        }
+    }
+
+    /// Pre-roll snapshot for wake-path STT: the trailing `durationSeconds` of
+    /// hardware audio, resampled to `targetSampleRate` (16 kHz). The VAD fires
+    /// 250–400 ms after speech starts, so without this the wake word's first
+    /// syllables exist nowhere the Rust capture can see them.
+    /// `recentAudioQueue.sync` keeps it off the append racing the ring.
+    func snapshotRecentSamples(durationSeconds: Double, targetSampleRate: Double) -> [Float] {
+        let snapshot = snapshotTail(durationSeconds: durationSeconds)
+        guard !snapshot.samples.isEmpty else { return [] }
+        if snapshot.sampleRate == targetSampleRate {
+            return snapshot.samples
+        }
+        return Self.resampleLinear(snapshot.samples, from: snapshot.sampleRate, to: targetSampleRate)
+    }
+
     /// Minimal linear-interpolation resampler (mono). No dependency, no
     /// allocation beyond the output — good enough for 48 kHz → 16 kHz
-    /// downsampling of short voice clips before WAV export.
-    private static func resampleLinear(_ samples: [Float], from sourceRate: Double, to targetRate: Double) -> [Float] {
+    /// downsampling of short voice clips. `internal` because the pre-roll
+    /// splice (WhisperCommandListener) shares this exact path.
+    static func resampleLinear(_ samples: [Float], from sourceRate: Double, to targetRate: Double) -> [Float] {
         guard !samples.isEmpty, sourceRate > 0, targetRate > 0, sourceRate != targetRate else {
             return samples
         }
@@ -208,7 +234,11 @@ final class MicManager {
             self.recentSamples.append(contentsOf: slice)
 
             let maxCount = Int(sampleRate * self.maxBufferedSeconds)
-            if self.recentSamples.count > maxCount {
+            // Trim with slack, not every callback: removeFirst on a ~1.4 MB
+            // ring memmoves the whole array, and this runs ~46×/s while the
+            // mic is live. Trimming once per ~8k samples cuts that ~4× with
+            // no behavior change — snapshotTail reads the TAIL either way.
+            if self.recentSamples.count > maxCount + 8_192 {
                 self.recentSamples.removeFirst(self.recentSamples.count - maxCount)
             }
         }

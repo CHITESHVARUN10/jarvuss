@@ -36,14 +36,20 @@ struct StageView: View {
             greeting
 
             MicOrbView(
-                assistantState: appState.assistantState,
-                audioLevel: appState.audioLevelNormalized,
-                micActive: appState.micActive
+                assistantState: appState.isLiveListening ? appState.assistantState : .idle,
+                audioLevel: appState.isLiveListening ? appState.audioLevelNormalized : 0,
+                micActive: appState.isLiveListening
             ) {
-                if appState.micActive {
+                if appState.isLiveListening {
                     appState.stopMicrophone()
                 } else {
-                    Task { await appState.startMicrophone() }
+                    // Orb tap = the user's own listening session (not the
+                    // transient mic a hotkey pill borrows). If a pill's
+                    // transient mic is up right now, adopt it as live.
+                    appState.noteManualMicStart()
+                    if !appState.micActive {
+                        Task { await appState.startMicrophone() }
+                    }
                 }
             }
 
@@ -108,7 +114,7 @@ struct StageView: View {
                 .frame(width: 5, height: 5)
             Text(stateText)
                 .font(.system(size: 11.5, weight: .medium))
-                .foregroundStyle(appState.micActive ? JColor.ink : JColor.ink2)
+                .foregroundStyle(appState.isLiveListening ? JColor.ink : JColor.ink2)
         }
         .padding(.horizontal, 11)
         .frame(height: 28)
@@ -163,10 +169,11 @@ struct StageView: View {
     }
 
     private var stateText: String {
-        if appState.micActive && appState.voiceSessionState == .active
+        if appState.isLiveListening && appState.voiceSessionState == .active
             && appState.assistantState == .listening {
             return "Follow-up active"
         }
+        guard appState.isLiveListening else { return "Not listening" }
         switch appState.assistantState {
         case .idle:       return "Idle"
         case .listening:  return "Listening"
@@ -177,7 +184,7 @@ struct StageView: View {
     }
 
     private var stateDotColor: Color {
-        guard appState.micActive else { return JColor.ink4 }
+        guard appState.isLiveListening else { return JColor.ink4 }
         switch appState.assistantState {
         case .idle:       return JColor.ink4
         case .listening:  return JColor.ok
@@ -198,7 +205,7 @@ struct StageView: View {
     }
 
     private var greetingText: String {
-        if !appState.micActive { return "Tap the orb to begin" }
+        if !appState.isLiveListening { return "Tap the orb to begin" }
         switch appState.assistantState {
         case .idle:       return "Tap the orb to begin"
         case .listening:  return "How can I help, Sir?"

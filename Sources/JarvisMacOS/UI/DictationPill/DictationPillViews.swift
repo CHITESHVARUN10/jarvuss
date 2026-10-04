@@ -29,10 +29,17 @@ struct DictationHUDView: View {
                 DictationTranscriptOverlayView(
                     transcript: model.transcript,
                     copied: model.copied,
+                    inserted: model.insertedAtCursor,
+                    formatting: model.formattingInProgress,
+                    insertNotice: model.insertNotice,
+                    showCopyOriginal: model.copyOriginalEnabled && !model.originalTranscript.isEmpty,
                     onCopy: { model.copyTranscript() },
+                    onCopyOriginal: { model.copyOriginalTranscript() },
+                    onUndo: { model.undoInsert() },
+                    onGrantAccessibility: { model.openAccessibilityPane() },
                     onClose: { model.closeTranscript() }
                 )
-                .frame(width: 300)
+                .frame(width: 330)
 
             case .Error:
                 DictationErrorView(
@@ -248,74 +255,44 @@ struct DictationTranscribingPillView: View {
 
 // MARK: - Transcript card
 
-/// 300×170 glass card: scrollable text + pinned Copy/Close buttons.
-/// Copy flips to a checkmark; the controller auto-dismisses after 0.6 s.
+/// 300pt glass card: scrollable text + pinned Copy (and, once text has been
+/// inserted, Undo) buttons. A failed insert carries the Accessibility notice
+/// with a one-tap grant; a running LLM polish shows a spinner row.
+/// Card height mirrors panelSizeForCurrentState in DictationController.
 struct DictationTranscriptOverlayView: View {
     let transcript: String
     var copied: Bool = false
+    var inserted: Bool = false
+    var formatting: Bool = false
+    var insertNotice: String = ""
+    var showCopyOriginal: Bool = false
     let onCopy: () -> Void
+    var onCopyOriginal: () -> Void = {}
+    var onUndo: () -> Void = {}
+    var onGrantAccessibility: () -> Void = {}
     let onClose: () -> Void
 
     @State private var isExpanded = false
     @State private var showCheck = false
+    @State private var originalCopied = false
+
+    private var cardHeight: CGFloat {
+        if !insertNotice.isEmpty { return 218 }
+        if formatting { return 205 }
+        return 170
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            ScrollView {
-                Text(transcript)
-                    .font(.system(size: 14, weight: .regular, design: .default))
-                    .foregroundStyle(.white.opacity(0.92))
-                    .lineSpacing(4)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .frame(maxHeight: 96)
-
+            transcriptScroll
+            polishRow
             Divider()
                 .overlay(.white.opacity(0.1))
-
-            HStack(spacing: 8) {
-                Button(action: {
-                    withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
-                        showCheck = true
-                    }
-                    onCopy()
-                }) {
-                    HStack(spacing: 5) {
-                        Image(systemName: copied ? "checkmark" : "doc.on.doc")
-                            .font(.system(size: 11, weight: .medium))
-                        Text(copied ? "Copied" : "Copy")
-                            .font(.system(size: 12, weight: .medium))
-                    }
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 7)
-                    .background {
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(.white.opacity(0.15))
-                    }
-                    .foregroundStyle(.white)
-                }
-                .buttonStyle(.plain)
-                .scaleEffect(showCheck ? 1.05 : 1.0)
-
-                Spacer()
-
-                Button(action: onClose) {
-                    HStack(spacing: 5) {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 11, weight: .medium))
-                        Text("Close")
-                            .font(.system(size: 12, weight: .medium))
-                    }
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 7)
-                    .foregroundStyle(.white.opacity(0.6))
-                }
-                .buttonStyle(.plain)
-            }
+            actionRow
+            insertNoticeRow
         }
         .padding(18)
-        .frame(width: 300, height: 170)
+        .frame(width: 330, height: cardHeight)
         .background {
             RoundedRectangle(cornerRadius: 18)
                 .fill(.ultraThinMaterial)
@@ -335,6 +312,146 @@ struct DictationTranscriptOverlayView: View {
                 isExpanded = true
             }
         }
+    }
+
+    private var transcriptScroll: some View {
+        ScrollView {
+            Text(transcript)
+                .font(.system(size: 14, weight: .regular, design: .default))
+                .foregroundStyle(.white.opacity(0.92))
+                .lineSpacing(4)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .frame(maxHeight: insertNotice.isEmpty ? 96 : 66)
+    }
+
+    @ViewBuilder
+    private var polishRow: some View {
+        if formatting {
+            HStack(spacing: 8) {
+                ProgressView()
+                    .controlSize(.small)
+                Text("Polishing…")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.55))
+            }
+        }
+    }
+
+    private var actionRow: some View {
+        HStack(spacing: 6) {
+            copyButton
+            if showCopyOriginal {
+                copyOriginalButton
+            }
+            if inserted {
+                undoButton
+            }
+            Spacer()
+            closeButton
+        }
+    }
+
+    @ViewBuilder
+    private var insertNoticeRow: some View {
+        if !insertNotice.isEmpty {
+            HStack(spacing: 6) {
+                Image(systemName: "lock.open")
+                    .font(.system(size: 10, weight: .medium))
+                Text(insertNotice)
+                    .font(.system(size: 10.5, weight: .regular))
+                    .foregroundStyle(.white.opacity(0.75))
+                    .fixedSize(horizontal: false, vertical: true)
+                Button(action: {
+                    onGrantAccessibility()
+                }) {
+                    Text("Grant")
+                        .font(.system(size: 10.5, weight: .semibold))
+                        .foregroundStyle(Color.accentColor)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    private var copyButton: some View {
+        Button(action: {
+            withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
+                showCheck = true
+            }
+            onCopy()
+        }) {
+            HStack(spacing: 5) {
+                Image(systemName: copied ? "checkmark" : "doc.on.doc")
+                    .font(.system(size: 11, weight: .medium))
+                Text(copied ? "Copied" : "Copy")
+                    .font(.system(size: 12, weight: .medium))
+            }
+            .padding(.horizontal, 11)
+            .padding(.vertical, 7)
+            .background {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(.white.opacity(0.15))
+            }
+            .foregroundStyle(.white)
+        }
+        .buttonStyle(.plain)
+        .scaleEffect(showCheck ? 1.05 : 1.0)
+    }
+
+    /// Copies the raw STT text — what was actually said, before rules and
+    /// before the polish pass. Stays open so the polished Copy is still live.
+    private var copyOriginalButton: some View {
+        Button(action: {
+            originalCopied = true
+            onCopyOriginal()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                originalCopied = false
+            }
+        }) {
+            HStack(spacing: 5) {
+                Image(systemName: originalCopied ? "checkmark" : "clock.arrow.circlepath")
+                    .font(.system(size: 11, weight: .medium))
+                Text(originalCopied ? "Copied" : "Original")
+                    .font(.system(size: 12, weight: .medium))
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .foregroundStyle(.white.opacity(0.75))
+        }
+        .buttonStyle(.plain)
+        .help("Copy what you actually said, before formatting")
+    }
+
+    private var undoButton: some View {
+        Button(action: onUndo) {
+            HStack(spacing: 5) {
+                Image(systemName: "arrow.uturn.backward")
+                    .font(.system(size: 11, weight: .medium))
+                Text("Undo")
+                    .font(.system(size: 12, weight: .medium))
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .foregroundStyle(.white.opacity(0.75))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var closeButton: some View {
+        Button(action: onClose) {
+            HStack(spacing: 5) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 11, weight: .medium))
+                Text("Close")
+                    .font(.system(size: 12, weight: .medium))
+            }
+            .padding(.horizontal, 11)
+            .padding(.vertical, 7)
+            .foregroundStyle(.white.opacity(0.6))
+        }
+        .buttonStyle(.plain)
     }
 }
 

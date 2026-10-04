@@ -245,7 +245,12 @@ final class ActionExecutor {
 
         do {
             try process.run()
-            process.waitUntilExit()
+            // Deadline: a shell command that waits on input/network must not
+            // hold the action pipeline (and the "Working" state) forever.
+            let exited = process.waitUntilExit(timeout: 30)
+            if !exited {
+                return (false, "Command timed out after 30 s")
+            }
 
             let outData = outPipe.fileHandleForReading.readDataToEndOfFile()
             let errData = errPipe.fileHandleForReading.readDataToEndOfFile()

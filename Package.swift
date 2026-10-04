@@ -28,11 +28,15 @@ let package = Package(
             exclude: ["Resources/Info.plist", "JarvisMacOS.entitlements"],
             linkerSettings: [
                 // Native frameworks required by the STT staticlib
-                // (whisper.cpp/Metal, cpal/CoreAudio, arboard) + Carbon hotkey.
+                // (whisper.cpp/Metal, cpal/CoreAudio, arboard) + Carbon hotkey
+                // + ApplicationServices for AXIsProcessTrusted and CoreGraphics
+                // for the CGEvent paste + CGPreflight/RequestPostEventAccess.
                 .linkedFramework("Metal"),
                 .linkedFramework("Accelerate"),
                 .linkedFramework("AudioToolbox"),
                 .linkedFramework("CoreAudio"),
+                .linkedFramework("ApplicationServices"),
+                .linkedFramework("CoreGraphics"),
                 .linkedFramework("Carbon"),
                 // whisper.cpp is C++ — the static archive needs libc++.
                 .linkedLibrary("c++"),

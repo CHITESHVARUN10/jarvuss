@@ -9,7 +9,10 @@ final class AppController {
 
         do {
             try process.run()
-            process.waitUntilExit()
+            let exited = process.waitUntilExit(timeout: 10)
+            if !exited {
+                return "Failed to open \(normalized) — it is taking too long."
+            }
             if process.terminationStatus == 0 {
                 return "Opened \(normalized)."
             }
@@ -28,7 +31,14 @@ final class AppController {
 
         do {
             try process.run()
-            process.waitUntilExit()
+            // 8 s deadline: quitting an app that has running processes pops a
+            // confirmation dialog and the AppleScript waits on it FOREVER —
+            // that hang used to wedge the whole command queue on "Working".
+            let exited = process.waitUntilExit(timeout: 8)
+            if !exited {
+                // "Failed" keeps the executor's success heuristic honest.
+                return "Failed to close \(normalized) — it may be showing a confirmation dialog. Answer it on screen, or quit it manually."
+            }
             if process.terminationStatus == 0 {
                 return "Closed \(normalized)."
             }

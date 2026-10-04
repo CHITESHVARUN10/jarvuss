@@ -31,6 +31,52 @@ final class DictationController: ObservableObject {
     @Published var audioLevel: Float = 0.0
     @Published var copied = false
     @Published var livePreviewEnabled: Bool = false
+    // ⌘⇧D Wispr-Flow additions: the LLM polish may still be running when the
+    // card shows, a failed insert carries the notice, and `insertedAtCursor`
+    // is what makes the card offer Undo.
+    @Published var formattingInProgress: Bool = false
+    @Published var insertedAtCursor: Bool = false
+    @Published var insertNotice: String = ""
+
+    /// Raw STT text before any formatting — the "Copy original" source.
+    @Published var originalTranscript: String = ""
+
+    /// Paste-at-cursor vs the copy-card behaviour. Default ON (Wispr).
+    /// Off returns to the show-and-copy flow. Persisted; toggled from the
+    /// System pane alongside `copyOriginalEnabled`.
+    @Published var insertAtCursorEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(insertAtCursorEnabled, forKey: Self.insertAtCursorDefaultsKey)
+        }
+    }
+
+    /// Offer "Copy original" on the ⌘⇧D card (and in the System pane's
+    /// last-dictation card). Default ON.
+    @Published var copyOriginalEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(copyOriginalEnabled, forKey: Self.copyOriginalDefaultsKey)
+        }
+    }
+
+    /// The most recent dictation, original + polished. Persisted as a PAIR:
+    /// each new dictation overwrites both, so the previous text is gone for
+    /// good (no history, no recovery — by request). Survives restarts.
+    @Published var lastOriginal: String = ""
+    @Published var lastPolished: String = ""
+
+    private static let insertAtCursorDefaultsKey = "jarvis.dictation.insertAtCursor"
+    private static let copyOriginalDefaultsKey = "jarvis.dictation.copyOriginal"
+    private static let lastOriginalDefaultsKey = "jarvis.dictation.lastOriginal"
+    private static let lastPolishedDefaultsKey = "jarvis.dictation.lastPolished"
+
+    private var insertLatencyStart: Date?
+    private var insertAutoDismiss: DispatchWorkItem?
+    private var hardCapDismiss: DispatchWorkItem?
+
+    /// True once `receiveDictationTranscript` has replaced the raw STT text
+    /// with the formatted version — `on_state_changed(TranscriptReady)` must
+    /// not re-clobber the card with raw after that (callback race).
+    private(set) var transcriptIsFormatted = false
 
     private var panel: NSPanel?
     private var panelHost: NSHostingView<DictationHUDView>?
@@ -45,11 +91,23 @@ final class DictationController: ObservableObject {
     private var watchdogTimer: Timer?
     var pendingSpeechSecs: Double = 0
 
-    private init() {}
+    private init() {
+        let defaults = UserDefaults.standard
+        // Init assignments bypass didSet — load persisted settings directly.
+        insertAtCursorEnabled = defaults.object(forKey: Self.insertAtCursorDefaultsKey) as? Bool ?? true
+        copyOriginalEnabled = defaults.object(forKey: Self.copyOriginalDefaultsKey) as? Bool ?? true
+        lastOriginal = defaults.string(forKey: Self.lastOriginalDefaultsKey) ?? ""
+        lastPolished = defaults.string(forKey: Self.lastPolishedDefaultsKey) ?? ""
+    }
 
     func launch() {
         let ok = initialize_core()
         NSLog("[Jarvis][STT] Core initialized: \(ok)")
+        // Loud, early, and in the app log: this is THE diagnostic for "paste
+        // silently does nothing". Toggle ON in System Settings can still mean
+        // untrusted when the grant was issued for an older build's signature
+        // (see package_jarvis_app.zsh — sign with a stable identity).
+        NSLog("[Jarvis][STT] Accessibility (auto-paste) trusted: \(has_accessibility_permission())")
         phase = get_app_phase()
         modelPhase = get_model_phase()
         livePreviewEnabled = get_live_preview_enabled()
@@ -268,6 +326,22 @@ final class DictationController: ObservableObject {
     }
 
     private func startDictation() {
+        // Clear the card's state BEFORE the panel exists: showPanel() renders
+        // whatever the last phase/transcript was, so a fresh run that skipped
+        // this could flash — or, if start_recording then failed, strand — the
+        // PREVIOUS dictation's text (the ⌘⇧D residue that showed up during a
+        // following ⌘⇧A). Every field the card reads is reset here, including
+        // the "Original" source and any half-finished polish flags.
+        transcript = ""
+        partialTranscript = ""
+        transcriptIsFormatted = false
+        originalTranscript = ""
+        insertNotice = ""
+        formattingInProgress = false
+        insertedAtCursor = false
+        copied = false
+        errorMessage = ""
+
         // Panel FIRST (agentTalk order): the press must always produce
         // something visible, even if the core then refuses to record.
         showPanel()
@@ -275,8 +349,11 @@ final class DictationController: ObservableObject {
         NSLog("[Jarvis][STT] start_recording returned: \(ok)")
         if ok {
             recordingStartedAt = Date()
-            copied = false
-            partialTranscript = ""
+            // Warm the small instruct model for the polish pass so the first
+            // messy dictation of a session wins its race. Utility priority;
+            // keep-alive unloads it again after 60 s if the dictation ends up
+            // short and clean (rules-only).
+            DictationPolisher.warmUp()
             // Optimistic mirror: the second press must see .Recording even
             // before the Rust callback round-trips, or it lands on
             // `ignored (core busy, owner: pill)` instead of the stop arm.
@@ -359,6 +436,219 @@ final class DictationController: ObservableObject {
 
     // ── Transcript actions ──────────────────────────────────
 
+    /// The ⌘⇧D entry point. Rules format first (sync, ~0 ms); the LLM polish
+    /// (`DictationPolisher`) runs only when the rules say the input is messy,
+    /// and what lands at the cursor is what the card shows — nothing diverges.
+    func receiveDictationTranscript(_ raw: String) {
+        insertLatencyStart = Date()
+        insertNotice = ""
+        insertedAtCursor = false
+        copied = false
+        originalTranscript = raw
+
+        let rules = TranscriptFormatter.format(raw)
+        transcript = rules.text
+        transcriptIsFormatted = true
+
+        guard !transcript.isEmpty else {
+            // Everything spoken was a filler — there is nothing to paste and
+            // nothing to show. Free the core and close so a next press is not
+            // blocked by a lingering empty card.
+            NSLog("[Jarvis][Dictate] nothing usable captured — card skipped")
+            dismissTranscript()
+            return
+        }
+
+        // Latest-pair persistence: original known now; the polished half of
+        // the pair lands when the final text is known (rules-only path
+        // immediately, polish path on completion). Each dictation overwrites
+        // both keys — the previous pair is unrecoverable, by request.
+        persistLastDictation(original: raw)
+
+        partialTranscript = ""
+        phase = .TranscriptReady
+        showPanel()
+        scheduleHardCapDismiss()
+
+        if TranscriptFormatter.shouldUseLLM(rules) {
+            formattingInProgress = true
+            resizePanelForCurrentState()
+            positionPanelForCurrentState()
+            // Main-actor, deliberately: the finalize path touches Published
+            // state, AppKit (pasteboard, panels) and the AX paste — all of it
+            // main-thread territory; a background-task polish that jumps
+            // straight back to mutating UI crashed (AXIsProcessTrusted*
+            // through objc_msgSend on a nil on a bare thread).
+            Task { @MainActor [weak self] in
+                let polished = await DictationPolisher.polish(rulesOutput: rules)
+                guard let self, STTRouter.shared.owner == .pill else { return }
+                self.formattingInProgress = false
+                self.transcript = polished
+                self.persistLastDictation(polished: polished)
+                self.insertFormattedText()
+            }
+        } else {
+            persistLastDictation(polished: rules.text)
+            insertFormattedText()
+        }
+    }
+
+    /// Paste the final text at the cursor. Insert failure is never silent:
+    /// the formatted text is copied so the user still has it, and the card
+    /// carries the permission notice with a one-tap grant.
+    private func insertFormattedText() {
+        let elapsed = insertLatencyStart.map { Date().timeIntervalSince($0) } ?? 0
+
+        guard insertAtCursorEnabled else {
+            NSLog("[Jarvis][Dictate] insert disabled — card ready (stop→ready %.0f ms)", elapsed * 1000)
+            return
+        }
+
+        let trusted = has_accessibility_permission()
+        let canPost = has_event_posting_permission()
+        let ok = insert_text(transcript)
+        NSLog("[Jarvis][Dictate] insert: %d (stop→insert %.0f ms, %d chars, ax=%d cg=%d)",
+              ok ? 1 : 0, elapsed * 1000, transcript.count, trusted ? 1 : 0, canPost ? 1 : 0)
+        logInsertAttempt(ok: ok, trusted: trusted, canPost: canPost, chars: transcript.count)
+
+        if ok {
+            insertedAtCursor = true
+            scheduleInsertAutoDismiss()
+        } else {
+            silentlyCopyTranscript()
+            if trusted || canPost {
+                // Both gates said yes yet the paste did not land — not a
+                // permission problem; the JSONL above has the details.
+                insertNotice = "Auto-paste did not land — text copied instead (logged)."
+            } else {
+                insertNotice = "Auto-paste needs Accessibility — approve the prompt, or add Jarvis in Privacy & Security → Accessibility. Text copied instead."
+                requestEventPostingAccessIfStale()
+            }
+        }
+
+        resizePanelForCurrentState()
+        positionPanelForCurrentState()
+    }
+
+    /// The Apple-supported grant request (CGRequestPostEventAccess) — shows
+    /// the system prompt and registers the app in the Accessibility list.
+    /// Main thread by construction (this path runs on main). Throttled: the
+    /// OS may re-prompt when the stored grant is stale, and a nagging prompt
+    /// on every dictation would be worse than the problem.
+    private var lastEventAccessRequestAt = Date.distantPast
+
+    private func requestEventPostingAccessIfStale() {
+        guard Date().timeIntervalSince(lastEventAccessRequestAt) > 300 else { return }
+        lastEventAccessRequestAt = Date()
+        _ = request_event_posting_permission()
+    }
+
+    /// One JSONL line per insert attempt — the answer to "why didn't it
+    /// paste" without needing a console.
+    private func logInsertAttempt(ok: Bool, trusted: Bool, canPost: Bool, chars: Int) {
+        let fields: [String: String] = [
+            "event": ok ? "inserted" : "failed",
+            "ax_trusted": trusted ? "1" : "0",
+            "cg_can_post": canPost ? "1" : "0",
+            "chars": String(chars),
+        ]
+        DispatchQueue.global(qos: .utility).async {
+            guard let data = try? JSONSerialization.data(withJSONObject: fields) else { return }
+            guard let dir = FileManager.default
+                .urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
+                .appendingPathComponent("Jarvis/logs") else { return }
+            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            let url = dir.appendingPathComponent("dictation_insert.jsonl")
+            if let handle = try? FileHandle(forWritingTo: url) {
+                _ = try? handle.seekToEnd()
+                try? handle.write(contentsOf: data + [0x0A])
+                try? handle.close()
+            } else {
+                try? data.write(to: url)
+            }
+        }
+    }
+
+    /// Copies without flipping the Copy button — on this path the copy is a
+    /// fallback, not an action the user took, and the button must stay live.
+    private func silentlyCopyTranscript() {
+        let pb = NSPasteboard.general
+        pb.clearContents()
+        pb.setString(transcript, forType: .string)
+        StatsRecorder.shared.recordCopy(chars: transcript.count)
+    }
+
+    /// After a successful paste the card must not demand a mouse click to go
+    /// away; it lingers long enough for Copy/Undo, then leaves on its own.
+    private func scheduleInsertAutoDismiss() {
+        insertAutoDismiss?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            guard let self, self.phase == .TranscriptReady else { return }
+            self.dismissTranscript()
+        }
+        insertAutoDismiss = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 6, execute: work)
+    }
+
+    /// Hard cap: whatever happened (paste failed, insert disabled, nobody
+    /// clicked anything), the card closes itself 10 s after it appears. The
+    /// 6 s success-dismiss above is a nicety; THIS is the guarantee that the
+    /// card never lingers forever.
+    private func scheduleHardCapDismiss() {
+        hardCapDismiss?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            guard let self, self.phase == .TranscriptReady else { return }
+            NSLog("[Jarvis][Dictate] card auto-closed (10 s cap)")
+            self.dismissTranscript()
+        }
+        hardCapDismiss = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10, execute: work)
+    }
+
+    /// Overwrite-in-place persistence for the latest dictation pair. No
+    /// history is kept: the previous values are gone the moment new ones
+    /// land, which is exactly the contract the user asked for.
+    private func persistLastDictation(original: String? = nil, polished: String? = nil) {
+        let defaults = UserDefaults.standard
+        if let original {
+            lastOriginal = original
+            defaults.set(original, forKey: Self.lastOriginalDefaultsKey)
+        }
+        if let polished {
+            lastPolished = polished
+            defaults.set(polished, forKey: Self.lastPolishedDefaultsKey)
+        }
+    }
+
+    /// "Copy original" on the card — copies the raw STT text (before rules
+    /// and before the polish pass), leaving the card open so the polished
+    /// version can still be copied too.
+    func copyOriginalTranscript() {
+        guard !originalTranscript.isEmpty else { return }
+        let pb = NSPasteboard.general
+        pb.clearContents()
+        pb.setString(originalTranscript, forType: .string)
+        NSLog("[Jarvis][Dictate] Copied ORIGINAL to clipboard (\(originalTranscript.count) chars)")
+        StatsRecorder.shared.recordCopy(chars: originalTranscript.count)
+    }
+
+    /// Runs ⌘Z in the frontmost app — a paste is the target app's editable
+    /// prop, so ITS undo stack is the right tool for backing it out.
+    func undoInsert() {
+        let ok = undo_last_insert()
+        NSLog("[Jarvis][Dictate] undo insert: %d", ok ? 1 : 0)
+        insertNotice = ""
+        if ok {
+            // Keep the text available for Copy — the undo only removed it
+            // from the document, not from the card.
+            insertedAtCursor = false
+        }
+    }
+
+    func openAccessibilityPane() {
+        open_accessibility_pane()
+    }
+
     func copyTranscript() {
         // Direct NSPasteboard write — one atomic clipboard event.
         // clearContents() then setString(_:forType:) bumps changeCount once,
@@ -381,10 +671,21 @@ final class DictationController: ObservableObject {
 
     func dismissTranscript() {
         dismiss_transcript()
+        insertAutoDismiss?.cancel()
+        insertAutoDismiss = nil
+        hardCapDismiss?.cancel()
+        hardCapDismiss = nil
         stopActivityTimers()
         hidePanel()
         STTRouter.shared.releaseModalOwner()
         STTRouter.shared.pillSuppressesCommandVAD = false
+        // One-shot pills that started the mic transiently hand it back:
+        // listening is manual, so a ⌘⇧A/⌘⇧D press must not leave the app
+        // live-listening afterwards (no-op when the user had listening on).
+        // AppState is main-actor isolated and this controller is not — hop.
+        Task { @MainActor in
+            AppState.shared?.restoreMicAfterTransientStartIfNeeded()
+        }
         resetDictationHotkeyHeldState()
         resetActionHotkeyHeldState()
     }
@@ -467,7 +768,16 @@ final class DictationController: ObservableObject {
         case .Processing:
             return CGSize(width: 240, height: 44)
         case .TranscriptReady:
-            return CGSize(width: 300, height: 170)
+            // Keep in sync with DictationTranscriptOverlayView.cardHeight.
+            // 330pt wide: the action row carries Copy + Copy original + Undo
+            // + Close without clipping.
+            if !insertNotice.isEmpty {
+                return CGSize(width: 330, height: 218)
+            }
+            if formattingInProgress {
+                return CGSize(width: 330, height: 205)
+            }
+            return CGSize(width: 330, height: 170)
         case .Error, .Preparing:
             return CGSize(width: 300, height: 120)
         default:

@@ -159,6 +159,12 @@ final class CommandQueueManager: ObservableObject {
         executeNext()
     }
 
+    /// How long a handler may run before the watchdog releases its slot.
+    /// Without this, one wedged handler (a child process blocked on a system
+    /// dialog) left `isExecuting == true` forever and every later command
+    /// queued behind a ghost. Internal so tests can shorten it.
+    static var executionWatchdogSeconds: TimeInterval = 90
+
     private func executeNext() {
         guard !queue.isEmpty else {
             isExecuting = false
@@ -191,6 +197,23 @@ final class CommandQueueManager: ObservableObject {
                 if !Task.isCancelled {
                     self.log("[Execution] finished: '\(cmd.text)'")
                 }
+                self.activeTask = nil
+                self.isExecuting = false
+                self.currentCommandText = ""
+                self.drainIfIdle()
+            }
+        }
+
+        // Watchdog: release the slot if the handler never returns. The stale
+        // handler keeps running detached; when it eventually finishes, the
+        // generation guard above turns its completion into a no-op.
+        let seconds = Self.executionWatchdogSeconds
+        Task { [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+            await MainActor.run {
+                guard let self, myGeneration == self.generation, self.isExecuting else { return }
+                self.log("[Execution] watchdog: '\(cmd.text)' exceeded \(Int(seconds)) s — releasing the queue slot")
+                self.generation += 1
                 self.activeTask = nil
                 self.isExecuting = false
                 self.currentCommandText = ""

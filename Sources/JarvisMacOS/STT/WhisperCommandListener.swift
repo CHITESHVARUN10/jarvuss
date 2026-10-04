@@ -17,6 +17,9 @@ final class WhisperCommandListener {
     private var utteranceActive = false
     /// When the current utterance began (failsafe cap below).
     private var utteranceStartedAt: Date?
+    /// True while a Rust recording is live — read by the AppState VAD tick to
+    /// decide whether a core-busy retry is still needed.
+    var isUtteranceActive: Bool { utteranceActive }
     /// Max seconds a command utterance may hold the core before it is
     /// force-finalized (prevents an abandoned claim wedging the pill).
     /// 30 s > longest legit enrollment phrase, < Rust 300 s ring cap.
@@ -78,12 +81,59 @@ final class WhisperCommandListener {
             STTRouter.shared.releaseFromCommand()
             return
         }
-        utteranceActive = start_recording()
+        let startBegan = Date()
+        let started = start_recording()
+        // Measured around the call: the tail of the pre-roll that the Rust
+        // stream already captured — dropping exactly this span is what makes
+        // the splice gap-free AND duplicate-free.
+        let startLatency = Date().timeIntervalSince(startBegan)
+        utteranceActive = started
         utteranceStartedAt = utteranceActive ? Date() : nil
-        if !utteranceActive {
+        if utteranceActive {
+            primeWithPreRoll(startLatency: startLatency)
+        } else {
             STTRouter.shared.logCommandDrop(reason: "start_recording refused (phase: \(get_app_phase()))")
             STTRouter.shared.releaseFromCommand()
         }
+    }
+
+    // MARK: - Pre-roll splice
+
+    /// 0.7 s covers the measured 250–400 ms VAD onset latency plus stream
+    /// build time with margin; tune from the log line below on real use.
+    private static let preRollSeconds: Double = 0.7
+    private static let sttSampleRate: Double = 16_000
+
+    /// The wake path starts recording REACTIVELY — the VAD only fires after
+    /// the smoothed level crosses the threshold, so the audio before that
+    /// moment exists only in MicManager's ring. Without this splice the "Jar-"
+    /// of "Jarvis" is gone and the transcript reads "vis open chrome".
+    private func primeWithPreRoll(startLatency: TimeInterval) {
+        let preRoll = MicManager.shared.snapshotRecentSamples(
+            durationSeconds: Self.preRollSeconds,
+            targetSampleRate: Self.sttSampleRate)
+        guard !preRoll.isEmpty else {
+            NSLog("[Voice] pre-roll: empty snapshot (mic ring not warm?) — proceeding unprimed")
+            return
+        }
+
+        // Drop the last `startLatency` seconds of the snapshot: the Rust
+        // stream already has that span (it started when start_recording()
+        // returned), so [pre-roll minus tail] ++ [stream] is contiguous.
+        let duplicateCount = min(preRoll.count, Int(startLatency * Self.sttSampleRate))
+        let splice = duplicateCount > 0 ? Array(preRoll.dropLast(duplicateCount)) : preRoll
+        guard !splice.isEmpty else {
+            NSLog("[Voice] pre-roll: fully overlapped by stream (latency %.0f ms) — nothing to inject",
+                  startLatency * 1000)
+            return
+        }
+
+        let injected = splice.withUnsafeBufferPointer { buffer -> UInt32 in
+            guard let base = buffer.baseAddress else { return 0 }
+            return prime_recording(base, UInt(buffer.count))
+        }
+        NSLog("[Voice] pre-roll: injected %d/%d samples (start latency %.0f ms, %.0f ms of audio)",
+              Int(injected), preRoll.count, startLatency * 1000, Double(injected) / (Self.sttSampleRate / 1000))
     }
 
     /// Silence detected. Finishes the utterance; the transcript arrives

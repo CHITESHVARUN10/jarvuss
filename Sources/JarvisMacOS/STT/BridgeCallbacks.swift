@@ -44,8 +44,13 @@ func on_state_changed(phase: AppPhase, model: ModelPhase) {
         }
 
         if phase == .TranscriptReady {
-            controller.transcript = get_transcript().toString()
-            NSLog("[Jarvis][STT] state→TranscriptReady route=\(STTRouter.shared.owner) chars=\(controller.transcript.count)")
+            // `receiveDictationTranscript` may have already replaced the raw
+            // text with formatted text (rules pass runs synchronously) — the
+            // mirror must not re-clobber it with raw on the state callback.
+            if !controller.transcriptIsFormatted {
+                controller.transcript = get_transcript().toString()
+                NSLog("[Jarvis][STT] state→TranscriptReady route=\(STTRouter.shared.owner) chars=\(controller.transcript.count)")
+            }
         }
 
         // A press during model load is queued; fire it now that Ready arrived.
@@ -81,15 +86,12 @@ func on_transcript_ready(text: RustString) {
                 STTRouter.shared.onActionTranscript?(pillText)
                 controller.dismissTranscript()
             } else {
-                controller.transcript = pillText
-                controller.partialTranscript = ""
-                controller.phase = .TranscriptReady
-                // Same panel grows into the transcript card (300x170).
-                // Do NOT dismiss_transcript() here (agentTalk parity): Rust must
-                // stay TranscriptReady with the text intact — Copy / Close / the
-                // next press dismisses. Dismissing here wiped get_transcript()
-                // and flipped the mirror to Ready (the "another pill" bug).
-                controller.showPanel()
+                // ⌘⇧D dictate: format (rules, plus the LLM pass when messy)
+                // then insert at the cursor. The card always shows what was
+                // inserted so text and card can never diverge. Ownership copy
+                // of the transcript is intact here (`dismiss_transcript()`
+                // must NOT run yet — per the agentTalk parity note below).
+                controller.receiveDictationTranscript(pillText)
             }
         } else {
             // Command-mode (or dropped): ready the core for the next

@@ -1,17 +1,17 @@
 {
-  "generatedAt" : "2026-10-01T13:39:52Z",
+  "generatedAt" : "2026-10-04T15:09:21Z",
   "retryPolicy" : "1 retry on failure (max 2 attempts per scenario)",
   "scenarios" : [
     {
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 186,
+          "durationMs" : 62,
           "planDescriptions" : [
-            "Open 'TextEdit'"
+            "Open 'textedit'"
           ],
           "stepMessages" : [
-            "✓ Opened TextEdit."
+            "✓ Opened textedit."
           ],
           "success" : true
         }
@@ -27,12 +27,12 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 715,
+          "durationMs" : 682,
           "planDescriptions" : [
-            "Close 'TextEdit'"
+            "Close 'textedit'"
           ],
           "stepMessages" : [
-            "✓ Closed TextEdit."
+            "✓ Closed textedit."
           ],
           "success" : true
         }
@@ -48,67 +48,93 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 95,
+          "durationMs" : 3,
+          "failureReason" : "Intent mismatch: expected info",
           "planDescriptions" : [
-            "Info: current time"
+            "AI query: 'what time is it'"
           ],
           "stepMessages" : [
-            "✓ Current time: 7:09:45 PM"
-          ],
-          "success" : true
-        }
-      ],
-      "attemptsUsed" : 1,
-      "command" : "what time is it",
-      "expectedIntent" : "info",
-      "id" : "info-time",
-      "success" : true,
-      "suite" : "info"
-    },
-    {
-      "attempts" : [
-        {
-          "attempt" : 1,
-          "durationMs" : 110,
-          "planDescriptions" : [
-            "Info: battery status"
-          ],
-          "stepMessages" : [
-            "✓ Battery status: Now drawing from 'AC Power'"
-          ],
-          "success" : true
-        }
-      ],
-      "attemptsUsed" : 1,
-      "command" : "battery status",
-      "expectedIntent" : "info",
-      "id" : "info-battery",
-      "success" : true,
-      "suite" : "info"
-    },
-    {
-      "attempts" : [
-        {
-          "attempt" : 1,
-          "durationMs" : 724,
-          "failureReason" : "One or more action steps failed",
-          "planDescriptions" : [
-            "Media: pause"
-          ],
-          "stepMessages" : [
-            "✗ Spotify backend failed (400): {\"detail\":\"Spotify pause failed: network\/request failure\"}"
+
           ],
           "success" : false
         },
         {
           "attempt" : 2,
-          "durationMs" : 1989,
+          "durationMs" : 6,
+          "failureReason" : "Intent mismatch: expected info",
+          "planDescriptions" : [
+            "AI query: 'what time is it'"
+          ],
+          "stepMessages" : [
+
+          ],
+          "success" : false
+        }
+      ],
+      "attemptsUsed" : 2,
+      "command" : "what time is it",
+      "expectedIntent" : "info",
+      "id" : "info-time",
+      "success" : false,
+      "suite" : "info"
+    },
+    {
+      "attempts" : [
+        {
+          "attempt" : 1,
+          "durationMs" : 5,
+          "failureReason" : "Intent mismatch: expected info",
+          "planDescriptions" : [
+            "AI query: 'battery status'"
+          ],
+          "stepMessages" : [
+
+          ],
+          "success" : false
+        },
+        {
+          "attempt" : 2,
+          "durationMs" : 6,
+          "failureReason" : "Intent mismatch: expected info",
+          "planDescriptions" : [
+            "AI query: 'battery status'"
+          ],
+          "stepMessages" : [
+
+          ],
+          "success" : false
+        }
+      ],
+      "attemptsUsed" : 2,
+      "command" : "battery status",
+      "expectedIntent" : "info",
+      "id" : "info-battery",
+      "success" : false,
+      "suite" : "info"
+    },
+    {
+      "attempts" : [
+        {
+          "attempt" : 1,
+          "durationMs" : 15,
           "failureReason" : "One or more action steps failed",
           "planDescriptions" : [
             "Media: pause"
           ],
           "stepMessages" : [
-            "✗ Spotify backend failed (400): {\"detail\":\"Spotify pause failed: 403 restriction\/premium or device limitation\"}"
+            "✗ Spotify backend failed: Could not connect to the server."
+          ],
+          "success" : false
+        },
+        {
+          "attempt" : 2,
+          "durationMs" : 10,
+          "failureReason" : "One or more action steps failed",
+          "planDescriptions" : [
+            "Media: pause"
+          ],
+          "stepMessages" : [
+            "✗ Spotify backend failed: Could not connect to the server."
           ],
           "success" : false
         }
@@ -124,25 +150,25 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 889,
+          "durationMs" : 7,
           "failureReason" : "One or more action steps failed",
           "planDescriptions" : [
             "Media: next track"
           ],
           "stepMessages" : [
-            "✗ Spotify backend failed (400): {\"detail\":\"Spotify next failed: network\/request failure\"}"
+            "✗ Spotify backend failed: Could not connect to the server."
           ],
           "success" : false
         },
         {
           "attempt" : 2,
-          "durationMs" : 843,
+          "durationMs" : 10,
           "failureReason" : "One or more action steps failed",
           "planDescriptions" : [
             "Media: next track"
           ],
           "stepMessages" : [
-            "✗ Spotify backend failed (400): {\"detail\":\"Spotify next failed: network\/request failure\"}"
+            "✗ Spotify backend failed: Could not connect to the server."
           ],
           "success" : false
         }
@@ -158,7 +184,7 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 144,
+          "durationMs" : 3,
           "failureReason" : "Intent mismatch: expected browser",
           "planDescriptions" : [
             "Search YouTube for 'swift package manager'"
@@ -170,7 +196,7 @@
         },
         {
           "attempt" : 2,
-          "durationMs" : 147,
+          "durationMs" : 6,
           "failureReason" : "Intent mismatch: expected browser",
           "planDescriptions" : [
             "Search YouTube for 'swift package manager'"
@@ -192,7 +218,7 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 117,
+          "durationMs" : 4,
           "failureReason" : "Intent mismatch: expected browser",
           "planDescriptions" : [
             "Search Google for 'swift concurrency'"
@@ -204,7 +230,7 @@
         },
         {
           "attempt" : 2,
-          "durationMs" : 157,
+          "durationMs" : 5,
           "failureReason" : "Intent mismatch: expected browser",
           "planDescriptions" : [
             "Search Google for 'swift concurrency'"
@@ -226,18 +252,18 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 110,
+          "durationMs" : 7,
           "planDescriptions" : [
-            "Create folder 'e2e-folder-69890C17'"
+            "Create folder 'e2e-folder-6a853134'"
           ],
           "stepMessages" : [
-            "✓ Created folder: \/Users\/chiteshvarun\/D-drive\/jarvis_code\/e2e-folder-69890C17"
+            "✓ Created folder: \/Users\/chiteshvarun\/D-drive\/jarvis_code\/e2e-folder-6a853134"
           ],
           "success" : true
         }
       ],
       "attemptsUsed" : 1,
-      "command" : "create folder e2e-folder-69890C17",
+      "command" : "create folder e2e-folder-6A853134",
       "expectedIntent" : "filesystem",
       "id" : "fs-create-folder",
       "success" : true,
@@ -247,18 +273,18 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 175,
+          "durationMs" : 6,
           "planDescriptions" : [
-            "Create file 'e2e-file-69890c17.txt'"
+            "Create file 'e2e-file-6a853134.txt'"
           ],
           "stepMessages" : [
-            "✓ Created file: \/Users\/chiteshvarun\/D-drive\/jarvis_code\/e2e-file-69890c17.txt"
+            "✓ Created file: \/Users\/chiteshvarun\/D-drive\/jarvis_code\/e2e-file-6a853134.txt"
           ],
           "success" : true
         }
       ],
       "attemptsUsed" : 1,
-      "command" : "create file e2e-file-69890C17.txt",
+      "command" : "create file e2e-file-6A853134.txt",
       "expectedIntent" : "filesystem",
       "id" : "fs-create-file",
       "success" : true,
@@ -268,28 +294,28 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 250,
+          "durationMs" : 123,
           "planDescriptions" : [
             "Automation path via AppState.executeTypedCommand"
           ],
           "stepMessages" : [
-            "[2026-10-01T13:39:52Z] [Typed] Received: 'focus mode 69890C17'",
-            "[2026-10-01T13:39:52Z] [DDC] Discovered 1 DCPAVServiceProxy entries",
-            "[2026-10-01T13:39:52Z] [DDC] Matched display 1 → IOAVService (location: '')",
-            "[2026-10-01T13:39:52Z] [DDC] Read VCP 0x10: current=68 max=100 on display 1",
-            "[2026-10-01T13:39:52Z] [DDC] Read VCP 0x12: current=57 max=100 on display 1",
-            "[2026-10-01T13:39:52Z] [Queue] Enqueued (normal): 'focus mode 69890C17' [queue size: 1]",
-            "[2026-10-01T13:39:52Z] [Execution] started: 'focus mode 69890C17'",
-            "[2026-10-01T13:39:52Z] [Automation] Triggered keyword: 'focus mode 69890C17'",
-            "[2026-10-01T13:39:52Z] [Automation] Executing 1 actions for 'focus mode 69890C17'",
-            "[2026-10-01T13:39:52Z] [Automation] ▶ Open folder 'Downloads'",
-            "[2026-10-01T13:39:52Z] [Automation] ✓ Opened folder: \/Users\/chiteshvarun\/Downloads"
+            "[2026-10-04T15:09:20Z] [Typed] Received: 'focus mode 6A853134'",
+            "[2026-10-04T15:09:20Z] [DDC] Discovered 1 DCPAVServiceProxy entries",
+            "[2026-10-04T15:09:20Z] [DDC] Matched display 3 → IOAVService (location: '')",
+            "[2026-10-04T15:09:20Z] [DDC] Read VCP 0x10: current=68 max=100 on display 3",
+            "[2026-10-04T15:09:20Z] [DDC] Read VCP 0x12: current=57 max=100 on display 3",
+            "[2026-10-04T15:09:20Z] [Queue] Enqueued (normal): 'focus mode 6A853134' [queue size: 1]",
+            "[2026-10-04T15:09:20Z] [Execution] started: 'focus mode 6A853134'",
+            "[2026-10-04T15:09:20Z] [Automation] Triggered keyword: 'focus mode 6A853134'",
+            "[2026-10-04T15:09:20Z] [Automation] Executing 1 actions for 'focus mode 6A853134'",
+            "[2026-10-04T15:09:20Z] [Automation] ▶ Open folder 'Downloads'",
+            "[2026-10-04T15:09:20Z] [Automation] ✓ Opened folder: \/Users\/chiteshvarun\/Downloads"
           ],
           "success" : true
         }
       ],
       "attemptsUsed" : 1,
-      "command" : "focus mode 69890C17",
+      "command" : "focus mode 6A853134",
       "expectedIntent" : "automation",
       "id" : "automation-on",
       "success" : true,
@@ -299,29 +325,29 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 252,
+          "durationMs" : 123,
           "planDescriptions" : [
             "Automation path via AppState.executeTypedCommand"
           ],
           "stepMessages" : [
-            "[2026-10-01T13:39:52Z] [Execution] started: 'focus mode 69890C17'",
-            "[2026-10-01T13:39:52Z] [Automation] Triggered keyword: 'focus mode 69890C17'",
-            "[2026-10-01T13:39:52Z] [Automation] Executing 1 actions for 'focus mode 69890C17'",
-            "[2026-10-01T13:39:52Z] [Automation] ▶ Open folder 'Downloads'",
-            "[2026-10-01T13:39:52Z] [Automation] ✓ Opened folder: \/Users\/chiteshvarun\/Downloads",
-            "[2026-10-01T13:39:52Z] [Typed] Received: 'focus mode off 69890C17'",
-            "[2026-10-01T13:39:52Z] [Queue] Enqueued (normal): 'focus mode off 69890C17' [queue size: 1]",
-            "[2026-10-01T13:39:52Z] [Execution] finished: 'focus mode 69890C17'",
-            "[2026-10-01T13:39:52Z] [Execution] started: 'focus mode off 69890C17'",
-            "[2026-10-01T13:39:52Z] [Automation] Triggered keyword: 'focus mode 69890C17'",
-            "[2026-10-01T13:39:52Z] [Automation] Off variant matched for 'focus mode 69890C17'.",
-            "[2026-10-01T13:39:52Z] [Execution] finished: 'focus mode off 69890C17'"
+            "[2026-10-04T15:09:20Z] [Execution] started: 'focus mode 6A853134'",
+            "[2026-10-04T15:09:20Z] [Automation] Triggered keyword: 'focus mode 6A853134'",
+            "[2026-10-04T15:09:20Z] [Automation] Executing 1 actions for 'focus mode 6A853134'",
+            "[2026-10-04T15:09:20Z] [Automation] ▶ Open folder 'Downloads'",
+            "[2026-10-04T15:09:20Z] [Automation] ✓ Opened folder: \/Users\/chiteshvarun\/Downloads",
+            "[2026-10-04T15:09:21Z] [Typed] Received: 'focus mode off 6A853134'",
+            "[2026-10-04T15:09:21Z] [Queue] Enqueued (normal): 'focus mode off 6A853134' [queue size: 1]",
+            "[2026-10-04T15:09:21Z] [Execution] finished: 'focus mode 6A853134'",
+            "[2026-10-04T15:09:21Z] [Execution] started: 'focus mode off 6A853134'",
+            "[2026-10-04T15:09:21Z] [Automation] Triggered keyword: 'focus mode 6A853134'",
+            "[2026-10-04T15:09:21Z] [Automation] Off variant matched for 'focus mode 6A853134'.",
+            "[2026-10-04T15:09:21Z] [Execution] finished: 'focus mode off 6A853134'"
           ],
           "success" : true
         }
       ],
       "attemptsUsed" : 1,
-      "command" : "focus mode off 69890C17",
+      "command" : "focus mode off 6A853134",
       "expectedIntent" : "automation",
       "id" : "automation-off",
       "success" : true,
@@ -337,10 +363,10 @@
     "spotify"
   ],
   "summary" : {
-    "averageDurationMs" : 431.4375,
-    "failed" : 4,
-    "passed" : 8,
-    "successRate" : 66.66666666666666,
+    "averageDurationMs" : 60.166666666666664,
+    "failed" : 6,
+    "passed" : 6,
+    "successRate" : 50,
     "total" : 12
   }
 }

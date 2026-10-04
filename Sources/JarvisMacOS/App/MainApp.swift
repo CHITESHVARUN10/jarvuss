@@ -7,8 +7,11 @@ struct MainApp: App {
     @NSApplicationDelegateAdaptor(DictationAppDelegate.self) private var dictationDelegate
 
     init() {
+        // Policy must be set early so the dock icon is correct; raising the
+        // window lives in applicationDidFinishLaunching, where the scenes
+        // actually exist to be raised (this init call was too early and a
+        // dev-run stayed buried under the terminal forever).
         NSApplication.shared.setActivationPolicy(.regular)
-        NSApplication.shared.activate(ignoringOtherApps: true)
     }
 
     var body: some Scene {

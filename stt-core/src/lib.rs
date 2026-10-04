@@ -163,6 +163,18 @@ mod ffi {
         fn get_error_message() -> String;
         fn get_live_preview_enabled() -> bool;
         fn set_live_preview_enabled(enabled: bool);
+        // Dictation insert-at-cursor (⌘⇧D — Wispr Flow behaviour).
+        fn has_accessibility_permission() -> bool;
+        fn has_event_posting_permission() -> bool;
+        fn request_event_posting_permission() -> bool;
+        fn open_accessibility_pane();
+        fn insert_text(text: String) -> bool;
+        fn undo_last_insert() -> bool;
+        // Wake-path pre-roll: prepend the audio from BEFORE the VAD fired
+        // (captured in Swift's mic ring) to the active Rust recording.
+        // Raw pointer + len: one FFI call for ~11k samples instead of a
+        // per-element push loop through the bridge.
+        fn prime_recording(samples: *const f32, len: usize) -> u32;
     }
 }
 
@@ -1181,6 +1193,68 @@ fn paste_into_frontmost_app() {
             notify_error("Paste failed - check Accessibility permission");
         }
     }
+}
+
+/// Permission surface for ⌘⇧D insert-at-cursor.
+fn has_accessibility_permission() -> bool {
+    system::is_accessibility_trusted()
+}
+
+/// CoreGraphics event-posting preflight alone (second opinion, logged).
+fn has_event_posting_permission() -> bool {
+    system::can_post_events()
+}
+
+/// Safe prompting path (main thread): CGRequestPostEventAccess shows the
+/// system prompt and registers the app in the Accessibility list. The old
+/// AXIsProcessTrustedWithOptions variant is gone — it crashed.
+fn request_event_posting_permission() -> bool {
+    system::request_event_posting_access()
+}
+
+fn open_accessibility_pane() {
+    if let Err(e) = system::open_accessibility_settings() {
+        tracing::error!("Failed to open Accessibility settings: {}", e);
+    }
+}
+
+/// Format → paste at the cursor, silently (no error card — the caller owns
+/// UX via the returned bool and shows the Copy fallback when false).
+fn insert_text(text: String) -> bool {
+    match system::insert_text(&text) {
+        Ok(()) => true,
+        Err(e) => {
+            tracing::warn!("insert_text failed: {}", e);
+            false
+        }
+    }
+}
+
+fn undo_last_insert() -> bool {
+    match system::undo_last_insert() {
+        Ok(()) => true,
+        Err(e) => {
+            tracing::warn!("undo_last_insert failed: {}", e);
+            false
+        }
+    }
+}
+
+/// Prepend the caller's pre-roll slice to the active recording. Returns the
+/// number of samples accepted (0 = no active recording or fully clipped).
+/// SAFETY: the caller must guarantee `samples` is valid for `len` reads for
+/// the duration of the call (Swift `withUnsafeBufferPointer` does exactly
+/// that); a null pointer or zero length is a safe no-op.
+fn prime_recording(samples: *const f32, len: usize) -> u32 {
+    if samples.is_null() || len == 0 {
+        return 0;
+    }
+    let slice = unsafe { std::slice::from_raw_parts(samples, len) };
+    let injected = audio::prepend_active(slice);
+    if injected == 0 {
+        tracing::debug!(offered = len, "Pre-roll rejected (no active recording)");
+    }
+    injected as u32
 }
 
 fn dismiss_transcript() {

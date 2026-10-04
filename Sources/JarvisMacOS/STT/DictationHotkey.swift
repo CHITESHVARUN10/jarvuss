@@ -68,7 +68,7 @@ private func dictationHotkeyEventHandler(
     let kind = GetEventKind(event)
     let isPress = (kind == UInt32(kEventHotKeyPressed))
 
-    DispatchQueue.main.async {
+    Task { @MainActor in
         if isPress {
             // Toggle ON the first key-down only.
             // Suppress auto-repeat presses while the key is held.
@@ -76,12 +76,12 @@ private func dictationHotkeyEventHandler(
                 guard !gActionHotkeyHeld else { return }
                 gActionHotkeyHeld = true
                 NSLog("[Jarvis][Hotkey] DOWN — toggle action")
-                DictationController.shared.toggleAction()
+                startMicThen { DictationController.shared.toggleAction() }
             } else {
                 guard !gDictationHotkeyHeld else { return }
                 gDictationHotkeyHeld = true
                 NSLog("[Jarvis][Hotkey] DOWN — toggle dictation")
-                DictationController.shared.toggleDictation()
+                startMicThen { DictationController.shared.toggleDictation() }
             }
         } else {
             // Release: clear the held flag, do NOT toggle.
@@ -94,6 +94,24 @@ private func dictationHotkeyEventHandler(
     }
 
     return noErr
+}
+
+/// Listening is manual-start (no launch auto-listen): a hotkey press IS a
+/// manual start, so bring the mic pipeline up first — recording against a
+/// cold pipeline captures silence and would look like the hotkey broke.
+@MainActor
+private func startMicThen(_ action: @escaping () -> Void) {
+    guard let app = AppState.shared, !app.micActive else {
+        action()
+        return
+    }
+    // Transient: this press is a one-shot, not "start listening". When the
+    // pill finishes, the mic goes back down (no surprise wake-word mode).
+    app.markTransientMicStart()
+    Task { @MainActor in
+        await app.startMicrophone()
+        action()
+    }
 }
 
 func registerDictationHotkey() {

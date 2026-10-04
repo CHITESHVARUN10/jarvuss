@@ -117,6 +117,7 @@ struct ControlPanelView: View {
 
             HStack(spacing: 8) {
                 Button {
+                    appState.noteManualMicStart()
                     Task { await appState.startMicrophone() }
                 } label: {
                     Label("Start", systemImage: "mic.fill")

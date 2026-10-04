@@ -8,7 +8,7 @@
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::Stream;
 use std::sync::{
-    atomic::{AtomicU32, Ordering},
+    atomic::{AtomicU32, AtomicUsize, Ordering},
     Arc, Mutex, OnceLock,
 };
 
@@ -18,8 +18,64 @@ use std::sync::{
 /// thread-local AudioCapture itself.
 static ACTIVE_BUFFER: OnceLock<Mutex<Option<Arc<Mutex<Vec<f32>>>>>> = OnceLock::new();
 
+/// Ring cap of the active capture, published on `start`. The pre-roll splice
+/// must obey the exact same bound as the cpal callback's overflow guard.
+static MAX_SAMPLES: AtomicUsize = AtomicUsize::new(16000 * 300);
+
 fn active_buffer() -> &'static Mutex<Option<Arc<Mutex<Vec<f32>>>>> {
     ACTIVE_BUFFER.get_or_init(|| Mutex::new(None))
+}
+
+/// Prepend pre-roll samples (older audio from the Swift mic ring) to the
+/// ACTIVE capture buffer, in front of what the stream has already collected.
+/// The Swift side drops the portion of the pre-roll the stream already has,
+/// so the caller's slice is exactly the missing span: [pre-roll] ++ [captured]
+/// is gap-free and duplicate-free by construction.
+///
+/// Returns the number of pre-roll samples that survived the ring cap.
+/// No-op (returns 0) when no recording is active — a late or spurious call
+/// must never crash and never resurrect a finished buffer.
+pub fn prepend_active(samples: &[f32]) -> usize {
+    if samples.is_empty() {
+        return 0;
+    }
+    let guard = match active_buffer().lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => {
+            tracing::error!("ACTIVE_BUFFER mutex poisoned on prepend — recovering");
+            poisoned.into_inner()
+        }
+    };
+    let Some(buf) = guard.as_ref() else {
+        return 0; // no recording active
+    };
+    let mut data = match buf.lock() {
+        Ok(data) => data,
+        Err(poisoned) => {
+            tracing::error!("audio buffer mutex poisoned on prepend — recovering");
+            poisoned.into_inner()
+        }
+    };
+
+    let max_samples = MAX_SAMPLES.load(Ordering::Relaxed);
+    let total = data.len() + samples.len();
+    let drop_front = total.saturating_sub(max_samples);
+    let kept_preroll = samples.len().saturating_sub(drop_front);
+    if kept_preroll == 0 {
+        return 0;
+    }
+
+    let mut combined = Vec::with_capacity(total.min(max_samples));
+    combined.extend_from_slice(&samples[drop_front..]);
+    combined.extend_from_slice(&data);
+    *data = combined;
+
+    tracing::info!(
+        injected = kept_preroll,
+        buffer_len = data.len(),
+        "Pre-roll prepended"
+    );
+    kept_preroll
 }
 
 /// Register the active buffer so other threads (chunker) can read windows.
@@ -93,6 +149,7 @@ impl AudioCapture {
         };
 
         let max_samples = 16000 * max_seconds as usize;
+        MAX_SAMPLES.store(max_samples, Ordering::Relaxed);
         let buffer = Arc::new(Mutex::new(Vec::with_capacity(max_samples)));
         let level = Arc::new(AtomicU32::new(0));
 
@@ -213,5 +270,60 @@ impl AudioCapture {
         drop(self.stream);
         tracing::info!(samples = samples.len(), "Audio capture stopped");
         samples
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Serializes tests that mutate the process-wide ACTIVE_BUFFER/MAX_SAMPLES.
+    static PREPEND_TEST_LOCK: Mutex<()> = Mutex::new(());
+
+    #[test]
+    fn prepend_orders_preroll_before_captured_audio() {
+        let _guard = PREPEND_TEST_LOCK.lock().unwrap_or_else(|p| p.into_inner());
+        let buffer = Arc::new(Mutex::new(vec![1.0, 2.0, 3.0]));
+        register_buffer(buffer.clone());
+
+        let injected = prepend_active(&[10.0, 11.0, 12.0]);
+        assert_eq!(injected, 3);
+
+        let data = buffer.lock().unwrap();
+        // Pre-roll is OLDER audio: strictly before what the stream captured.
+        assert_eq!(*data, vec![10.0, 11.0, 12.0, 1.0, 2.0, 3.0]);
+
+        drop(data);
+        unregister_buffer();
+    }
+
+    #[test]
+    fn prepend_is_noop_without_active_recording() {
+        let _guard = PREPEND_TEST_LOCK.lock().unwrap_or_else(|p| p.into_inner());
+        unregister_buffer();
+        assert_eq!(prepend_active(&[1.0, 2.0]), 0);
+    }
+
+    #[test]
+    fn prepend_clips_from_the_front_when_over_capacity() {
+        let _guard = PREPEND_TEST_LOCK.lock().unwrap_or_else(|p| p.into_inner());
+        let previous_max = MAX_SAMPLES.load(Ordering::Relaxed);
+        MAX_SAMPLES.store(5, Ordering::Relaxed);
+
+        let buffer = Arc::new(Mutex::new(vec![1.0, 2.0, 3.0]));
+        register_buffer(buffer.clone());
+
+        // total would be 8 > 5: the OLDEST pre-roll is clipped, never the
+        // captured stream (the wake word lives in the pre-roll's tail).
+        let injected = prepend_active(&[10.0, 11.0, 12.0, 13.0, 14.0]);
+        assert_eq!(injected, 2);
+
+        let data = buffer.lock().unwrap();
+        assert_eq!(data.len(), 5);
+        assert_eq!(*data, vec![13.0, 14.0, 1.0, 2.0, 3.0]);
+
+        drop(data);
+        unregister_buffer();
+        MAX_SAMPLES.store(previous_max, Ordering::Relaxed);
     }
 }
