@@ -70,6 +70,22 @@ enum SystemInfoAction: Equatable, CustomStringConvertible {
     case displayBrightness
     case displayContrast
 
+    /// Tool-prompt `system_info.kind` → action; unknown kinds return nil and
+    /// the step is dropped.
+    init?(toolKind: String) {
+        switch toolKind {
+        case "time":       self = .currentTime
+        case "date":       self = .currentDate
+        case "battery":    self = .batteryStatus
+        case "wifi":       self = .wifiStatus
+        case "bluetooth":  self = .bluetoothDevices
+        case "volume":     self = .systemVolume
+        case "brightness": self = .displayBrightness
+        case "contrast":   self = .displayContrast
+        default:           return nil
+        }
+    }
+
     var description: String {
         switch self {
         case .currentTime:         return "current time"
@@ -92,6 +108,26 @@ enum MediaAction: Equatable, CustomStringConvertible {
     case previousTrack
     case playLikedSongs
     case playPlaylist(String)
+
+    /// Tool-prompt media spec
+    /// ("play|pause|next|prev|liked_songs|play_song:X|play_playlist:X").
+    init?(spec: String) {
+        switch spec {
+        case "play":        self = .play
+        case "pause":       self = .pause
+        case "next":        self = .nextTrack
+        case "prev":        self = .previousTrack
+        case "liked_songs": self = .playLikedSongs
+        default:
+            if spec.hasPrefix("play_song:") {
+                self = .playSong(String(spec.dropFirst("play_song:".count)))
+            } else if spec.hasPrefix("play_playlist:") {
+                self = .playPlaylist(String(spec.dropFirst("play_playlist:".count)))
+            } else {
+                return nil
+            }
+        }
+    }
 
     var description: String {
         switch self {
@@ -1829,8 +1865,9 @@ final class ActionPlanner {
     // MARK: - Ollama fallback (complex / unrecognised input only)
 
     private func ollamaFallback(_ cleaned: String) async -> [PlannedAction] {
-        // X (user words) + shared tools prompt in, Y (executor JSON) out.
-        let prompt = JarvisToolsPrompt.text + "Respond with Shape A.\n\nUser: \(cleaned)"
+        // X (user words) + the tools prompt in, Y (executor JSON) out. The
+        // input continues the prompt's own few-shot pattern.
+        let prompt = JarvisToolsPrompt.text + "\nCommand: \(cleaned)\n"
         let response = await ollamaClient.generate(prompt: prompt)
 
         if let actions = parseOllamaActions(response) {
@@ -1850,45 +1887,71 @@ final class ActionPlanner {
             return nil
         }
 
+        // Strict schema: a recognized type with a missing/invalid payload
+        // (e.g. `system_info` kind "weather") invalidates the whole plan —
+        // the caller then degrades to a single ai_query instead of executing
+        // a silently wrong action. Unknown types are skipped; an output with
+        // nothing usable still returns nil.
         var actions: [PlannedAction] = []
         for obj in array {
-            guard let type = obj["type"] as? String else { continue }
+            guard let type = obj["type"] as? String else { return nil }
             switch type {
             case "open_app":
-                if let app = obj["app"] as? String { actions.append(.openApp(app)) }
+                guard let app = obj["app"] as? String else { return nil }
+                actions.append(.openApp(app))
             case "close_app":
-                if let app = obj["app"] as? String { actions.append(.closeApp(app)) }
+                guard let app = obj["app"] as? String else { return nil }
+                actions.append(.closeApp(app))
             case "open_url":
-                if let url = obj["url"] as? String { actions.append(.openURL(url)) }
+                guard let url = obj["url"] as? String else { return nil }
+                actions.append(.openURL(url))
             case "search_web":
+                guard let q = obj["query"] as? String else { return nil }
                 let engine = (obj["engine"] as? String) ?? "Google"
-                if let q   = obj["query"] as? String {
-                    actions.append(.searchWeb(engine: engine, query: q))
-                }
+                actions.append(.searchWeb(engine: engine, query: q))
             case "open_folder":
-                if let p = obj["path"] as? String { actions.append(.openFolder(p)) }
+                guard let p = obj["path"] as? String else { return nil }
+                actions.append(.openFolder(p))
+            case "set_volume":
+                guard let level = clampedPercent(obj["level"]) else { return nil }
+                actions.append(.volumeControl(.setLevel(level)))
+            case "mute":
+                actions.append(.volumeControl(.mute))
+            case "set_brightness":
+                guard let level = clampedPercent(obj["level"]) else { return nil }
+                actions.append(.displayControl(.setBrightness(level)))
+            case "system_info":
+                guard let kind = obj["kind"] as? String,
+                      let info = SystemInfoAction(toolKind: kind) else { return nil }
+                actions.append(.systemInfo(info))
             case "media":
-                if let a = obj["action"] as? String {
-                    switch a {
-                    case "play":         actions.append(.mediaControl(.play))
-                    case "pause":        actions.append(.mediaControl(.pause))
-                    case "next":         actions.append(.mediaControl(.nextTrack))
-                    case "prev":         actions.append(.mediaControl(.previousTrack))
-                    case "liked_songs":  actions.append(.mediaControl(.playLikedSongs))
-                    default:
-                        if a.hasPrefix("play_song:") {
-                            actions.append(.mediaControl(.playSong(String(a.dropFirst("play_song:".count)))))
-                        } else if a.hasPrefix("play_playlist:") {
-                            actions.append(.mediaControl(.playPlaylist(String(a.dropFirst("play_playlist:".count)))))
-                        }
-                    }
-                }
+                guard let spec = obj["action"] as? String,
+                      let media = MediaAction(spec: spec) else { return nil }
+                actions.append(.mediaControl(media))
             case "ai_query":
-                if let q = obj["query"] as? String { actions.append(.aiQuery(q)) }
+                guard let q = obj["query"] as? String else { return nil }
+                actions.append(.aiQuery(q))
             default:
-                break
+                continue
             }
         }
         return actions.isEmpty ? nil : actions
+    }
+
+    /// JSON numbers arrive as NSNumber — accept Int/Double/numeric String and
+    /// clamp to a valid 0-100 percent.
+    private func clampedPercent(_ value: Any?) -> Int? {
+        let raw: Double?
+        if let i = value as? Int {
+            raw = Double(i)
+        } else if let d = value as? Double {
+            raw = d
+        } else if let s = value as? String {
+            raw = Double(s)
+        } else {
+            raw = nil
+        }
+        guard let n = raw else { return nil }
+        return min(100, max(0, Int(n.rounded())))
     }
 }

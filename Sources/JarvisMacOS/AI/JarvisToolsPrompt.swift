@@ -1,34 +1,48 @@
-/// Shared tools prompt for the Qwen planner/normalizer fallbacks.
+/// Single tools prompt for the Qwen planner/normalizer fallbacks.
 ///
-/// Contract the user asked for: X (what the user said) + this prompt in,
-/// Y (the exact JSON our executor runs) out. Small on purpose: the tools
-/// we actually have, one example per shape, then the input.
+/// Contract: X (what the user said) + this prompt in, Y (the exact JSON our
+/// executor runs) out. One prompt, array output only — the user's command is
+/// appended as ``"\nCommand: <text>\n"``, continuing the few-shot pattern.
+/// Unparseable output degrades to a single `ai_query` with the raw words.
 enum JarvisToolsPrompt {
     static let text = """
-        You map a voice command to JSON our macOS executor runs. Output ONLY the JSON, no words before or after.
+        You convert one spoken Mac command into JSON for an executor. Reply with a JSON array only. No prose, no markdown.
 
-        Tools:
-        - open_app(app): open a Mac app. Inside apps via Spotify backend: play/pause/next/previous a song, play liked songs, play a named playlist, search+play a song.
-        - close_app(app): close a Mac app.
-        - open_url(url): open a web destination in the default browser. Use for "search YouTube for X" -> https://www.youtube.com/results?search_query=X.
-        - search_web(engine, query): web search. engine is Google. Use for "search the web / google for X".
-        - open_folder(path): open a Finder folder.
-        - media(action): Spotify playback. action is play|pause|next|prev|liked_songs|play_song|play_playlist. Needs "song" or "playlist" name after a colon, e.g. play_song:Blinding Lights.
-        - ai_query(query): anything else (questions, chat, unknown).
-
-        Shape A (planner, array):
-        [{"type":"open_app","app":"Spotify"},{"type":"media","action":"play_song:Blinding Lights"}]
-        Shape B (normalizer, object):
-        {"priority":"normal","actions":[{"type":"open_app","value":"Spotify"},{"type":"media","value":"play_song:Blinding Lights"}]}
+        Tools (use only these "type" values):
+        {"type":"open_app","app":"<app name>"}
+        {"type":"close_app","app":"<app name>"}
+        {"type":"open_folder","path":"<Downloads|Documents|Desktop|~/path>"}
+        {"type":"search_web","engine":"Google|YouTube","query":"<search terms>"}
+        {"type":"media","action":"play|pause|next|prev|liked_songs|play_song:<title>|play_playlist:<name>"}
+        {"type":"set_volume","level":<0-100>}
+        {"type":"mute"}
+        {"type":"set_brightness","level":<0-100>}
+        {"type":"system_info","kind":"time|date|battery|wifi|bluetooth|volume|brightness"}
+        {"type":"ai_query","query":"<the user's words>"}
 
         Rules:
-        - "open X" -> open_app. "close X" -> close_app.
-        - "search YouTube for X" -> open_url with the youtube search URL, never ai_query.
-        - "search Google/the web for X" -> search_web engine Google.
-        - "play <song>" -> media play_song:<song>. "play playlist <name>" -> media play_playlist:<name>. "liked songs" -> media liked_songs. "next/previous song" -> media next/prev.
-        - "open Spotify and play X" -> open_app Spotify THEN the media action, in order.
-        - Unsure -> single ai_query with the raw words.
+        - Ignore the wake word "Jarvis" and words like please, can you, the.
+        - One action per thing asked, in spoken order. Split on "and", "then", "also". Maximum 5.
+        - App names: the app's usual name, capitalised (Spotify, Finder, Chrome). Fix obvious mishearings. Never invent an app.
+        - Song and playlist names: as spoken, in Title Case.
+        - "search YouTube for X" -> search_web engine YouTube. "search Google / the web for X" -> search_web engine Google. Never write URLs.
+        - Questions, chat, or anything needing a tool not listed (delete, run a command, sudo, install, send a message) -> one ai_query with the raw words.
 
-        Input:
+        Command: Jarvis open the terminal
+        [{"type":"open_app","app":"Terminal"}]
+        Command: open spotify and play blinding lights
+        [{"type":"open_app","app":"Spotify"},{"type":"media","action":"play_song:Blinding Lights"}]
+        Command: search youtube for lofi beats
+        [{"type":"search_web","engine":"YouTube","query":"lofi beats"}]
+        Command: close chrome and open finder
+        [{"type":"close_app","app":"Chrome"},{"type":"open_app","app":"Finder"}]
+        Command: whats my battery and set brightness to 24
+        [{"type":"system_info","kind":"battery"},{"type":"set_brightness","level":24}]
+        Command: next song
+        [{"type":"media","action":"next"}]
+        Command: why is the sky blue
+        [{"type":"ai_query","query":"why is the sky blue"}]
+        Command: delete everything in downloads
+        [{"type":"ai_query","query":"delete everything in downloads"}]
         """
 }

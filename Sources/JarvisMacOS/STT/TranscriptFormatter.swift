@@ -475,6 +475,13 @@ enum TranscriptFormatter {
 
     private static func ensureTerminalPunctuation(_ text: String) -> String {
         guard let last = text.last else { return text }
+        // Lists end without a period: "1. Milk\n2. Eggs\n3. Bread".
+        if let finalLine = text.split(separator: "\n").last {
+            let line = finalLine.trimmingCharacters(in: .whitespaces)
+            if line.hasPrefix("- ") || line.range(of: #"^\d+\. "#, options: .regularExpression) != nil {
+                return text
+            }
+        }
         switch last {
         case ".", "?", "!", "…":
             return text

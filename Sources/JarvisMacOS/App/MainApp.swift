@@ -12,6 +12,10 @@ struct MainApp: App {
         // actually exist to be raised (this init call was too early and a
         // dev-run stayed buried under the terminal forever).
         NSApplication.shared.setActivationPolicy(.regular)
+        // The packaged app registers Contents/Resources/Fonts via
+        // ATSApplicationFontsPath; dev runs register them here so the
+        // dictation card renders its intended faces either way.
+        JarvisFonts.registerBundledFonts()
     }
 
     var body: some Scene {

@@ -16,11 +16,14 @@ enum CommandAction: Equatable, CustomStringConvertible {
     case openApp(String)
     case closeApp(String)
     case openURL(String)         // uses system default browser
-    case searchWeb(String)       // search query — executor opens search URL
+    case searchWeb(engine: String, query: String)  // search query + engine
     case openFolder(String)
     case createFile(String)
     case createFolder(String)
     case media(String)           // Spotify playback: play|pause|next|prev|liked_songs|play_song:<n>|play_playlist:<n>
+    case volume(String)          // set:<0-100> | mute
+    case display(String)         // brightness:<0-100>
+    case systemInfo(String)      // time|date|battery|wifi|bluetooth|volume|brightness
     case aiQuery(String)         // LLM answer query
 
     var description: String {
@@ -28,11 +31,14 @@ enum CommandAction: Equatable, CustomStringConvertible {
         case .openApp(let n):      return "openApp(\(n))"
         case .closeApp(let n):     return "closeApp(\(n))"
         case .openURL(let u):      return "openURL(\(u))"
-        case .searchWeb(let q):    return "searchWeb(\(q))"
+        case .searchWeb(let e, let q): return "searchWeb(\(e): \(q))"
         case .openFolder(let p):   return "openFolder(\(p))"
         case .createFile(let n):   return "createFile(\(n))"
         case .createFolder(let n): return "createFolder(\(n))"
         case .media(let m):       return "media(\(m))"
+        case .volume(let v):      return "volume(\(v))"
+        case .display(let d):     return "display(\(d))"
+        case .systemInfo(let k):  return "systemInfo(\(k))"
         case .aiQuery(let q):      return "aiQuery(\(q))"
         }
     }
@@ -57,11 +63,14 @@ struct NormalizedCommand {
         case .openApp(let n):      return "open \(n)"
         case .closeApp(let n):     return "close \(n)"
         case .openURL(let u):      return "open \(u)"
-        case .searchWeb(let q):    return "searchweb: \(q)"
+        case .searchWeb(_, let q): return "searchweb: \(q)"
         case .openFolder(let p):   return "open folder \(p)"
         case .createFile(let n):   return "create file \(n)"
         case .createFolder(let n): return "create folder \(n)"
         case .media(let m):       return "media \(m)"
+        case .volume(let v):      return "volume \(v)"
+        case .display(let d):     return "display \(d)"
+        case .systemInfo(let k):  return "info \(k)"
         case .aiQuery(let q):      return "ai: \(q)"
         }
     }
@@ -205,13 +214,10 @@ final class CommandNormalizer {
         // "search on the internet for X", "search X in brave", plus
         // trailing Whisper punctuation ("...in youtube.").
         if let (engine, query) = parseSearch(lower) {
-            let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
-            let base: String = engine == "YouTube"
-                ? "https://www.youtube.com/results?search_query="
-                : "https://www.google.com/search?q="
-            // SINGLE open: the executor opens base+encoded from searchWeb —
-            // never return both or the browser opens twice.
-            return .single(.searchWeb(query), raw: stripped)
+            // SINGLE open: the executor opens the engine's results URL from
+            // searchWeb (engine-aware) — never return both or the browser
+            // opens twice.
+            return .single(.searchWeb(engine: engine, query: query), raw: stripped)
         }
 
         // ── App open ───────────────────────────────────────────────
@@ -401,8 +407,8 @@ final class CommandNormalizer {
     // MARK: - Ollama fallback (complex / unrecognised input only)
 
     private func ollamaFallback(_ cleaned: String, raw: String) async -> NormalizedCommand {
-        // Migration cut-over: Rust owns the HTTP call + Shape B parsing
-        // (falls back to a single aiQuery on unparseable output, same as Swift).
+        // Migration cut-over: Rust owns the HTTP call + parsing (falls back
+        // to a single aiQuery on unparseable output, same as Swift).
         if JarvisFlags.useRustPipeline {
             let outcome = await RustPipeline.runBlocking { coreOllamaNormalize(cleaned: cleaned) }
             if outcome.error == nil {
@@ -412,64 +418,101 @@ final class CommandNormalizer {
             return RustPipeline.map(outcome, rawText: raw)
         }
 
-        // X (user words) + shared tools prompt in, Y (executor JSON) out.
-        let prompt = JarvisToolsPrompt.text + "Respond with Shape B.\n\nUser: \(cleaned)"
+        // X (user words) + the single tools prompt in, Y (executor JSON) out.
+        // Input continues the prompt's own "Command: …" few-shot pattern.
+        let prompt = JarvisToolsPrompt.text + "\nCommand: \(cleaned)\n"
 
         let response = await ollamaClient.generate(prompt: prompt)
 
-        // Try to parse Ollama JSON response
-        if let parsed = parseOllamaJSON(response, raw: raw) {
-            return parsed
+        if let actions = parseToolActions(response), !actions.isEmpty {
+            let isAI = actions.allSatisfy(\.isAI)
+            return NormalizedCommand(
+                priority: .normal,
+                actions: actions,
+                isAIQuery: isAI,
+                rawText: raw,
+                isBlocked: false, blockedReason: nil
+            )
         }
 
         // Ollama failed or returned garbage — fall back to AI query string
         return .single(.aiQuery(cleaned), raw: raw)
     }
 
-    private func parseOllamaJSON(_ raw: String, raw input: String) -> NormalizedCommand? {
-        // Extract JSON object from response (may contain preamble text)
-        guard let start = raw.firstIndex(of: "{"),
-              let end   = raw.lastIndex(of: "}") else { return nil }
+    /// Parses the tools prompt's JSON array (`[{"type":…}]`, not a wrapped
+    /// object) into `CommandAction`s. Strict schema: a recognized type with a
+    /// missing/invalid payload invalidates the whole response (caller degrades
+    /// to a single aiQuery); unknown types are skipped.
+    private func parseToolActions(_ raw: String) -> [CommandAction]? {
+        guard let start = raw.firstIndex(of: "["),
+              let end   = raw.lastIndex(of: "]") else { return nil }
         let jsonStr = String(raw[start...end])
 
         guard let data  = jsonStr.data(using: .utf8),
-              let obj   = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let acts  = obj["actions"] as? [[String: Any]] else { return nil }
-
-        let priorityStr = obj["priority"] as? String ?? "normal"
-        let priority: NormalizedPriority = {
-            switch priorityStr {
-            case "high": return .high
-            case "low":  return .low
-            default:     return .normal
-            }
-        }()
-
-        var actions: [CommandAction] = []
-        for act in acts {
-            guard let type  = act["type"]  as? String,
-                  let value = act["value"] as? String else { continue }
-            switch type {
-            case "open_app":      actions.append(.openApp(AppAliasResolver.resolveSpoken(value)))
-            case "close_app":     actions.append(.closeApp(AppAliasResolver.resolveSpoken(value)))
-            case "open_url":      actions.append(.openURL(value))
-            case "search_web":    actions.append(.searchWeb(value))
-            case "open_folder":   actions.append(.openFolder(value))
-            case "create_file":   actions.append(.createFile(value))
-            case "create_folder": actions.append(.createFolder(value))
-            case "media":         actions.append(.media(value))
-            case "ai_query":      actions.append(.aiQuery(value))
-            default: break
-            }
+              let array = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
+            return nil
         }
 
-        guard !actions.isEmpty else { return nil }
-        return NormalizedCommand(
-            priority: priority, actions: actions,
-            isAIQuery: actions.allSatisfy(\.isAI),
-            rawText: input,
-            isBlocked: false, blockedReason: nil
-        )
+        var actions: [CommandAction] = []
+        for obj in array {
+            guard let type = obj["type"] as? String else { return nil }
+            switch type {
+            case "open_app":
+                guard let app = obj["app"] as? String else { return nil }
+                actions.append(.openApp(AppAliasResolver.resolveSpoken(app)))
+            case "close_app":
+                guard let app = obj["app"] as? String else { return nil }
+                actions.append(.closeApp(AppAliasResolver.resolveSpoken(app)))
+            case "open_url":
+                guard let url = obj["url"] as? String else { return nil }
+                actions.append(.openURL(url))
+            case "search_web":
+                guard let q = obj["query"] as? String else { return nil }
+                actions.append(.searchWeb(engine: (obj["engine"] as? String) ?? "Google", query: q))
+            case "open_folder":
+                guard let p = obj["path"] as? String else { return nil }
+                actions.append(.openFolder(p))
+            case "media":
+                guard let m = obj["action"] as? String, MediaAction(spec: m) != nil else { return nil }
+                actions.append(.media(m))
+            case "set_volume":
+                guard let level = clampedPercent(obj["level"]) else { return nil }
+                actions.append(.volume("set:\(level)"))
+            case "mute":
+                actions.append(.volume("mute"))
+            case "set_brightness":
+                guard let level = clampedPercent(obj["level"]) else { return nil }
+                actions.append(.display("brightness:\(level)"))
+            case "system_info":
+                guard let kind = obj["kind"] as? String, SystemInfoAction(toolKind: kind) != nil else {
+                    return nil
+                }
+                actions.append(.systemInfo(kind))
+            case "ai_query":
+                guard let q = obj["query"] as? String else { return nil }
+                actions.append(.aiQuery(q))
+            default:
+                continue
+            }
+        }
+        return actions.isEmpty ? nil : actions
+    }
+
+    /// JSON numbers arrive as NSNumber — accept Int/Double/numeric String and
+    /// clamp to a valid 0-100 percent.
+    private func clampedPercent(_ value: Any?) -> Int? {
+        let raw: Double?
+        if let i = value as? Int {
+            raw = Double(i)
+        } else if let d = value as? Double {
+            raw = d
+        } else if let s = value as? String {
+            raw = Double(s)
+        } else {
+            raw = nil
+        }
+        guard let n = raw else { return nil }
+        return min(100, max(0, Int(n.rounded())))
     }
 }
 
@@ -478,20 +521,25 @@ final class CommandNormalizer {
 extension CommandAction {
     /// Colon media form ("play_song:X") -> the matching MediaAction.
     static func toPlannedMedia(_ raw: String) -> PlannedAction {
-        if raw.hasPrefix("play_song:") {
-            return .mediaControl(.playSong(String(raw.dropFirst("play_song:".count))))
+        MediaAction(spec: raw).map { .mediaControl($0) } ?? .aiQuery(raw)
+    }
+
+    /// Volume spec ("set:<0-100>" | "mute") -> the matching VolumeAction.
+    static func toPlannedVolume(_ raw: String) -> PlannedAction {
+        if raw == "mute" { return .volumeControl(.mute) }
+        if raw == "unmute" { return .volumeControl(.unmute) }
+        if raw.hasPrefix("set:"), let level = Int(raw.dropFirst("set:".count)) {
+            return .volumeControl(.setLevel(min(100, max(0, level))))
         }
-        if raw.hasPrefix("play_playlist:") {
-            return .mediaControl(.playPlaylist(String(raw.dropFirst("play_playlist:".count))))
+        return .aiQuery(raw)
+    }
+
+    /// Display spec ("brightness:<0-100>") -> the matching DisplayAction.
+    static func toPlannedDisplay(_ raw: String) -> PlannedAction {
+        if raw.hasPrefix("brightness:"), let level = Int(raw.dropFirst("brightness:".count)) {
+            return .displayControl(.setBrightness(min(100, max(0, level))))
         }
-        switch raw {
-        case "play":        return .mediaControl(.play)
-        case "pause":       return .mediaControl(.pause)
-        case "next":        return .mediaControl(.nextTrack)
-        case "prev":        return .mediaControl(.previousTrack)
-        case "liked_songs": return .mediaControl(.playLikedSongs)
-        default:            return .aiQuery(raw)
-        }
+        return .aiQuery(raw)
     }
 
     /// Converts to PlannedAction so AppState can pass multi-action
@@ -501,11 +549,14 @@ extension CommandAction {
         case .openApp(let n):      return .openApp(n)
         case .closeApp(let n):     return .closeApp(n)
         case .openURL(let u):      return .openURL(u)
-        case .searchWeb(let q):    return .searchWeb(engine: "Google", query: q)
+        case .searchWeb(let e, let q): return .searchWeb(engine: e, query: q)
         case .openFolder(let p):   return .openFolder(p)
         case .createFile(let n):   return .createFile(n)
         case .createFolder(let n): return .createFolder(n)
         case .media(let m):       return CommandAction.toPlannedMedia(m)
+        case .volume(let v):      return CommandAction.toPlannedVolume(v)
+        case .display(let d):     return CommandAction.toPlannedDisplay(d)
+        case .systemInfo(let k):  return SystemInfoAction(toolKind: k).map { .systemInfo($0) } ?? .aiQuery(k)
         case .aiQuery(let q):      return .aiQuery(q)
         }
     }

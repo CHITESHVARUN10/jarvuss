@@ -126,6 +126,17 @@ fi
 # Source: Sources/JarvisMacOS/Resources/Info.plist
 cp "$ROOT_DIR/Sources/JarvisMacOS/Resources/Info.plist" "$APP_CONTENTS/Info.plist"
 
+if [[ -f "$ROOT_DIR/Sources/JarvisMacOS/Resources/AppIcon.icns" ]]; then
+  cp "$ROOT_DIR/Sources/JarvisMacOS/Resources/AppIcon.icns" "$APP_RESOURCES/AppIcon.icns"
+fi
+
+# Card typefaces (registered via ATSApplicationFontsPath = Fonts).
+FONT_SRC="$ROOT_DIR/Sources/JarvisMacOS/Resources/Fonts"
+if [[ -d "$FONT_SRC" ]]; then
+  rm -rf "$APP_RESOURCES/Fonts"
+  cp -R "$FONT_SRC" "$APP_RESOURCES/Fonts"
+fi
+
 # Re-sign AFTER all bundle contents are in place. macOS kills an app
 # whose bundle signature no longer matches its executable ("Killed: 9" at
 # launch) — which is exactly what a stale signature produces after a repackage.

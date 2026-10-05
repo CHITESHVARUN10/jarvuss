@@ -532,9 +532,11 @@ final class AppState: ObservableObject {
     }
 
     /// The user started listening on purpose (orb tap / panel button): the
-    /// transient rule no longer applies — the mic stays up.
+    /// transient rule no longer applies — the mic stays up. The same goes for
+    /// an enrollment auto-start: the user owns the mic now.
     func noteManualMicStart() {
         micTransientAutoStart = false
+        micStartedForEnrollment = false
     }
 
     /// Called when a pill session ends. Stops the mic only when THIS session
@@ -562,6 +564,30 @@ final class AppState: ObservableObject {
         enrollmentCompleted = false
         persistEnrollmentCompleted(false)
         appendLog("Voice enrollment started. Repeat each phrase \(enrollmentRequiredMatchesPerPhrase)x.")
+
+        // Enrollment captures from the live mic pipeline, so it must not
+        // depend on the user already having a listening session running
+        // (the old flow greyed the button out until ⌘⇧D had brought the mic
+        // up). Bring the mic up here when idle; `releaseEnrollmentMicIfNeeded`
+        // returns it to idle when enrollment ends — listening stays manual.
+        if micActive {
+            // A one-shot pill may hold a transient mic right when Enroll is
+            // pressed; adopt it so the pill's teardown can't stop capture
+            // under the live enrollment.
+            if micTransientAutoStart {
+                micTransientAutoStart = false
+                micStartedForEnrollment = true
+            }
+        } else {
+            micStartedForEnrollment = true
+            appendLog("Microphone started for enrollment.")
+            Task {
+                await startMicrophone()
+                if !micActive {
+                    appendLog("[Voice] Enrollment can't capture — microphone failed to start.")
+                }
+            }
+        }
 
         guard resetStore else {
             appendLog("Enrolling from a clean slate (0/\(voiceEnrollmentSampleTarget)) — only these new samples will be used.")
@@ -628,7 +654,22 @@ final class AppState: ObservableObject {
 
     func stopEnrollment() {
         enrollmentActive = false
+        releaseEnrollmentMicIfNeeded()
         appendLog("Voice enrollment stopped.")
+    }
+
+    /// True when enrollment started the mic itself (Enroll/Retrain pressed
+    /// with listening idle). Like the hotkey pills, the mic goes back down
+    /// when enrollment ends — a user-started session is never touched.
+    private var micStartedForEnrollment = false
+
+    /// Returns the mic to idle when enrollment was its only reason to exist.
+    private func releaseEnrollmentMicIfNeeded() {
+        guard micStartedForEnrollment else { return }
+        micStartedForEnrollment = false
+        guard micActive else { return }
+        appendLog("Enrollment finished — mic back to idle (listening stays manual).")
+        stopMicrophone()
     }
 
     /// Action-pill (⌘⇧A) command entry. Same shape as executeTypedCommand:
@@ -1227,6 +1268,8 @@ final class AppState: ObservableObject {
                     voiceVerificationStatus = "Finalizing Voice Profile..."
                     appendLog("Voice phrases completed. Waiting for final backend voice samples (\(backendEnrollmentSampleCount)/\(voiceEnrollmentSampleTarget)).")
                 }
+
+                releaseEnrollmentMicIfNeeded()
 
                 dbManager.saveEvent(
                     eventType: "enrollment_completed",

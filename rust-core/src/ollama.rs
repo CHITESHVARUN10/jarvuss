@@ -6,7 +6,9 @@
 //! guarantees only one `/api/generate` runs at a time (parallel calls would
 //! each load a runner and spike unified memory).
 
-use crate::actions::{MediaAction, PlannedAction};
+use crate::actions::{
+    DisplayAction, MediaAction, PlannedAction, SystemInfoAction, VolumeAction,
+};
 use crate::alias;
 use serde_json::{json, Value};
 use std::sync::Mutex;
@@ -18,32 +20,47 @@ const TIMEOUT_SECONDS: u64 = 60;
 const ENDPOINT: &str = "http://127.0.0.1:11434/api/generate";
 
 /// Shared tools prompt (`JarvisToolsPrompt.text`). X (what the user said) +
-/// this prompt in, Y (the exact JSON our executor runs) out.
-pub const TOOLS_PROMPT: &str = r#"You map a voice command to JSON our macOS executor runs. Output ONLY the JSON, no words before or after.
+/// this prompt in, Y (the exact JSON our executor runs) out. One prompt,
+/// array output only — the command is appended as "\nCommand: <text>\n",
+/// continuing the few-shot pattern.
+pub const TOOLS_PROMPT: &str = r#"You convert one spoken Mac command into JSON for an executor. Reply with a JSON array only. No prose, no markdown.
 
-Tools:
-- open_app(app): open a Mac app. Inside apps via Spotify backend: play/pause/next/previous a song, play liked songs, play a named playlist, search+play a song.
-- close_app(app): close a Mac app.
-- open_url(url): open a web destination in the default browser. Use for "search YouTube for X" -> https://www.youtube.com/results?search_query=X.
-- search_web(engine, query): web search. engine is Google. Use for "search the web / google for X".
-- open_folder(path): open a Finder folder.
-- media(action): Spotify playback. action is play|pause|next|prev|liked_songs|play_song|play_playlist. Needs "song" or "playlist" name after a colon, e.g. play_song:Blinding Lights.
-- ai_query(query): anything else (questions, chat, unknown).
-
-Shape A (planner, array):
-[{"type":"open_app","app":"Spotify"},{"type":"media","action":"play_song:Blinding Lights"}]
-Shape B (normalizer, object):
-{"priority":"normal","actions":[{"type":"open_app","value":"Spotify"},{"type":"media","value":"play_song:Blinding Lights"}]}
+Tools (use only these "type" values):
+{"type":"open_app","app":"<app name>"}
+{"type":"close_app","app":"<app name>"}
+{"type":"open_folder","path":"<Downloads|Documents|Desktop|~/path>"}
+{"type":"search_web","engine":"Google|YouTube","query":"<search terms>"}
+{"type":"media","action":"play|pause|next|prev|liked_songs|play_song:<title>|play_playlist:<name>"}
+{"type":"set_volume","level":<0-100>}
+{"type":"mute"}
+{"type":"set_brightness","level":<0-100>}
+{"type":"system_info","kind":"time|date|battery|wifi|bluetooth|volume|brightness"}
+{"type":"ai_query","query":"<the user's words>"}
 
 Rules:
-- "open X" -> open_app. "close X" -> close_app.
-- "search YouTube for X" -> open_url with the youtube search URL, never ai_query.
-- "search Google/the web for X" -> search_web engine Google.
-- "play <song>" -> media play_song:<song>. "play playlist <name>" -> media play_playlist:<name>. "liked songs" -> media liked_songs. "next/previous song" -> media next/prev.
-- "open Spotify and play X" -> open_app Spotify THEN the media action, in order.
-- Unsure -> single ai_query with the raw words.
+- Ignore the wake word "Jarvis" and words like please, can you, the.
+- One action per thing asked, in spoken order. Split on "and", "then", "also". Maximum 5.
+- App names: the app's usual name, capitalised (Spotify, Finder, Chrome). Fix obvious mishearings. Never invent an app.
+- Song and playlist names: as spoken, in Title Case.
+- "search YouTube for X" -> search_web engine YouTube. "search Google / the web for X" -> search_web engine Google. Never write URLs.
+- Questions, chat, or anything needing a tool not listed (delete, run a command, sudo, install, send a message) -> one ai_query with the raw words.
 
-Input:
+Command: Jarvis open the terminal
+[{"type":"open_app","app":"Terminal"}]
+Command: open spotify and play blinding lights
+[{"type":"open_app","app":"Spotify"},{"type":"media","action":"play_song:Blinding Lights"}]
+Command: search youtube for lofi beats
+[{"type":"search_web","engine":"YouTube","query":"lofi beats"}]
+Command: close chrome and open finder
+[{"type":"close_app","app":"Chrome"},{"type":"open_app","app":"Finder"}]
+Command: whats my battery and set brightness to 24
+[{"type":"system_info","kind":"battery"},{"type":"set_brightness","level":24}]
+Command: next song
+[{"type":"media","action":"next"}]
+Command: why is the sky blue
+[{"type":"ai_query","query":"why is the sky blue"}]
+Command: delete everything in downloads
+[{"type":"ai_query","query":"delete everything in downloads"}]
 "#;
 
 fn generate_lock() -> &'static Mutex<()> {
@@ -131,11 +148,11 @@ pub struct OllamaPlanResult {
     pub error: Option<String>,
 }
 
-/// Planner fallback: "Respond with Shape A" → ordered actions.
+/// Planner fallback: tools prompt + "Command: …" → ordered actions.
 pub fn plan(cleaned: &str) -> OllamaPlanResult {
-    let prompt = format!("{TOOLS_PROMPT}Respond with Shape A.\n\nUser: {cleaned}");
+    let prompt = format!("{TOOLS_PROMPT}\nCommand: {cleaned}\n");
     let outcome = generate(&prompt);
-    let parsed = parse_shape_a(&outcome.text);
+    let parsed = parse_tool_array(&outcome.text);
     OllamaPlanResult {
         actions: parsed
             .clone()
@@ -148,8 +165,43 @@ pub fn plan(cleaned: &str) -> OllamaPlanResult {
     }
 }
 
-/// Port of `ActionPlanner.parseOllamaActions`.
-pub fn parse_shape_a(raw: &str) -> Option<Vec<PlannedAction>> {
+/// Numeric JSON value (or numeric string) clamped to a 0-100 percent.
+fn clamp_percent(value: &Value) -> Option<i32> {
+    let n = if let Some(i) = value.as_i64() {
+        i as f64
+    } else if let Some(u) = value.as_u64() {
+        u as f64
+    } else if let Some(f) = value.as_f64() {
+        f
+    } else if let Some(s) = value.as_str() {
+        s.parse::<f64>().ok()?
+    } else {
+        return None;
+    };
+    Some(n.round().clamp(0.0, 100.0) as i32)
+}
+
+/// Tool-prompt `system_info.kind` → action; unknown kinds return None.
+fn system_info_from_kind(kind: &str) -> Option<SystemInfoAction> {
+    match kind {
+        "time" => Some(SystemInfoAction::CurrentTime),
+        "date" => Some(SystemInfoAction::CurrentDate),
+        "battery" => Some(SystemInfoAction::BatteryStatus),
+        "wifi" => Some(SystemInfoAction::WifiStatus),
+        "bluetooth" => Some(SystemInfoAction::BluetoothDevices),
+        "volume" => Some(SystemInfoAction::SystemVolume),
+        "brightness" => Some(SystemInfoAction::DisplayBrightness),
+        "contrast" => Some(SystemInfoAction::DisplayContrast),
+        _ => None,
+    }
+}
+
+/// Port of `ActionPlanner.parseOllamaActions` — the tools prompt's JSON array.
+/// Strict schema: a recognized type with a missing/invalid payload (e.g.
+/// `system_info` kind "weather") rejects the whole response so callers
+/// degrade to a single ai_query instead of executing a wrong action.
+/// Unknown types are skipped; an output with nothing usable returns None.
+pub fn parse_tool_array(raw: &str) -> Option<Vec<PlannedAction>> {
     let start = raw.find('[')?;
     let end = raw.rfind(']')?;
     if end < start {
@@ -160,63 +212,70 @@ pub fn parse_shape_a(raw: &str) -> Option<Vec<PlannedAction>> {
 
     let mut actions: Vec<PlannedAction> = vec![];
     for obj in items {
-        let Some(kind) = obj.get("type").and_then(Value::as_str) else {
-            continue;
-        };
+        let kind = obj.get("type").and_then(Value::as_str)?;
         let string = |key: &str| obj.get(key).and_then(Value::as_str);
         match kind {
             "open_app" => {
-                if let Some(app) = string("app") {
-                    actions.push(PlannedAction::OpenApp {
-                        name: app.to_string(),
-                    });
-                }
+                actions.push(PlannedAction::OpenApp {
+                    name: string("app")?.to_string(),
+                });
             }
             "close_app" => {
-                if let Some(app) = string("app") {
-                    actions.push(PlannedAction::CloseApp {
-                        name: app.to_string(),
-                    });
-                }
+                actions.push(PlannedAction::CloseApp {
+                    name: string("app")?.to_string(),
+                });
             }
             "open_url" => {
-                if let Some(url) = string("url") {
-                    actions.push(PlannedAction::OpenUrl {
-                        url: url.to_string(),
-                    });
-                }
+                actions.push(PlannedAction::OpenUrl {
+                    url: string("url")?.to_string(),
+                });
             }
             "search_web" => {
-                let engine = string("engine").unwrap_or("Google");
-                if let Some(query) = string("query") {
-                    actions.push(PlannedAction::SearchWeb {
-                        engine: engine.to_string(),
-                        query: query.to_string(),
-                    });
-                }
+                actions.push(PlannedAction::SearchWeb {
+                    engine: string("engine").unwrap_or("Google").to_string(),
+                    query: string("query")?.to_string(),
+                });
             }
             "open_folder" => {
-                if let Some(path) = string("path") {
-                    actions.push(PlannedAction::OpenFolder {
-                        path: path.to_string(),
-                    });
-                }
+                actions.push(PlannedAction::OpenFolder {
+                    path: string("path")?.to_string(),
+                });
+            }
+            "set_volume" => {
+                actions.push(PlannedAction::VolumeControl {
+                    action: VolumeAction::SetLevel {
+                        level: obj.get("level").and_then(clamp_percent)?,
+                    },
+                });
+            }
+            "mute" => {
+                actions.push(PlannedAction::VolumeControl {
+                    action: VolumeAction::Mute,
+                });
+            }
+            "set_brightness" => {
+                actions.push(PlannedAction::DisplayControl {
+                    action: DisplayAction::SetBrightness {
+                        percent: obj.get("level").and_then(clamp_percent)?,
+                    },
+                });
+            }
+            "system_info" => {
+                actions.push(PlannedAction::SystemInfo {
+                    info: string("kind").and_then(system_info_from_kind)?,
+                });
             }
             "media" => {
-                if let Some(action) = string("action") {
-                    if let Some(media) = parse_media_spec(action) {
-                        actions.push(PlannedAction::MediaControl { action: media });
-                    }
-                }
+                actions.push(PlannedAction::MediaControl {
+                    action: parse_media_spec(string("action")?)?,
+                });
             }
             "ai_query" => {
-                if let Some(query) = string("query") {
-                    actions.push(PlannedAction::AiQuery {
-                        query: query.to_string(),
-                    });
-                }
+                actions.push(PlannedAction::AiQuery {
+                    query: string("query")?.to_string(),
+                });
             }
-            _ => {}
+            _ => {} // unknown type — skip; empty result still yields None
         }
     }
     if actions.is_empty() {
@@ -250,7 +309,7 @@ fn parse_media_spec(raw: &str) -> Option<MediaAction> {
     }
 }
 
-// ── Shape B: normalizer fallback ────────────────────────────────────
+// ── Normalizer fallback (shared tools prompt) ───────────────────────
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
 pub enum NormalizedPriority {
@@ -259,17 +318,20 @@ pub enum NormalizedPriority {
     Low,
 }
 
-/// Marker-shaped action list from the normalizer's Shape B.
+/// Action list the normalizer produces — mirrors Swift `CommandAction`.
 #[derive(Debug, Clone, PartialEq, uniffi::Enum)]
 pub enum CommandAction {
     OpenApp { name: String },
     CloseApp { name: String },
     OpenUrl { url: String },
-    SearchWeb { query: String },
+    SearchWeb { engine: String, query: String },
     OpenFolder { path: String },
     CreateFile { name: String },
     CreateFolder { name: String },
     Media { action: String },
+    Volume { action: String },
+    Display { action: String },
+    SystemInfo { kind: String },
     AiQuery { query: String },
 }
 
@@ -286,18 +348,45 @@ pub struct NormalizedCommand {
     pub error: Option<String>,
 }
 
-/// Normalizer fallback: "Respond with Shape B" → structured command.
+/// Normalizer fallback: same tools prompt as the planner, array output.
 pub fn normalize(cleaned: &str) -> NormalizedCommand {
-    let prompt = format!("{TOOLS_PROMPT}Respond with Shape B.\n\nUser: {cleaned}");
+    let prompt = format!("{TOOLS_PROMPT}\nCommand: {cleaned}\n");
     let outcome = generate(&prompt);
+    normalize_from_text(
+        &outcome.text,
+        cleaned,
+        outcome.prompt_chars,
+        outcome.response_chars,
+        outcome.error,
+    )
+}
 
-    if let Some(parsed) = parse_shape_b(&outcome.text, cleaned) {
-        return NormalizedCommand {
-            prompt_chars: outcome.prompt_chars,
-            response_chars: outcome.response_chars,
-            error: outcome.error,
-            ..parsed
-        };
+/// Pure half of `normalize` — split out so tests never hit Ollama.
+fn normalize_from_text(
+    raw: &str,
+    cleaned: &str,
+    prompt_chars: i64,
+    response_chars: i64,
+    error: Option<String>,
+) -> NormalizedCommand {
+    if let Some(parsed) = parse_tool_array(raw) {
+        let actions: Vec<CommandAction> = parsed.iter().filter_map(command_action_from).collect();
+        if !actions.is_empty() {
+            let is_ai_query = actions
+                .iter()
+                .all(|a| matches!(a, CommandAction::AiQuery { .. }));
+            return NormalizedCommand {
+                priority: NormalizedPriority::Normal,
+                actions,
+                is_ai_query,
+                blocked: false,
+                blocked_reason: None,
+                raw: cleaned.to_string(),
+                prompt_chars,
+                response_chars,
+                error,
+            };
+        }
     }
 
     // Garbage / unreachable model → single AI query on the original text.
@@ -310,85 +399,92 @@ pub fn normalize(cleaned: &str) -> NormalizedCommand {
         blocked: false,
         blocked_reason: None,
         raw: cleaned.to_string(),
-        prompt_chars: outcome.prompt_chars,
-        response_chars: outcome.response_chars,
-        error: outcome.error,
+        prompt_chars,
+        response_chars,
+        error,
     }
 }
 
-/// Port of `CommandNormalizer.parseOllamaJSON`.
-pub fn parse_shape_b(raw: &str, original: &str) -> Option<NormalizedCommand> {
-    let start = raw.find('{')?;
-    let end = raw.rfind('}')?;
-    if end < start {
-        return None;
+/// Planner action → normalizer action. Only types the tools prompt can emit
+/// round-trip; anything else is dropped.
+fn command_action_from(action: &PlannedAction) -> Option<CommandAction> {
+    match action {
+        PlannedAction::OpenApp { name } => Some(CommandAction::OpenApp {
+            name: alias::resolve(name),
+        }),
+        PlannedAction::CloseApp { name } => Some(CommandAction::CloseApp {
+            name: alias::resolve(name),
+        }),
+        PlannedAction::OpenUrl { url } => Some(CommandAction::OpenUrl { url: url.clone() }),
+        PlannedAction::SearchWeb { engine, query } => Some(CommandAction::SearchWeb {
+            engine: engine.clone(),
+            query: query.clone(),
+        }),
+        PlannedAction::OpenFolder { path } => Some(CommandAction::OpenFolder { path: path.clone() }),
+        PlannedAction::MediaControl { action } => Some(CommandAction::Media {
+            action: media_spec(action),
+        }),
+        PlannedAction::VolumeControl { action } => Some(CommandAction::Volume {
+            action: volume_spec(action),
+        }),
+        PlannedAction::DisplayControl { action } => display_spec(action).map(|spec| {
+            CommandAction::Display { action: spec }
+        }),
+        PlannedAction::SystemInfo { info } => Some(CommandAction::SystemInfo {
+            kind: system_info_kind(info).to_string(),
+        }),
+        PlannedAction::AiQuery { query } => Some(CommandAction::AiQuery {
+            query: query.clone(),
+        }),
+        _ => None,
     }
-    let object: Value = serde_json::from_str(&raw[start..=end]).ok()?;
-    let items = object.get("actions")?.as_array()?;
+}
 
-    let priority = match object.get("priority").and_then(Value::as_str) {
-        Some("high") => NormalizedPriority::High,
-        Some("low") => NormalizedPriority::Low,
-        _ => NormalizedPriority::Normal,
-    };
-
-    let mut actions: Vec<CommandAction> = vec![];
-    for item in items {
-        let (Some(kind), Some(value)) = (
-            item.get("type").and_then(Value::as_str),
-            item.get("value").and_then(Value::as_str),
-        ) else {
-            continue;
-        };
-        match kind {
-            "open_app" => actions.push(CommandAction::OpenApp {
-                name: alias::resolve(value),
-            }),
-            "close_app" => actions.push(CommandAction::CloseApp {
-                name: alias::resolve(value),
-            }),
-            "open_url" => actions.push(CommandAction::OpenUrl {
-                url: value.to_string(),
-            }),
-            "search_web" => actions.push(CommandAction::SearchWeb {
-                query: value.to_string(),
-            }),
-            "open_folder" => actions.push(CommandAction::OpenFolder {
-                path: value.to_string(),
-            }),
-            "create_file" => actions.push(CommandAction::CreateFile {
-                name: value.to_string(),
-            }),
-            "create_folder" => actions.push(CommandAction::CreateFolder {
-                name: value.to_string(),
-            }),
-            "media" => actions.push(CommandAction::Media {
-                action: value.to_string(),
-            }),
-            "ai_query" => actions.push(CommandAction::AiQuery {
-                query: value.to_string(),
-            }),
-            _ => {}
-        }
+/// "play|pause|next|prev|liked_songs|play_song:X|play_playlist:X" (inverse of
+/// `parse_media_spec`).
+fn media_spec(action: &MediaAction) -> String {
+    match action {
+        MediaAction::Play => "play".to_string(),
+        MediaAction::Pause => "pause".to_string(),
+        MediaAction::NextTrack => "next".to_string(),
+        MediaAction::PreviousTrack => "prev".to_string(),
+        MediaAction::PlayLikedSongs => "liked_songs".to_string(),
+        MediaAction::PlaySong { name } => format!("play_song:{name}"),
+        MediaAction::PlayPlaylist { name } => format!("play_playlist:{name}"),
     }
+}
 
-    if actions.is_empty() {
-        return None;
+/// "set:<0-100>|mute|unmute" (Swift `toPlannedVolume` reads this spec).
+fn volume_spec(action: &VolumeAction) -> String {
+    match action {
+        VolumeAction::SetLevel { level } => format!("set:{level}"),
+        VolumeAction::Mute => "mute".to_string(),
+        VolumeAction::Unmute => "unmute".to_string(),
+        VolumeAction::Increase { by } => format!("increase:{by}"),
+        VolumeAction::Decrease { by } => format!("decrease:{by}"),
     }
-    let is_ai_query = actions
-        .iter()
-        .all(|a| matches!(a, CommandAction::AiQuery { .. }));
-    Some(NormalizedCommand {
-        priority,
-        actions,
-        is_ai_query,
-        blocked: false,
-        blocked_reason: None,
-        raw: original.to_string(),
-        prompt_chars: 0,
-        response_chars: 0,
-        error: None,
-    })
+}
+
+/// Only set-brightness round-trips (the tools prompt can't emit the rest);
+/// Swift `toPlannedDisplay` reads "brightness:<0-100>".
+fn display_spec(action: &DisplayAction) -> Option<String> {
+    match action {
+        DisplayAction::SetBrightness { percent } => Some(format!("brightness:{percent}")),
+        _ => None,
+    }
+}
+
+fn system_info_kind(info: &SystemInfoAction) -> &'static str {
+    match info {
+        SystemInfoAction::CurrentTime => "time",
+        SystemInfoAction::CurrentDate => "date",
+        SystemInfoAction::BatteryStatus => "battery",
+        SystemInfoAction::WifiStatus => "wifi",
+        SystemInfoAction::BluetoothDevices => "bluetooth",
+        SystemInfoAction::SystemVolume => "volume",
+        SystemInfoAction::DisplayBrightness => "brightness",
+        SystemInfoAction::DisplayContrast => "contrast",
+    }
 }
 
 #[cfg(test)]
@@ -396,9 +492,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn shape_a_multi_step_with_preamble() {
+    fn tools_array_multi_step_with_preamble() {
         let raw = r#"Sure! [{"type":"open_app","app":"Spotify"},{"type":"media","action":"play_song:Blinding Lights"}]"#;
-        let actions = parse_shape_a(raw).expect("parsed");
+        let actions = parse_tool_array(raw).expect("parsed");
         assert_eq!(
             actions,
             vec![
@@ -415,7 +511,7 @@ mod tests {
     }
 
     #[test]
-    fn shape_a_media_specs() {
+    fn tools_array_media_specs() {
         assert_eq!(parse_media_spec("next"), Some(MediaAction::NextTrack));
         assert_eq!(
             parse_media_spec("play_playlist:Gym"),
@@ -427,47 +523,125 @@ mod tests {
     }
 
     #[test]
-    fn shape_a_empty_or_garbage_is_none() {
-        assert!(parse_shape_a("no json here").is_none());
-        assert!(parse_shape_a("[]").is_none());
-        assert!(parse_shape_a(r#"[{"type":"unknown"}]"#).is_none());
+    fn tools_array_empty_or_garbage_is_none() {
+        assert!(parse_tool_array("no json here").is_none());
+        assert!(parse_tool_array("[]").is_none());
+        assert!(parse_tool_array(r#"[{"type":"unknown"}]"#).is_none());
     }
 
     #[test]
-    fn shape_b_priority_and_actions() {
-        let raw = r#"{"priority":"high","actions":[{"type":"open_app","value":"Photos"},{"type":"open_url","value":"https://x.dev"}]}"#;
-        let nc = parse_shape_b(raw, "open photos and x").expect("parsed");
-        assert_eq!(nc.priority, NormalizedPriority::High);
-        assert!(!nc.is_ai_query);
+    fn tools_array_new_action_types() {
+        // The new prompt's vocabulary: search engine, set_volume (clamped),
+        // mute, set_brightness, system_info — plus open_folder.
+        let raw = r#"[
+            {"type":"search_web","engine":"YouTube","query":"lofi beats"},
+            {"type":"set_volume","level":150},
+            {"type":"mute"},
+            {"type":"set_brightness","level":"24"},
+            {"type":"system_info","kind":"battery"},
+            {"type":"open_folder","path":"Downloads"}
+        ]"#;
+        let actions = parse_tool_array(raw).expect("parsed");
         assert_eq!(
-            nc.actions,
+            actions,
             vec![
-                CommandAction::OpenApp {
-                    name: "Photos".to_string()
+                PlannedAction::SearchWeb {
+                    engine: "YouTube".to_string(),
+                    query: "lofi beats".to_string(),
                 },
-                CommandAction::OpenUrl {
-                    url: "https://x.dev".to_string()
-                }
+                PlannedAction::VolumeControl {
+                    action: VolumeAction::SetLevel { level: 100 },
+                },
+                PlannedAction::VolumeControl {
+                    action: VolumeAction::Mute,
+                },
+                PlannedAction::DisplayControl {
+                    action: DisplayAction::SetBrightness { percent: 24 },
+                },
+                PlannedAction::SystemInfo {
+                    info: SystemInfoAction::BatteryStatus,
+                },
+                PlannedAction::OpenFolder {
+                    path: "Downloads".to_string(),
+                },
             ]
         );
     }
 
     #[test]
-    fn shape_b_all_ai_marks_query() {
-        let raw = r#"{"actions":[{"type":"ai_query","value":"what is rust"}]}"#;
-        let nc = parse_shape_b(raw, "what is rust").expect("parsed");
-        assert!(nc.is_ai_query);
-        assert_eq!(nc.priority, NormalizedPriority::Normal);
+    fn tools_array_unknown_kinds_are_dropped() {
+        let raw = r#"[{"type":"system_info","kind":"weather"},{"type":"set_volume","level":"hot"}]"#;
+        assert!(parse_tool_array(raw).is_none());
     }
 
     #[test]
-    fn shape_b_garbage_is_none() {
-        assert!(parse_shape_b("nothing", "x").is_none());
-        assert!(parse_shape_b(r#"{"actions":[]}"#, "x").is_none());
+    fn tools_array_bad_payload_rejects_all() {
+        // A recognized type with an invalid payload invalidates the whole
+        // response — "date" must not execute when the model hallucinated
+        // `system_info.kind = "weather tomorrow"` for a weather question.
+        let raw = r#"[{"type":"system_info","kind":"date"},{"type":"system_info","kind":"weather tomorrow"}]"#;
+        assert!(parse_tool_array(raw).is_none());
+        let raw = r#"[{"type":"open_app","app":"Chrome"},{"type":"set_volume","level":"hot"}]"#;
+        assert!(parse_tool_array(raw).is_none());
+        let raw = r#"[{"type":"media","action":"bogus"}]"#;
+        assert!(parse_tool_array(raw).is_none());
     }
 
-    /// Live smoke test — needs `ollama serve` and the qwen2.5-coder model.
-    /// Run with: `cargo test ollama_live -- --ignored --nocapture`
+    #[test]
+    fn normalize_array_actions() {
+        let raw = r#"[{"type":"open_app","app":"photos"},{"type":"search_web","engine":"YouTube","query":"lofi"},{"type":"set_volume","level":30},{"type":"system_info","kind":"time"}]"#;
+        let nc = normalize_from_text(raw, "open photos and search youtube for lofi", 100, 80, None);
+        assert!(!nc.is_ai_query);
+        assert_eq!(nc.priority, NormalizedPriority::Normal);
+        assert_eq!(
+            nc.actions,
+            vec![
+                CommandAction::OpenApp {
+                    name: alias::resolve("photos")
+                },
+                CommandAction::SearchWeb {
+                    engine: "YouTube".to_string(),
+                    query: "lofi".to_string(),
+                },
+                CommandAction::Volume {
+                    action: "set:30".to_string(),
+                },
+                CommandAction::SystemInfo {
+                    kind: "time".to_string(),
+                },
+            ]
+        );
+    }
+
+    #[test]
+    fn normalize_all_ai_marks_query() {
+        let raw = r#"[{"type":"ai_query","query":"what is rust"}]"#;
+        let nc = normalize_from_text(raw, "what is rust", 0, 0, None);
+        assert!(nc.is_ai_query);
+        assert_eq!(
+            nc.actions,
+            vec![CommandAction::AiQuery {
+                query: "what is rust".to_string()
+            }]
+        );
+    }
+
+    #[test]
+    fn normalize_garbage_degrades_to_ai_query() {
+        for raw in ["nothing", "[]", r#"{"actions":[]}"#] {
+            let nc = normalize_from_text(raw, "delete everything in downloads", 0, 0, None);
+            assert!(nc.is_ai_query, "raw={raw:?}");
+            assert_eq!(
+                nc.actions,
+                vec![CommandAction::AiQuery {
+                    query: "delete everything in downloads".to_string()
+                }]
+            );
+        }
+    }
+
+    /// Live smoke test — needs `ollama serve` and the qwen2.5:1.5b-instruct
+    /// model. Run with: `cargo test ollama_live -- --ignored --nocapture`
     ///
     /// Contract under test: a live call never errors at the transport level,
     /// and always yields actions — either the parsed plan, or the single

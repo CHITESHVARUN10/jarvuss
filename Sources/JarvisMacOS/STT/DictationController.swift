@@ -768,16 +768,15 @@ final class DictationController: ObservableObject {
         case .Processing:
             return CGSize(width: 240, height: 44)
         case .TranscriptReady:
-            // Keep in sync with DictationTranscriptOverlayView.cardHeight.
-            // 330pt wide: the action row carries Copy + Copy original + Undo
-            // + Close without clipping.
+            // Keep in sync with DictationTranscriptOverlayView
+            // (baseHeight / noticeHeight / cardWidth). 400pt wide: four
+            // equal-width actions sit on one row without clipping.
             if !insertNotice.isEmpty {
-                return CGSize(width: 330, height: 218)
+                return CGSize(width: DictationTranscriptOverlayView.cardWidth,
+                              height: DictationTranscriptOverlayView.noticeHeight)
             }
-            if formattingInProgress {
-                return CGSize(width: 330, height: 205)
-            }
-            return CGSize(width: 330, height: 170)
+            return CGSize(width: DictationTranscriptOverlayView.cardWidth,
+                          height: DictationTranscriptOverlayView.baseHeight)
         case .Error, .Preparing:
             return CGSize(width: 300, height: 120)
         default:

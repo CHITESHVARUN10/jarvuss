@@ -97,15 +97,16 @@ struct VoicePane: View {
                 } label: {
                     Label("Enroll", systemImage: "play.fill")
                 }
-                .disabled(!appState.micActive || appState.enrollmentActive)
+                .disabled(appState.enrollmentActive)
                 .jButton(intent: .primary)
+                .help("Starts the mic and begins enrollment — no listening session needed")
 
                 Button {
                     appState.retrainVoiceProfile()
                 } label: {
                     Label("Retrain", systemImage: "arrow.triangle.2.circlepath")
                 }
-                .disabled(!appState.micActive || appState.enrollmentActive)
+                .disabled(appState.enrollmentActive)
                 .jButton()
                 .help("Deletes ALL stored voice samples, then starts a fresh enrollment so only the new samples are used")
             }
@@ -117,7 +118,7 @@ struct VoicePane: View {
                 } label: {
                     Label("Add samples", systemImage: "plus")
                 }
-                .disabled(!appState.micActive || appState.enrollmentActive || !appState.enrollmentCompleted)
+                .disabled(appState.enrollmentActive || !appState.enrollmentCompleted)
                 .jButton()
 
                 Button {

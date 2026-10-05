@@ -147,8 +147,9 @@ struct EnrollmentView: View {
                     } label: {
                         Label("Start", systemImage: "play.fill")
                     }
-                    .disabled(!appState.micActive || appState.enrollmentActive)
+                    .disabled(appState.enrollmentActive)
                     .buttonStyle(JarvisButtonStyle(color: JarvisColor.accent, compact: true))
+                    .help("Starts the mic and begins enrollment — no listening session needed")
 
                     Button {
                         appState.stopEnrollment()
@@ -167,7 +168,7 @@ struct EnrollmentView: View {
                     } label: {
                         Label("Retrain voice", systemImage: "arrow.triangle.2.circlepath")
                     }
-                    .disabled(!appState.micActive || appState.enrollmentActive)
+                    .disabled(appState.enrollmentActive)
                     .buttonStyle(JarvisButtonStyle(color: JarvisColor.attention, compact: true))
                     .help("Deletes ALL stored voice samples, then starts a fresh enrollment so only the new samples are used")
 

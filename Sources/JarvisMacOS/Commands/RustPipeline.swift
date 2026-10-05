@@ -126,18 +126,21 @@ enum RustPipeline {
         }
     }
 
-    // MARK: - Command normalizer mapping (Shape B)
+    // MARK: - Command normalizer mapping (tools prompt)
 
     static func map(_ action: CoreCommandAction) -> CommandAction {
         switch action {
         case .openApp(let name):      return .openApp(name)
         case .closeApp(let name):     return .closeApp(name)
         case .openUrl(let url):       return .openURL(url)
-        case .searchWeb(let query):   return .searchWeb(query)
+        case .searchWeb(let engine, let query): return .searchWeb(engine: engine, query: query)
         case .openFolder(let path):   return .openFolder(path)
         case .createFile(let name):   return .createFile(name)
         case .createFolder(let name): return .createFolder(name)
         case .media(let action):      return .media(action)
+        case .volume(let action):     return .volume(action)
+        case .display(let action):    return .display(action)
+        case .systemInfo(let kind):   return .systemInfo(kind)
         case .aiQuery(let query):     return .aiQuery(query)
         }
     }

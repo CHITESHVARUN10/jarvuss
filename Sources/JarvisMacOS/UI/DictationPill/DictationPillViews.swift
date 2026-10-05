@@ -28,6 +28,7 @@ struct DictationHUDView: View {
             case .TranscriptReady:
                 DictationTranscriptOverlayView(
                     transcript: model.transcript,
+                    original: model.originalTranscript,
                     copied: model.copied,
                     inserted: model.insertedAtCursor,
                     formatting: model.formattingInProgress,
@@ -39,7 +40,7 @@ struct DictationHUDView: View {
                     onGrantAccessibility: { model.openAccessibilityPane() },
                     onClose: { model.closeTranscript() }
                 )
-                .frame(width: 330)
+                .frame(width: DictationTranscriptOverlayView.cardWidth)
 
             case .Error:
                 DictationErrorView(
@@ -255,12 +256,13 @@ struct DictationTranscribingPillView: View {
 
 // MARK: - Transcript card
 
-/// 300pt glass card: scrollable text + pinned Copy (and, once text has been
-/// inserted, Undo) buttons. A failed insert carries the Accessibility notice
-/// with a one-tap grant; a running LLM polish shows a spinner row.
+/// Glass result card, styled after the dictation-card mockup: 26pt radius,
+/// material + dark tint, top gloss, mono tag/meta header, serif transcript,
+/// and a four-slot action bar (Copy / Original / Undo / Close).
 /// Card height mirrors panelSizeForCurrentState in DictationController.
 struct DictationTranscriptOverlayView: View {
     let transcript: String
+    var original: String = ""
     var copied: Bool = false
     var inserted: Bool = false
     var formatting: Bool = false
@@ -272,186 +274,260 @@ struct DictationTranscriptOverlayView: View {
     var onGrantAccessibility: () -> Void = {}
     let onClose: () -> Void
 
-    @State private var isExpanded = false
-    @State private var showCheck = false
-    @State private var originalCopied = false
+    /// Keep in sync with DictationController.panelSizeForCurrentState.
+    static let baseHeight: CGFloat = 250
+    static let noticeHeight: CGFloat = 298
+    static let cardWidth: CGFloat = 400
+
+    @State private var appeared = false
+    @State private var showRaw = false
+    @State private var undone = false
+    @State private var copiedFlash = false
+
+    private var canToggleOriginal: Bool { showCopyOriginal && !original.isEmpty }
+
+    private var displayText: String {
+        if undone { return "Dictation removed from the app." }
+        return showRaw ? original : transcript
+    }
+
+    private var wordCount: Int {
+        displayText.split(whereSeparator: \.isWhitespace).count
+    }
+
+    private var tagText: String {
+        if undone { return "Undone" }
+        return showRaw ? "Original" : "Polished"
+    }
+
+    private var metaText: String {
+        if undone { return "nothing pasted" }
+        if formatting { return "polishing…" }
+        let words = "\(wordCount) word\(wordCount == 1 ? "" : "s")"
+        let state = inserted ? "pasted" : (copied ? "copied" : "")
+        return state.isEmpty ? words : "\(words) · \(state)"
+    }
 
     private var cardHeight: CGFloat {
-        if !insertNotice.isEmpty { return 218 }
-        if formatting { return 205 }
-        return 170
+        insertNotice.isEmpty ? Self.baseHeight : Self.noticeHeight
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 0) {
+            header
             transcriptScroll
-            polishRow
             Divider()
-                .overlay(.white.opacity(0.1))
-            actionRow
+                .overlay(DictationCardPalette.hairline)
+                .padding(.bottom, 10)
+            actionBar
             insertNoticeRow
         }
-        .padding(18)
-        .frame(width: 330, height: cardHeight)
-        .background {
-            RoundedRectangle(cornerRadius: 18)
-                .fill(.ultraThinMaterial)
-                .environment(\.colorScheme, .dark)
-        }
+        .padding(EdgeInsets(top: 22, leading: 22, bottom: 14, trailing: 22))
+        .frame(width: Self.cardWidth, height: cardHeight, alignment: .top)
+        .background(cardBackground)
         .overlay {
-            RoundedRectangle(cornerRadius: 18)
-                .stroke(.white.opacity(0.12), lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: 26)
+                .stroke(DictationCardPalette.edge, lineWidth: 0.5)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 18))
+        .clipShape(RoundedRectangle(cornerRadius: 26))
         .compositingGroup()
-        .shadow(color: .black.opacity(0.4), radius: 20, y: 10)
-        .scaleEffect(isExpanded ? 1 : 0.9)
-        .opacity(isExpanded ? 1 : 0)
+        .shadow(color: .black.opacity(0.4), radius: 40, y: 20)
+        .scaleEffect(appeared ? 1 : 0.97)
+        .offset(y: appeared ? 0 : 14)
+        .opacity(appeared ? 1 : 0)
         .onAppear {
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
-                isExpanded = true
+            withAnimation(.timingCurve(0.2, 0.9, 0.3, 1, duration: 0.45)) {
+                appeared = true
             }
         }
     }
 
+    // MARK: Header
+
+    private var header: some View {
+        HStack(spacing: 8) {
+            Circle()
+                .fill(DictationCardPalette.accent)
+                .frame(width: 7, height: 7)
+                .shadow(color: DictationCardPalette.accent.opacity(0.85), radius: 5)
+
+            Text(tagText)
+                .font(JarvisFonts.mono(11))
+                .textCase(.uppercase)
+                .tracking(1.0)
+                .foregroundStyle(DictationCardPalette.muted)
+
+            Spacer(minLength: 8)
+
+            Text(metaText)
+                .font(JarvisFonts.mono(11))
+                .foregroundStyle(DictationCardPalette.muted)
+        }
+        .padding(.bottom, 12)
+    }
+
+    // MARK: Transcript
+
     private var transcriptScroll: some View {
-        ScrollView {
-            Text(transcript)
-                .font(.system(size: 14, weight: .regular, design: .default))
-                .foregroundStyle(.white.opacity(0.92))
+        ScrollView(.vertical, showsIndicators: false) {
+            Text(displayText)
+                .font(JarvisFonts.serif(30))
+                .foregroundStyle(undone ? DictationCardPalette.muted : DictationCardPalette.text)
                 .lineSpacing(4)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .contentTransition(.opacity)
         }
-        .frame(maxHeight: insertNotice.isEmpty ? 96 : 66)
+        .frame(minHeight: 92, maxHeight: 150)
+        .animation(.easeInOut(duration: 0.16), value: displayText)
+        .padding(.bottom, 14)
     }
 
-    @ViewBuilder
-    private var polishRow: some View {
-        if formatting {
-            HStack(spacing: 8) {
-                ProgressView()
-                    .controlSize(.small)
-                Text("Polishing…")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.55))
-            }
-        }
-    }
+    // MARK: Action bar
 
-    private var actionRow: some View {
-        HStack(spacing: 6) {
-            copyButton
-            if showCopyOriginal {
-                copyOriginalButton
+    private var actionBar: some View {
+        HStack(spacing: 4) {
+            CardActionButton(
+                icon: copiedFlash ? "checkmark" : "doc.on.doc",
+                label: copiedFlash ? "Copied" : "Copy",
+                primary: true,
+                done: copiedFlash,
+                disabled: undone
+            ) {
+                if showRaw {
+                    onCopyOriginal()
+                } else {
+                    onCopy()
+                }
+                copiedFlash = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
+                    copiedFlash = false
+                }
             }
-            if inserted {
-                undoButton
+
+            if canToggleOriginal {
+                CardActionButton(
+                    icon: "clock.arrow.circlepath",
+                    label: showRaw ? "Polished" : "Original",
+                    disabled: undone
+                ) {
+                    withAnimation(.easeInOut(duration: 0.16)) {
+                        showRaw.toggle()
+                    }
+                }
+                .help("Show what you actually said, before formatting")
             }
-            Spacer()
-            closeButton
+
+            CardActionButton(icon: "arrow.uturn.backward", label: "Undo", disabled: undone) {
+                undone = true
+                onUndo()
+            }
+
+            CardActionButton(icon: "xmark", label: "Close") {
+                onClose()
+            }
         }
     }
 
     @ViewBuilder
     private var insertNoticeRow: some View {
         if !insertNotice.isEmpty {
-            HStack(spacing: 6) {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Image(systemName: "lock.open")
                     .font(.system(size: 10, weight: .medium))
                 Text(insertNotice)
-                    .font(.system(size: 10.5, weight: .regular))
-                    .foregroundStyle(.white.opacity(0.75))
+                    .font(JarvisFonts.sans(11))
                     .fixedSize(horizontal: false, vertical: true)
-                Button(action: {
-                    onGrantAccessibility()
-                }) {
+                Button(action: onGrantAccessibility) {
                     Text("Grant")
-                        .font(.system(size: 10.5, weight: .semibold))
-                        .foregroundStyle(Color.accentColor)
+                        .font(JarvisFonts.sans(11, weight: .semibold))
+                        .foregroundStyle(DictationCardPalette.accent)
                 }
                 .buttonStyle(.plain)
             }
+            .foregroundStyle(DictationCardPalette.muted)
+            .padding(.top, 12)
         }
     }
 
-    private var copyButton: some View {
-        Button(action: {
-            withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
-                showCheck = true
+    private var cardBackground: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 26)
+                .fill(.ultraThinMaterial)
+            RoundedRectangle(cornerRadius: 26)
+                .fill(DictationCardPalette.cardTint.opacity(0.45))
+            RoundedRectangle(cornerRadius: 26)
+                .fill(
+                    LinearGradient(
+                        colors: [Color.white.opacity(0.10), .clear],
+                        startPoint: .topLeading,
+                        endPoint: .center))
+        }
+        .environment(\.colorScheme, .dark)
+    }
+}
+
+/// Mockup palette (dark) — the HTML design tokens 1:1.
+enum DictationCardPalette {
+    static let text     = Color(red: 0.949, green: 0.953, blue: 0.965)  // #F2F3F6
+    static let muted    = Color(red: 0.604, green: 0.624, blue: 0.682)  // #9A9FAE
+    static let accent   = Color(red: 0.561, green: 0.890, blue: 0.839)  // #8FE3D6
+    static let ok       = Color(red: 0.498, green: 0.863, blue: 0.745)  // #7FDCBE
+    static let ink      = Color(red: 0.031, green: 0.035, blue: 0.047)  // #08090C
+    static let cardTint = Color(red: 0.118, green: 0.125, blue: 0.157)  // #1E2028
+    static let edge     = Color.white.opacity(0.14)
+    static let hairline = Color.white.opacity(0.09)
+    static let hover    = Color.white.opacity(0.08)
+}
+
+/// One slot of the four-button bar: equal width, 13pt radius, hover fill,
+/// filled/ink treatment for the primary Copy action, green when done.
+private struct CardActionButton: View {
+    let icon: String
+    let label: String
+    var primary: Bool = false
+    var done: Bool = false
+    var disabled: Bool = false
+    let action: () -> Void
+
+    @State private var hovering = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 7) {
+                Image(systemName: icon)
+                    .font(.system(size: 13, weight: .medium))
+                Text(label)
+                    .font(JarvisFonts.sans(13, weight: primary ? .semibold : .medium))
+                    .lineLimit(1)
             }
-            onCopy()
-        }) {
-            HStack(spacing: 5) {
-                Image(systemName: copied ? "checkmark" : "doc.on.doc")
-                    .font(.system(size: 11, weight: .medium))
-                Text(copied ? "Copied" : "Copy")
-                    .font(.system(size: 12, weight: .medium))
-            }
-            .padding(.horizontal, 11)
-            .padding(.vertical, 7)
+            .foregroundStyle(foreground)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .padding(.horizontal, 6)
             .background {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(.white.opacity(0.15))
+                RoundedRectangle(cornerRadius: 13)
+                    .fill(background)
             }
-            .foregroundStyle(.white)
+            .contentShape(RoundedRectangle(cornerRadius: 13))
         }
         .buttonStyle(.plain)
-        .scaleEffect(showCheck ? 1.05 : 1.0)
+        .disabled(disabled)
+        .opacity(disabled ? 0.35 : 1)
+        .onHover { inside in
+            hovering = inside && !disabled
+        }
     }
 
-    /// Copies the raw STT text — what was actually said, before rules and
-    /// before the polish pass. Stays open so the polished Copy is still live.
-    private var copyOriginalButton: some View {
-        Button(action: {
-            originalCopied = true
-            onCopyOriginal()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-                originalCopied = false
-            }
-        }) {
-            HStack(spacing: 5) {
-                Image(systemName: originalCopied ? "checkmark" : "clock.arrow.circlepath")
-                    .font(.system(size: 11, weight: .medium))
-                Text(originalCopied ? "Copied" : "Original")
-                    .font(.system(size: 12, weight: .medium))
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 7)
-            .foregroundStyle(.white.opacity(0.75))
-        }
-        .buttonStyle(.plain)
-        .help("Copy what you actually said, before formatting")
+    private var foreground: Color {
+        if primary { return DictationCardPalette.ink }
+        if done { return DictationCardPalette.ok }
+        return DictationCardPalette.muted
     }
 
-    private var undoButton: some View {
-        Button(action: onUndo) {
-            HStack(spacing: 5) {
-                Image(systemName: "arrow.uturn.backward")
-                    .font(.system(size: 11, weight: .medium))
-                Text("Undo")
-                    .font(.system(size: 12, weight: .medium))
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 7)
-            .foregroundStyle(.white.opacity(0.75))
-        }
-        .buttonStyle(.plain)
-    }
-
-    private var closeButton: some View {
-        Button(action: onClose) {
-            HStack(spacing: 5) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 11, weight: .medium))
-                Text("Close")
-                    .font(.system(size: 12, weight: .medium))
-            }
-            .padding(.horizontal, 11)
-            .padding(.vertical, 7)
-            .foregroundStyle(.white.opacity(0.6))
-        }
-        .buttonStyle(.plain)
+    private var background: Color {
+        if primary { return hovering ? Color.white.opacity(0.92) : DictationCardPalette.text }
+        return hovering ? DictationCardPalette.hover : .clear
     }
 }
 

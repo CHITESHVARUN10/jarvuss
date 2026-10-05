@@ -159,7 +159,7 @@ pub fn rl_append(event_json: String) -> bool {
     rl_log::append(&event_json)
 }
 
-// ── Phase 1.1: Ollama fallback (client + both response shapes) ──────
+// ── Phase 1.1: Ollama fallback (client + tools-prompt parsing) ──────
 
 /// Raw `/api/generate` call (free-form answers, e.g. `aiQuery` responses).
 #[uniffi::export]
@@ -167,14 +167,14 @@ pub fn ollama_generate(prompt: String) -> ollama::OllamaGenerateOutcome {
     ollama::generate(&prompt)
 }
 
-/// Planner fallback: tools prompt + "Shape A" → ordered actions
+/// Planner fallback: tools prompt + "Command: …" → ordered actions
 /// (falls back to a single `AiQuery(cleaned)` when the output is unparseable).
 #[uniffi::export]
 pub fn ollama_plan(cleaned: String) -> ollama::OllamaPlanResult {
     ollama::plan(&cleaned)
 }
 
-/// Normalizer fallback: tools prompt + "Shape B" → structured command.
+/// Normalizer fallback: same tools prompt → structured command.
 #[uniffi::export]
 pub fn ollama_normalize(cleaned: String) -> ollama::NormalizedCommand {
     ollama::normalize(&cleaned)
