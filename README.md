@@ -12,6 +12,8 @@ Three ways in:
 | **⌘⇧A** — action | Push-to-talk command execution ("open chrome, play lofi on spotify"). |
 | **"Jarvis …"** — wake word | Hands-free: say the wake word and the command in the same breath. |
 
+Full walkthrough with every command and exact phrasings: **[practice.md](practice.md)**.
+
 ---
 
 ## What it can do today
@@ -37,6 +39,7 @@ Three ways in:
 - **Insights**: local stats on dictation, commands, success rates, LLM usage.
 - **Connections**: Spotify (OAuth via local backend) and PostgreSQL (schema-browsing status/credentials/test).
 - **rail + panes shell**: Assistant, Voice, Routines, Connections, Insights, System, About.
+- **Start at login**: Assistant → Behaviour — macOS opens Jarvis for you when you log in (Login Items via `SMAppService`; no helper app).
 - **Rust core (in progress)**: command understanding can route through the Rust pipeline (toggle in About), with shadow-parity logging.
 
 ---
@@ -151,8 +154,7 @@ brew install cmake ffmpeg portaudio ollama postgresql@18 rust
 ### 2) Local models
 
 ```zsh
-ollama pull qwen2.5-coder:1.5b-base   # planner / answers
-ollama pull qwen2.5:1.5b-instruct     # dictation polish pass
+ollama pull qwen2.5:1.5b-instruct     # one model serves planner, answers, and the polish pass
 ollama serve
 ```
 
@@ -195,6 +197,10 @@ python3 -m uvicorn voice_auth_service:app --app-dir backend --host 127.0.0.1 --p
 swift run
 ```
 
+### Start at login
+
+Toggle **Assistant → Behaviour → Start at login** and macOS opens Jarvis for you when you log in. Enable it from the packaged app (`./scripts/package_jarvis_app.zsh`) — a bare `swift run` binary has no bundle identity to register. If macOS wants approval first, the same card shows an **Open Settings** row that lands in System Settings → General → Login Items.
+
 ### Permissions — read this once
 
 - **Microphone** is required for everything voice-related. Grant it and restart.
@@ -213,6 +219,8 @@ Jarvis from that list with **−** and re-add it — once. The app logs
 
 ## 🎙️ Command syntax
 
+New here? **[practice.md](practice.md)** is the hands-on tutorial — every capability with exact phrasings. The short version:
+
 ```text
 # Apps
 Jarvis open brave browser
@@ -228,7 +236,7 @@ Jarvis open the most recent pdf in downloads
 # Media / system
 Jarvis play lofi beats on spotify
 Jarvis set the volume to forty percent
-Jarvis dim the display
+Jarvis dim the screen
 
 # Questions
 Jarvis explain quantum computing

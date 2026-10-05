@@ -126,42 +126,6 @@ enum RustPipeline {
         }
     }
 
-    // MARK: - Command normalizer mapping (tools prompt)
-
-    static func map(_ action: CoreCommandAction) -> CommandAction {
-        switch action {
-        case .openApp(let name):      return .openApp(name)
-        case .closeApp(let name):     return .closeApp(name)
-        case .openUrl(let url):       return .openURL(url)
-        case .searchWeb(let engine, let query): return .searchWeb(engine: engine, query: query)
-        case .openFolder(let path):   return .openFolder(path)
-        case .createFile(let name):   return .createFile(name)
-        case .createFolder(let name): return .createFolder(name)
-        case .media(let action):      return .media(action)
-        case .volume(let action):     return .volume(action)
-        case .display(let action):    return .display(action)
-        case .systemInfo(let kind):   return .systemInfo(kind)
-        case .aiQuery(let query):     return .aiQuery(query)
-        }
-    }
-
-    static func map(_ command: CoreNormalizedCommand, rawText: String) -> NormalizedCommand {
-        let priority: NormalizedPriority
-        switch command.priority {
-        case .high:   priority = .high
-        case .normal: priority = .normal
-        case .low:    priority = .low
-        }
-        return NormalizedCommand(
-            priority: priority,
-            actions: command.actions.map(map),
-            isAIQuery: command.isAiQuery,
-            rawText: rawText,
-            isBlocked: command.blocked,
-            blockedReason: command.blockedReason
-        )
-    }
-
     // MARK: - Blocking bridge
 
     /// Run a blocking Rust call (HTTP, file I/O) off the cooperative pool so

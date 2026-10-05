@@ -128,15 +128,12 @@ final class AppState: ObservableObject {
     static let layer1PhraseCount = 7
     static let layer2PhraseCount = 7
 
-    private let micManager: MicManager
+    private let micManager: AudioCapturing
     private let logger: Logger
     let dbManager: DBManager
-    private let parser = CommandParser()
-    private let executor = CommandExecutor()
-    private let actionExecutor = ActionExecutor()
+    private var actionExecutor: PlanExecuting = ActionExecutor()
     private let automationStore = AutomationStore()
-    private let commandNormalizer = CommandNormalizer(model: JarvisModel.name)
-    private let voiceAuthClient = VoiceAuthClient()
+    private let voiceAuthClient: SpeakerVerifying = VoiceAuthClient()
     let spotifyClient = SpotifyClient()
     let postgresClient = PostgresClient()
     private let actionPlanner = ActionPlanner()
@@ -189,14 +186,8 @@ final class AppState: ObservableObject {
     /// the backend would 400 (or Resemblyzer would embed noise). Skip the
     /// POST and reject locally instead.
     private static let verifyMinClipRMS: Float = 0.005
-    /// Whisper emits "thank you / thanks / you" on silence (well-known
-    /// hallucination). Such singleton finals without a wake word are never
-    /// commands — filter them before verify/enqueue.
-    private static let hallucinatedSingletons: Set<String> = [
-        "thankyou", "thanks", "you", "thankyouthankyou", "okay", "ok",
-        "thankyouforwatching", "thanksforwatching", "thankyouverymuch",
-        "subtitlesby", "blankaudio", "youyouyou",
-    ]
+    // Hallucinated-singleton filtering lives in TranscriptSanitizer
+    // (single table shared with the batch path).
     /// Resemblyzer embeds via preprocess_wav at 16 kHz. Exporting at the
     /// same rate removes a resample-variance source between enroll-time
     /// and verify-time embeddings and keeps clips comparable sample-for-sample.
@@ -224,7 +215,7 @@ final class AppState: ObservableObject {
     }
 
     init(
-        micManager: MicManager = MicManager.shared,
+        micManager: AudioCapturing = MicManager.shared,
         logger: Logger = Logger(),
         dbManager: DBManager = DBManager()
     ) {
@@ -867,15 +858,15 @@ final class AppState: ObservableObject {
         // still waits for the final below.
         guard isFinal else { return }
 
-        if voiceModeEnabled && containsWakeWord(transcript) {
+        if voiceModeEnabled && TranscriptSanitizer.containsWakeWord(transcript) {
             pendingWakeWordDetected = true
             pendingWakeWordDetectedAt = Date()
         }
 
         // ── TTS echo suppression ─────────────────────────────────────
         if !lastSpokenResponseText.isEmpty {
-            let compactTranscript = Self.normalizeCompact(transcript)
-            let compactSpoken    = Self.normalizeCompact(lastSpokenResponseText)
+            let compactTranscript = TranscriptSanitizer.normalizeCompact(transcript)
+            let compactSpoken    = TranscriptSanitizer.normalizeCompact(lastSpokenResponseText)
             let windowElapsed    = Date().timeIntervalSince(lastSpokenResponseAt)
             if windowElapsed < ttsEchoSuppressWindow
                 && (compactTranscript.contains(compactSpoken)
@@ -962,7 +953,7 @@ final class AppState: ObservableObject {
         // NOTE: everything below uses transcriptForCommand (the repaired
         // text), not the raw transcript: a bare "Spotify" mishear was
         // already repaired to "open spotify" above.
-        let hasWakeWord = containsWakeWord(transcriptForCommand)
+        let hasWakeWord = TranscriptSanitizer.containsWakeWord(transcriptForCommand)
         var rawSegments: [String] = []
 
         // ── Whisper hallucination filter ──────────────────────────
@@ -970,7 +961,7 @@ final class AppState: ObservableObject {
         // never a command. Drop singleton fillers without a wake word BEFORE
         // verify/enqueue so they can't hit /verify (400), Ollama, or the
         // queue.
-        if !hasWakeWord, Self.hallucinatedSingletons.contains(Self.normalizeCompact(transcriptForCommand)) {
+        if !hasWakeWord, TranscriptSanitizer.isHallucinatedSingleton(transcriptForCommand) {
             appendLog("[Voice] dropped: hallucination filter ('\(transcriptForCommand)' without wake word).")
             return
         }
@@ -1021,7 +1012,7 @@ final class AppState: ObservableObject {
         // ── Clean each segment ────────────────────────────────────────
         var cleanedCommands: [String] = []
         for segment in rawSegments {
-            guard let cmd = cleanVoiceSegment(segment) else { continue }
+            guard let cmd = TranscriptSanitizer.cleanVoiceSegment(segment, onLog: { [weak self] in self?.appendLog($0) }) else { continue }
             cleanedCommands.append(cmd)
         }
 
@@ -1031,14 +1022,14 @@ final class AppState: ObservableObject {
         }
 
         // ── Sanitize batch: dedup + conflict resolution + cap ─────────
-        let sanitized = sanitizeBatch(cleanedCommands)
+        let sanitized = TranscriptSanitizer.sanitizeBatch(cleanedCommands, maxBatchSize: Self.maxBatchSize, onLog: { [weak self] in self?.appendLog($0) })
         appendLog("[Voice] final commands: \(sanitized.map { "'\($0)'" }.joined(separator: ", "))")
 
         for cmd in sanitized {
             appendLog("[Voice] cleaned: '\(cmd)'")
         }
 
-        lastBatchHandledTranscript = Self.normalizeCompact(transcriptForCommand)
+        lastBatchHandledTranscript = TranscriptSanitizer.normalizeCompact(transcriptForCommand)
 
         for validated in sanitized {
             let priority = CommandPriority.classify(validated)
@@ -1049,113 +1040,6 @@ final class AppState: ObservableObject {
                 appendLog("[Voice] dropped: queue rejected '\(validated)' (see [Queue] line above).")
             }
         }
-    }
-
-    // MARK: - Voice segment cleaner
-
-    private func cleanVoiceSegment(_ segment: String) -> String? {
-        var cleaned = sanitizeSpokenCommand(segment)
-        cleaned = removeTrailingWakeWordFragment(from: cleaned)
-        cleaned = collapseRepeatedWords(cleaned)
-        cleaned = normalizeMisheardTargets(in: cleaned)
-
-        // Strip filler words
-        let fillerRegex = "\\b(please|okay|ok|uh|um|you know|like)\\b"
-        cleaned = cleaned
-            .replacingOccurrences(of: fillerRegex, with: " ", options: .regularExpression)
-            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-
-        // Strip any residual jarvis tokens (edge-case partial matches)
-        cleaned = cleaned
-            .replacingOccurrences(of: "(?i)\\bjarvis\\b", with: " ",
-                                   options: [.regularExpression, .caseInsensitive])
-            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-
-        // Enforce 8-word max per command
-        let tokens = cleaned.split(separator: " ").map(String.init)
-        let capped  = tokens.count > 8 ? Array(tokens.prefix(8)).joined(separator: " ") : cleaned
-
-        guard let validated = CommandValidator.validate(capped) else {
-            if !capped.isEmpty { appendLog("[Validator] Rejected segment: '\(capped)'") }
-            return nil
-        }
-        return validated
-    }
-
-    private func collapseRepeatedWords(_ text: String) -> String {
-        let tokens = text.split(separator: " ").map(String.init)
-        var output: [String] = []
-        for token in tokens {
-            if output.last?.lowercased() != token.lowercased() {
-                output.append(token)
-            }
-        }
-        return output.joined(separator: " ")
-    }
-
-    // MARK: - Batch sanitizer (dedup + conflict resolution + cap)
-
-    private func sanitizeBatch(_ raw: [String]) -> [String] {
-        let original = raw.count
-
-        // Step 1: Deduplicate — last occurrence wins
-        var seen = Set<String>()
-        var deduplicated: [String] = []
-        for cmd in raw.reversed() {
-            let key = cmd.lowercased().trimmingCharacters(in: .whitespaces)
-            if seen.insert(key).inserted { deduplicated.insert(cmd, at: 0) }
-        }
-
-        // Step 2: Build app-target → winning command map
-        let appPrefixes = ["open ", "close ", "launch ", "start ", "run "]
-        func appTarget(for cmd: String) -> (verb: String, target: String)? {
-            let lower = cmd.lowercased()
-            for prefix in appPrefixes {
-                if lower.hasPrefix(prefix) {
-                    let target = String(lower.dropFirst(prefix.count)).trimmingCharacters(in: .whitespaces)
-                    return (prefix.trimmingCharacters(in: .whitespaces), target)
-                }
-            }
-            return nil
-        }
-
-        var winner = [String: String]()
-        for cmd in deduplicated {
-            if let (verb, target) = appTarget(for: cmd) {
-                if let prev = winner[target] {
-                    let prevVerb = appTarget(for: prev)?.verb ?? "?"
-                    appendLog("[Conflict] resolved: \(target) \(prevVerb) → \(verb) (last wins)")
-                }
-                winner[target] = cmd
-            }
-        }
-
-        // Step 3: Rebuild in ORIGINAL ORDER
-        var emittedTargets = Set<String>()
-        var combined: [String] = []
-        for cmd in deduplicated {
-            if let (_, target) = appTarget(for: cmd) {
-                if let w = winner[target], w == cmd, !emittedTargets.contains(target) {
-                    combined.append(cmd)
-                    emittedTargets.insert(target)
-                }
-            } else {
-                combined.append(cmd)
-            }
-        }
-
-        // Step 4: Cap at maxBatchSize
-        if combined.count > Self.maxBatchSize {
-            appendLog("[Batch] capped: \(combined.count) → \(Self.maxBatchSize) commands")
-            combined = Array(combined.suffix(Self.maxBatchSize))
-        }
-
-        if combined.count != original {
-            appendLog("[Batch] sanitized: \(original) → \(combined.count) commands")
-        }
-        return combined
     }
 
     private func handleEnrollmentTranscript(_ transcript: String, isFinal: Bool) {
@@ -1176,7 +1060,7 @@ final class AppState: ObservableObject {
         latestEnrollmentScore = score
 
         let requiredTokens = requiredIntentTokens(for: target)
-        let recognizedTokenSet = Set(Self.normalizedTokens(from: cleanedTranscript))
+        let recognizedTokenSet = Set(TranscriptSanitizer.normalizedTokens(from: cleanedTranscript))
         let requiredTokenHits = requiredTokens.filter { recognizedTokenSet.contains($0) }.count
         let requiredTokenRatio: Double = requiredTokens.isEmpty ? 0 : Double(requiredTokenHits) / Double(requiredTokens.count)
 
@@ -1204,10 +1088,10 @@ final class AppState: ObservableObject {
                 return
             }
 
-            let currentNormalized = Self.normalizeCompact(cleanedTranscript)
-            let previousNormalized = Self.normalizeCompact(lastEnrollmentAcceptedTranscript)
+            let currentNormalized = TranscriptSanitizer.normalizeCompact(cleanedTranscript)
+            let previousNormalized = TranscriptSanitizer.normalizeCompact(lastEnrollmentAcceptedTranscript)
             if !previousNormalized.isEmpty {
-                let duplicateDistance = Self.levenshteinDistance(lhs: currentNormalized, rhs: previousNormalized)
+                let duplicateDistance = StringDistance.levenshtein(currentNormalized, previousNormalized)
                 let maxLen = max(currentNormalized.count, previousNormalized.count)
                 if maxLen > 0 {
                     let duplicateSimilarity = 1.0 - (Double(duplicateDistance) / Double(maxLen))
@@ -1317,28 +1201,6 @@ final class AppState: ObservableObject {
         }
     }
 
-    /// Legacy sync restore (kept for in-session callers like re-enroll
-    /// flows — never on the boot path; boot uses restoreEnrollmentStateFast
-    /// + reconcileEnrollmentFromDB so psql can never park the MainActor).
-    private func restoreEnrollmentState() {
-        let defaultsFlag = UserDefaults.standard.bool(forKey: Self.enrollmentCompletedDefaultsKey)
-        let savedBackendCount = UserDefaults.standard.integer(forKey: Self.backendSampleCountDefaultsKey)
-
-        backendEnrollmentSampleCount = savedBackendCount
-
-        if defaultsFlag {
-            enrollmentCompleted = true
-            enrollmentActive = false
-            appendLog("Enrollment restored from saved state.")
-
-            if savedBackendCount >= voiceEnrollmentSampleTarget {
-                voiceVerificationStatus = "Voice Enrolled ✅"
-            } else if savedBackendCount > 0 {
-                voiceVerificationStatus = "Finalizing Voice Profile..."
-            }
-        }
-    }
-
     private func persistEnrollmentCompleted(_ value: Bool) {
         UserDefaults.standard.set(value, forKey: Self.enrollmentCompletedDefaultsKey)
     }
@@ -1374,8 +1236,8 @@ final class AppState: ObservableObject {
     }
 
     private func phraseMatchScore(target: String, recognized: String) -> Double {
-        let targetTokens = Set(Self.normalizedTokens(from: target))
-        let recognizedTokens = Set(Self.normalizedTokens(from: recognized))
+        let targetTokens = Set(TranscriptSanitizer.normalizedTokens(from: target))
+        let recognizedTokens = Set(TranscriptSanitizer.normalizedTokens(from: recognized))
         guard !targetTokens.isEmpty else { return 0 }
 
         let tokenIntersection = targetTokens.intersection(recognizedTokens).count
@@ -1387,40 +1249,10 @@ final class AppState: ObservableObject {
         let maxLen = max(targetNormalized.count, recognizedNormalized.count)
         guard maxLen > 0 else { return tokenScore }
 
-        let distance = Self.levenshteinDistance(lhs: targetNormalized, rhs: recognizedNormalized)
+        let distance = StringDistance.levenshtein(targetNormalized, recognizedNormalized)
         let charScore = 1.0 - (Double(distance) / Double(maxLen))
 
         return (0.6 * tokenScore) + (0.4 * max(0.0, charScore))
-    }
-
-    private static func levenshteinDistance(lhs: String, rhs: String) -> Int {
-        let lhsArray = Array(lhs)
-        let rhsArray = Array(rhs)
-
-        var distance = Array(repeating: Array(repeating: 0, count: rhsArray.count + 1), count: lhsArray.count + 1)
-
-        for i in 0...lhsArray.count {
-            distance[i][0] = i
-        }
-
-        for j in 0...rhsArray.count {
-            distance[0][j] = j
-        }
-
-        for i in 1...lhsArray.count {
-            for j in 1...rhsArray.count {
-                let cost = lhsArray[i - 1] == rhsArray[j - 1] ? 0 : 1
-                distance[i][j] = min(
-                    distance[i - 1][j] + 1,
-                    min(
-                        distance[i][j - 1] + 1,
-                        distance[i - 1][j - 1] + cost
-                    )
-                )
-            }
-        }
-
-        return distance[lhsArray.count][rhsArray.count]
     }
 
     func toggleVoiceMode() {
@@ -1434,17 +1266,6 @@ final class AppState: ObservableObject {
         appendLog("Voice mode \(voiceModeEnabled ? "enabled" : "disabled").")
     }
 
-    private func sanitizeSpokenCommand(_ text: String) -> String {
-        text
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .replacingOccurrences(of: "^[\\p{Punct}\\s]+", with: "", options: .regularExpression)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    private func containsWakeWord(_ text: String) -> Bool {
-        text.lowercased().range(of: "\\bjarvis\\b", options: .regularExpression) != nil
-    }
-
     // MARK: - Speech session helpers (Whisper era)
     //
     // Utterances are VAD-segmented and self-isolated: each silence boundary
@@ -1456,32 +1277,6 @@ final class AppState: ObservableObject {
     // deleted here — the batch path in handleTranscript is the SOLE entry.
     // isActionableCommand / prepareVoiceCommandCandidate /
     // truncateAtFillerBoundary went with it (dual-path only).
-
-    private func normalizeMisheardTargets(in command: String) -> String {
-        let lower = command.lowercased()
-        if lower.hasPrefix("open ") || lower.hasPrefix("close ") {
-            if lower.contains("get her desktop") ||
-                lower.contains("getha desktop") ||
-                lower.contains("get desktop") ||
-                lower.contains("gate desktop") {
-                let verb = lower.hasPrefix("close ") ? "close" : "open"
-                return "\(verb) GitHub Desktop"
-            }
-        }
-        return command
-    }
-
-    private func removeTrailingWakeWordFragment(from command: String) -> String {
-        var tokens = command.split(separator: " ").map(String.init)
-        guard let last = tokens.last?.lowercased() else { return command }
-
-        let wakeFragments = ["ja", "jar", "jarv", "jarvi", "jarvis"]
-        if wakeFragments.contains(last) {
-            tokens.removeLast()
-        }
-
-        return tokens.joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
-    }
 
     private func matchedAutomation(for command: String) -> (automation: VoiceAutomation, isOffVariant: Bool)? {
         // Migration cut-over: Rust core owns the matching decision.
@@ -1616,7 +1411,10 @@ final class AppState: ObservableObject {
 
         do {
             try process.run()
-            process.waitUntilExit()
+            guard process.waitUntilExit(timeout: 10) else {
+                appendLog("[Automation][ERROR] Open file timed out: \(path)")
+                return false
+            }
             return process.terminationStatus == 0
         } catch {
             appendLog("[Automation][ERROR] Open file failed: \(error.localizedDescription)")
@@ -1684,19 +1482,9 @@ final class AppState: ObservableObject {
         if tryHandleQuickInfoCommand(command) { return }
         // ---
 
-        // --- Safety pre-check (existing blocklist) ---
-        if let blockedReason = blockedCommandReason(command) {
-            appendLog("Blocked command: \(blockedReason)")
-            dbManager.saveEvent(
-                eventType: "command_blocked",
-                transcript: command,
-                matched: false,
-                metadata: ["reason": blockedReason]
-            )
-            return
-        }
-
-        // --- SafetyGuard (new, covers install / sudo / destructive) ---
+        // --- SafetyGuard: single pre-pipeline gate (sudo / destructive /
+        // install-preview / protected paths). Previously two overlapping
+        // blocklists ran here; SafetyGuard is now the only one.
         switch SafetyGuard.validate(rawCommand: command) {
         case .blocked(let reason):
             appendLog("⛔ Safety blocked: \(reason)")
@@ -1753,12 +1541,11 @@ final class AppState: ObservableObject {
             }
         }
 
-        // Determine if the plan is multi-step or a single action that maps
-        // cleanly to the legacy single-command pipeline.
-        let isSingleLegacy = planIsSingleLegacyAction(plan)
-
-        if !isSingleLegacy {
-            // == Multi-step (or media / URL / volume / search) path ==
+        // == Unified execution: every plan (single or multi-step) runs
+        // through ActionExecutor. The old single-legacy fork re-parsed the
+        // already-planned action through CommandNormalizer + CommandParser
+        // (including a redundant potential Ollama call) — removed.
+        do {
             if plan.count > 1 {
                 appendLog("[Plan] \(plan.count) steps:")
                 plan.enumerated().forEach { i, a in appendLog("  \(i + 1). \(a)") }
@@ -1816,129 +1603,8 @@ final class AppState: ObservableObject {
             currentCommand = ""
             assistantState = micActive ? .listening : .idle
             succeeded = true
-            return
         }
 
-        // == Structured normalization path (replaces old plain-string normalize) ==
-        let nc = await commandNormalizer.normalizeStructured(command)
-
-        // Handle safety block from normalizer
-        if nc.isBlocked {
-            let reason = nc.blockedReason ?? "unknown"
-            appendLog("⛔ [Normalizer] Blocked: \(reason)")
-            dbManager.saveEvent(
-                eventType: "command_blocked",
-                transcript: command,
-                matched: false,
-                metadata: ["reason": reason]
-            )
-            StatsRecorder.shared.recordCommand(success: false)
-            currentCommand = ""
-            assistantState = micActive ? .listening : .idle
-            return
-        }
-
-        // If normalizer produced multiple actions → execute directly via ActionExecutor
-        if nc.actions.count > 1 {
-            let plan = nc.actions.map { $0.toPlannedAction() }
-            appendLog("[Normalizer] Multi-action plan (\(plan.count) steps):")
-            plan.enumerated().forEach { i, a in appendLog("  \(i + 1). \(a)") }
-            assistantState = .executing
-            let result = await executor.execute(.multiAction(plan))
-            appendLog("Result: \(result)")
-            dbManager.saveEvent(
-                eventType: "multi_action_executed",
-                transcript: command,
-                executionResult: result
-            )
-            currentCommand = ""
-            assistantState = micActive ? .listening : .idle
-            succeeded = true
-            return
-        }
-
-        // Single action — route through legacy CommandParser for backward compatibility
-        let normalizedString = nc.toLegacyString()
-
-        // Additional legacy blocklist check
-        if let blockedReason = blockedCommandReason(normalizedString) {
-            appendLog("Blocked command after normalization: \(blockedReason)")
-            dbManager.saveEvent(
-                eventType: "command_blocked",
-                transcript: command,
-                matched: false,
-                normalizedCommand: normalizedString,
-                metadata: ["reason": blockedReason]
-            )
-            StatsRecorder.shared.recordCommand(success: false)
-            currentCommand = ""
-            assistantState = micActive ? .listening : .idle
-            return
-        }
-
-        let parserInput: String
-        if normalizedString.lowercased().hasPrefix("ai: ") {
-            parserInput = String(normalizedString.dropFirst(4)).trimmingCharacters(in: .whitespacesAndNewlines)
-        } else {
-            parserInput = normalizedString
-        }
-
-        currentCommand = parserInput
-        appendLog("[Normalizer] \(normalizedString)")
-
-        dbManager.saveEvent(
-            eventType: "command_normalized",
-            transcript: command,
-            normalizedCommand: normalizedString
-        )
-
-        let parsed = parser.parse(parserInput)
-        assistantState = .executing
-        appendLog("Executing command...")
-
-        let result = await executor.execute(parsed)
-
-        appendLog("Result: \(result)")
-
-        // Deliver text + optional voice response
-        let speak = voiceResponseEnabled
-        switch parsed {
-        case .aiQuery:
-            // AI query result → show full response + speak if enabled
-            ResponseEngine.shared.respond(to: result, speak: speak)
-        case .searchWeb:
-            ResponseEngine.shared.respond(to: result, speak: speak)
-        case .openApp(let n):
-            ResponseEngine.shared.respond(to: "Opening \(n)", speak: speak)
-        case .closeApp(let n):
-            ResponseEngine.shared.respond(to: "Closing \(n)", speak: speak)
-        default:
-            if !result.isEmpty {
-                ResponseEngine.shared.respond(to: result, speak: speak)
-            }
-        }
-
-        dbManager.saveEvent(
-            eventType: "command_executed",
-            transcript: command,
-            normalizedCommand: normalizedString,
-            executionResult: result
-        )
-        currentCommand = ""
-        assistantState = micActive ? .listening : .idle
-        succeeded = true
-    }
-
-    /// Returns true when the plan contains exactly one action that falls
-    /// into the legacy single-command parser's domain (app open/close/create/ai).
-    private func planIsSingleLegacyAction(_ plan: [PlannedAction]) -> Bool {
-        guard plan.count == 1 else { return false }
-        switch plan[0] {
-        case .openApp, .closeApp, .createFile, .createFolder, .aiQuery:
-            return true
-        default:
-            return false
-        }
     }
 
     private func verifyThenRunCommand(_ command: String) async {
@@ -1963,7 +1629,7 @@ final class AppState: ObservableObject {
             // Borderline retry and network retry have been removed per spec requirement.
             let result = try await attemptVerification()
 
-            let wakeWordDetected = containsWakeWord(lastRecognizedSpeech)
+            let wakeWordDetected = TranscriptSanitizer.containsWakeWord(lastRecognizedSpeech)
             let effectiveThreshold = wakeWordDetected ? 0.65 : voiceVerificationThreshold
             let isVerifiedByThreshold = result.similarity >= effectiveThreshold
 
@@ -2080,7 +1746,7 @@ final class AppState: ObservableObject {
                 || authError.localizedDescription.lowercased().contains("url")
 
             if isNetworkError {
-                let hasWake = containsWakeWord(lastRecognizedSpeech)
+                let hasWake = TranscriptSanitizer.containsWakeWord(lastRecognizedSpeech)
                     || voiceSessionState == .active
                 guard hasWake else {
                     voiceVerificationStatus = "Unknown Voice ❌"
@@ -2208,26 +1874,6 @@ final class AppState: ObservableObject {
         }
     }
 
-    private func blockedCommandReason(_ command: String) -> String? {
-        let lowered = command.lowercased()
-
-        let destructiveRegex = "\\b(delete|remove|rm|trash|erase|wipe)\\b"
-        if lowered.range(of: destructiveRegex, options: .regularExpression) != nil {
-            return "destructive operations (delete/remove) are disabled"
-        }
-
-        let sensitivePathRegex = "\\b(/system|/library|/private|/usr|/bin|/sbin|/etc|/var|root)\\b"
-        if lowered.range(of: sensitivePathRegex, options: .regularExpression) != nil {
-            return "access to protected system paths is disabled"
-        }
-
-        if lowered.contains("system file") || lowered.contains("main system file") {
-            return "system file access is disabled"
-        }
-
-        return nil
-    }
-
     /// Floating result panel: shows a short answer (time, date, brightness)
     /// in a global NSPanel above ALL apps — the in-window PopupView only
     /// renders when Jarvis is frontmost, so background ⌘⇧A answers were
@@ -2250,18 +1896,19 @@ final class AppState: ObservableObject {
         // Remove trailing punctuation
         lower = lower.trimmingCharacters(in: CharacterSet(charactersIn: "?.!"))
 
+        // Detection lives in QuickInfoMatcher (single table shared with the
+        // planner routers). Multi-clause inputs fall through so the
+        // conjunction splitter keeps every clause. This stays a presentation
+        // fast-path: instant answer + floating panel + TTS.
+        guard !QuickInfoMatcher.looksCompound(lower),
+              let kind = QuickInfoMatcher.match(lower) else { return false }
+
         let now = Date()
         let calendar = Calendar.current
         let formatter = DateFormatter()
 
-        // ── Time patterns ────────────────────────────────────────────
-        let timePatterns = [
-            "what is the time", "what's the time", "what time is it",
-            "tell me the time", "current time", "time right now",
-            "what is time", "whats the time", "show me the time",
-            "the time", "time please"
-        ]
-        if timePatterns.contains(where: { lower.contains($0) }) {
+        switch kind {
+        case .time:
             formatter.dateStyle = .none
             formatter.timeStyle = .short
             let timeStr = formatter.string(from: now)
@@ -2271,17 +1918,8 @@ final class AppState: ObservableObject {
             ResponseEngine.shared.respond(to: timeStr, speak: voiceResponseEnabled)
             showFloatingResult(timeStr, icon: "clock.fill")
             return true
-        }
 
-        // ── Date patterns ────────────────────────────────────────────
-        let datePatterns = [
-            "what is today's date", "what is the date", "today's date",
-            "what day is today", "what is today", "what date is it",
-            "tell me the date", "current date", "todays date",
-            "what's today's date", "whats todays date", "show me the date",
-            "date today", "date right now"
-        ]
-        if datePatterns.contains(where: { lower.contains($0) }) {
+        case .date:
             formatter.dateStyle = .full
             formatter.timeStyle = .none
             let dateStr = formatter.string(from: now)
@@ -2291,14 +1929,8 @@ final class AppState: ObservableObject {
             ResponseEngine.shared.respond(to: dateStr, speak: voiceResponseEnabled)
             showFloatingResult(dateStr, icon: "calendar")
             return true
-        }
 
-        // ── Day of week patterns ─────────────────────────────────────
-        let dayPatterns = [
-            "what day is it", "what day is this", "which day is it",
-            "which day is today", "tell me the day", "what day"
-        ]
-        if dayPatterns.contains(where: { lower.contains($0) }) {
+        case .day:
             let dayNames = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
             let weekday = calendar.component(.weekday, from: now)
             let dayStr = dayNames[weekday - 1]
@@ -2308,14 +1940,8 @@ final class AppState: ObservableObject {
             ResponseEngine.shared.respond(to: dayStr, speak: voiceResponseEnabled)
             showFloatingResult(dayStr, icon: "calendar")
             return true
-        }
 
-        // ── Month patterns ───────────────────────────────────────────
-        let monthPatterns = [
-            "what month is it", "what month", "which month",
-            "tell me the month", "current month"
-        ]
-        if monthPatterns.contains(where: { lower.contains($0) }) {
+        case .month:
             let months = ["January","February","March","April","May","June",
                           "July","August","September","October","November","December"]
             let monthIdx = calendar.component(.month, from: now)
@@ -2326,11 +1952,8 @@ final class AppState: ObservableObject {
             ResponseEngine.shared.respond(to: monthStr, speak: voiceResponseEnabled)
             showFloatingResult(monthStr, icon: "calendar.badge.clock")
             return true
-        }
 
-        // ── Year ─────────────────────────────────────────────────────
-        let yearPatterns = ["what year is it", "what year", "current year", "which year"]
-        if yearPatterns.contains(where: { lower.contains($0) }) {
+        case .year:
             let year = calendar.component(.year, from: now)
             let yearStr = String(year)
             appendLog("[QuickInfo] Detected year query → \(yearStr)")
@@ -2340,8 +1963,6 @@ final class AppState: ObservableObject {
             showFloatingResult(yearStr, icon: "calendar.badge.clock")
             return true
         }
-
-        return false
     }
 
     /// Acoustic wake word heard (only fires when a real engine is enabled —
@@ -2518,17 +2139,6 @@ final class AppState: ObservableObject {
         (alpha * current) + ((1 - alpha) * previous)
     }
 
-    private static func normalizedTokens(from text: String) -> [String] {
-        text.lowercased()
-            .replacingOccurrences(of: "[^a-z0-9\\s]", with: " ", options: .regularExpression)
-            .split(separator: " ")
-            .map(String.init)
-    }
-
-    private static func normalizeCompact(_ text: String) -> String {
-        text.lowercased().replacingOccurrences(of: "[^a-z0-9]", with: "", options: .regularExpression)
-    }
-
     private func normalizeEnrollmentTranscript(_ text: String) -> String {
         let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cleaned.isEmpty else { return "" }
@@ -2538,7 +2148,7 @@ final class AppState: ObservableObject {
             return String(cleaned[range.lowerBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
         }
 
-        let tokens = Self.normalizedTokens(from: cleaned)
+        let tokens = TranscriptSanitizer.normalizedTokens(from: cleaned)
         if tokens.count > 14 {
             return tokens.suffix(14).joined(separator: " ")
         }
@@ -2550,7 +2160,7 @@ final class AppState: ObservableObject {
         let stopWords: Set<String> = [
             "jarvis", "the", "a", "an", "to", "please"
         ]
-        let tokens = Self.normalizedTokens(from: phrase).filter { !stopWords.contains($0) }
+        let tokens = TranscriptSanitizer.normalizedTokens(from: phrase).filter { !stopWords.contains($0) }
 
         if tokens.contains("open") && tokens.contains("finder") {
             return ["open", "finder"]

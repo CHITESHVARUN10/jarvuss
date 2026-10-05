@@ -1,3 +1,4 @@
+import AppKit
 import XCTest
 @testable import JarvisMacOS
 
@@ -5,11 +6,25 @@ final class SystemPipelineE2ETests: XCTestCase {
     private let planner = ActionPlanner()
     private let executor = ActionExecutor()
 
+    override func setUp() {
+        super.setUp()
+        TestSupport.pinRustPipelineOff()
+    }
+
+    override func tearDown() {
+        TestSupport.unpinRustPipeline()
+        super.tearDown()
+    }
+
     private struct CommandScenario {
         let id: String
         let suite: String
         let command: String
         let expectedIntent: ExpectedIntent
+        /// Playback control needs Spotify running with an active device —
+        /// quarantined (reported as skipped) when it is not up, so the suite
+        /// stays honest on machines that do not have it open.
+        var requiresSpotify = false
     }
 
     private enum ExpectedIntent: String {
@@ -36,6 +51,7 @@ final class SystemPipelineE2ETests: XCTestCase {
             case .browser:
                 return plan.contains { action in
                     if case .openURL = action { return true }
+                    if case .searchWeb = action { return true }
                     return false
                 }
             case .filesystem:
@@ -80,6 +96,7 @@ final class SystemPipelineE2ETests: XCTestCase {
         let generatedAt: String
         let retryPolicy: String
         let suites: [String]
+        let skipped: [String]
         let summary: ReportSummary
         let scenarios: [ScenarioReport]
     }
@@ -100,8 +117,8 @@ final class SystemPipelineE2ETests: XCTestCase {
             .init(id: "app-close", suite: "app_discovery", command: "close \(selectedApp)", expectedIntent: .system),
             .init(id: "info-time", suite: "info", command: "what time is it", expectedIntent: .info),
             .init(id: "info-battery", suite: "info", command: "battery status", expectedIntent: .info),
-            .init(id: "spotify-pause", suite: "spotify", command: "pause", expectedIntent: .media),
-            .init(id: "spotify-next", suite: "spotify", command: "next song", expectedIntent: .media),
+            .init(id: "spotify-pause", suite: "spotify", command: "pause", expectedIntent: .media, requiresSpotify: true),
+            .init(id: "spotify-next", suite: "spotify", command: "next song", expectedIntent: .media, requiresSpotify: true),
             .init(id: "browser-youtube-search", suite: "browser", command: "search youtube for swift package manager", expectedIntent: .browser),
             .init(id: "browser-search", suite: "browser", command: "search google for swift concurrency", expectedIntent: .browser),
             .init(id: "fs-create-folder", suite: "filesystem", command: "create folder \(folderName)", expectedIntent: .filesystem),
@@ -109,8 +126,13 @@ final class SystemPipelineE2ETests: XCTestCase {
         ]
 
         var scenarioReports: [ScenarioReport] = []
+        var skipped: [String] = []
 
         for scenario in scenarios {
+            if scenario.requiresSpotify, !isSpotifyRunning {
+                skipped.append("\(scenario.id) — Spotify is not running (playback control needs an active device)")
+                continue
+            }
             let report = await runScenarioWithRetry(scenario, maxAttempts: 2)
             scenarioReports.append(report)
         }
@@ -138,6 +160,7 @@ final class SystemPipelineE2ETests: XCTestCase {
             generatedAt: ISO8601DateFormatter().string(from: Date()),
             retryPolicy: "1 retry on failure (max 2 attempts per scenario)",
             suites: suites,
+            skipped: skipped,
             summary: summary,
             scenarios: scenarioReports
         )
@@ -147,6 +170,15 @@ final class SystemPipelineE2ETests: XCTestCase {
         print("[SystemTest] Markdown report: \(outputPaths.markdownPath)")
 
         XCTAssertGreaterThan(report.summary.total, 0)
+        XCTAssertEqual(
+            report.summary.passed,
+            report.summary.total,
+            "\(report.summary.failed) scenario(s) failed — see artifacts/system-tests/system-test-report.md"
+        )
+    }
+
+    private var isSpotifyRunning: Bool {
+        NSWorkspace.shared.runningApplications.contains { $0.bundleIdentifier == "com.spotify.client" }
     }
 
     private func discoverTestableAppName() -> String {
@@ -379,6 +411,9 @@ final class SystemPipelineE2ETests: XCTestCase {
         lines.append("- Failed: \(report.summary.failed)")
         lines.append(String(format: "- Success rate: %.2f%%", report.summary.successRate))
         lines.append(String(format: "- Average attempt duration: %.1f ms", report.summary.averageDurationMs))
+        if !report.skipped.isEmpty {
+            lines.append("- Skipped (environment unavailable): \(report.skipped.count)")
+        }
         lines.append("")
         lines.append("## Scenarios")
         lines.append("")
@@ -401,6 +436,15 @@ final class SystemPipelineE2ETests: XCTestCase {
                 if let failureReason = attempt.failureReason {
                     lines.append("    - Reason: \(failureReason)")
                 }
+            }
+            lines.append("")
+        }
+
+        if !report.skipped.isEmpty {
+            lines.append("## Skipped Scenarios")
+            lines.append("")
+            for entry in report.skipped {
+                lines.append("- \(entry)")
             }
             lines.append("")
         }

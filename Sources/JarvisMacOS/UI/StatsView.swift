@@ -42,7 +42,7 @@ struct StatsSummary {
 }
 
 struct StatsProvider {
-    let dbManager: DBManager
+    let dbManager: EventLogging
 
     func buckets(for range: StatsRange) async -> [DayBucket] {
         let sinceDays: Int
@@ -98,7 +98,7 @@ struct StatsProvider {
 }
 
 struct StatsView: View {
-    let dbManager: DBManager
+    let dbManager: EventLogging
     @State private var range: StatsRange = .week
     @State private var summary = StatsSummary()
     @State private var buckets: [DayBucket] = []

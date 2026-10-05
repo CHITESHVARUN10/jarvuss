@@ -7,36 +7,53 @@ final class JarvisFileManager {
     ]
 
     func createFile(named name: String) -> String {
+        createFileResult(named: name).message
+    }
+
+    /// Structured result: success is decided by the filesystem call, not by
+    /// sniffing the message (a file named "error_log.txt" must not read as
+    /// a failure).
+    func createFileResult(named name: String) -> (message: String, success: Bool) {
         guard isSafeRelativeName(name) else {
-            return "Blocked: file creation in protected or invalid paths is not allowed."
+            return ("Blocked: file creation in protected or invalid paths is not allowed.", false)
         }
 
         let targetURL = URL(fileURLWithPath: fileManager.currentDirectoryPath).appendingPathComponent(name)
         if fileManager.fileExists(atPath: targetURL.path) {
-            return "File already exists: \(name)"
+            return ("File already exists: \(name)", false)
         }
 
         let created = fileManager.createFile(atPath: targetURL.path, contents: Data(), attributes: nil)
-        return created ? "Created file: \(targetURL.path)" : "Failed to create file: \(name)"
+        return created
+            ? ("Created file: \(targetURL.path)", true)
+            : ("Failed to create file: \(name)", false)
     }
 
     func createFolder(named name: String) -> String {
+        createFolderResult(named: name).message
+    }
+
+    func createFolderResult(named name: String) -> (message: String, success: Bool) {
         guard isSafeRelativeName(name) else {
-            return "Blocked: folder creation in protected or invalid paths is not allowed."
+            return ("Blocked: folder creation in protected or invalid paths is not allowed.", false)
         }
 
         let targetURL = URL(fileURLWithPath: fileManager.currentDirectoryPath).appendingPathComponent(name)
         do {
             try fileManager.createDirectory(at: targetURL, withIntermediateDirectories: true)
-            return "Created folder: \(targetURL.path)"
+            return ("Created folder: \(targetURL.path)", true)
         } catch {
-            return "Failed to create folder: \(error.localizedDescription)"
+            return ("Failed to create folder: \(error.localizedDescription)", false)
         }
     }
 
     func openFolder(named name: String) -> String {
+        openFolderResult(named: name).message
+    }
+
+    func openFolderResult(named name: String) -> (message: String, success: Bool) {
         guard let targetURL = resolveFolderName(name) else {
-            return "Folder not found: \(name)"
+            return ("Folder not found: \(name)", false)
         }
 
         let process = Process()
@@ -45,12 +62,14 @@ final class JarvisFileManager {
 
         do {
             try process.run()
-            process.waitUntilExit()
+            guard process.waitUntilExit(timeout: 10) else {
+                return ("Failed to open folder: \(targetURL.path) — timed out.", false)
+            }
             return process.terminationStatus == 0
-                ? "Opened folder: \(targetURL.path)"
-                : "Failed to open folder: \(targetURL.path)"
+                ? ("Opened folder: \(targetURL.path)", true)
+                : ("Failed to open folder: \(targetURL.path)", false)
         } catch {
-            return "Failed to open folder: \(error.localizedDescription)"
+            return ("Failed to open folder: \(error.localizedDescription)", false)
         }
     }
 
@@ -123,7 +142,7 @@ final class JarvisFileManager {
                 guard isAllowedPath(item.path) else { continue }
 
                 let candidateName = item.lastPathComponent.lowercased()
-                let dist = levenshtein(normalized, candidateName)
+                let dist = StringDistance.levenshtein(normalized, candidateName)
                 NSLog("[Folder] Fuzzy candidate '%@' dist=%d", item.lastPathComponent, dist)
                 if dist < bestDistance {
                     bestDistance = dist
@@ -160,25 +179,5 @@ final class JarvisFileManager {
 
     private func isAllowedPath(_ path: String) -> Bool {
         !protectedPathPrefixes.contains { path.hasPrefix($0) }
-    }
-
-    // MARK: - Levenshtein distance (for fuzzy folder matching)
-
-    private func levenshtein(_ a: String, _ b: String) -> Int {
-        let aArr = Array(a)
-        let bArr = Array(b)
-        var dist = Array(repeating: Array(repeating: 0, count: bArr.count + 1), count: aArr.count + 1)
-        for i in 0...aArr.count { dist[i][0] = i }
-        for j in 0...bArr.count { dist[0][j] = j }
-        for i in 1...aArr.count {
-            for j in 1...bArr.count {
-                let cost = aArr[i - 1] == bArr[j - 1] ? 0 : 1
-                dist[i][j] = Swift.min(
-                    dist[i - 1][j] + 1,
-                    Swift.min(dist[i][j - 1] + 1, dist[i - 1][j - 1] + cost)
-                )
-            }
-        }
-        return dist[aArr.count][bArr.count]
     }
 }

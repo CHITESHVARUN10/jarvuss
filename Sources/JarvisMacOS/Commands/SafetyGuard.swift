@@ -21,15 +21,18 @@ enum SafetyGuard {
     ]
 
     // ── Destructive keywords (regex word-boundary matched) ────────────
+    // Includes trash/mkfs/fdisk: folded in from the legacy AppState +
+    // CommandNormalizer blocklists so SafetyGuard is the single gate.
     private static let destructivePattern =
-        "\\b(delete|remove|rm|format|wipe|erase|overwrite|shred|truncate)\\b"
+        "\\b(delete|remove|rm|trash|format|wipe|erase|overwrite|shred|truncate|mkfs|fdisk)\\b"
 
     // ── Package-manager / install keywords ───────────────────────────
     private static let installPattern =
-        "\\b(install|brew install|npm install|pip install|gem install|yarn add|apt-get|yum|dnf)\\b"
+        "\\b(install|brew install|npm install|pip install|gem install|cargo add|yarn add|pod install|apt-get|yum|dnf)\\b"
 
-    // ── sudo – always blocked ─────────────────────────────────────────
-    private static let sudoPattern = "\\bsudo\\b"
+    // ── Elevated privilege – always blocked ──────────────────────────
+    // sudo plus su/runas variants (folded in from CommandNormalizer).
+    private static let elevatedPattern = "\\bsudo\\b|\\bsu\\b|runas"
 
     // MARK: - Public API
 
@@ -111,9 +114,9 @@ enum SafetyGuard {
     }
 
     private static func runChecks(on lower: String, original: String) -> SafetyVerdict {
-        // 1. sudo — permanent block
-        if lower.range(of: sudoPattern, options: .regularExpression) != nil {
-            return .blocked(reason: "sudo commands are permanently disabled for safety.")
+        // 1. Elevated privilege (sudo/su/runas) — permanent block
+        if lower.range(of: elevatedPattern, options: .regularExpression) != nil {
+            return .blocked(reason: "Elevated-privilege commands (sudo/su) are permanently disabled for safety.")
         }
 
         // 2. Destructive operations

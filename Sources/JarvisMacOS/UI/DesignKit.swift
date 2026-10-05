@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Mock-faithful design tokens + reusable panel components.
 ///
-/// Exact values come from `htmls/index.html`:
+/// Exact values from the design mock:
 ///   --bg-base #0b0b11 · --bg-raised #101017 · --bg-overlay #14141d
 ///   --line white .07 · --line-strong white .12 · --line-focus accent .55
 ///   --ink .94 / .62 / .40 / .24

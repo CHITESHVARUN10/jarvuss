@@ -3,10 +3,12 @@ import SwiftUI
 /// Assistant pane — Privacy, Behaviour, Recent.
 struct AssistantPane: View {
     @ObservedObject var appState: AppState
+    @StateObject private var launchAtLogin = LaunchAtLoginController()
 
     var body: some View {
         paneBody
             .padding(.horizontal, 22)
+            .onAppear { launchAtLogin.refresh() }
     }
 
     private var paneBody: some View {
@@ -50,8 +52,34 @@ struct AssistantPane: View {
                         .font(JType.kv)
                         .foregroundStyle(JColor.ink2)
                 }
+                JRow(title: "Start at login",
+                     sub: "Open Jarvis automatically when you log in") {
+                    JSwitch(binding: Binding(
+                        get: { launchAtLogin.isEnabled },
+                        set: { launchAtLogin.setEnabled($0) }
+                    ))
+                }
+                if launchAtLogin.requiresApproval {
+                    JRow(title: "Approval needed",
+                         sub: "Allow Jarvis under Login Items") {
+                        Button("Open Settings") {
+                            launchAtLogin.openLoginItemsSettings()
+                        }
+                        .buttonStyle(.plain)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(JColor.accent)
+                    }
+                }
             }
             .padding(.top, 9)
+
+            if let error = launchAtLogin.errorText {
+                Text(error)
+                    .font(.system(size: 10.5))
+                    .foregroundStyle(JColor.danger)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 9)
+            }
 
             JLabel(text: "Recent")
                 .padding(.top, 22)

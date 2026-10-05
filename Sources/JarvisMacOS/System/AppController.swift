@@ -1,7 +1,10 @@
 import Foundation
 
 final class AppController {
-    func open(appName: String) -> String {
+    /// Structured result: success comes from the process exit, not from
+    /// sniffing the message text (an app named "ErrorLog" must not read
+    /// as a failure). The String wrappers below preserve the old API.
+    func openResult(appName: String) -> (message: String, success: Bool) {
         let normalized = AppAliasResolver.resolveSpoken(appName)
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
@@ -11,18 +14,18 @@ final class AppController {
             try process.run()
             let exited = process.waitUntilExit(timeout: 10)
             if !exited {
-                return "Failed to open \(normalized) — it is taking too long."
+                return ("Failed to open \(normalized) — it is taking too long.", false)
             }
             if process.terminationStatus == 0 {
-                return "Opened \(normalized)."
+                return ("Opened \(normalized).", true)
             }
-            return "Failed to open \(normalized)."
+            return ("Failed to open \(normalized).", false)
         } catch {
-            return "Error opening app: \(error.localizedDescription)"
+            return ("Error opening app: \(error.localizedDescription)", false)
         }
     }
 
-    func close(appName: String) -> String {
+    func closeResult(appName: String) -> (message: String, success: Bool) {
         let normalized = AppAliasResolver.resolveSpoken(appName)
         let script = "tell application \"\(normalized)\" to quit"
         let process = Process()
@@ -37,15 +40,23 @@ final class AppController {
             let exited = process.waitUntilExit(timeout: 8)
             if !exited {
                 // "Failed" keeps the executor's success heuristic honest.
-                return "Failed to close \(normalized) — it may be showing a confirmation dialog. Answer it on screen, or quit it manually."
+                return ("Failed to close \(normalized) — it may be showing a confirmation dialog. Answer it on screen, or quit it manually.", false)
             }
             if process.terminationStatus == 0 {
-                return "Closed \(normalized)."
+                return ("Closed \(normalized).", true)
             }
-            return "Failed to close \(normalized)."
+            return ("Failed to close \(normalized).", false)
         } catch {
-            return "Error closing app: \(error.localizedDescription)"
+            return ("Error closing app: \(error.localizedDescription)", false)
         }
+    }
+
+    func open(appName: String) -> String {
+        openResult(appName: appName).message
+    }
+
+    func close(appName: String) -> String {
+        closeResult(appName: appName).message
     }
 }
 
@@ -99,7 +110,7 @@ enum AppAliasResolver {
 
         for (canonical, aliases) in aliasMap {
             for alias in aliases {
-                let distance = levenshteinDistance(lhs: value, rhs: alias)
+                let distance = StringDistance.levenshtein(value, alias)
                 if distance < bestDistance {
                     bestDistance = distance
                     bestCanonical = canonical
@@ -132,34 +143,5 @@ enum AppAliasResolver {
             .trimmingCharacters(in: CharacterSet(charactersIn: "?.!,,;:"))
             .trimmingCharacters(in: .whitespacesAndNewlines)
         return resolve(cleaned)
-    }
-
-    private static func levenshteinDistance(lhs: String, rhs: String) -> Int {
-        let lhsArray = Array(lhs)
-        let rhsArray = Array(rhs)
-        var matrix = Array(repeating: Array(repeating: 0, count: rhsArray.count + 1), count: lhsArray.count + 1)
-
-        for lhsIndex in 0...lhsArray.count {
-            matrix[lhsIndex][0] = lhsIndex
-        }
-
-        for rhsIndex in 0...rhsArray.count {
-            matrix[0][rhsIndex] = rhsIndex
-        }
-
-        for lhsIndex in 1...lhsArray.count {
-            for rhsIndex in 1...rhsArray.count {
-                let cost = lhsArray[lhsIndex - 1] == rhsArray[rhsIndex - 1] ? 0 : 1
-                matrix[lhsIndex][rhsIndex] = min(
-                    matrix[lhsIndex - 1][rhsIndex] + 1,
-                    min(
-                        matrix[lhsIndex][rhsIndex - 1] + 1,
-                        matrix[lhsIndex - 1][rhsIndex - 1] + cost
-                    )
-                )
-            }
-        }
-
-        return matrix[lhsArray.count][rhsArray.count]
     }
 }

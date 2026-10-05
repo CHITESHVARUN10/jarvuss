@@ -63,6 +63,9 @@ struct FileQuery: Equatable, CustomStringConvertible {
 enum SystemInfoAction: Equatable, CustomStringConvertible {
     case currentTime
     case currentDate
+    case currentDay
+    case currentMonth
+    case currentYear
     case wifiStatus
     case bluetoothDevices
     case batteryStatus
@@ -76,6 +79,9 @@ enum SystemInfoAction: Equatable, CustomStringConvertible {
         switch toolKind {
         case "time":       self = .currentTime
         case "date":       self = .currentDate
+        case "day":        self = .currentDay
+        case "month":      self = .currentMonth
+        case "year":       self = .currentYear
         case "battery":    self = .batteryStatus
         case "wifi":       self = .wifiStatus
         case "bluetooth":  self = .bluetoothDevices
@@ -90,6 +96,9 @@ enum SystemInfoAction: Equatable, CustomStringConvertible {
         switch self {
         case .currentTime:         return "current time"
         case .currentDate:         return "current date"
+        case .currentDay:          return "current day"
+        case .currentMonth:        return "current month"
+        case .currentYear:         return "current year"
         case .wifiStatus:          return "wifi status"
         case .bluetoothDevices:    return "bluetooth devices"
         case .batteryStatus:       return "battery status"
@@ -213,9 +222,18 @@ enum FastPathRouter {
             return .execute(search)
         }
 
-        // Time / date / day / month / year — answered locally, no model.
-        if isQuickInfo(lower) {
-            return .execute([.aiQuery(cleaned)])
+        // Time / date / day / month / year + device reads — answered
+        // locally with zero model load. Previously these returned
+        // .aiQuery (an Ollama call for "what time is it"); now they route
+        // to .systemInfo like the rule path below. Multi-clause inputs
+        // stay out so the conjunction splitter keeps every clause.
+        if !QuickInfoMatcher.looksCompound(lower),
+           let kind = QuickInfoMatcher.match(lower) {
+            return .execute([.systemInfo(QuickInfoMatcher.systemInfoAction(for: kind))])
+        }
+        if !QuickInfoMatcher.looksCompound(lower),
+           let info = quickDeviceInfo(lower) {
+            return .execute([.systemInfo(info)])
         }
 
         // Volume / mute / media transport / display — pure regex, no model.
@@ -322,12 +340,17 @@ enum FastPathRouter {
         return nil
     }
 
-    private static func isQuickInfo(_ lower: String) -> Bool {
-        let terms = ["what time", "current time", "time right now",
-                     "what day", "what date", "today's date", "todays date", "current date",
-                     "what month", "what year", "system volume", "current volume",
-                     "wifi", "bluetooth", "battery"]
-        return terms.contains(where: { lower.contains($0) })
+    /// Device/system reads that the rule path also answers locally
+    /// (parseInfoCommand). Kept separate from QuickInfoMatcher, which owns
+    /// the time/date/day/month/year tables shared with presentation.
+    private static func quickDeviceInfo(_ lower: String) -> SystemInfoAction? {
+        if lower.contains("wifi") { return .wifiStatus }
+        if lower.contains("bluetooth") { return .bluetoothDevices }
+        if lower.contains("battery") { return .batteryStatus }
+        if lower == "system volume" || lower == "current volume" || lower == "volume level" {
+            return .systemVolume
+        }
+        return nil
     }
 
     private static func singleVolume(_ lower: String) -> PlannedAction? {
@@ -890,12 +913,17 @@ final class ActionPlanner {
         let trimmed = lower.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
 
-        if trimmed == "what time is it" || trimmed == "current time" || trimmed == "time now" {
-            return .currentTime
-        }
-
-        if trimmed == "what is today's date" || trimmed == "what is todays date" || trimmed == "today's date" || trimmed == "todays date" || trimmed == "current date" {
-            return .currentDate
+        // Time/date/day/month/year share one table with the FastPath router
+        // and AppState presentation (QuickInfoMatcher) — never three copies.
+        if !QuickInfoMatcher.looksCompound(trimmed),
+           let kind = QuickInfoMatcher.match(trimmed) {
+            switch kind {
+            case .time:  return .currentTime
+            case .date:  return .currentDate
+            case .day:   return .currentDay
+            case .month: return .currentMonth
+            case .year:  return .currentYear
+            }
         }
 
         if trimmed.contains("wifi") {

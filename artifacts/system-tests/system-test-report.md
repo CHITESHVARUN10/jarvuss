@@ -1,16 +1,17 @@
 # Jarvis System Pipeline Test Report
 
-- Generated at: 2026-10-05T15:00:03Z
+- Generated at: 2026-10-05T16:05:55Z
 - Retry policy: 1 retry on failure (max 2 attempts per scenario)
-- Suites: app_discovery, automation, browser, filesystem, info, spotify
+- Suites: app_discovery, automation, browser, filesystem, info
 
 ## Summary
 
-- Total: 12
-- Passed: 8
-- Failed: 4
-- Success rate: 66.67%
-- Average attempt duration: 447.5 ms
+- Total: 10
+- Passed: 10
+- Failed: 0
+- Success rate: 100.00%
+- Average attempt duration: 211.9 ms
+- Skipped (environment unavailable): 2
 
 ## Scenarios
 
@@ -20,7 +21,7 @@
 - Expected intent: `system`
 - Outcome: PASS
 - Attempts used: 1
-  - Attempt 1: PASS in 548 ms
+  - Attempt 1: PASS in 197 ms
     - Plan: Open 'TextEdit'
     - Steps: ✓ Opened TextEdit.
 
@@ -30,7 +31,7 @@
 - Expected intent: `system`
 - Outcome: PASS
 - Attempts used: 1
-  - Attempt 1: PASS in 750 ms
+  - Attempt 1: PASS in 708 ms
     - Plan: Close 'TextEdit'
     - Steps: ✓ Closed TextEdit.
 
@@ -40,9 +41,9 @@
 - Expected intent: `info`
 - Outcome: PASS
 - Attempts used: 1
-  - Attempt 1: PASS in 92 ms
+  - Attempt 1: PASS in 96 ms
     - Plan: Info: current time
-    - Steps: ✓ Current time: 8:29:56 PM
+    - Steps: ✓ Current time: 9:35:54 PM
 
 ### info-battery [info]
 
@@ -50,102 +51,71 @@
 - Expected intent: `info`
 - Outcome: PASS
 - Attempts used: 1
-  - Attempt 1: PASS in 117 ms
+  - Attempt 1: PASS in 118 ms
     - Plan: Info: battery status
     - Steps: ✓ Battery status: Now drawing from 'AC Power'
-
-### spotify-pause [spotify]
-
-- Command: `pause`
-- Expected intent: `media`
-- Outcome: FAIL
-- Attempts used: 2
-  - Attempt 1: FAIL in 1152 ms
-    - Plan: Media: pause
-    - Steps: ✗ Spotify backend failed (400): {"detail":"No active Spotify device"}
-    - Reason: One or more action steps failed
-  - Attempt 2: FAIL in 1082 ms
-    - Plan: Media: pause
-    - Steps: ✗ Spotify backend failed (400): {"detail":"No active Spotify device"}
-    - Reason: One or more action steps failed
-
-### spotify-next [spotify]
-
-- Command: `next song`
-- Expected intent: `media`
-- Outcome: FAIL
-- Attempts used: 2
-  - Attempt 1: FAIL in 1082 ms
-    - Plan: Media: next track
-    - Steps: ✗ Spotify backend failed (400): {"detail":"No active Spotify device"}
-    - Reason: One or more action steps failed
-  - Attempt 2: FAIL in 1029 ms
-    - Plan: Media: next track
-    - Steps: ✗ Spotify backend failed (400): {"detail":"No active Spotify device"}
-    - Reason: One or more action steps failed
 
 ### browser-youtube-search [browser]
 
 - Command: `search youtube for swift package manager`
 - Expected intent: `browser`
-- Outcome: FAIL
-- Attempts used: 2
-  - Attempt 1: FAIL in 159 ms
+- Outcome: PASS
+- Attempts used: 1
+  - Attempt 1: PASS in 200 ms
     - Plan: Search YouTube for 'swift package manager'
-    - Reason: Intent mismatch: expected browser
-  - Attempt 2: FAIL in 180 ms
-    - Plan: Search YouTube for 'swift package manager'
-    - Reason: Intent mismatch: expected browser
+    - Steps: ✓ Searching YouTube for 'swift package manager'
 
 ### browser-search [browser]
 
 - Command: `search google for swift concurrency`
 - Expected intent: `browser`
-- Outcome: FAIL
-- Attempts used: 2
-  - Attempt 1: FAIL in 140 ms
+- Outcome: PASS
+- Attempts used: 1
+  - Attempt 1: PASS in 224 ms
     - Plan: Search Google for 'swift concurrency'
-    - Reason: Intent mismatch: expected browser
-  - Attempt 2: FAIL in 153 ms
-    - Plan: Search Google for 'swift concurrency'
-    - Reason: Intent mismatch: expected browser
+    - Steps: ✓ Searching Google for 'swift concurrency'
 
 ### fs-create-folder [filesystem]
 
-- Command: `create folder e2e-folder-70A9DF28`
+- Command: `create folder e2e-folder-2B5CB9FE`
 - Expected intent: `filesystem`
 - Outcome: PASS
 - Attempts used: 1
-  - Attempt 1: PASS in 119 ms
-    - Plan: Create folder 'e2e-folder-70A9DF28'
-    - Steps: ✓ Created folder: /Users/chiteshvarun/D-drive/jarvis_code/e2e-folder-70A9DF28
+  - Attempt 1: PASS in 187 ms
+    - Plan: Create folder 'e2e-folder-2B5CB9FE'
+    - Steps: ✓ Created folder: /Users/chiteshvarun/D-drive/jarvis_code/e2e-folder-2B5CB9FE
 
 ### fs-create-file [filesystem]
 
-- Command: `create file e2e-file-70A9DF28.txt`
+- Command: `create file e2e-file-2B5CB9FE.txt`
 - Expected intent: `filesystem`
 - Outcome: PASS
 - Attempts used: 1
-  - Attempt 1: PASS in 176 ms
-    - Plan: Create file 'e2e-file-70a9df28.txt'
-    - Steps: ✓ Created file: /Users/chiteshvarun/D-drive/jarvis_code/e2e-file-70a9df28.txt
+  - Attempt 1: PASS in 136 ms
+    - Plan: Create file 'e2e-file'
+    - Steps: ✓ Created file: /Users/chiteshvarun/D-drive/jarvis_code/e2e-file
 
 ### automation-on [automation]
 
-- Command: `focus mode 70A9DF28`
+- Command: `focus mode 2B5CB9FE`
 - Expected intent: `automation`
 - Outcome: PASS
 - Attempts used: 1
-  - Attempt 1: PASS in 121 ms
+  - Attempt 1: PASS in 126 ms
     - Plan: Automation path via AppState.executeTypedCommand
-    - Steps: [2026-10-05T15:00:03Z] [Typed] Received: 'focus mode 70A9DF28' | [2026-10-05T15:00:03Z] [DDC] Discovered 1 DCPAVServiceProxy entries | [2026-10-05T15:00:03Z] [DDC] Matched display 1 → IOAVService (location: '') | [2026-10-05T15:00:03Z] [DDC] Read VCP 0x10: current=68 max=100 on display 1 | [2026-10-05T15:00:03Z] [DDC] Read VCP 0x12: current=57 max=100 on display 1 | [2026-10-05T15:00:03Z] [Queue] Enqueued (normal): 'focus mode 70A9DF28' [queue size: 1] | [2026-10-05T15:00:03Z] [Execution] started: 'focus mode 70A9DF28' | [2026-10-05T15:00:03Z] [Automation] Triggered keyword: 'focus mode 70A9DF28' | [2026-10-05T15:00:03Z] [Automation] Executing 1 actions for 'focus mode 70A9DF28' | [2026-10-05T15:00:03Z] [Automation] ▶ Open folder 'Downloads' | [2026-10-05T15:00:03Z] [Automation] ✓ Opened folder: /Users/chiteshvarun/Downloads
+    - Steps: [2026-10-05T16:05:55Z] [Typed] Received: 'focus mode 2B5CB9FE' | [2026-10-05T16:05:55Z] [DDC] Discovered 1 DCPAVServiceProxy entries | [2026-10-05T16:05:55Z] [DDC] Matched display 1 → IOAVService (location: '') | [2026-10-05T16:05:55Z] [DDC] Read VCP 0x10: current=68 max=100 on display 1 | [2026-10-05T16:05:55Z] [DDC] Read VCP 0x12: current=57 max=100 on display 1 | [2026-10-05T16:05:55Z] [Queue] Enqueued (normal): 'focus mode 2B5CB9FE' [queue size: 1] | [2026-10-05T16:05:55Z] [Execution] started: 'focus mode 2B5CB9FE' | [2026-10-05T16:05:55Z] [Automation] Triggered keyword: 'focus mode 2B5CB9FE' | [2026-10-05T16:05:55Z] [Automation] Executing 1 actions for 'focus mode 2B5CB9FE' | [2026-10-05T16:05:55Z] [Automation] ▶ Open folder 'Downloads' | [2026-10-05T16:05:55Z] [Automation] ✓ Opened folder: /Users/chiteshvarun/Downloads
 
 ### automation-off [automation]
 
-- Command: `focus mode off 70A9DF28`
+- Command: `focus mode off 2B5CB9FE`
 - Expected intent: `automation`
 - Outcome: PASS
 - Attempts used: 1
-  - Attempt 1: PASS in 260 ms
+  - Attempt 1: PASS in 127 ms
     - Plan: Automation path via AppState.executeTypedCommand
-    - Steps: [2026-10-05T15:00:03Z] [Execution] started: 'focus mode 70A9DF28' | [2026-10-05T15:00:03Z] [Automation] Triggered keyword: 'focus mode 70A9DF28' | [2026-10-05T15:00:03Z] [Automation] Executing 1 actions for 'focus mode 70A9DF28' | [2026-10-05T15:00:03Z] [Automation] ▶ Open folder 'Downloads' | [2026-10-05T15:00:03Z] [Automation] ✓ Opened folder: /Users/chiteshvarun/Downloads | [2026-10-05T15:00:03Z] [Typed] Received: 'focus mode off 70A9DF28' | [2026-10-05T15:00:03Z] [Queue] Enqueued (normal): 'focus mode off 70A9DF28' [queue size: 1] | [2026-10-05T15:00:03Z] [Execution] finished: 'focus mode 70A9DF28' | [2026-10-05T15:00:03Z] [Execution] started: 'focus mode off 70A9DF28' | [2026-10-05T15:00:03Z] [Automation] Triggered keyword: 'focus mode 70A9DF28' | [2026-10-05T15:00:03Z] [Automation] Off variant matched for 'focus mode 70A9DF28'. | [2026-10-05T15:00:03Z] [Execution] finished: 'focus mode off 70A9DF28'
+    - Steps: [2026-10-05T16:05:55Z] [Execution] started: 'focus mode 2B5CB9FE' | [2026-10-05T16:05:55Z] [Automation] Triggered keyword: 'focus mode 2B5CB9FE' | [2026-10-05T16:05:55Z] [Automation] Executing 1 actions for 'focus mode 2B5CB9FE' | [2026-10-05T16:05:55Z] [Automation] ▶ Open folder 'Downloads' | [2026-10-05T16:05:55Z] [Automation] ✓ Opened folder: /Users/chiteshvarun/Downloads | [2026-10-05T16:05:55Z] [Typed] Received: 'focus mode off 2B5CB9FE' | [2026-10-05T16:05:55Z] [Queue] Enqueued (normal): 'focus mode off 2B5CB9FE' [queue size: 1] | [2026-10-05T16:05:55Z] [Execution] finished: 'focus mode 2B5CB9FE' | [2026-10-05T16:05:55Z] [Execution] started: 'focus mode off 2B5CB9FE' | [2026-10-05T16:05:55Z] [Automation] Triggered keyword: 'focus mode 2B5CB9FE' | [2026-10-05T16:05:55Z] [Automation] Off variant matched for 'focus mode 2B5CB9FE'. | [2026-10-05T16:05:55Z] [Execution] finished: 'focus mode off 2B5CB9FE'
+
+## Skipped Scenarios
+
+- spotify-pause — Spotify is not running (playback control needs an active device)
+- spotify-next — Spotify is not running (playback control needs an active device)

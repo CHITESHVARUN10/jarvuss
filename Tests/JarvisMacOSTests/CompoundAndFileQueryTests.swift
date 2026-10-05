@@ -6,6 +6,16 @@ import XCTest
 /// file-exploration questions the user asked for.
 final class CompoundAndFileQueryTests: XCTestCase {
 
+    override func setUp() {
+        super.setUp()
+        TestSupport.pinRustPipelineOff()
+    }
+
+    override func tearDown() {
+        TestSupport.unpinRustPipeline()
+        super.tearDown()
+    }
+
     // MARK: - Validator gate
 
     func testLongCompoundCommandIsAccepted() {

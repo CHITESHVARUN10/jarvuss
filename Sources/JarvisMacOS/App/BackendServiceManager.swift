@@ -136,7 +136,11 @@ final class BackendServiceManager {
 
         do {
             try process.run()
-            process.waitUntilExit()
+            // Backend boot can take a while (venv + model probe); 60 s
+            // deadline so a wedged start script can't park the caller.
+            guard process.waitUntilExit(timeout: 60) else {
+                return (false, "start script timed out after 60 s")
+            }
 
             let output = String(data: outPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
             let error  = String(data: errPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""

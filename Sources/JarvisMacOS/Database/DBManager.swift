@@ -34,47 +34,7 @@ final class DBManager {
         }
 
         private static func mergedEnv() -> [String: String] {
-            var merged = ProcessInfo.processInfo.environment
-            for (key, value) in dotEnvValues() where merged[key]?.isEmpty ?? true {
-                merged[key] = value
-            }
-            return merged
-        }
-
-        private static func dotEnvValues() -> [String: String] {
-            let fm = FileManager.default
-            var candidates: [URL] = []
-            if let resourcePath = Bundle.main.resourcePath {
-                candidates.append(URL(fileURLWithPath: resourcePath).appendingPathComponent("backend/.env"))
-                candidates.append(URL(fileURLWithPath: resourcePath).appendingPathComponent(".env"))
-            }
-            if let executableURL = Bundle.main.executableURL {
-                var dir = executableURL.deletingLastPathComponent()
-                for _ in 0..<4 {
-                    candidates.append(dir.appendingPathComponent(".env"))
-                    dir = dir.deletingLastPathComponent()
-                }
-            }
-            var cwdURL = URL(fileURLWithPath: fm.currentDirectoryPath)
-            for _ in 0..<10 {
-                candidates.append(cwdURL.appendingPathComponent(".env"))
-                let parent = cwdURL.deletingLastPathComponent()
-                if parent.path == cwdURL.path { break }
-                cwdURL = parent
-            }
-            for fileURL in candidates {
-                guard let text = try? String(contentsOf: fileURL, encoding: .utf8) else { continue }
-                var values: [String: String] = [:]
-                for line in text.components(separatedBy: .newlines) {
-                    let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
-                    if trimmed.isEmpty || trimmed.hasPrefix("#") { continue }
-                    let parts = trimmed.split(separator: "=", maxSplits: 1).map(String.init)
-                    guard parts.count == 2 else { continue }
-                    values[parts[0].trimmingCharacters(in: .whitespaces)] = parts[1].trimmingCharacters(in: .whitespaces)
-                }
-                if !values.isEmpty { return values }
-            }
-            return [:]
+            DotEnvLoader.mergedEnv()
         }
     }
 
@@ -264,7 +224,13 @@ final class DBManager {
         process.standardError = Pipe()
         do {
             try process.run()
-            process.waitUntilExit()
+            // Bounded wait: psql has connect/statement timeouts, but the
+            // Process itself needs a deadline so a wedged child can't park
+            // the serial PG queue forever. 20 s > 5 s connect + 8 s
+            // statement so psql's own timeouts fire first.
+            guard process.waitUntilExit(timeout: 20) else {
+                return ""
+            }
             let data = stdout.fileHandleForReading.readDataToEndOfFile()
             return (String(data: data, encoding: .utf8) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         } catch {
@@ -319,7 +285,12 @@ final class DBManager {
 
         do {
             try process.run()
-            process.waitUntilExit()
+            guard process.waitUntilExit(timeout: 20) else {
+                let errorData = pipe.fileHandleForReading.readDataToEndOfFile()
+                let errorOutput = String(data: errorData, encoding: .utf8) ?? ""
+                let suffix = errorOutput.isEmpty ? "" : " (\(errorOutput))"
+                return (-1, "psql timed out after 20 s\(suffix)")
+            }
 
             let errorData = pipe.fileHandleForReading.readDataToEndOfFile()
             let errorOutput = String(data: errorData, encoding: .utf8) ?? ""
@@ -358,7 +329,9 @@ final class DBManager {
 
         do {
             try process.run()
-            process.waitUntilExit()
+            guard process.waitUntilExit(timeout: 20) else {
+                return ""
+            }
             let data = stdout.fileHandleForReading.readDataToEndOfFile()
             return (String(data: data, encoding: .utf8) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         } catch {

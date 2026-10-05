@@ -1,12 +1,12 @@
 {
-  "generatedAt" : "2026-10-05T15:00:03Z",
+  "generatedAt" : "2026-10-05T16:05:55Z",
   "retryPolicy" : "1 retry on failure (max 2 attempts per scenario)",
   "scenarios" : [
     {
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 548,
+          "durationMs" : 197,
           "planDescriptions" : [
             "Open 'TextEdit'"
           ],
@@ -27,7 +27,7 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 750,
+          "durationMs" : 708,
           "planDescriptions" : [
             "Close 'TextEdit'"
           ],
@@ -48,12 +48,12 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 92,
+          "durationMs" : 96,
           "planDescriptions" : [
             "Info: current time"
           ],
           "stepMessages" : [
-            "✓ Current time: 8:29:56 PM"
+            "✓ Current time: 9:35:54 PM"
           ],
           "success" : true
         }
@@ -69,7 +69,7 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 117,
+          "durationMs" : 118,
           "planDescriptions" : [
             "Info: battery status"
           ],
@@ -90,154 +90,60 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 1152,
-          "failureReason" : "One or more action steps failed",
-          "planDescriptions" : [
-            "Media: pause"
-          ],
-          "stepMessages" : [
-            "✗ Spotify backend failed (400): {\"detail\":\"No active Spotify device\"}"
-          ],
-          "success" : false
-        },
-        {
-          "attempt" : 2,
-          "durationMs" : 1082,
-          "failureReason" : "One or more action steps failed",
-          "planDescriptions" : [
-            "Media: pause"
-          ],
-          "stepMessages" : [
-            "✗ Spotify backend failed (400): {\"detail\":\"No active Spotify device\"}"
-          ],
-          "success" : false
-        }
-      ],
-      "attemptsUsed" : 2,
-      "command" : "pause",
-      "expectedIntent" : "media",
-      "id" : "spotify-pause",
-      "success" : false,
-      "suite" : "spotify"
-    },
-    {
-      "attempts" : [
-        {
-          "attempt" : 1,
-          "durationMs" : 1082,
-          "failureReason" : "One or more action steps failed",
-          "planDescriptions" : [
-            "Media: next track"
-          ],
-          "stepMessages" : [
-            "✗ Spotify backend failed (400): {\"detail\":\"No active Spotify device\"}"
-          ],
-          "success" : false
-        },
-        {
-          "attempt" : 2,
-          "durationMs" : 1029,
-          "failureReason" : "One or more action steps failed",
-          "planDescriptions" : [
-            "Media: next track"
-          ],
-          "stepMessages" : [
-            "✗ Spotify backend failed (400): {\"detail\":\"No active Spotify device\"}"
-          ],
-          "success" : false
-        }
-      ],
-      "attemptsUsed" : 2,
-      "command" : "next song",
-      "expectedIntent" : "media",
-      "id" : "spotify-next",
-      "success" : false,
-      "suite" : "spotify"
-    },
-    {
-      "attempts" : [
-        {
-          "attempt" : 1,
-          "durationMs" : 159,
-          "failureReason" : "Intent mismatch: expected browser",
+          "durationMs" : 200,
           "planDescriptions" : [
             "Search YouTube for 'swift package manager'"
           ],
           "stepMessages" : [
-
-          ],
-          "success" : false
-        },
-        {
-          "attempt" : 2,
-          "durationMs" : 180,
-          "failureReason" : "Intent mismatch: expected browser",
-          "planDescriptions" : [
-            "Search YouTube for 'swift package manager'"
-          ],
-          "stepMessages" : [
-
-          ],
-          "success" : false
-        }
-      ],
-      "attemptsUsed" : 2,
-      "command" : "search youtube for swift package manager",
-      "expectedIntent" : "browser",
-      "id" : "browser-youtube-search",
-      "success" : false,
-      "suite" : "browser"
-    },
-    {
-      "attempts" : [
-        {
-          "attempt" : 1,
-          "durationMs" : 140,
-          "failureReason" : "Intent mismatch: expected browser",
-          "planDescriptions" : [
-            "Search Google for 'swift concurrency'"
-          ],
-          "stepMessages" : [
-
-          ],
-          "success" : false
-        },
-        {
-          "attempt" : 2,
-          "durationMs" : 153,
-          "failureReason" : "Intent mismatch: expected browser",
-          "planDescriptions" : [
-            "Search Google for 'swift concurrency'"
-          ],
-          "stepMessages" : [
-
-          ],
-          "success" : false
-        }
-      ],
-      "attemptsUsed" : 2,
-      "command" : "search google for swift concurrency",
-      "expectedIntent" : "browser",
-      "id" : "browser-search",
-      "success" : false,
-      "suite" : "browser"
-    },
-    {
-      "attempts" : [
-        {
-          "attempt" : 1,
-          "durationMs" : 119,
-          "planDescriptions" : [
-            "Create folder 'e2e-folder-70A9DF28'"
-          ],
-          "stepMessages" : [
-            "✓ Created folder: \/Users\/chiteshvarun\/D-drive\/jarvis_code\/e2e-folder-70A9DF28"
+            "✓ Searching YouTube for 'swift package manager'"
           ],
           "success" : true
         }
       ],
       "attemptsUsed" : 1,
-      "command" : "create folder e2e-folder-70A9DF28",
+      "command" : "search youtube for swift package manager",
+      "expectedIntent" : "browser",
+      "id" : "browser-youtube-search",
+      "success" : true,
+      "suite" : "browser"
+    },
+    {
+      "attempts" : [
+        {
+          "attempt" : 1,
+          "durationMs" : 224,
+          "planDescriptions" : [
+            "Search Google for 'swift concurrency'"
+          ],
+          "stepMessages" : [
+            "✓ Searching Google for 'swift concurrency'"
+          ],
+          "success" : true
+        }
+      ],
+      "attemptsUsed" : 1,
+      "command" : "search google for swift concurrency",
+      "expectedIntent" : "browser",
+      "id" : "browser-search",
+      "success" : true,
+      "suite" : "browser"
+    },
+    {
+      "attempts" : [
+        {
+          "attempt" : 1,
+          "durationMs" : 187,
+          "planDescriptions" : [
+            "Create folder 'e2e-folder-2B5CB9FE'"
+          ],
+          "stepMessages" : [
+            "✓ Created folder: \/Users\/chiteshvarun\/D-drive\/jarvis_code\/e2e-folder-2B5CB9FE"
+          ],
+          "success" : true
+        }
+      ],
+      "attemptsUsed" : 1,
+      "command" : "create folder e2e-folder-2B5CB9FE",
       "expectedIntent" : "filesystem",
       "id" : "fs-create-folder",
       "success" : true,
@@ -247,18 +153,18 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 176,
+          "durationMs" : 136,
           "planDescriptions" : [
-            "Create file 'e2e-file-70a9df28.txt'"
+            "Create file 'e2e-file'"
           ],
           "stepMessages" : [
-            "✓ Created file: \/Users\/chiteshvarun\/D-drive\/jarvis_code\/e2e-file-70a9df28.txt"
+            "✓ Created file: \/Users\/chiteshvarun\/D-drive\/jarvis_code\/e2e-file"
           ],
           "success" : true
         }
       ],
       "attemptsUsed" : 1,
-      "command" : "create file e2e-file-70A9DF28.txt",
+      "command" : "create file e2e-file-2B5CB9FE.txt",
       "expectedIntent" : "filesystem",
       "id" : "fs-create-file",
       "success" : true,
@@ -268,28 +174,28 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 121,
+          "durationMs" : 126,
           "planDescriptions" : [
             "Automation path via AppState.executeTypedCommand"
           ],
           "stepMessages" : [
-            "[2026-10-05T15:00:03Z] [Typed] Received: 'focus mode 70A9DF28'",
-            "[2026-10-05T15:00:03Z] [DDC] Discovered 1 DCPAVServiceProxy entries",
-            "[2026-10-05T15:00:03Z] [DDC] Matched display 1 → IOAVService (location: '')",
-            "[2026-10-05T15:00:03Z] [DDC] Read VCP 0x10: current=68 max=100 on display 1",
-            "[2026-10-05T15:00:03Z] [DDC] Read VCP 0x12: current=57 max=100 on display 1",
-            "[2026-10-05T15:00:03Z] [Queue] Enqueued (normal): 'focus mode 70A9DF28' [queue size: 1]",
-            "[2026-10-05T15:00:03Z] [Execution] started: 'focus mode 70A9DF28'",
-            "[2026-10-05T15:00:03Z] [Automation] Triggered keyword: 'focus mode 70A9DF28'",
-            "[2026-10-05T15:00:03Z] [Automation] Executing 1 actions for 'focus mode 70A9DF28'",
-            "[2026-10-05T15:00:03Z] [Automation] ▶ Open folder 'Downloads'",
-            "[2026-10-05T15:00:03Z] [Automation] ✓ Opened folder: \/Users\/chiteshvarun\/Downloads"
+            "[2026-10-05T16:05:55Z] [Typed] Received: 'focus mode 2B5CB9FE'",
+            "[2026-10-05T16:05:55Z] [DDC] Discovered 1 DCPAVServiceProxy entries",
+            "[2026-10-05T16:05:55Z] [DDC] Matched display 1 → IOAVService (location: '')",
+            "[2026-10-05T16:05:55Z] [DDC] Read VCP 0x10: current=68 max=100 on display 1",
+            "[2026-10-05T16:05:55Z] [DDC] Read VCP 0x12: current=57 max=100 on display 1",
+            "[2026-10-05T16:05:55Z] [Queue] Enqueued (normal): 'focus mode 2B5CB9FE' [queue size: 1]",
+            "[2026-10-05T16:05:55Z] [Execution] started: 'focus mode 2B5CB9FE'",
+            "[2026-10-05T16:05:55Z] [Automation] Triggered keyword: 'focus mode 2B5CB9FE'",
+            "[2026-10-05T16:05:55Z] [Automation] Executing 1 actions for 'focus mode 2B5CB9FE'",
+            "[2026-10-05T16:05:55Z] [Automation] ▶ Open folder 'Downloads'",
+            "[2026-10-05T16:05:55Z] [Automation] ✓ Opened folder: \/Users\/chiteshvarun\/Downloads"
           ],
           "success" : true
         }
       ],
       "attemptsUsed" : 1,
-      "command" : "focus mode 70A9DF28",
+      "command" : "focus mode 2B5CB9FE",
       "expectedIntent" : "automation",
       "id" : "automation-on",
       "success" : true,
@@ -299,48 +205,51 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 260,
+          "durationMs" : 127,
           "planDescriptions" : [
             "Automation path via AppState.executeTypedCommand"
           ],
           "stepMessages" : [
-            "[2026-10-05T15:00:03Z] [Execution] started: 'focus mode 70A9DF28'",
-            "[2026-10-05T15:00:03Z] [Automation] Triggered keyword: 'focus mode 70A9DF28'",
-            "[2026-10-05T15:00:03Z] [Automation] Executing 1 actions for 'focus mode 70A9DF28'",
-            "[2026-10-05T15:00:03Z] [Automation] ▶ Open folder 'Downloads'",
-            "[2026-10-05T15:00:03Z] [Automation] ✓ Opened folder: \/Users\/chiteshvarun\/Downloads",
-            "[2026-10-05T15:00:03Z] [Typed] Received: 'focus mode off 70A9DF28'",
-            "[2026-10-05T15:00:03Z] [Queue] Enqueued (normal): 'focus mode off 70A9DF28' [queue size: 1]",
-            "[2026-10-05T15:00:03Z] [Execution] finished: 'focus mode 70A9DF28'",
-            "[2026-10-05T15:00:03Z] [Execution] started: 'focus mode off 70A9DF28'",
-            "[2026-10-05T15:00:03Z] [Automation] Triggered keyword: 'focus mode 70A9DF28'",
-            "[2026-10-05T15:00:03Z] [Automation] Off variant matched for 'focus mode 70A9DF28'.",
-            "[2026-10-05T15:00:03Z] [Execution] finished: 'focus mode off 70A9DF28'"
+            "[2026-10-05T16:05:55Z] [Execution] started: 'focus mode 2B5CB9FE'",
+            "[2026-10-05T16:05:55Z] [Automation] Triggered keyword: 'focus mode 2B5CB9FE'",
+            "[2026-10-05T16:05:55Z] [Automation] Executing 1 actions for 'focus mode 2B5CB9FE'",
+            "[2026-10-05T16:05:55Z] [Automation] ▶ Open folder 'Downloads'",
+            "[2026-10-05T16:05:55Z] [Automation] ✓ Opened folder: \/Users\/chiteshvarun\/Downloads",
+            "[2026-10-05T16:05:55Z] [Typed] Received: 'focus mode off 2B5CB9FE'",
+            "[2026-10-05T16:05:55Z] [Queue] Enqueued (normal): 'focus mode off 2B5CB9FE' [queue size: 1]",
+            "[2026-10-05T16:05:55Z] [Execution] finished: 'focus mode 2B5CB9FE'",
+            "[2026-10-05T16:05:55Z] [Execution] started: 'focus mode off 2B5CB9FE'",
+            "[2026-10-05T16:05:55Z] [Automation] Triggered keyword: 'focus mode 2B5CB9FE'",
+            "[2026-10-05T16:05:55Z] [Automation] Off variant matched for 'focus mode 2B5CB9FE'.",
+            "[2026-10-05T16:05:55Z] [Execution] finished: 'focus mode off 2B5CB9FE'"
           ],
           "success" : true
         }
       ],
       "attemptsUsed" : 1,
-      "command" : "focus mode off 70A9DF28",
+      "command" : "focus mode off 2B5CB9FE",
       "expectedIntent" : "automation",
       "id" : "automation-off",
       "success" : true,
       "suite" : "automation"
     }
   ],
+  "skipped" : [
+    "spotify-pause — Spotify is not running (playback control needs an active device)",
+    "spotify-next — Spotify is not running (playback control needs an active device)"
+  ],
   "suites" : [
     "app_discovery",
     "automation",
     "browser",
     "filesystem",
-    "info",
-    "spotify"
+    "info"
   ],
   "summary" : {
-    "averageDurationMs" : 447.5,
-    "failed" : 4,
-    "passed" : 8,
-    "successRate" : 66.66666666666666,
-    "total" : 12
+    "averageDurationMs" : 211.9,
+    "failed" : 0,
+    "passed" : 10,
+    "successRate" : 100,
+    "total" : 10
   }
 }

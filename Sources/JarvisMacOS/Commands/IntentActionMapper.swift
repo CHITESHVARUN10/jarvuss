@@ -100,6 +100,12 @@ enum IntentActionMapper {
             return .systemInfo(.wifiStatus)
         case "info.bluetooth":
             return .systemInfo(.bluetoothDevices)
+        case "info.day":
+            return .systemInfo(.currentDay)
+        case "info.month":
+            return .systemInfo(.currentMonth)
+        case "info.year":
+            return .systemInfo(.currentYear)
 
         case "file.create":
             guard let v = stringArg(args, "name") else { return nil }

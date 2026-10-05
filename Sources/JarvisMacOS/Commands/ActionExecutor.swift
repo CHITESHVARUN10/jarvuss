@@ -17,7 +17,7 @@ final class ActionExecutor {
 
     private let appController    = AppController()
     private let fileManager      = JarvisFileManager()
-    private let ollamaClient     = OllamaClient(model: JarvisModel.name)
+    private let ollamaClient: LLMGenerating = OllamaClient(model: JarvisModel.name)
     private let volumeController = VolumeController()
     private let displayController = DisplayController()
 
@@ -76,16 +76,14 @@ final class ActionExecutor {
         switch action {
 
         case .openApp(let name):
-            let msg = appController.open(appName: name)
-            return ActionResult(action: action, success: !msg.lowercased().contains("fail") &&
-                                !msg.lowercased().contains("error"),
-                                message: msg)
+            let result = appController.openResult(appName: name)
+            return ActionResult(action: action, success: result.success,
+                                message: result.message)
 
         case .closeApp(let name):
-            let msg = appController.close(appName: name)
-            return ActionResult(action: action, success: !msg.lowercased().contains("fail") &&
-                                !msg.lowercased().contains("error"),
-                                message: msg)
+            let result = appController.closeResult(appName: name)
+            return ActionResult(action: action, success: result.success,
+                                message: result.message)
 
         case .systemInfo(let infoAction):
             return executeSystemInfo(infoAction)
@@ -97,10 +95,9 @@ final class ActionExecutor {
             return executeSearchWeb(engine: engine, query: query, action: action)
 
         case .openFolder(let path):
-            let msg = fileManager.openFolder(named: path)
-            return ActionResult(action: action, success: !msg.contains("not found") &&
-                                !msg.lowercased().contains("fail"),
-                                message: msg)
+            let result = fileManager.openFolderResult(named: path)
+            return ActionResult(action: action, success: result.success,
+                                message: result.message)
 
         case .openLatestFile(let folder):
             return openLatestFile(inFolder: folder)
@@ -115,16 +112,14 @@ final class ActionExecutor {
             return ActionResult(action: action, success: success, message: displayMsg)
 
         case .createFile(let name):
-            let msg = fileManager.createFile(named: name)
-            return ActionResult(action: action, success: !msg.lowercased().contains("fail") &&
-                                !msg.lowercased().contains("blocked"),
-                                message: msg)
+            let result = fileManager.createFileResult(named: name)
+            return ActionResult(action: action, success: result.success,
+                                message: result.message)
 
         case .createFolder(let name):
-            let msg = fileManager.createFolder(named: name)
-            return ActionResult(action: action, success: !msg.lowercased().contains("fail") &&
-                                !msg.lowercased().contains("blocked"),
-                                message: msg)
+            let result = fileManager.createFolderResult(named: name)
+            return ActionResult(action: action, success: result.success,
+                                message: result.message)
 
         case .aiQuery(let query):
             if query.hasPrefix("blocked:") {
@@ -140,7 +135,12 @@ final class ActionExecutor {
 
         case .displayControl(let displayAction):
             let msg = displayController.execute(displayAction)
-            let success = !msg.lowercased().contains("fail") && !msg.lowercased().contains("error")
+            // Failure sentinels emitted by DisplayController itself
+            // (setBrightness/adjustBrightness); kept narrow so a display
+            // name containing "error" can't flip the result.
+            let lower = msg.lowercased()
+            let success = !(lower.contains("failed") || lower.contains("unable")
+                || lower.contains("no controllable display") || lower.contains("not supported"))
             return ActionResult(action: action, success: success, message: msg)
 
         case .fileQuery(let query):
@@ -190,6 +190,20 @@ final class ActionExecutor {
             formatter.dateStyle = .full
             formatter.timeStyle = .none
             return ActionResult(action: .systemInfo(action), success: true, message: "Today's date: \(formatter.string(from: Date()))")
+
+        case .currentDay:
+            let weekday = Calendar.current.component(.weekday, from: Date())
+            let day = DateFormatter().weekdaySymbols[weekday - 1]
+            return ActionResult(action: .systemInfo(action), success: true, message: "Today is \(day)")
+
+        case .currentMonth:
+            let monthIdx = Calendar.current.component(.month, from: Date())
+            let month = DateFormatter().monthSymbols[monthIdx - 1]
+            return ActionResult(action: .systemInfo(action), success: true, message: "Current month: \(month)")
+
+        case .currentYear:
+            let year = Calendar.current.component(.year, from: Date())
+            return ActionResult(action: .systemInfo(action), success: true, message: "Current year: \(year)")
 
         case .wifiStatus:
             let wifi = runShell("/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -I | awk -F': ' '/ SSID/ {print $2}'")
@@ -283,7 +297,10 @@ final class ActionExecutor {
         process.arguments = [urlObj.absoluteString]
         do {
             try process.run()
-            process.waitUntilExit()
+            guard process.waitUntilExit(timeout: 10) else {
+                return ActionResult(action: .openURL(url), success: false,
+                                    message: "Failed to open URL: \(url) — timed out.")
+            }
             let ok = process.terminationStatus == 0
             return ActionResult(action: .openURL(url), success: ok,
                                 message: ok ? "Opened: \(normalized)" : "Failed to open URL: \(url)")
@@ -323,7 +340,13 @@ final class ActionExecutor {
 
         do {
             try process.run()
-            process.waitUntilExit()
+            guard process.waitUntilExit(timeout: 10) else {
+                return ActionResult(
+                    action: action,
+                    success: false,
+                    message: "Failed to open search URL — timed out"
+                )
+            }
             let ok = process.terminationStatus == 0
             return ActionResult(
                 action: action,
@@ -372,7 +395,10 @@ final class ActionExecutor {
         process.arguments = [latest.path]
         do {
             try process.run()
-            process.waitUntilExit()
+            guard process.waitUntilExit(timeout: 10) else {
+                return ActionResult(action: .openLatestFile(inFolder: folderName), success: false,
+                                    message: "Failed to open \(latest.lastPathComponent) — timed out.")
+            }
             let ok = process.terminationStatus == 0
             return ActionResult(action: .openLatestFile(inFolder: folderName), success: ok,
                                 message: ok ? "Opened latest file: \(latest.lastPathComponent)" : "Failed to open \(latest.lastPathComponent)")
@@ -523,65 +549,8 @@ final class ActionExecutor {
     }
 
     private func envValue(_ key: String) -> String? {
-        if let value = ProcessInfo.processInfo.environment[key], !value.isEmpty {
-            return value
-        }
-        let dotEnv = parseDotEnv()
-        if let value = dotEnv[key], !value.isEmpty {
-            return value
-        }
-        return nil
-    }
-
-    private func parseDotEnv() -> [String: String] {
-        let candidates = dotEnvCandidates()
-
-        for fileURL in candidates {
-            guard let data = try? Data(contentsOf: fileURL),
-                  let text = String(data: data, encoding: .utf8) else { continue }
-            var values: [String: String] = [:]
-            for line in text.components(separatedBy: .newlines) {
-                let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
-                if trimmed.isEmpty || trimmed.hasPrefix("#") { continue }
-                let parts = trimmed.split(separator: "=", maxSplits: 1).map(String.init)
-                guard parts.count == 2 else { continue }
-                values[parts[0]] = parts[1]
-            }
-            if !values.isEmpty { return values }
-        }
-        return [:]
-    }
-
-    private func dotEnvCandidates() -> [URL] {
-        let fm = FileManager.default
-        var candidates: [URL] = []
-
-        var seen = Set<String>()
-        func appendUnique(_ url: URL) {
-            let normalized = url.standardizedFileURL.path
-            if seen.contains(normalized) { return }
-            seen.insert(normalized)
-            candidates.append(url)
-        }
-
-        var cwdURL = URL(fileURLWithPath: fm.currentDirectoryPath)
-        for _ in 0..<10 {
-            appendUnique(cwdURL.appendingPathComponent(".env"))
-            let parent = cwdURL.deletingLastPathComponent()
-            if parent.path == cwdURL.path { break }
-            cwdURL = parent
-        }
-
-        let sourceURL = URL(fileURLWithPath: #filePath)
-        var sourceDir = sourceURL.deletingLastPathComponent()
-        for _ in 0..<10 {
-            appendUnique(sourceDir.appendingPathComponent(".env"))
-            let parent = sourceDir.deletingLastPathComponent()
-            if parent.path == sourceDir.path { break }
-            sourceDir = parent
-        }
-
-        return candidates
+        let sourceDir = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+        return DotEnvLoader.value(for: key, extraSearchDirs: [sourceDir])
     }
 
     private func emitSpotify(_ message: String) {

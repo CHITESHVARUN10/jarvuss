@@ -38,6 +38,9 @@ final class OllamaClient {
     /// 3 queued voice commands = 3 concurrent loads = the 10 GB spike.
     private static let flightLock = NSLock()
     private static var inFlight: Task<String, Never>?
+    /// Generation token: Task is a struct (no === identity) and hashValue
+    /// is not identity — only clear inFlight when IDs match.
+    private static var inFlightID: UUID?
 
     init(model: String = JarvisModel.name) {
         if model != JarvisModel.name && model != JarvisModel.formattingName {
@@ -69,14 +72,17 @@ final class OllamaClient {
         let task = Task<String, Never> { [endpoint, model] in
             await Self.runGenerate(endpoint: endpoint, model: model, prompt: prompt)
         }
+        let taskID = UUID()
         OllamaClient.inFlight = task
+        OllamaClient.inFlightID = taskID
         OllamaClient.flightLock.unlock()
 
         let result = await task.value
 
         OllamaClient.flightLock.lock()
-        if OllamaClient.inFlight?.hashValue == task.hashValue {
+        if OllamaClient.inFlightID == taskID {
             OllamaClient.inFlight = nil
+            OllamaClient.inFlightID = nil
         }
         OllamaClient.flightLock.unlock()
         return result
