@@ -478,6 +478,20 @@ final class ActionPlanner {
             break
         }
 
+        // 2. File-exploration questions ("how many folders do I have") are
+        // answered from the filesystem by pure Swift rules. They must never
+        // reach the LLM, and the Rust core has no fileQuery action yet — so
+        // this runs in BOTH pipeline modes, before any router. Without it,
+        // the Rust cut-over flag sent every file question to Qwen, and with
+        // Ollama down the transport error surfaced as the "answer".
+        if let files = parseFileQuery(lower) {
+            NSLog("[Plan] File query (local): %@", files.description)
+            logPlanEvent(branch: "rule", text: cleaned, requestID: requestID, actions: [files])
+            RustPipeline.shadowCompare(cleaned: cleaned, swiftActions: [files],
+                                       swiftBranch: "rule", requestID: requestID)
+            return [files]
+        }
+
         // 2a. Learned intent model — primary router. It understands phrasing
         // and ordered multi-step plans the regexes cannot. On ANY miss
         // (disabled, backend down, low confidence, unmappable JSON) it logs

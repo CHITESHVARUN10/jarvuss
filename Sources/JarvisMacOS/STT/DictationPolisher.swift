@@ -52,6 +52,18 @@ enum DictationPolisher {
             return rulesOutput.text
         }
 
+        // A dead model must never contribute text to a document — the guard
+        // below would reject it by prefix, this makes the reason explicit and
+        // records a distinguishable event.
+        if OllamaClient.isFailure(raw) {
+            record(fields: [
+                "event": "unavailable",
+                "seconds": String(format: "%.2f", elapsed),
+            ])
+            NSLog("[Polish] model unavailable — rules output used")
+            return rulesOutput.text
+        }
+
         let inspected = sanitize(raw, referenceText: rulesOutput.text)
         guard let cleanText = inspected.text else {
             record(fields: [

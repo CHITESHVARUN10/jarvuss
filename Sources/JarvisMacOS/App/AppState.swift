@@ -55,6 +55,14 @@ final class AppState: ObservableObject {
     @Published var useRustPipeline: Bool = JarvisFlags.useRustPipeline {
         didSet { JarvisFlags.useRustPipeline = useRustPipeline }
     }
+    /// Self-protection ceiling in GB (0 = off) — the MemoryGuard watchdog
+    /// terminates the app past it. UserDefaults-backed so it survives
+    /// relaunch; default scales with physical RAM on first run.
+    @Published var memoryLimitGB: Int =
+        (UserDefaults.standard.object(forKey: MemoryGuard.limitDefaultsKey) as? Int)
+        ?? MemoryGuard.defaultLimitGB(physicalMemoryBytes: ProcessInfo.processInfo.physicalMemory) {
+        didSet { UserDefaults.standard.set(memoryLimitGB, forKey: MemoryGuard.limitDefaultsKey) }
+    }
     @Published var voiceVerificationStatus = "Unknown Voice ❌"
     @Published var lastVoiceSimilarity = 0.0
     @Published var backendEnrollmentSampleCount = 0
@@ -794,7 +802,7 @@ final class AppState: ObservableObject {
         } catch {
             ollamaReachable = false
         }
-        ollamaStatusText = ollamaReachable ? "qwen2.5 · 1.5b instruct" : "Ollama offline"
+        ollamaStatusText = ollamaReachable ? "qwen2.5 · 1.5b instruct" : "Offline — commands still work"
     }
 
     /// Keeps the last 5 executed commands for the Assistant pane's Recent card.

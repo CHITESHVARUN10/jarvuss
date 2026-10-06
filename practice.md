@@ -196,6 +196,8 @@ So "delete everything in downloads" is refused — deliberately.
 | Symptom | Fix |
 |:---|:---|
 | ⌘⇧A does nothing | Check speaker verification — un-enrolled profiles reject commands. Enroll, or turn *Speaker verification* off in Assistant → Privacy. |
+| "I can't reach the local model" | Ollama isn't running. Start it (`ollama serve`) for answers and dictation polish — commands, files, apps, volume and Spotify all keep working without it. |
+| Jarvis quit by itself | It hit the memory limit (Assistant → Behaviour). The reason is in `~/Library/Application Support/Jarvis/logs/memory.log`; raise the limit or set it to Off if you need more headroom. |
 | Dictation copies but doesn't paste | Accessibility grant — re-add Jarvis under Privacy & Security → Accessibility (see README). |
 | "No active Spotify device" | Open Spotify and start a song once; then voice control works. |
 | Answers are silent | Turn on *Spoken replies* (Assistant → Behaviour). |
@@ -209,7 +211,7 @@ So "delete everything in downloads" is refused — deliberately.
 
 | Pane | What's there |
 |:---|:---|
-| **Assistant** | Speaker verification, spoken replies, voice mode, follow-up window, start at login, recent commands |
+| **Assistant** | Speaker verification, spoken replies, voice mode, follow-up window, start at login, memory limit, recent commands |
 | **Voice** | Enrollment, retrain, clear, profile status |
 | **System** | Brightness/contrast, safety status, dictation settings, last dictation |
 | **Routines** | Custom keyword → action workflows |

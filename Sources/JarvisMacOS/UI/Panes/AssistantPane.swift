@@ -70,6 +70,19 @@ struct AssistantPane: View {
                         .foregroundStyle(JColor.accent)
                     }
                 }
+                JRow(title: "Memory limit",
+                     sub: "Quit Jarvis if it ever exceeds this") {
+                    Picker("", selection: $appState.memoryLimitGB) {
+                        Text("Off").tag(0)
+                        Text("2 GB").tag(2)
+                        Text("4 GB").tag(4)
+                        Text("6 GB").tag(6)
+                        Text("8 GB").tag(8)
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+                    .frame(width: 78)
+                }
             }
             .padding(.top, 9)
 

@@ -40,6 +40,7 @@ Full walkthrough with every command and exact phrasings: **[practice.md](practic
 - **Connections**: Spotify (OAuth via local backend) and PostgreSQL (schema-browsing status/credentials/test).
 - **rail + panes shell**: Assistant, Voice, Routines, Connections, Insights, System, About.
 - **Start at login**: Assistant → Behaviour — macOS opens Jarvis for you when you log in (Login Items via `SMAppService`; no helper app).
+- **Memory guard**: if the app's footprint ever exceeds the limit (Assistant → Behaviour, default ~¼ of RAM), it writes the reason to `~/Library/Application Support/Jarvis/logs/memory.log` and terminates itself instead of dragging your Mac into swap.
 - **Rust core (in progress)**: command understanding can route through the Rust pipeline (toggle in About), with shadow-parity logging.
 
 ---

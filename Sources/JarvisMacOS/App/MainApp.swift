@@ -16,6 +16,9 @@ struct MainApp: App {
         // ATSApplicationFontsPath; dev runs register them here so the
         // dictation card renders its intended faces either way.
         JarvisFonts.registerBundledFonts()
+        // Self-protection: terminate rather than let a runaway footprint
+        // push the Mac into swap. Limit lives in Assistant → Behaviour.
+        MemoryGuard.shared.start()
     }
 
     var body: some Scene {

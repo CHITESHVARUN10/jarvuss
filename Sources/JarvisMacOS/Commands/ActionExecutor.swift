@@ -127,6 +127,13 @@ final class ActionExecutor {
                                     message: "⛔ " + query)
             }
             let response = await ollamaClient.generate(prompt: query)
+            guard !OllamaClient.isFailure(response) else {
+                // The transport diagnostic stays in the log; the card gets a
+                // sentence a person can act on (and never speaks reqwest text).
+                NSLog("[AI] Local model unavailable — %@", response)
+                return ActionResult(action: action, success: false,
+                                    message: OllamaClient.unavailableMessage)
+            }
             return ActionResult(action: action, success: true, message: response)
 
         case .installPreview(let pkg, let source):

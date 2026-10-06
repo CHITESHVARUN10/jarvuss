@@ -103,6 +103,27 @@ final class CompoundAndFileQueryTests: XCTestCase {
         XCTAssertNil(planner.debugFileQuery("what is the time"))
     }
 
+    /// The exact ⌘⇧A utterance that reached Qwen — and then a raw Ollama
+    /// transport error — when the Rust cut-over flag was on. The rule layer
+    /// must answer it locally, with no model in the loop, and the default
+    /// folder must be the one that gets NAMED in the answer (Downloads).
+    func testFolderlessCountsDefaultToDownloads() {
+        let planner = ActionPlanner()
+        XCTAssertEqual(planner.debugFileQuery("how many folders do i have"),
+                       .fileQuery(FileQuery(op: .countFolders, folder: "downloads")))
+        XCTAssertEqual(planner.debugFileQuery("how many files do i have"),
+                       .fileQuery(FileQuery(op: .count, folder: "downloads")))
+    }
+
+    /// End-to-end: the phrase routes locally BEFORE the learned model is
+    /// consulted, so it can never depend on Ollama being up — that dependency
+    /// is exactly what produced a raw transport error instead of an answer.
+    func testFolderQuestionRoutesLocallyEndToEnd() async {
+        let planner = ActionPlanner()
+        let plan = await planner.plan(from: "how many folders do I have")
+        XCTAssertEqual(plan, [.fileQuery(FileQuery(op: .countFolders, folder: "downloads"))])
+    }
+
     // MARK: - End-to-end rule plan (the whole point of the fix)
 
     func testCompoundProducesAllFourOrderedActions() {

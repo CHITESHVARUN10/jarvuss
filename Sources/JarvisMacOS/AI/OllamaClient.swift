@@ -33,6 +33,37 @@ final class OllamaClient {
     private let endpoint = URL(string: "http://127.0.0.1:11434/api/generate")!
     private let model: String
 
+    // MARK: - Failure classification
+
+    /// Stable prefix on every failure string `generate` returns. Callers use
+    /// `isFailure` to tell a dead model from real output — without this, a
+    /// transport error was shown and spoken as if it were the answer.
+    static let failurePrefix = "Ollama error"
+
+    static func isFailure(_ text: String) -> Bool {
+        text.hasPrefix(failurePrefix)
+    }
+
+    /// One sentence the UI can show and speak; the raw transport detail goes
+    /// to the log, never into a response card.
+    static let unavailableMessage =
+        "I can't reach the local model right now — Ollama isn't responding. "
+        + "Commands still work; start Ollama (`ollama serve`) for answers and polish."
+
+    private static func failure(_ detail: String) -> String {
+        "\(failurePrefix): \(detail). Make sure Ollama is running."
+    }
+
+    /// Ollama reports failures as {"error": "model … not found"} — surface
+    /// that reason instead of a generic HTTP failure.
+    private static func httpFailureDetail(_ data: Data) -> String {
+        if let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           let message = object["error"] as? String, !message.isEmpty {
+            return message
+        }
+        return "unexpected HTTP response"
+    }
+
     /// Single-flight lock: only one Ollama inference at a time app-wide.
     /// Parallel /generate calls each load a runner (~1-4 GB); without this,
     /// 3 queued voice commands = 3 concurrent loads = the 10 GB spike.
@@ -56,10 +87,13 @@ final class OllamaClient {
         // timeout, and the process-wide single-flight guard.
         if JarvisFlags.useRustPipeline {
             let outcome = await RustPipeline.runBlocking { coreOllamaGenerate(prompt: prompt) }
-            if outcome.error == nil {
-                StatsRecorder.shared.recordLLM(promptChars: Int(outcome.promptChars),
-                                               responseChars: Int(outcome.responseChars))
+            if let error = outcome.error {
+                // Never return the raw reqwest text as the model's answer.
+                NSLog("[Ollama] Rust call failed: %@", error)
+                return Self.failure(error)
             }
+            StatsRecorder.shared.recordLLM(promptChars: Int(outcome.promptChars),
+                                           responseChars: Int(outcome.responseChars))
             return outcome.text
         }
 
@@ -106,7 +140,7 @@ final class OllamaClient {
             let (data, urlResponse) = try await URLSession.shared.data(for: request)
 
             guard let http = urlResponse as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
-                return "Ollama request failed: unexpected HTTP response."
+                return Self.failure(Self.httpFailureDetail(data))
             }
 
             let decoded = try JSONDecoder().decode(OllamaGenerateResponse.self, from: data)
@@ -114,7 +148,7 @@ final class OllamaClient {
             StatsRecorder.shared.recordLLM(promptChars: prompt.count, responseChars: response.count)
             return response
         } catch {
-            return "Ollama error: \(error.localizedDescription). Make sure Ollama is running."
+            return Self.failure(error.localizedDescription)
         }
     }
 }

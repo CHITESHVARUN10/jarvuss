@@ -247,6 +247,18 @@ private struct OllamaDetail: View {
                     .font(JType.kv)
                     .foregroundStyle(JColor.ink2)
             }
+            JRow(title: "Intent router",
+                 sub: "Learns from your commands · served by the backend") {
+                Text("t5-small · int8 ONNX")
+                    .font(JType.kv)
+                    .foregroundStyle(JColor.ink2)
+            }
+            JRow(title: "Speech to text",
+                 sub: "On-device transcription") {
+                Text("Whisper large-v3-turbo")
+                    .font(JType.kv)
+                    .foregroundStyle(JColor.ink2)
+            }
             JRow(title: "Endpoint") {
                 Text("127.0.0.1:11434")
                     .font(JType.kv)
