@@ -1,6 +1,10 @@
 #!/bin/zsh
 set -euo pipefail
 
+# Bytecode caches written into Resources/backend at runtime break the
+# bundle's code-signature seal; keep the venv import-cache-free.
+export PYTHONDONTWRITEBYTECODE=1
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 if [[ -d "$SCRIPT_DIR/../Resources/backend" ]]; then
   BACKEND_DIR="$(cd "$SCRIPT_DIR/../Resources/backend" && pwd)"

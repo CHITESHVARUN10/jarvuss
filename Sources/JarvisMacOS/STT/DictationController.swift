@@ -73,6 +73,25 @@ final class DictationController: ObservableObject {
     private var insertAutoDismiss: DispatchWorkItem?
     private var hardCapDismiss: DispatchWorkItem?
 
+    /// Diagnostics timeline (only populated when DictationDevLog is on):
+    /// stop stamp for the STT latency, previous final for the segment wall
+    /// time, and the captured numbers written by `writeDevLog`.
+    private var stopRequestedAt: Date?
+    private var lastFinalAt: Date?
+    private var devTimeline: DevTimeline?
+
+    /// One dictation's captured diagnostics, as read at transcript-arrival
+    /// time; the polish/insert halves are added when the text is final.
+    private struct DevTimeline {
+        let raw: String
+        let rulesText: String
+        let directive: String
+        let wallMs: Int
+        let speechMs: Int
+        let sttMs: Int?
+        let rulesMs: Int
+    }
+
     /// True once `receiveDictationTranscript` has replaced the raw STT text
     /// with the formatted version — `on_state_changed(TranscriptReady)` must
     /// not re-clobber the card with raw after that (callback race).
@@ -426,6 +445,7 @@ final class DictationController: ObservableObject {
         }
         // FFI runs on main thread: captures audio (thread_local),
         // transitions to Processing, then spawns its own inference thread.
+        stopRequestedAt = Date()
         stop_recording()
         // Optimistic flip: the SAME panel shows Transcribing instantly while
         // inference runs (the user waits on the pill). The Rust
@@ -438,17 +458,40 @@ final class DictationController: ObservableObject {
 
     /// The ⌘⇧D entry point. Rules format first (sync, ~0 ms); the LLM polish
     /// (`DictationPolisher`) runs only when the rules say the input is messy,
-    /// and what lands at the cursor is what the card shows — nothing diverges.
-    func receiveDictationTranscript(_ raw: String) {
-        insertLatencyStart = Date()
+    /// or when the app has decided the input is a list (it then sends the
+    /// "List: …" directive itself), and what lands at the cursor is what the
+    /// card shows — nothing diverges.
+    func receiveDictationTranscript(_ raw: String, speechSeconds: Double) {
+        let now = Date()
+        insertLatencyStart = now
         insertNotice = ""
         insertedAtCursor = false
         copied = false
         originalTranscript = raw
 
+        let rulesStart = Date()
         let rules = TranscriptFormatter.format(raw)
+        let rulesMs = Int(Date().timeIntervalSince(rulesStart) * 1000)
+        let listDirective = TranscriptFormatter.listDirective(for: raw)
         transcript = rules.text
         transcriptIsFormatted = true
+
+        // Diagnostics capture (a dictionary write when off — the timing reads
+        // are cheap anyway). wall_ms = since the previous final in this
+        // session; stt_ms exists only for the segment that ENDED the session
+        // (stop → transcript), where the stop stamp is known.
+        if DictationDevLog.isEnabled {
+            devTimeline = DevTimeline(
+                raw: raw,
+                rulesText: rules.text,
+                directive: listDirective?.rawValue ?? "none",
+                wallMs: Int(now.timeIntervalSince(lastFinalAt ?? recordingStartedAt ?? now) * 1000),
+                speechMs: Int(speechSeconds * 1000),
+                sttMs: stopRequestedAt.map { Int(now.timeIntervalSince($0) * 1000) },
+                rulesMs: rulesMs)
+            lastFinalAt = now
+            stopRequestedAt = nil
+        }
 
         guard !transcript.isEmpty else {
             // Everything spoken was a filler — there is nothing to paste and
@@ -470,7 +513,7 @@ final class DictationController: ObservableObject {
         showPanel()
         scheduleHardCapDismiss()
 
-        if TranscriptFormatter.shouldUseLLM(rules) {
+        if TranscriptFormatter.shouldUseLLM(rules, directive: listDirective) {
             formattingInProgress = true
             resizePanelForCurrentState()
             positionPanelForCurrentState()
@@ -480,16 +523,21 @@ final class DictationController: ObservableObject {
             // straight back to mutating UI crashed (AXIsProcessTrusted*
             // through objc_msgSend on a nil on a bare thread).
             Task { @MainActor [weak self] in
-                let polished = await DictationPolisher.polish(rulesOutput: rules)
+                let result = await DictationPolisher.polish(rulesOutput: rules,
+                                                            directive: listDirective)
                 guard let self, STTRouter.shared.owner == .pill else { return }
                 self.formattingInProgress = false
-                self.transcript = polished
-                self.persistLastDictation(polished: polished)
+                self.transcript = result.text
+                self.persistLastDictation(polished: result.text)
                 self.insertFormattedText()
+                self.writeDevLog(finalText: result.text,
+                                 polishMs: result.elapsedMs,
+                                 outcome: result.outcome.rawValue)
             }
         } else {
             persistLastDictation(polished: rules.text)
             insertFormattedText()
+            writeDevLog(finalText: rules.text, polishMs: 0, outcome: "rules_not_needed")
         }
     }
 
@@ -528,6 +576,38 @@ final class DictationController: ObservableObject {
 
         resizePanelForCurrentState()
         positionPanelForCurrentState()
+    }
+
+    /// One JSONL diagnostics line when the mode is on — the raw input, the
+    /// rules text, the final text, and the timing breakdown. This is the
+    /// app-side half of the dictation quality test; the HTML harness captures
+    /// what got pasted, and the two line up by order and timestamp.
+    ///
+    /// Reading the timings: `wall_ms` is time since the previous final in the
+    /// session; `speech_ms` is the recording duration (set at stop, so only
+    /// the final segment of a session has it); `stt_ms` is stop → transcript
+    /// (final segment only); `total_ms` is transcript → text ready to paste,
+    /// which includes the polish wait.
+    private func writeDevLog(finalText: String, polishMs: Int, outcome: String) {
+        defer { devTimeline = nil }
+        guard DictationDevLog.isEnabled, let timeline = devTimeline else { return }
+        let totalMs = insertLatencyStart.map { Int(Date().timeIntervalSince($0) * 1000) } ?? 0
+        DictationDevLog.append([
+            "event": "dictation",
+            "raw": timeline.raw,
+            "rules": timeline.rulesText,
+            "final": finalText,
+            "directive": timeline.directive,
+            "chars": finalText.count,
+            "words": finalText.split(whereSeparator: \.isWhitespace).count,
+            "wall_ms": timeline.wallMs,
+            "speech_ms": timeline.speechMs,
+            "stt_ms": timeline.sttMs.map { $0 as Any } ?? NSNull(),
+            "rules_ms": timeline.rulesMs,
+            "polish_ms": polishMs,
+            "polish_outcome": outcome,
+            "total_ms": totalMs,
+        ])
     }
 
     /// The Apple-supported grant request (CGRequestPostEventAccess) — shows

@@ -63,6 +63,12 @@ final class AppState: ObservableObject {
         ?? MemoryGuard.defaultLimitGB(physicalMemoryBytes: ProcessInfo.processInfo.physicalMemory) {
         didSet { UserDefaults.standard.set(memoryLimitGB, forKey: MemoryGuard.limitDefaultsKey) }
     }
+    /// Dictation diagnostics (Assistant → Behaviour): one JSONL line per
+    /// dictation with the raw input, rules/final text, and timing breakdown.
+    @Published var dictationDevLogEnabled: Bool =
+        UserDefaults.standard.bool(forKey: DictationDevLog.defaultsKey) {
+        didSet { UserDefaults.standard.set(dictationDevLogEnabled, forKey: DictationDevLog.defaultsKey) }
+    }
     @Published var voiceVerificationStatus = "Unknown Voice ❌"
     @Published var lastVoiceSimilarity = 0.0
     @Published var backendEnrollmentSampleCount = 0

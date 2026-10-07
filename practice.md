@@ -173,6 +173,12 @@ Expected:
 The card offers **Copy**, **Original** (raw transcript), **Undo**, **Close** —
 and closes itself after 10 seconds, always.
 
+Lists work when you ask for them or count items: say "…as bullet points" for
+`- ` items, or dictate "point one … point two …" / "first … second … third …"
+for a numbered list. Spoken lead-ins such as "first point is" are dropped; the
+items themselves stay your exact words. (Paragraph breaks are not supported
+yet.)
+
 Dictation is plain text on purpose: it types what you said, cleaned — it does
 not restyle, add headings, or answer anything you happen to say.
 

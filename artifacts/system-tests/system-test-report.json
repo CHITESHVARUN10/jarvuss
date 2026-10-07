@@ -1,17 +1,17 @@
 {
-  "generatedAt" : "2026-10-06T13:18:18Z",
+  "generatedAt" : "2026-10-06T15:59:12Z",
   "retryPolicy" : "1 retry on failure (max 2 attempts per scenario)",
   "scenarios" : [
     {
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 59,
+          "durationMs" : 185,
           "planDescriptions" : [
-            "Open 'textedit'"
+            "Open 'TextEdit'"
           ],
           "stepMessages" : [
-            "✓ Opened textedit."
+            "✓ Opened TextEdit."
           ],
           "success" : true
         }
@@ -27,12 +27,12 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 923,
+          "durationMs" : 1090,
           "planDescriptions" : [
-            "Close 'textedit'"
+            "Close 'TextEdit'"
           ],
           "stepMessages" : [
-            "✓ Closed textedit."
+            "✓ Closed TextEdit."
           ],
           "success" : true
         }
@@ -48,12 +48,12 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 5,
+          "durationMs" : 96,
           "planDescriptions" : [
             "Info: current time"
           ],
           "stepMessages" : [
-            "✓ Current time: 6:48:18 PM"
+            "✓ Current time: 9:29:11 PM"
           ],
           "success" : true
         }
@@ -69,7 +69,7 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 55,
+          "durationMs" : 127,
           "planDescriptions" : [
             "Info: battery status"
           ],
@@ -90,7 +90,7 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 76,
+          "durationMs" : 198,
           "planDescriptions" : [
             "Search YouTube for 'swift package manager'"
           ],
@@ -111,7 +111,7 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 77,
+          "durationMs" : 208,
           "planDescriptions" : [
             "Search Google for 'swift concurrency'"
           ],
@@ -132,18 +132,18 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 3,
+          "durationMs" : 214,
           "planDescriptions" : [
-            "Create folder 'e2e-folder-d96a8186'"
+            "Create folder 'e2e-folder-0322FA7D'"
           ],
           "stepMessages" : [
-            "✓ Created folder: \/Users\/chiteshvarun\/D-drive\/jarvis_code\/e2e-folder-d96a8186"
+            "✓ Created folder: \/Users\/chiteshvarun\/D-drive\/jarvis_code\/e2e-folder-0322FA7D"
           ],
           "success" : true
         }
       ],
       "attemptsUsed" : 1,
-      "command" : "create folder e2e-folder-D96A8186",
+      "command" : "create folder e2e-folder-0322FA7D",
       "expectedIntent" : "filesystem",
       "id" : "fs-create-folder",
       "success" : true,
@@ -153,18 +153,18 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 3,
+          "durationMs" : 213,
           "planDescriptions" : [
-            "Create file 'e2e-file-d96a8186.txt'"
+            "Create file 'e2e-file-0322fa7d.txt'"
           ],
           "stepMessages" : [
-            "✓ Created file: \/Users\/chiteshvarun\/D-drive\/jarvis_code\/e2e-file-d96a8186.txt"
+            "✓ Created file: \/Users\/chiteshvarun\/D-drive\/jarvis_code\/e2e-file-0322fa7d.txt"
           ],
           "success" : true
         }
       ],
       "attemptsUsed" : 1,
-      "command" : "create file e2e-file-D96A8186.txt",
+      "command" : "create file e2e-file-0322FA7D.txt",
       "expectedIntent" : "filesystem",
       "id" : "fs-create-file",
       "success" : true,
@@ -174,28 +174,28 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 129,
+          "durationMs" : 128,
           "planDescriptions" : [
             "Automation path via AppState.executeTypedCommand"
           ],
           "stepMessages" : [
-            "[2026-10-06T13:18:18Z] [Typed] Received: 'focus mode D96A8186'",
-            "[2026-10-06T13:18:18Z] [DDC] Discovered 1 DCPAVServiceProxy entries",
-            "[2026-10-06T13:18:18Z] [DDC] Matched display 2 → IOAVService (location: '')",
-            "[2026-10-06T13:18:18Z] [DDC] Read VCP 0x10: current=50 max=100 on display 2",
-            "[2026-10-06T13:18:18Z] [DDC] Read VCP 0x12: current=57 max=100 on display 2",
-            "[2026-10-06T13:18:18Z] [Queue] Enqueued (normal): 'focus mode D96A8186' [queue size: 1]",
-            "[2026-10-06T13:18:18Z] [Execution] started: 'focus mode D96A8186'",
-            "[2026-10-06T13:18:18Z] [Automation] Triggered keyword: 'focus mode D96A8186'",
-            "[2026-10-06T13:18:18Z] [Automation] Executing 1 actions for 'focus mode D96A8186'",
-            "[2026-10-06T13:18:18Z] [Automation] ▶ Open folder 'Downloads'",
-            "[2026-10-06T13:18:18Z] [Automation] ✓ Opened folder: \/Users\/chiteshvarun\/Downloads"
+            "[2026-10-06T15:59:12Z] [Typed] Received: 'focus mode 0322FA7D'",
+            "[2026-10-06T15:59:12Z] [DDC] Discovered 1 DCPAVServiceProxy entries",
+            "[2026-10-06T15:59:12Z] [DDC] Matched display 2 → IOAVService (location: '')",
+            "[2026-10-06T15:59:12Z] [DDC] Read VCP 0x10: current=25 max=100 on display 2",
+            "[2026-10-06T15:59:12Z] [DDC] Read VCP 0x12: current=57 max=100 on display 2",
+            "[2026-10-06T15:59:12Z] [Queue] Enqueued (normal): 'focus mode 0322FA7D' [queue size: 1]",
+            "[2026-10-06T15:59:12Z] [Execution] started: 'focus mode 0322FA7D'",
+            "[2026-10-06T15:59:12Z] [Automation] Triggered keyword: 'focus mode 0322FA7D'",
+            "[2026-10-06T15:59:12Z] [Automation] Executing 1 actions for 'focus mode 0322FA7D'",
+            "[2026-10-06T15:59:12Z] [Automation] ▶ Open folder 'Downloads'",
+            "[2026-10-06T15:59:12Z] [Automation] ✓ Opened folder: \/Users\/chiteshvarun\/Downloads"
           ],
           "success" : true
         }
       ],
       "attemptsUsed" : 1,
-      "command" : "focus mode D96A8186",
+      "command" : "focus mode 0322FA7D",
       "expectedIntent" : "automation",
       "id" : "automation-on",
       "success" : true,
@@ -205,29 +205,29 @@
       "attempts" : [
         {
           "attempt" : 1,
-          "durationMs" : 251,
+          "durationMs" : 125,
           "planDescriptions" : [
             "Automation path via AppState.executeTypedCommand"
           ],
           "stepMessages" : [
-            "[2026-10-06T13:18:18Z] [Execution] started: 'focus mode D96A8186'",
-            "[2026-10-06T13:18:18Z] [Automation] Triggered keyword: 'focus mode D96A8186'",
-            "[2026-10-06T13:18:18Z] [Automation] Executing 1 actions for 'focus mode D96A8186'",
-            "[2026-10-06T13:18:18Z] [Automation] ▶ Open folder 'Downloads'",
-            "[2026-10-06T13:18:18Z] [Automation] ✓ Opened folder: \/Users\/chiteshvarun\/Downloads",
-            "[2026-10-06T13:18:18Z] [Typed] Received: 'focus mode off D96A8186'",
-            "[2026-10-06T13:18:18Z] [Queue] Enqueued (normal): 'focus mode off D96A8186' [queue size: 1]",
-            "[2026-10-06T13:18:18Z] [Execution] finished: 'focus mode D96A8186'",
-            "[2026-10-06T13:18:18Z] [Execution] started: 'focus mode off D96A8186'",
-            "[2026-10-06T13:18:18Z] [Automation] Triggered keyword: 'focus mode D96A8186'",
-            "[2026-10-06T13:18:18Z] [Automation] Off variant matched for 'focus mode D96A8186'.",
-            "[2026-10-06T13:18:18Z] [Execution] finished: 'focus mode off D96A8186'"
+            "[2026-10-06T15:59:12Z] [Execution] started: 'focus mode 0322FA7D'",
+            "[2026-10-06T15:59:12Z] [Automation] Triggered keyword: 'focus mode 0322FA7D'",
+            "[2026-10-06T15:59:12Z] [Automation] Executing 1 actions for 'focus mode 0322FA7D'",
+            "[2026-10-06T15:59:12Z] [Automation] ▶ Open folder 'Downloads'",
+            "[2026-10-06T15:59:12Z] [Automation] ✓ Opened folder: \/Users\/chiteshvarun\/Downloads",
+            "[2026-10-06T15:59:12Z] [Typed] Received: 'focus mode off 0322FA7D'",
+            "[2026-10-06T15:59:12Z] [Queue] Enqueued (normal): 'focus mode off 0322FA7D' [queue size: 1]",
+            "[2026-10-06T15:59:12Z] [Execution] finished: 'focus mode 0322FA7D'",
+            "[2026-10-06T15:59:12Z] [Execution] started: 'focus mode off 0322FA7D'",
+            "[2026-10-06T15:59:12Z] [Automation] Triggered keyword: 'focus mode 0322FA7D'",
+            "[2026-10-06T15:59:12Z] [Automation] Off variant matched for 'focus mode 0322FA7D'.",
+            "[2026-10-06T15:59:12Z] [Execution] finished: 'focus mode off 0322FA7D'"
           ],
           "success" : true
         }
       ],
       "attemptsUsed" : 1,
-      "command" : "focus mode off D96A8186",
+      "command" : "focus mode off 0322FA7D",
       "expectedIntent" : "automation",
       "id" : "automation-off",
       "success" : true,
@@ -246,7 +246,7 @@
     "info"
   ],
   "summary" : {
-    "averageDurationMs" : 158.1,
+    "averageDurationMs" : 258.4,
     "failed" : 0,
     "passed" : 10,
     "successRate" : 100,

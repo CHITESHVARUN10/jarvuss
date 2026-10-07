@@ -75,7 +75,8 @@ func on_transcript_ready(text: RustString) {
             // staleness was the ⌘⇧D-executes-commands bug).
             let actionMode = STTRouter.shared.owner == .action
             NSLog("[Jarvis][STT] transcript route=\(actionMode ? "action" : "pill") chars=\(pillText.count)")
-            StatsRecorder.shared.recordDictation(speechSecs: controller.pendingSpeechSecs, chars: pillText.count)
+            let speechSecs = controller.pendingSpeechSecs
+            StatsRecorder.shared.recordDictation(speechSecs: speechSecs, chars: pillText.count)
             controller.pendingSpeechSecs = 0
             if actionMode {
                 // Action pill: hand the text to AppState (verifies per the
@@ -91,7 +92,7 @@ func on_transcript_ready(text: RustString) {
                 // inserted so text and card can never diverge. Ownership copy
                 // of the transcript is intact here (`dismiss_transcript()`
                 // must NOT run yet — per the agentTalk parity note below).
-                controller.receiveDictationTranscript(pillText)
+                controller.receiveDictationTranscript(pillText, speechSeconds: speechSecs)
             }
         } else {
             // Command-mode (or dropped): ready the core for the next

@@ -67,6 +67,8 @@ final class OllamaClient {
     /// Single-flight lock: only one Ollama inference at a time app-wide.
     /// Parallel /generate calls each load a runner (~1-4 GB); without this,
     /// 3 queued voice commands = 3 concurrent loads = the 10 GB spike.
+    /// Callers that arrive while a call is running WAIT for it and then run
+    /// their own — they never receive someone else's result.
     private static let flightLock = NSLock()
     private static var inFlight: Task<String, Never>?
     /// Generation token: Task is a struct (no === identity) and hashValue
@@ -97,29 +99,37 @@ final class OllamaClient {
             return outcome.text
         }
 
-        OllamaClient.flightLock.lock()
-        if let shared = OllamaClient.inFlight {
+        // Serialize, never share. Returning another prompt's result to the
+        // caller was a real failure mode for dictation polish: two lines
+        // dictating in one session (or the mic-start warm-up racing the
+        // first line) could hand polish a different prompt's output —
+        // missing structure, or in the worst case the wrong text.
+        while true {
+            OllamaClient.flightLock.lock()
+            if let shared = OllamaClient.inFlight {
+                OllamaClient.flightLock.unlock()
+                NSLog("[Ollama] Waiting for the in-flight generate, then running ours")
+                _ = await shared.value
+                continue
+            }
+            let task = Task<String, Never> { [endpoint, model] in
+                await Self.runGenerate(endpoint: endpoint, model: model, prompt: prompt)
+            }
+            let taskID = UUID()
+            OllamaClient.inFlight = task
+            OllamaClient.inFlightID = taskID
             OllamaClient.flightLock.unlock()
-            NSLog("[Ollama] Coalesced concurrent generate — sharing in-flight result")
-            return await shared.value
-        }
-        let task = Task<String, Never> { [endpoint, model] in
-            await Self.runGenerate(endpoint: endpoint, model: model, prompt: prompt)
-        }
-        let taskID = UUID()
-        OllamaClient.inFlight = task
-        OllamaClient.inFlightID = taskID
-        OllamaClient.flightLock.unlock()
 
-        let result = await task.value
+            let result = await task.value
 
-        OllamaClient.flightLock.lock()
-        if OllamaClient.inFlightID == taskID {
-            OllamaClient.inFlight = nil
-            OllamaClient.inFlightID = nil
+            OllamaClient.flightLock.lock()
+            if OllamaClient.inFlightID == taskID {
+                OllamaClient.inFlight = nil
+                OllamaClient.inFlightID = nil
+            }
+            OllamaClient.flightLock.unlock()
+            return result
         }
-        OllamaClient.flightLock.unlock()
-        return result
     }
 
     private static func runGenerate(endpoint: URL, model: String, prompt: String) async -> String {

@@ -52,9 +52,19 @@ enum TranscriptFormatter {
         )
     }
 
+    /// The app-side instruction line for the polish model (see
+    /// `DictationPolisher.systemPrompt`). The speaker never says this line —
+    /// it is how the app tells the model "this is a list, typeset it".
+    enum ListDirective: String, Equatable {
+        case numbered = "List: numbered"
+        case bullets  = "List: bullets"
+    }
+
     /// LLM-pass trigger (`DictationPolisher`): rules handle the common case at
-    /// ~0 ms; the LLM only earns its latency on messy or structured input.
-    static func shouldUseLLM(_ output: Output) -> Bool {
+    /// ~0 ms; the LLM only earns its latency on messy, structured, or
+    /// app-directed-list input.
+    static func shouldUseLLM(_ output: Output, directive: ListDirective? = nil) -> Bool {
+        if directive != nil { return true }
         if output.hasEnumeration { return true }
         // A retraction without a clause boundary ("meet Tuesday no wait
         // Wednesday") is left untouched — half-fixing it would drop words the
@@ -63,6 +73,30 @@ enum TranscriptFormatter {
         if output.unboundedCorrections > 0 { return true }
         if output.outputWords > 25 { return true }
         return output.fillerRemovals >= 2 && output.correctionResolves > 0
+    }
+
+    /// Decides whether the app should DIRECT the model to typeset a list.
+    /// The model is never allowed to infer list structure on its own — two
+    /// distinct ordinal/sequence markers (or an explicit spoken request)
+    /// mean the speaker is dictating items.
+    static func listDirective(for raw: String) -> ListDirective? {
+        let lower = raw.lowercased()
+        if lower.contains("bullet") { return .bullets }
+        if lower.contains("numbered list") || lower.contains("number the list") { return .numbered }
+
+        // Paragraph intent is not list intent — "first paragraph … second
+        // paragraph …" would otherwise be forced into a numbered list.
+        if lower.contains("paragraph") { return nil }
+
+        let markers = ["first", "firstly", "second", "secondly", "third", "thirdly", "finally", "lastly"]
+        let distinct = markers.filter {
+            lower.range(of: "\\b\($0)\\b", options: .regularExpression) != nil
+        }
+        if distinct.count >= 2 { return .numbered }
+
+        if lower.contains("point one") && lower.contains("point two") { return .numbered }
+        if lower.contains("point 1") && lower.contains("point 2") { return .numbered }
+        return nil
     }
 
     // MARK: - Pass A: whitespace

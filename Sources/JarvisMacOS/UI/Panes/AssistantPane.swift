@@ -83,6 +83,10 @@ struct AssistantPane: View {
                     .pickerStyle(.menu)
                     .frame(width: 78)
                 }
+                JRow(title: "Dictation diagnostics",
+                     sub: "Log raw input + timings per dictation (dev)") {
+                    JSwitch(binding: $appState.dictationDevLogEnabled)
+                }
             }
             .padding(.top, 9)
 

@@ -23,6 +23,7 @@ Full walkthrough with every command and exact phrasings: **[practice.md](practic
 - ⌘⇧D dictation with WISPR-style formatting: deterministic rules (fillers, stutters, self-corrections, punctuation, casing, `25%`, `3pm`) plus a small-model polish pass for messy or structured speech (lists get typeset).
 - **Insert at cursor**: the formatted text is pasted into whatever app you were in — your clipboard is preserved. The card offers **Copy** (formatted), **Copy original** (raw STT, toggleable), and **Undo** (⌘Z in the target app), and it closes itself after 10 seconds no matter what. With no Accessibility grant it silently copies instead and tells you.
 - **Last dictation is kept across restarts**: the System pane shows the latest original + polished pair — and only that pair. A new dictation immediately and unrecoverably replaces the previous one (no history by design).
+- **Dictation diagnostics (dev)**: Assistant → Behaviour → *Dictation diagnostics* writes one JSONL line per dictation — raw input, rules and final text, and the timing breakdown (wall, speech, STT, rules, polish, insert) to `~/Library/Application Support/Jarvis/logs/dictation_dev.jsonl`.
 - **"Jarvis" wake word**: wake-word command mode with a 0.7 s audio pre-roll so the wake word and the first syllables are never lost to VAD latency; "Jarvis" → pause → command works; continuous speech is segmented at 8 s with the tail re-armed, not dropped.
 - **Speaker verification (optional)**: Resemblyzer voiceprint enrollment can gate execution to your voice.
 
