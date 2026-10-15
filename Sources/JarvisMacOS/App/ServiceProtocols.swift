@@ -18,6 +18,18 @@ protocol LLMGenerating {
 
 extension OllamaClient: LLMGenerating {}
 
+protocol IntentRouting {
+    func route(_ text: String, requestID: UUID) async -> [PlannedAction]?
+}
+
+extension IntentModelRouter: IntentRouting {}
+
+protocol ActionPlanning {
+    func plan(from raw: String, requestID: UUID) async -> [PlannedAction]
+}
+
+extension ActionPlanner: ActionPlanning {}
+
 // MARK: - SpeakerVerifying
 
 /// Voiceprint enroll / verify / reset / stats. Production: VoiceAuthClient.
@@ -34,13 +46,13 @@ extension VoiceAuthClient: SpeakerVerifying {}
 // MARK: - PlanExecuting
 
 /// Runs a PlannedAction plan step-by-step. Production: ActionExecutor.
-protocol PlanExecuting {
+protocol PlanExecuting: AnyObject {
     var onLog: ((String) -> Void)? { get set }
-    func execute(
+    @discardableResult func execute(
         plan: [PlannedAction],
-        onStepStart: @escaping (PlannedAction) -> Void,
-        onStepComplete: @escaping (ActionResult) -> Void
-    ) async
+        onStepStart: @escaping @MainActor (PlannedAction) -> Void,
+        onStepComplete: @escaping @MainActor (ActionResult) -> Void
+    ) async -> [ActionResult]
 }
 
 extension ActionExecutor: PlanExecuting {}
@@ -83,7 +95,7 @@ protocol EventLogging: AnyObject {
         executionResult: String?,
         metadata: [String: String]?
     )
-    func upsertDailyStats(_ bucket: DayBucket)
+    func upsertDailyStats(_ batch: StatsBatch) async -> Bool
     func fetchDailyStats(sinceDays: Int) async -> [DayBucket]
     func hasEnrollmentCompletionEvent() async -> Bool
 }

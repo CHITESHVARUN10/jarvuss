@@ -4,13 +4,13 @@ final class Logger {
     private let fileManager = Foundation.FileManager.default
     private let logURL: URL
 
-    init() {
-        let support = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Application Support/Jarvis/logs", isDirectory: true)
+    init(logURL: URL? = nil) {
+        let support = logURL?.deletingLastPathComponent() ?? RuntimeConfiguration.dataDirectory
+            .appendingPathComponent("logs", isDirectory: true)
         try? FileManager.default.createDirectory(at: support, withIntermediateDirectories: true)
-        logURL = support.appendingPathComponent("commands.log")
-        if !fileManager.fileExists(atPath: logURL.path) {
-            fileManager.createFile(atPath: logURL.path, contents: nil)
+        self.logURL = logURL ?? support.appendingPathComponent("commands.log")
+        if !fileManager.fileExists(atPath: self.logURL.path) {
+            fileManager.createFile(atPath: self.logURL.path, contents: nil)
         }
     }
 

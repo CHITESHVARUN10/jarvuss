@@ -17,6 +17,12 @@ final class DotEnvLoaderTests: XCTestCase {
         XCTAssertEqual(parsed["TOKEN"], "abc=def")
     }
 
+    func testQuotedExportValuesAreLiteralAndPreserveInteriorSpaces() {
+        let parsed = DotEnvLoader.parse("export PGPASSWORD='  literal $(command)  '\nTOKEN=\"quoted=value\"\n")
+        XCTAssertEqual(parsed["PGPASSWORD"], "  literal $(command)  ")
+        XCTAssertEqual(parsed["TOKEN"], "quoted=value")
+    }
+
     func testParseSkipsMalformedLines() {
         let parsed = DotEnvLoader.parse("NOEQUALS\n=novalue\nGOOD=yes\n")
         XCTAssertEqual(parsed, ["GOOD": "yes"])

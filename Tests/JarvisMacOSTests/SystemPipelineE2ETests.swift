@@ -102,6 +102,9 @@ final class SystemPipelineE2ETests: XCTestCase {
     }
 
     func testSystemPipelineHarnessWithReport() async throws {
+        guard ProcessInfo.processInfo.environment["JARVIS_RUN_SYSTEM_TESTS"] == "1" else {
+            throw XCTSkip("Set JARVIS_RUN_SYSTEM_TESTS=1 to run tests that open/close apps and control media.")
+        }
         let selectedApp = discoverTestableAppName()
         let uniqueToken = UUID().uuidString.prefix(8)
         let folderName = "e2e-folder-\(uniqueToken)"

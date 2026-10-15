@@ -143,31 +143,12 @@ enum DictationPolisher {
         let prompt = promptText(for: rulesOutput.text, directive: directive)
         let client = OllamaClient(model: model)
 
-        // Race the generate against the budget. nil = timeout; the LLM's
-        // own empty response also routes to the fallback (an empty "cleanup"
-        // deletes the user's words).
-        let maybe = await withTaskGroup(of: Optional<String>.self) { group -> Optional<String> in
-            group.addTask { await client.generate(prompt: prompt) }
-            group.addTask { () -> Optional<String> in
-                try? await Task.sleep(nanoseconds: UInt64(budget * 1_000_000_000))
-                return nil
-            }
-            while let value = await group.next() {
-                if let text = value, !text.isEmpty {
-                    group.cancelAll()
-                    return text
-                }
-                if value == nil {
-                    group.cancelAll()
-                    return nil
-                }
-            }
-            return nil
-        }
+        // The client enforces this budget across queue waiting and HTTP work.
+        let raw = await client.generate(prompt: prompt, timeout: budget)
 
         let elapsed = Date().timeIntervalSince(started)
 
-        guard let raw = maybe else {
+        if raw == OllamaClient.timeoutMessage {
             record(fields: [
                 "event": "timeout",
                 "seconds": String(format: "%.2f", elapsed),
@@ -431,8 +412,8 @@ enum DictationPolisher {
     /// session is not silently degraded to the rules output by the race.
     /// Keep-alive unloads it after 60 s idle, so this only ever front-runs
     /// real use, never parks memory between sessions.
-    static func warmUp() {
-        Task.detached(priority: .utility) {
+    static func warmUp() -> Task<Void, Never> {
+        Task(priority: .utility) {
             _ = await OllamaClient(model: model).generate(
                 prompt: promptText(for: "warm up", directive: nil))
         }

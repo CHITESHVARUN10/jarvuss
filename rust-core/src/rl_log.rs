@@ -16,6 +16,14 @@ fn lock() -> &'static Mutex<()> {
 }
 
 pub fn log_path() -> PathBuf {
+    if cfg!(test) {
+        return std::env::temp_dir()
+            .join(format!("jarvis-core-tests-{}", std::process::id()))
+            .join("intent_router.jsonl");
+    }
+    if let Ok(directory) = std::env::var("JARVIS_DATA_DIR") {
+        return PathBuf::from(directory).join("logs/intent_router.jsonl");
+    }
     let home = dirs::home_dir().unwrap_or_default();
     home.join("Library/Application Support/Jarvis/logs/intent_router.jsonl")
 }

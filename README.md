@@ -4,6 +4,9 @@ A local-first macOS assistant: talk to it, and it types, opens, searches, plays,
 controls, and answers — with the speech model, the language models, and the
 intent router all running on your Mac.
 
+Requires **macOS 26.0 or later**. For the local speech and language models,
+16 GB RAM or more is recommended; 24 GB gives more room for other apps.
+
 Three ways in:
 
 | Shortcut / phrase | What it does |
@@ -42,7 +45,7 @@ Full walkthrough with every command and exact phrasings: **[practice.md](practic
 - **rail + panes shell**: Assistant, Voice, Routines, Connections, Insights, System, About.
 - **Start at login**: Assistant → Behaviour — macOS opens Jarvis for you when you log in (Login Items via `SMAppService`; no helper app).
 - **Memory guard**: if the app's footprint ever exceeds the limit (Assistant → Behaviour, default ~¼ of RAM), it writes the reason to `~/Library/Application Support/Jarvis/logs/memory.log` and terminates itself instead of dragging your Mac into swap.
-- **Rust core (in progress)**: command understanding can route through the Rust pipeline (toggle in About), with shadow-parity logging.
+- **Rust core (in progress)**: command understanding can route through the Rust pipeline (toggle in About), with shadow-parity logging. Safety, priority and instant information patterns share one Rust policy in both modes. Model HTTP requests use the same cancellable Swift client in both modes.
 
 ---
 
@@ -50,8 +53,9 @@ Full walkthrough with every command and exact phrasings: **[practice.md](practic
 
 Commands are routed by a **compact learned router: t5-small, ~60M parameters**
 (0.06B — small on purpose: it must run locally in milliseconds). It is exported
-as int8 ONNX (~196 MB) and served by the local backend at `/parse_intent`,
-where rules are tried first and the model handles the rest.
+as int8 ONNX (~196 MB) and served by the local backend at `/parse_intent`.
+The app handles unambiguous single commands locally first, then asks the model
+to resolve ambiguous or compound commands.
 
 It does not stay frozen. Every routing decision the app makes is appended to:
 
@@ -59,7 +63,11 @@ It does not stay frozen. Every routing decision the app makes is appended to:
 ~/Library/Application Support/Jarvis/logs/intent_router.jsonl
 ```
 
-That log is the reward signal, and `training/post_train.py` closes the loop:
+That log supplies candidate training labels. `training/post_train.py` harvests
+only complete, explicitly successful runs with successful steps and the matching
+final plan. Failed, cancelled, and incomplete runs are excluded. Execution
+success is a proxy, not human confirmation of the interpretation; retain
+independent evaluations and human corrections.
 
 ```zsh
 cd training
@@ -147,6 +155,9 @@ or say "Jarvis, open chrome" hands-free.
 ## 🛠️ Installation & Setup
 
 ### 1) Prerequisites (macOS)
+
+macOS **26.0+**, with Xcode and a matching macOS SDK installed. Swift, Rust,
+and the native speech dependencies all use a 26.0 deployment target.
 
 ```zsh
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -273,3 +284,27 @@ Jarvis explain quantum computing
   are blocked or previewed, never run.
 - Stats and command history are stored locally (SQLite/PostgreSQL if you
   connect it); away from a database, nothing leaves the machine.
+- Saved connection secrets use macOS **Keychain**. Non-secret settings,
+  voice embeddings, and the statistics outbox live in
+  `~/Library/Application Support/Jarvis` (or `JARVIS_DATA_DIR`). Runtime updates
+  never modify the signed app bundle. Existing `.env` files are read as literal
+  data and migrated; saved connection edits take precedence.
+- Usage uploads retain immutable batch IDs until PostgreSQL acknowledges them,
+  so an outage or a retry does not lose or double-count usage. Local events are
+  batched for up to one second and persisted immediately on shutdown.
+
+## Development checks
+
+```zsh
+swift test                              # real system actions are opt-in
+cargo test --locked --manifest-path rust-core/Cargo.toml
+zsh scripts/test_stt.zsh                 # no microphone/model required
+python3 -m venv /tmp/jarvis-tests
+/tmp/jarvis-tests/bin/pip install -r backend/requirements-test.txt
+/tmp/jarvis-tests/bin/python -B -m unittest discover -s backend/tests -v
+python3 scripts/test_postgres.py         # disposable DB; never uses your database
+```
+
+`JARVIS_RUN_SYSTEM_TESTS=1 swift test --filter SystemPipelineE2ETests` runs the
+separate harness that opens/closes real apps and controls Spotify. See
+[docs/architecture.md](docs/architecture.md) for policy ownership and lifecycle rules.

@@ -57,7 +57,7 @@ struct PulsingModifier: ViewModifier {
                     opacity = 0.25
                 }
             }
-            .onChange(of: active) { newVal in
+            .onChange(of: active) { _, newVal in
                 if newVal {
                     withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) {
                         opacity = 0.25

@@ -1,0 +1,20 @@
+[
+  {"text":"open spotify","actions":["Open 'Spotify'"],"priority":"normal","safety":"allowed"},
+  {"text":"close spotify","actions":["Close 'Spotify'"],"priority":"high","safety":"allowed"},
+  {"text":"pause","actions":["Media: pause"],"priority":"high","safety":"allowed"},
+  {"text":"mute","actions":["Volume: mute"],"priority":"high","safety":"allowed"},
+  {"text":"what time is it","actions":["Info: current time"],"priority":"high","safety":"allowed"},
+  {"text":"set volume to 30 percent","actions":["Volume: set to 30%"],"priority":"high","safety":"allowed"},
+  {"text":"open youtube","actions":["Open URL: https://www.youtube.com"],"priority":"normal","safety":"allowed"},
+  {"text":"open spotify and open whatsapp","actions":["Open 'Spotify'","Open 'WhatsApp'"],"priority":"normal","safety":"allowed"},
+  {"text":"sudo ls","priority":"normal","safety":"blocked"},
+  {"text":"su root","priority":"normal","safety":"blocked"},
+  {"text":"runas admin open chrome","priority":"normal","safety":"blocked"},
+  {"text":"empty the trash","priority":"normal","safety":"blocked"},
+  {"text":"run mkfs on disk","priority":"normal","safety":"blocked"},
+  {"text":"run fdisk","priority":"normal","safety":"blocked"},
+  {"text":"open /System/Library/file","priority":"normal","safety":"blocked"},
+  {"text":"brew install ffmpeg","priority":"normal","safety":"install"},
+  {"text":"cargo add serde","priority":"normal","safety":"install"},
+  {"text":"pod install","priority":"normal","safety":"install"}
+]

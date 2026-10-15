@@ -17,6 +17,7 @@ pub mod intent_router;
 pub mod ollama;
 pub mod planner;
 pub mod queue;
+pub mod quick_info;
 pub mod rl_log;
 pub mod safety;
 pub mod validator;
@@ -52,6 +53,12 @@ pub fn resolve_app(name: String) -> String {
 #[uniffi::export]
 pub fn check_safety(raw: String) -> SafetyVerdict {
     safety::validate_raw(&raw)
+}
+
+/// Instant informational query policy, shared by both Swift routing modes.
+#[uniffi::export]
+pub fn match_quick_info(lower: String) -> Option<SystemInfoAction> {
+    quick_info::match_query(&lower)
 }
 
 /// Local hardware reads ("what is the current brightness level").

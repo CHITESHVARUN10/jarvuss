@@ -119,7 +119,7 @@ func registerDictationHotkey() {
     // per call (app relaunch paths, tests). Tear down first.
     unregisterDictationHotkey()
 
-    var hotKeyID = EventHotKeyID(signature: gDictationHotKeySignature, id: 1)
+    let hotKeyID = EventHotKeyID(signature: gDictationHotKeySignature, id: 1)
 
     let status = RegisterEventHotKey(
         UInt32(kVK_ANSI_D),
@@ -137,7 +137,7 @@ func registerDictationHotkey() {
     }
 
     // Action pill (⌘⇧A) — same shared Carbon handler, own signature + id.
-    var actionHotKeyID = EventHotKeyID(signature: gActionHotKeySignature, id: 2)
+    let actionHotKeyID = EventHotKeyID(signature: gActionHotKeySignature, id: 2)
 
     let actionStatus = RegisterEventHotKey(
         UInt32(kVK_ANSI_A),

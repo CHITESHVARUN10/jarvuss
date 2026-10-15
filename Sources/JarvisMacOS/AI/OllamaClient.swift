@@ -18,8 +18,7 @@ import Foundation
 /// Memory guards live HERE, not at each call site:
 /// - keepAliveSeconds: unload the model after 60 s idle so VRAM returns.
 /// - timeout: a stuck Ollama call can never wedge the queue forever.
-/// - Single-flight: only one generate at a time; concurrent callers share
-///   the in-flight result instead of spawning parallel model loads.
+/// - Single-flight: requests wait their turn and receive their own output.
 enum JarvisModel {
     static let name = "qwen2.5:1.5b-instruct"
     /// Alias kept for the ⌘⇧D polish pass (`DictationPolisher`) — the same
@@ -30,7 +29,9 @@ enum JarvisModel {
 }
 
 final class OllamaClient {
-    private let endpoint = URL(string: "http://127.0.0.1:11434/api/generate")!
+    private let endpoint: URL
+    private let session: URLSession
+    private let gate: InferenceGate
     private let model: String
 
     // MARK: - Failure classification
@@ -64,18 +65,17 @@ final class OllamaClient {
         return "unexpected HTTP response"
     }
 
-    /// Single-flight lock: only one Ollama inference at a time app-wide.
-    /// Parallel /generate calls each load a runner (~1-4 GB); without this,
-    /// 3 queued voice commands = 3 concurrent loads = the 10 GB spike.
-    /// Callers that arrive while a call is running WAIT for it and then run
-    /// their own — they never receive someone else's result.
-    private static let flightLock = NSLock()
-    private static var inFlight: Task<String, Never>?
-    /// Generation token: Task is a struct (no === identity) and hashValue
-    /// is not identity — only clear inFlight when IDs match.
-    private static var inFlightID: UUID?
+    private static let sharedGate = InferenceGate()
+    private enum GenerationError: Error { case deadlineExceeded }
+    static let timeoutMessage = "Ollama error: request deadline exceeded"
 
-    init(model: String = JarvisModel.name) {
+    init(model: String = JarvisModel.name,
+         endpoint: URL = URL(string: "http://127.0.0.1:11434/api/generate")!,
+         session: URLSession = .shared,
+         gate: InferenceGate? = nil) {
+        self.endpoint = endpoint
+        self.session = session
+        self.gate = gate ?? Self.sharedGate
         if model != JarvisModel.name && model != JarvisModel.formattingName {
             NSLog("[Ollama] WARNING: non-canonical model '%@' requested — forcing '%@' (7B+ models OOM this Mac)", model, JarvisModel.name)
             self.model = JarvisModel.name
@@ -85,58 +85,49 @@ final class OllamaClient {
     }
 
     func generate(prompt: String) async -> String {
-        // Migration cut-over: Rust owns the HTTP call, keep-alive unload,
-        // timeout, and the process-wide single-flight guard.
-        if JarvisFlags.useRustPipeline {
-            let outcome = await RustPipeline.runBlocking { coreOllamaGenerate(prompt: prompt) }
-            if let error = outcome.error {
-                // Never return the raw reqwest text as the model's answer.
-                NSLog("[Ollama] Rust call failed: %@", error)
-                return Self.failure(error)
-            }
-            StatsRecorder.shared.recordLLM(promptChars: Int(outcome.promptChars),
-                                           responseChars: Int(outcome.responseChars))
-            return outcome.text
-        }
+        await generate(prompt: prompt, timeout: JarvisModel.requestTimeoutSeconds)
+    }
 
-        // Serialize, never share. Returning another prompt's result to the
-        // caller was a real failure mode for dictation polish: two lines
-        // dictating in one session (or the mic-start warm-up racing the
-        // first line) could hand polish a different prompt's output —
-        // missing structure, or in the worst case the wrong text.
-        while true {
-            OllamaClient.flightLock.lock()
-            if let shared = OllamaClient.inFlight {
-                OllamaClient.flightLock.unlock()
-                NSLog("[Ollama] Waiting for the in-flight generate, then running ours")
-                _ = await shared.value
-                continue
+    /// One wall-clock budget includes admission, model load and generation.
+    /// Both branches cooperate with cancellation; no unstructured inference
+    /// task can keep the task-group scope alive after its deadline.
+    func generate(prompt: String, timeout: TimeInterval) async -> String {
+        guard timeout > 0 else { return Self.timeoutMessage }
+        do {
+            return try await withThrowingTaskGroup(of: String.self) { group in
+                group.addTask { [self] in
+                    try await gate.acquire()
+                    do {
+                        try Task.checkCancellation()
+                        let text = try await runGenerate(prompt: prompt, timeout: timeout)
+                        await gate.release()
+                        return text
+                    } catch {
+                        await gate.release()
+                        throw error
+                    }
+                }
+                group.addTask {
+                    try await Task.sleep(for: .seconds(timeout))
+                    throw GenerationError.deadlineExceeded
+                }
+                defer { group.cancelAll() }
+                return try await group.next()!
             }
-            let task = Task<String, Never> { [endpoint, model] in
-                await Self.runGenerate(endpoint: endpoint, model: model, prompt: prompt)
-            }
-            let taskID = UUID()
-            OllamaClient.inFlight = task
-            OllamaClient.inFlightID = taskID
-            OllamaClient.flightLock.unlock()
-
-            let result = await task.value
-
-            OllamaClient.flightLock.lock()
-            if OllamaClient.inFlightID == taskID {
-                OllamaClient.inFlight = nil
-                OllamaClient.inFlightID = nil
-            }
-            OllamaClient.flightLock.unlock()
-            return result
+        } catch GenerationError.deadlineExceeded {
+            return Self.timeoutMessage
+        } catch let error as URLError where error.code == .timedOut {
+            return Self.timeoutMessage
+        } catch {
+            return Self.failure(error.localizedDescription)
         }
     }
 
-    private static func runGenerate(endpoint: URL, model: String, prompt: String) async -> String {
+    private func runGenerate(prompt: String, timeout: TimeInterval) async throws -> String {
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.timeoutInterval = JarvisModel.requestTimeoutSeconds
+        request.timeoutInterval = timeout
 
         // keep_alive unloads the model 60 s after last use so VRAM returns
         // to the system instead of sitting resident between commands.
@@ -145,21 +136,18 @@ final class OllamaClient {
             keepAliveSeconds: JarvisModel.unloadAfterIdleSeconds
         )
 
-        do {
-            request.httpBody = try JSONEncoder().encode(payload)
-            let (data, urlResponse) = try await URLSession.shared.data(for: request)
+        request.httpBody = try JSONEncoder().encode(payload)
+        let (data, urlResponse) = try await session.data(for: request)
+        try Task.checkCancellation()
 
-            guard let http = urlResponse as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
-                return Self.failure(Self.httpFailureDetail(data))
-            }
-
-            let decoded = try JSONDecoder().decode(OllamaGenerateResponse.self, from: data)
-            let response = decoded.response.trimmingCharacters(in: .whitespacesAndNewlines)
-            StatsRecorder.shared.recordLLM(promptChars: prompt.count, responseChars: response.count)
-            return response
-        } catch {
-            return Self.failure(error.localizedDescription)
+        guard let http = urlResponse as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+            return Self.failure(Self.httpFailureDetail(data))
         }
+
+        let decoded = try JSONDecoder().decode(OllamaGenerateResponse.self, from: data)
+        let response = decoded.response.trimmingCharacters(in: .whitespacesAndNewlines)
+        StatsRecorder.shared.recordLLM(promptChars: prompt.count, responseChars: response.count)
+        return response
     }
 }
 

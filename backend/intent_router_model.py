@@ -27,7 +27,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 BASE_DIR = Path(__file__).resolve().parent
 MODEL_DIR = Path(os.environ.get("JARVIS_INTENT_MODEL_DIR", str(BASE_DIR / "models" / "intent-t5-small")))
@@ -44,12 +44,17 @@ UNK_ID = 2
 router = APIRouter()
 
 _lock = threading.Lock()
+_inference_lock = threading.Lock()
 _engine = None
 _load_error: str | None = None
 
 
 class ParseIntentRequest(BaseModel):
-    text: str
+    text: str = Field(max_length=4096)
+
+
+class InputTooLong(ValueError):
+    pass
 
 
 class _OnnxIntentEngine:
@@ -83,10 +88,9 @@ class _OnnxIntentEngine:
         self.dec_output_names = [o.name for o in self.dec.get_outputs()]
 
     def encode(self, text: str) -> list[int]:
-        np = self.np
         ids: list[int] = []
         buf: list[str] = []
-        for ch in text[:MAX_SOURCE_LEN]:
+        for ch in text:
             if ch in self.brace_to_id:
                 if buf:
                     ids.extend(self.sp.encode("".join(buf)))
@@ -96,8 +100,9 @@ class _OnnxIntentEngine:
                 buf.append(ch)
         if buf:
             ids.extend(self.sp.encode("".join(buf)))
-        ids.append(EOS_ID)
-        return ids[:MAX_SOURCE_LEN]
+        if len(ids) >= MAX_SOURCE_LEN:
+            raise InputTooLong(f"Intent input exceeds {MAX_SOURCE_LEN - 1} tokens")
+        return ids + [EOS_ID]
 
     def decode(self, token_ids: list[int]) -> str:
         parts: list[str] = []
@@ -148,6 +153,7 @@ class _OnnxIntentEngine:
         logprobs: list[float] = []
         cur = np.array([[self.start_id]], dtype=np.int64)
         use_cache = False
+        finished = False
         for _ in range(MAX_TARGET_LEN):
             feed["input_ids"] = cur
             feed["use_cache_branch"] = np.array([use_cache], dtype=np.bool_)
@@ -159,6 +165,7 @@ class _OnnxIntentEngine:
             log_probs = logits - log_sum_exp
             next_id = int(log_probs.argmax())
             if next_id == EOS_ID:
+                finished = True
                 break
             logprobs.append(float(log_probs[next_id]))
             generated.append(next_id)
@@ -175,6 +182,8 @@ class _OnnxIntentEngine:
                     feed[f"past_key_values.{layer}.encoder.value"] = by_name[f"present.{layer}.encoder.value"]
             use_cache = True
 
+        if not finished:
+            return "", 0.0
         confidence = math.exp(sum(logprobs) / len(logprobs)) if logprobs else 0.0
         return self.decode(generated), confidence
 
@@ -204,7 +213,16 @@ def parse_intent(req: ParseIntentRequest) -> dict[str, Any]:
         raise HTTPException(status_code=400, detail="text is required")
 
     start = time.perf_counter()
-    raw, confidence = _engine.generate(text)
+    if not _inference_lock.acquire(blocking=False):
+        raise HTTPException(status_code=503, detail="Intent model busy")
+    try:
+        raw, confidence = _engine.generate(text)
+    except InputTooLong:
+        # The caller can split or route the FULL request through its fallback.
+        return {"actions": None, "parse_ok": False, "confidence": 0,
+                "raw": "", "latency_ms": 0, "reason": "input_too_long"}
+    finally:
+        _inference_lock.release()
     latency_ms = int((time.perf_counter() - start) * 1000)
 
     actions = None

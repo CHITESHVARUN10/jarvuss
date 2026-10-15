@@ -14,7 +14,7 @@ pub enum SafetyVerdict {
 fn destructive_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r"\b(delete|remove|rm|format|wipe|erase|overwrite|shred|truncate)\b")
+        Regex::new(r"\b(delete|remove|rm|trash|format|wipe|erase|overwrite|shred|truncate|mkfs|fdisk)\b")
             .expect("destructive regex")
     })
 }
@@ -22,14 +22,14 @@ fn destructive_re() -> &'static Regex {
 fn install_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r"\b(install|brew install|npm install|pip install|gem install|yarn add|apt-get|yum|dnf)\b")
+        Regex::new(r"\b(install|brew install|npm install|pip install|gem install|cargo add|yarn add|pod install|apt-get|yum|dnf)\b")
             .expect("install regex")
     })
 }
 
 fn sudo_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r"\bsudo\b").expect("sudo regex"))
+    RE.get_or_init(|| Regex::new(r"\bsudo\b|\bsu\b|runas").expect("elevated privilege regex"))
 }
 
 pub const PROTECTED_PATHS: &[&str] = &[
@@ -65,7 +65,7 @@ fn run_checks(lower: &str, original: &str) -> SafetyVerdict {
     // 1. sudo — permanent block
     if sudo_re().is_match(lower) {
         return SafetyVerdict::Blocked {
-            reason: "sudo commands are permanently disabled for safety.".to_string(),
+            reason: "Elevated-privilege commands (sudo/su) are permanently disabled for safety.".to_string(),
         };
     }
     // 2. Destructive operations

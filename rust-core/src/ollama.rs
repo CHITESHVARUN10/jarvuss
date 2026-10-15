@@ -186,6 +186,9 @@ fn system_info_from_kind(kind: &str) -> Option<SystemInfoAction> {
     match kind {
         "time" => Some(SystemInfoAction::CurrentTime),
         "date" => Some(SystemInfoAction::CurrentDate),
+        "day" => Some(SystemInfoAction::CurrentDay),
+        "month" => Some(SystemInfoAction::CurrentMonth),
+        "year" => Some(SystemInfoAction::CurrentYear),
         "battery" => Some(SystemInfoAction::BatteryStatus),
         "wifi" => Some(SystemInfoAction::WifiStatus),
         "bluetooth" => Some(SystemInfoAction::BluetoothDevices),
@@ -478,6 +481,9 @@ fn system_info_kind(info: &SystemInfoAction) -> &'static str {
     match info {
         SystemInfoAction::CurrentTime => "time",
         SystemInfoAction::CurrentDate => "date",
+        SystemInfoAction::CurrentDay => "day",
+        SystemInfoAction::CurrentMonth => "month",
+        SystemInfoAction::CurrentYear => "year",
         SystemInfoAction::BatteryStatus => "battery",
         SystemInfoAction::WifiStatus => "wifi",
         SystemInfoAction::BluetoothDevices => "bluetooth",

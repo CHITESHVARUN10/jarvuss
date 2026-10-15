@@ -60,6 +60,7 @@ final class CommandQueueManager: ObservableObject {
 
     // External log sink — set this to append to AppState.logs
     var onLog: ((String) -> Void)?
+    var onCancel: (() -> Void)?
 
     // MARK: - Enqueue
 
@@ -143,6 +144,7 @@ final class CommandQueueManager: ObservableObject {
         log("[Queue] Cancelled current task — \(reason)")
         isExecuting = false
         currentCommandText = ""
+        onCancel?()
     }
 
     func cancelAll() {
@@ -204,15 +206,16 @@ final class CommandQueueManager: ObservableObject {
             }
         }
 
-        // Watchdog: release the slot if the handler never returns. The stale
-        // handler keeps running detached; when it eventually finishes, the
-        // generation guard above turns its completion into a no-op.
+        // Cancel before releasing the slot. Executors check cancellation
+        // between actions, so an expired plan cannot resume its side effects.
         let seconds = Self.executionWatchdogSeconds
         Task { [weak self] in
             try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
             await MainActor.run {
                 guard let self, myGeneration == self.generation, self.isExecuting else { return }
                 self.log("[Execution] watchdog: '\(cmd.text)' exceeded \(Int(seconds)) s — releasing the queue slot")
+                self.activeTask?.cancel()
+                self.onCancel?()
                 self.generation += 1
                 self.activeTask = nil
                 self.isExecuting = false
@@ -234,52 +237,10 @@ final class CommandQueueManager: ObservableObject {
 extension CommandPriority {
     /// Classify a raw command string into a priority level.
     static func classify(_ text: String) -> CommandPriority {
-        // Migration cut-over: Rust core carries the same keyword rules.
-        if JarvisFlags.useRustPipeline {
-            switch coreClassifyCommandPriority(text: text) {
-            case .high:   return .high
-            case .normal: return .normal
-            }
+        // One policy owner; the routing migration flag cannot change queue semantics.
+        switch coreClassifyCommandPriority(text: text) {
+        case .high: return .high
+        case .normal: return .normal
         }
-
-        let lower = text.lowercased()
-
-        // Time / date — always high
-        let timeTerms = [
-            "what time", "what is the time", "tell me the time", "current time",
-            "what day", "what date", "what month", "what year",
-            "stop", "cancel", "abort"
-        ]
-        if timeTerms.contains(where: { lower.contains($0) }) { return .high }
-
-        // Media — high (execute immediately, no waiting for other commands)
-        let mediaTerms = [
-            "play", "pause", "next", "previous", "prev", "skip", "resume",
-            "next song", "next track", "previous song", "liked songs",
-        ]
-        if mediaTerms.contains(where: { lower == $0 || lower.hasPrefix($0 + " ") }) {
-            return .high
-        }
-
-        // Volume — always high (user expects instant feedback)
-        let volumeTerms = [
-            "mute", "unmute",
-            "increase volume", "decrease volume",
-            "increase sound", "decrease sound",
-            "increase audio", "decrease audio",
-            "volume up", "volume down",
-            "sound up", "sound down",
-            "turn up", "turn down",
-            "louder", "quieter", "lower volume", "lower sound",
-            "set volume", "sound off", "sound on",
-            "raise volume", "raise the volume",
-            "reduce volume", "reduce the volume",
-        ]
-        if volumeTerms.contains(where: { lower.contains($0) }) { return .high }
-
-        // Close app — high so it's never delayed behind a queue
-        if lower.hasPrefix("close ") { return .high }
-
-        return .normal
     }
 }

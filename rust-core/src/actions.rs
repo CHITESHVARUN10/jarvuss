@@ -8,6 +8,9 @@ use serde::{Deserialize, Serialize};
 pub enum SystemInfoAction {
     CurrentTime,
     CurrentDate,
+    CurrentDay,
+    CurrentMonth,
+    CurrentYear,
     WifiStatus,
     BluetoothDevices,
     BatteryStatus,
@@ -21,6 +24,9 @@ impl SystemInfoAction {
         match self {
             Self::CurrentTime => "current time",
             Self::CurrentDate => "current date",
+            Self::CurrentDay => "current day",
+            Self::CurrentMonth => "current month",
+            Self::CurrentYear => "current year",
             Self::WifiStatus => "wifi status",
             Self::BluetoothDevices => "bluetooth devices",
             Self::BatteryStatus => "battery status",

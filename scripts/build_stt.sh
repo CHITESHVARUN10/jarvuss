@@ -25,13 +25,17 @@ if [[ "$(uname)" != "Darwin" ]]; then
   exit 0
 fi
 
+# Use the selected Xcode SDK and its matching compiler. Mixing an older
+# linker with a newer standalone Command Line Tools SDK can fail to link.
+source "$ROOT_DIR/scripts/macos_toolchain.zsh"
+
 if ! command -v cargo >/dev/null 2>&1; then
   echo "[STT][ERROR] cargo not found. Install Rust: brew install rust" >&2
   exit 1
 fi
 
 echo "[STT] Building jarvis-stt ($PROFILE, first build compiles whisper.cpp — a few minutes)..."
-cargo build $CARGO_PROFILE_FLAG --manifest-path "$STT_DIR/Cargo.toml"
+cargo build --locked $CARGO_PROFILE_FLAG --manifest-path "$STT_DIR/Cargo.toml"
 
 LIB="$STT_DIR/target/$PROFILE/libjarvis_stt.a"
 GEN_SWIFT="$STT_DIR/generated/jarvis-stt/jarvis-stt.swift"

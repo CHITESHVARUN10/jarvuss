@@ -4,8 +4,8 @@ import SwiftUI
 
 @MainActor
 final class AppState: ObservableObject {
-    private static let enrollmentCompletedDefaultsKey = "jarvis.enrollment.completed"
-    private static let backendSampleCountDefaultsKey = "jarvis.voice.backendSampleCount"
+    static let enrollmentCompletedDefaultsKey = "jarvis.enrollment.completed"
+    static let backendSampleCountDefaultsKey = "jarvis.voice.backendSampleCount"
 
     enum AssistantState: String {
         case idle = "Idle"
@@ -97,6 +97,10 @@ final class AppState: ObservableObject {
         didSet {
             UserDefaults.standard.set(eventLoggingEnabled, forKey: "jarvis.eventLogging.enabled")
             dbManager.loggingEnabled = eventLoggingEnabled
+            if eventLoggingEnabled {
+                dbManager.setup()
+                statsRecorder.flush()
+            }
         }
     }
     /// Recent commands ring (last 5) for the Assistant pane.
@@ -142,15 +146,20 @@ final class AppState: ObservableObject {
     static let layer1PhraseCount = 7
     static let layer2PhraseCount = 7
 
-    private let micManager: AudioCapturing
+    var micStartedForEnrollment = false
+    var activeCommandRunToken: UUID?
+    let micManager: AudioCapturing
     private let logger: Logger
     let dbManager: DBManager
-    private var actionExecutor: PlanExecuting = ActionExecutor()
+    let actionExecutor: PlanExecuting
     private let automationStore = AutomationStore()
-    private let voiceAuthClient: SpeakerVerifying = VoiceAuthClient()
+    let voiceAuthClient: SpeakerVerifying
     let spotifyClient = SpotifyClient()
     let postgresClient = PostgresClient()
-    private let actionPlanner = ActionPlanner()
+    let actionPlanner: ActionPlanning
+    let statsRecorder: StatsRecorder
+    let intentLog: IntentRouterLog
+    let presentsUI: Bool
     private let backendServiceManager = BackendServiceManager()
     private let displayController = DisplayController()
     let commandQueue = CommandQueueManager()
@@ -175,9 +184,9 @@ final class AppState: ObservableObject {
     private var pendingWakeWordDetected = false
     private var pendingWakeWordDetectedAt = Date.distantPast
     private var isStoppingMicrophone = false
-    private var lastEnrollmentAcceptedAt = Date.distantPast
-    private var lastEnrollmentAcceptedTranscript = ""
-    private var lastEnrollmentAttemptAt = Date.distantPast
+    var lastEnrollmentAcceptedAt = Date.distantPast
+    var lastEnrollmentAcceptedTranscript = ""
+    var lastEnrollmentAttemptAt = Date.distantPast
 
     private let voiceStartThresholdDB: Float = -42.0
     private let voiceContinueThresholdDB: Float = -50.0
@@ -188,24 +197,24 @@ final class AppState: ObservableObject {
     /// (see handleAudioLevel). Sits just past Rust chunk_seconds=6 so each
     /// segment carries a live partial before the split fires.
     private static let maxContinuousSpeechSeconds: TimeInterval = 8.0
-    private let enrollmentAcceptCooldown: TimeInterval = 1.4
-    private let enrollmentAttemptThrottle: TimeInterval = 0.30
-    private let voiceVerificationThreshold = 0.70
+    let enrollmentAcceptCooldown: TimeInterval = 1.4
+    let enrollmentAttemptThrottle: TimeInterval = 0.30
+    let voiceVerificationThreshold = 0.70
     /// How long after hearing "Jarvis" a follow-up without the wake word is
     /// still accepted as its command ("Jarvis" … pause … "open Spotify").
     private static let pendingWakeWordGraceSeconds: TimeInterval = 4.0
-    private static let verifyAudioSeconds = 3.5
-    private static let enrollAudioSeconds = 3.5
+    static let verifyAudioSeconds = 3.5
+    static let enrollAudioSeconds = 3.5
     /// Minimum RMS of the verify clip — below this the buffer is silence and
     /// the backend would 400 (or Resemblyzer would embed noise). Skip the
     /// POST and reject locally instead.
-    private static let verifyMinClipRMS: Float = 0.005
+    static let verifyMinClipRMS: Float = 0.005
     // Hallucinated-singleton filtering lives in TranscriptSanitizer
     // (single table shared with the batch path).
     /// Resemblyzer embeds via preprocess_wav at 16 kHz. Exporting at the
     /// same rate removes a resample-variance source between enroll-time
     /// and verify-time embeddings and keeps clips comparable sample-for-sample.
-    private static let voiceSampleRate = 16_000.0
+    static let voiceSampleRate = 16_000.0
 
     /// Read-only surfaces for the Assistant pane (threshold display, profile row).
     var voiceVerifyThreshold: Double { voiceVerificationThreshold }
@@ -231,12 +240,26 @@ final class AppState: ObservableObject {
     init(
         micManager: AudioCapturing = MicManager.shared,
         logger: Logger = Logger(),
-        dbManager: DBManager = DBManager()
+        dbManager: DBManager = DBManager(),
+        actionPlanner: ActionPlanning = ActionPlanner(),
+        actionExecutor: PlanExecuting = ActionExecutor(),
+        voiceAuthClient: SpeakerVerifying = VoiceAuthClient(),
+        statsRecorder: StatsRecorder = .shared,
+        intentLog: IntentRouterLog = .shared,
+        activateServices: Bool = true
     ) {
         self.micManager = micManager
         self.logger = logger
         self.dbManager = dbManager
+        self.actionPlanner = actionPlanner
+        self.actionExecutor = actionExecutor
+        self.voiceAuthClient = voiceAuthClient
+        self.statsRecorder = statsRecorder
+        self.intentLog = intentLog
+        self.presentsUI = activateServices
+        guard activateServices else { return }
         AppState.shared = self
+        commandQueue.onCancel = { [weak self] in self?.invalidateActiveCommand() }
         commandQueue.onLog = { [weak self] msg in
             Task { @MainActor in self?.appendLog(msg) }
         }
@@ -294,17 +317,8 @@ final class AppState: ObservableObject {
         refreshContrast()
         // Usage stats: Postgres primary, local JSON buffer when PG is off.
         // Recorder always buffers; flush upserts deltas keyed by day.
-        StatsRecorder.shared.onFlush = { [weak self] snapshot in
-            guard let self else { return }
-            guard self.dbManager.isConfigured else { return }
-            let pending = StatsRecorder.shared.bufferedDays()
-            for bucket in pending {
-                self.dbManager.upsertDailyStats(bucket)
-            }
-            if !pending.isEmpty {
-                StatsRecorder.shared.markBackfilled(days: pending.map { $0.day })
-            }
-            _ = snapshot
+        statsRecorder.onFlush = { [dbManager] batch in
+            await dbManager.upsertDailyStats(batch)
         }
 
         sessionTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
@@ -430,7 +444,7 @@ final class AppState: ObservableObject {
     }
 
     func shutdown() {
-        StatsRecorder.shared.flush()
+        statsRecorder.flush()
         stopMicrophone()
         backendServiceManager.stopIfNeeded { [weak self] message in
             Task { @MainActor in
@@ -524,7 +538,7 @@ final class AppState: ObservableObject {
     /// True when the mic was brought up ONLY so a ⌘⇧D/⌘⇧A press could record
     /// — no manual listening was on. When that pill finishes, the pipeline
     /// goes back down, so a hotkey never leaves the app live-listening.
-    private var micTransientAutoStart = false
+    var micTransientAutoStart = false
 
     /// True when the USER has listening on — not when a one-shot hotkey pill
     /// (⌘⇧D / ⌘⇧A) borrowed the mic for its recording. The main-window orb
@@ -551,129 +565,6 @@ final class AppState: ObservableObject {
         micTransientAutoStart = false
         guard micActive else { return }
         appendLog("One-shot use finished — mic back to idle (listening stays manual).")
-        stopMicrophone()
-    }
-
-    func startEnrollment(resetStore: Bool = true) {
-        enrollmentIndex = 0
-        enrollmentMatchedCount = 0
-        enrollmentAttemptCount = 0
-        enrollmentCurrentPhraseMatchCount = 0
-        latestEnrollmentScore = 0
-        voiceModeEnabled = false
-        voiceVerificationStatus = "Building Voice Profile..."
-        lastEnrollmentAcceptedAt = .distantPast
-        lastEnrollmentAcceptedTranscript = ""
-        lastEnrollmentAttemptAt = .distantPast
-        enrollmentActive = true
-        enrollmentCompleted = false
-        persistEnrollmentCompleted(false)
-        appendLog("Voice enrollment started. Repeat each phrase \(enrollmentRequiredMatchesPerPhrase)x.")
-
-        // Enrollment captures from the live mic pipeline, so it must not
-        // depend on the user already having a listening session running
-        // (the old flow greyed the button out until ⌘⇧D had brought the mic
-        // up). Bring the mic up here when idle; `releaseEnrollmentMicIfNeeded`
-        // returns it to idle when enrollment ends — listening stays manual.
-        if micActive {
-            // A one-shot pill may hold a transient mic right when Enroll is
-            // pressed; adopt it so the pill's teardown can't stop capture
-            // under the live enrollment.
-            if micTransientAutoStart {
-                micTransientAutoStart = false
-                micStartedForEnrollment = true
-            }
-        } else {
-            micStartedForEnrollment = true
-            appendLog("Microphone started for enrollment.")
-            Task {
-                await startMicrophone()
-                if !micActive {
-                    appendLog("[Voice] Enrollment can't capture — microphone failed to start.")
-                }
-            }
-        }
-
-        guard resetStore else {
-            appendLog("Enrolling from a clean slate (0/\(voiceEnrollmentSampleTarget)) — only these new samples will be used.")
-            return
-        }
-
-        appendLog("Existing voice profile is preserved until new samples are collected.")
-        // Reset the backend store so re-enrollment starts from a clean slate —
-        // the store is append-only, so without this every re-run stacks on the
-        // old samples (the 63-vs-42 pollution) and drags similarity averages down.
-        // Runs detached: enrollment must not block on a cold backend.
-        Task {
-            do {
-                try await voiceAuthClient.reset()
-                await MainActor.run {
-                    backendEnrollmentSampleCount = 0
-                    persistBackendSampleCount(0)
-                    appendLog("Voice profile store reset — re-enrolling from 0/\(voiceEnrollmentSampleTarget).")
-                }
-            } catch {
-                await MainActor.run {
-                    appendLog("[Voice] Profile reset failed (\(error.localizedDescription)) — old samples preserved; scores may skew high-N. POST /reset manually to clear.")
-                }
-            }
-        }
-    }
-
-    /// Wipe every previously stored voice sample, then start a fresh enrollment
-    /// so verification uses ONLY the new recordings. Aborts (without touching
-    /// the old samples) if the backend wipe fails.
-    func retrainVoiceProfile() {
-        guard !enrollmentActive else { return }
-        Task {
-            do {
-                try await voiceAuthClient.reset()
-                await MainActor.run {
-                    backendEnrollmentSampleCount = 0
-                    persistBackendSampleCount(0)
-                    voiceVerificationStatus = "No Voice Profile ❌"
-                    appendLog("Voice profile wiped — all \(voiceEnrollmentSampleTarget)-sample history deleted. Starting fresh enrollment.")
-                    startEnrollment(resetStore: false)
-                }
-            } catch {
-                await MainActor.run {
-                    appendLog("[Voice] Retrain aborted — could not wipe old samples: \(error.localizedDescription)")
-                }
-            }
-        }
-    }
-
-    func resetVoiceProfile() {
-        Task {
-            do {
-                try await voiceAuthClient.reset()
-                backendEnrollmentSampleCount = 0
-                persistBackendSampleCount(0)
-                voiceVerificationStatus = "No Voice Profile ❌"
-                appendLog("Voice profile cleared (0/\(voiceEnrollmentSampleTarget)). Re-enroll to rebuild.")
-            } catch {
-                appendLog("[Voice] Profile reset failed: \(error.localizedDescription)")
-            }
-        }
-    }
-
-    func stopEnrollment() {
-        enrollmentActive = false
-        releaseEnrollmentMicIfNeeded()
-        appendLog("Voice enrollment stopped.")
-    }
-
-    /// True when enrollment started the mic itself (Enroll/Retrain pressed
-    /// with listening idle). Like the hotkey pills, the mic goes back down
-    /// when enrollment ends — a user-started session is never touched.
-    private var micStartedForEnrollment = false
-
-    /// Returns the mic to idle when enrollment was its only reason to exist.
-    private func releaseEnrollmentMicIfNeeded() {
-        guard micStartedForEnrollment else { return }
-        micStartedForEnrollment = false
-        guard micActive else { return }
-        appendLog("Enrollment finished — mic back to idle (listening stays manual).")
         stopMicrophone()
     }
 
@@ -729,90 +620,8 @@ final class AppState: ObservableObject {
     // MARK: - Connectors (Spotify status)
 
     /// Presence-only refresh: linked = keys saved + a usable token.
-    func refreshSpotifyStatus() async {
-        do {
-            let st = try await spotifyClient.status()
-            spotifyExpired = st.expired
-            spotifyLinked = st.clientPresent && st.accessPresent && !st.expired
-            spotifyStatusText = !st.clientPresent ? "Keys missing"
-                : st.expired ? "Token expired — reconnect"
-                : "Connected"
-            appendLog("[Spotify] Status: \(spotifyStatusText)")
-        } catch {
-            spotifyLinked = false
-            spotifyStatusText = "Backend unreachable"
-            appendLog("[Spotify] Status check failed: \(error.localizedDescription)")
-        }
-    }
-
-    // MARK: - Connectors (PostgreSQL)
-
-    /// Refresh from GET /postgres/status; prefills the Connections form
-    /// (host/port/db/user — never the password) for editing.
-    func refreshPostgresStatus() async {
-        do {
-            let st = try await postgresClient.status()
-            postgresConfigured = st.configured
-            postgresMissingKeys = st.missing
-            postgresStatusText = st.configured ? "Configured"
-                : st.missing.isEmpty ? "Not configured"
-                : "Missing: \(st.missing.joined(separator: ", "))"
-            if postgresConfigured {
-                postgresForm = PostgresForm(
-                    host: st.host, port: st.port,
-                    database: st.database, user: st.user,
-                    password: ""
-                )
-            }
-            dbManager.reloadConfiguration()
-            appendLog("[Postgres] Status: \(postgresStatusText)")
-        } catch {
-            postgresConfigured = false
-            postgresStatusText = "Backend unreachable"
-            appendLog("[Postgres] Status check failed: \(error.localizedDescription)")
-        }
-    }
-
-    func savePostgresCredentials() async -> String {
-        do {
-            let msg = try await postgresClient.save(
-                host: postgresForm.host, port: postgresForm.port,
-                database: postgresForm.database, user: postgresForm.user,
-                password: postgresForm.password
-            )
-            postgresForm.password = ""
-            dbManager.reloadConfiguration()
-            await refreshPostgresStatus()
-            return msg
-        } catch {
-            return error.localizedDescription
-        }
-    }
-
-    func testPostgresConnection() async -> String {
-        do {
-            return try await postgresClient.test()
-        } catch {
-            return error.localizedDescription
-        }
-    }
-
-    /// Probe GET /api/tags (2 s timeout) — drives the Ollama chip.
-    func refreshOllamaStatus() async {
-        guard let url = URL(string: "http://127.0.0.1:11434/api/tags") else { return }
-        var request = URLRequest(url: url)
-        request.timeoutInterval = 2
-        do {
-            let (_, response) = try await URLSession.shared.data(for: request)
-            ollamaReachable = ((response as? HTTPURLResponse)?.statusCode ?? 0) / 100 == 2
-        } catch {
-            ollamaReachable = false
-        }
-        ollamaStatusText = ollamaReachable ? "qwen2.5 · 1.5b instruct" : "Offline — commands still work"
-    }
-
     /// Keeps the last 5 executed commands for the Assistant pane's Recent card.
-    private func trackRecentCommand(_ command: String) {
+    func trackRecentCommand(_ command: String) {
         recentCommands.removeAll { $0 == command }
         recentCommands.insert(command, at: 0)
         if recentCommands.count > 5 {
@@ -1056,219 +865,6 @@ final class AppState: ObservableObject {
         }
     }
 
-    private func handleEnrollmentTranscript(_ transcript: String, isFinal: Bool) {
-        let cleanedTranscript = normalizeEnrollmentTranscript(transcript)
-        guard !cleanedTranscript.isEmpty else { return }
-        guard enrollmentPhrases.indices.contains(enrollmentIndex) else { return }
-
-        let now = Date()
-        if !isFinal && now.timeIntervalSince(lastEnrollmentAttemptAt) < enrollmentAttemptThrottle {
-            return
-        }
-        lastEnrollmentAttemptAt = now
-
-        enrollmentAttemptCount += 1
-
-        let target = enrollmentPhrases[enrollmentIndex]
-        let score = phraseMatchScore(target: target, recognized: cleanedTranscript)
-        latestEnrollmentScore = score
-
-        let requiredTokens = requiredIntentTokens(for: target)
-        let recognizedTokenSet = Set(TranscriptSanitizer.normalizedTokens(from: cleanedTranscript))
-        let requiredTokenHits = requiredTokens.filter { recognizedTokenSet.contains($0) }.count
-        let requiredTokenRatio: Double = requiredTokens.isEmpty ? 0 : Double(requiredTokenHits) / Double(requiredTokens.count)
-
-        let requiredScore = isFinal ? 0.48 : 0.58
-        let keywordGate = requiredTokens.count <= 2 ? requiredTokenHits >= 1 : requiredTokenRatio >= 0.60
-        let matched = keywordGate && score >= requiredScore
-
-        dbManager.saveEvent(
-            eventType: "enrollment_attempt",
-            transcript: cleanedTranscript,
-            targetPhrase: target,
-            score: score,
-            matched: matched,
-            phraseIndex: enrollmentIndex + 1,
-            metadata: [
-                "is_final": String(isFinal),
-                "required_token_hits": String(requiredTokenHits),
-                "required_token_ratio": String(format: "%.2f", requiredTokenRatio),
-                "required_token_count": String(requiredTokens.count)
-            ]
-        )
-
-        if matched {
-            if now.timeIntervalSince(lastEnrollmentAcceptedAt) < enrollmentAcceptCooldown {
-                return
-            }
-
-            let currentNormalized = TranscriptSanitizer.normalizeCompact(cleanedTranscript)
-            let previousNormalized = TranscriptSanitizer.normalizeCompact(lastEnrollmentAcceptedTranscript)
-            if !previousNormalized.isEmpty {
-                let duplicateDistance = StringDistance.levenshtein(currentNormalized, previousNormalized)
-                let maxLen = max(currentNormalized.count, previousNormalized.count)
-                if maxLen > 0 {
-                    let duplicateSimilarity = 1.0 - (Double(duplicateDistance) / Double(maxLen))
-                    if duplicateSimilarity > 0.96 {
-                        return
-                    }
-                }
-            }
-
-            lastEnrollmentAcceptedAt = now
-            lastEnrollmentAcceptedTranscript = cleanedTranscript
-            enrollmentMatchedCount += 1
-            enrollmentCurrentPhraseMatchCount += 1
-
-            let phraseNumber = enrollmentIndex + 1
-            let phraseRepetition = enrollmentCurrentPhraseMatchCount
-            appendLog(
-                "Phrase \(enrollmentIndex + 1) matched " +
-                "(\(enrollmentCurrentPhraseMatchCount)/\(enrollmentRequiredMatchesPerPhrase), score: \(String(format: "%.2f", score)), token-hit: \(requiredTokenHits)/\(requiredTokens.count))."
-            )
-
-            Task {
-                await enrollMatchedVoiceSample(
-                    phraseNumber: phraseNumber,
-                    repetition: phraseRepetition,
-                    transcript: cleanedTranscript
-                )
-            }
-
-            if enrollmentCurrentPhraseMatchCount >= enrollmentRequiredMatchesPerPhrase {
-                enrollmentIndex += 1
-                enrollmentCurrentPhraseMatchCount = 0
-                appendLog("Phrase \(enrollmentIndex) completed. Moving to next phrase.")
-            }
-
-            dbManager.saveEvent(
-                eventType: "enrollment_match",
-                transcript: cleanedTranscript,
-                targetPhrase: target,
-                score: score,
-                matched: true,
-                phraseIndex: enrollmentIndex,
-                metadata: [
-                    "match_count_total": String(enrollmentMatchedCount),
-                    "match_count_phrase": String(enrollmentCurrentPhraseMatchCount)
-                ]
-            )
-
-            if enrollmentIndex >= enrollmentPhrases.count {
-                enrollmentActive = false
-                enrollmentCompleted = true
-                persistEnrollmentCompleted(true)
-
-                if backendEnrollmentSampleCount >= voiceEnrollmentSampleTarget {
-                    voiceVerificationStatus = "Voice Enrolled ✅"
-                    appendLog("Voice enrollment completed. Voice profile ready (\(backendEnrollmentSampleCount)/\(voiceEnrollmentSampleTarget) samples).")
-                } else {
-                    voiceVerificationStatus = "Finalizing Voice Profile..."
-                    appendLog("Voice phrases completed. Waiting for final backend voice samples (\(backendEnrollmentSampleCount)/\(voiceEnrollmentSampleTarget)).")
-                }
-
-                releaseEnrollmentMicIfNeeded()
-
-                dbManager.saveEvent(
-                    eventType: "enrollment_completed",
-                    transcript: lastRecognizedSpeech,
-                    matched: true,
-                    phraseIndex: enrollmentPhrases.count
-                )
-            }
-        } else {
-            appendLog("Phrase mismatch (score: \(String(format: "%.2f", score)), token-hit: \(requiredTokenHits)/\(requiredTokens.count)). Please repeat phrase \(enrollmentIndex + 1).")
-        }
-    }
-
-    /// Boot fast-path: UserDefaults only, never touches the DB (sync psql
-    /// from @MainActor deadlocked boot in __DISPATCH_WAIT_FOR_QUEUE__).
-    /// The DB reconcile runs async right after (see reconcileEnrollmentFromDB).
-    private func restoreEnrollmentStateFast() {
-        let defaultsFlag = UserDefaults.standard.bool(forKey: Self.enrollmentCompletedDefaultsKey)
-        let savedBackendCount = UserDefaults.standard.integer(forKey: Self.backendSampleCountDefaultsKey)
-
-        backendEnrollmentSampleCount = savedBackendCount
-
-        if defaultsFlag {
-            enrollmentCompleted = true
-            enrollmentActive = false
-            appendLog("Enrollment restored from saved state.")
-            if savedBackendCount >= voiceEnrollmentSampleTarget {
-                voiceVerificationStatus = "Voice Enrolled ✅"
-            } else if savedBackendCount > 0 {
-                voiceVerificationStatus = "Finalizing Voice Profile..."
-            }
-        }
-    }
-
-    /// Background reconcile: if the DB has an enrollment_completed event we
-    /// never persisted locally (fresh profile, wiped defaults), adopt it.
-    private func reconcileEnrollmentFromDB() async {
-        guard !enrollmentCompleted else { return }
-        guard dbManager.isConfigured else { return }
-        if await dbManager.hasEnrollmentCompletionEvent() {
-            enrollmentCompleted = true
-            enrollmentActive = false
-            persistEnrollmentCompleted(true)
-            appendLog("Enrollment restored from saved state.")
-        }
-    }
-
-    private func persistEnrollmentCompleted(_ value: Bool) {
-        UserDefaults.standard.set(value, forKey: Self.enrollmentCompletedDefaultsKey)
-    }
-
-    private func persistBackendSampleCount(_ value: Int) {
-        UserDefaults.standard.set(value, forKey: Self.backendSampleCountDefaultsKey)
-    }
-
-    private func syncVoiceProfileStatusFromBackend() async {
-        do {
-            let enrolledCount = try await voiceAuthClient.enrolledCount()
-            backendEnrollmentSampleCount = enrolledCount
-            persistBackendSampleCount(enrolledCount)
-
-            if enrollmentCompleted {
-                if enrolledCount >= voiceEnrollmentSampleTarget {
-                    voiceVerificationStatus = "Voice Enrolled ✅"
-                    appendLog("Voice profile restored from backend (\(enrolledCount)/\(voiceEnrollmentSampleTarget)).")
-                } else if enrolledCount > 0 {
-                    voiceVerificationStatus = "Voice Profile Incomplete ⚠️"
-                    appendLog("Enrollment restored, but backend voice samples are incomplete (\(enrolledCount)/\(voiceEnrollmentSampleTarget)).")
-                } else {
-                    voiceVerificationStatus = "Voice Profile Missing ⚠️"
-                    appendLog("Enrollment restored but backend voice profile is empty. Run enrollment once to rebuild speaker samples.")
-                }
-            }
-        } catch {
-            if backendEnrollmentSampleCount >= voiceEnrollmentSampleTarget {
-                voiceVerificationStatus = "Voice Enrolled ✅"
-            }
-            appendLog("Voice backend stats unavailable. Using saved profile state (\(backendEnrollmentSampleCount)/\(voiceEnrollmentSampleTarget)).")
-        }
-    }
-
-    private func phraseMatchScore(target: String, recognized: String) -> Double {
-        let targetTokens = Set(TranscriptSanitizer.normalizedTokens(from: target))
-        let recognizedTokens = Set(TranscriptSanitizer.normalizedTokens(from: recognized))
-        guard !targetTokens.isEmpty else { return 0 }
-
-        let tokenIntersection = targetTokens.intersection(recognizedTokens).count
-        let tokenScore = Double(tokenIntersection) / Double(targetTokens.count)
-
-        let targetNormalized = target.lowercased().replacingOccurrences(of: "[^a-z0-9]", with: "", options: .regularExpression)
-        let recognizedNormalized = recognized.lowercased().replacingOccurrences(of: "[^a-z0-9]", with: "", options: .regularExpression)
-
-        let maxLen = max(targetNormalized.count, recognizedNormalized.count)
-        guard maxLen > 0 else { return tokenScore }
-
-        let distance = StringDistance.levenshtein(targetNormalized, recognizedNormalized)
-        let charScore = 1.0 - (Double(distance) / Double(maxLen))
-
-        return (0.6 * tokenScore) + (0.4 * max(0.0, charScore))
-    }
-
     func toggleVoiceMode() {
         guard voiceProfileReady else {
             voiceModeEnabled = false
@@ -1291,693 +887,6 @@ final class AppState: ObservableObject {
     // deleted here — the batch path in handleTranscript is the SOLE entry.
     // isActionableCommand / prepareVoiceCommandCandidate /
     // truncateAtFillerBoundary went with it (dual-path only).
-
-    private func matchedAutomation(for command: String) -> (automation: VoiceAutomation, isOffVariant: Bool)? {
-        // Migration cut-over: Rust core owns the matching decision.
-        if JarvisFlags.useRustPipeline {
-            let keywords = automations.map {
-                CoreAutomationKeywords(keyword: $0.keyword, offKeyword: $0.offKeyword)
-            }
-            if let match = coreMatchAutomation(text: command, keywords: keywords),
-               Int(match.index) < automations.count {
-                return (automations[Int(match.index)], match.isOffVariant)
-            }
-            return nil
-        }
-
-        let lower = command.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !lower.isEmpty else { return nil }
-
-        for automation in automations {
-            let keyword = automation.keyword.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !keyword.isEmpty else { continue }
-
-            let offKeyword = automation.offKeyword?.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-                ?? "\(keyword) off"
-
-            if !offKeyword.isEmpty, lower.contains(offKeyword) {
-                return (automation, true)
-            }
-
-            if lower.contains(keyword) {
-                return (automation, false)
-            }
-        }
-
-        return nil
-    }
-
-    private func executeAutomation(_ automation: VoiceAutomation, isOffVariant: Bool) async {
-        if isOffVariant {
-            appendLog("[Automation] Off variant matched for '\(automation.keyword)'.")
-            ResponseEngine.shared.respond(to: "Automation \(automation.keyword) turned off", speak: voiceResponseEnabled)
-            return
-        }
-
-        appendLog("[Automation] Executing \(automation.actions.count) actions for '\(automation.keyword)'")
-        assistantState = .executing
-
-        for action in automation.actions {
-            if action.type == .timer {
-                let timerText = action.value.trimmingCharacters(in: .whitespacesAndNewlines)
-                appendLog("[Automation] Timer started: \(timerText.isEmpty ? "custom" : timerText)")
-                continue
-            }
-
-            if action.type == .stopwatch {
-                appendLog("[Automation] Stopwatch started")
-                continue
-            }
-
-            if action.type == .openFile {
-                let result = openFilePath(action.value)
-                appendLog(result ? "[Automation] Opened file: \(action.value)" : "[Automation][ERROR] Failed opening file: \(action.value)")
-            } else if let planned = plannedAction(for: action) {
-                await actionExecutor.execute(
-                    plan: [planned],
-                    onStepStart: { [weak self] plannedAction in
-                        Task { @MainActor in
-                            self?.appendLog("[Automation] ▶ \(plannedAction.description)")
-                        }
-                    },
-                    onStepComplete: { [weak self] result in
-                        Task { @MainActor in
-                            let prefix = result.success ? "✓" : "✗"
-                            self?.appendLog("[Automation] \(prefix) \(result.message)")
-                        }
-                    }
-                )
-            } else {
-                // Never skip silently: an action whose value is empty used to
-                // vanish here with no trace, which read as "the routine ran
-                // but the second step never happened".
-                appendLog("[Automation][ERROR] Skipped \(action.type.rawValue) — no value configured")
-            }
-
-            let delayMs = UInt64(Int.random(in: 100...300))
-            try? await Task.sleep(nanoseconds: delayMs * 1_000_000)
-        }
-
-        assistantState = micActive ? .listening : .idle
-        ResponseEngine.shared.respond(to: "Automation \(automation.keyword) executed", speak: voiceResponseEnabled)
-    }
-
-    private func plannedAction(for action: AutomationAction) -> PlannedAction? {
-        let value = action.value.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        switch action.type {
-        case .openApp:
-            guard !value.isEmpty else { return nil }
-            return .openApp(value)
-        case .closeApp:
-            guard !value.isEmpty else { return nil }
-            return .closeApp(value)
-        case .playSong:
-            guard !value.isEmpty else { return nil }
-            return .mediaControl(.playSong(value))
-        case .playPlaylist:
-            guard !value.isEmpty else { return nil }
-            return .mediaControl(.playPlaylist(value))
-        case .playLiked:
-            return .mediaControl(.playLikedSongs)
-        case .pause:
-            return .mediaControl(.pause)
-        case .next:
-            return .mediaControl(.nextTrack)
-        case .previous:
-            return .mediaControl(.previousTrack)
-        case .openFolder:
-            guard !value.isEmpty else { return nil }
-            return .openFolder(value)
-        case .timer, .stopwatch, .openFile:
-            return nil
-        }
-    }
-
-    private func openFilePath(_ rawPath: String) -> Bool {
-        let path = rawPath.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !path.isEmpty else { return false }
-
-        let expanded = (path as NSString).expandingTildeInPath
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
-        process.arguments = [expanded]
-
-        do {
-            try process.run()
-            guard process.waitUntilExit(timeout: 10) else {
-                appendLog("[Automation][ERROR] Open file timed out: \(path)")
-                return false
-            }
-            return process.terminationStatus == 0
-        } catch {
-            appendLog("[Automation][ERROR] Open file failed: \(error.localizedDescription)")
-            return false
-        }
-    }
-
-    /// Watchdog window for one command: beyond this, the pipeline is
-    /// declared wedged and the visible state is released. Longer than the
-    /// Ollama call timeout (60 s) so a legitimately slow answer never trips
-    /// it. Internal so tests can shorten it.
-    static var commandWatchdogSeconds: TimeInterval = 90
-
-    /// A command may await something that never returns (a blocked child
-    /// process was the real case — see Process.waitUntilExit(timeout:)).
-    /// Whatever the cause, the UI must not sit on "Working" forever: this
-    /// wrapper releases assistantState/currentCommand if the body overruns.
-    private func runCommand(_ command: String) async {
-        let token = UUID()
-        activeCommandRunToken = token
-        let seconds = Self.commandWatchdogSeconds
-        Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
-            guard let self, self.activeCommandRunToken == token else { return }
-            self.activeCommandRunToken = nil
-            self.appendLog("⚠️ Command watchdog: '\(command)' still running after \(Int(seconds)) s — releasing the state (the action may be waiting on a system dialog).")
-            self.currentCommand = ""
-            if self.assistantState == .executing || self.assistantState == .processing {
-                self.assistantState = self.micActive ? .listening : .idle
-            }
-        }
-        await runCommandBody(command)
-        activeCommandRunToken = nil
-    }
-
-    private var activeCommandRunToken: UUID?
-
-    private func runCommandBody(_ command: String) async {
-        guard !command.isEmpty else { return }
-        trackRecentCommand(command)
-        var succeeded = false
-        // One id for this whole utterance — ties the model_hit/model_miss,
-        // plan branch and execute events together in intent_router.jsonl.
-        let intentRequestID = UUID()
-        defer {
-            StatsRecorder.shared.recordCommand(success: succeeded)
-            // Final outcome line for every utterance (RL corpus): input, and
-            // whether the chosen pipeline actually executed it.
-            IntentRouterLog.shared.append([
-                "event": "execute_command",
-                "request_id": intentRequestID.uuidString,
-                "text": command,
-                "success": succeeded,
-            ])
-        }
-
-        if let match = matchedAutomation(for: command) {
-            appendLog("[Automation] Triggered keyword: '\(match.automation.keyword)'")
-            await executeAutomation(match.automation, isOffVariant: match.isOffVariant)
-            succeeded = true
-            return
-        }
-
-        // --- Quick informational commands (time / date / month / day) ---
-        if tryHandleQuickInfoCommand(command) { return }
-        // ---
-
-        // --- SafetyGuard: single pre-pipeline gate (sudo / destructive /
-        // install-preview / protected paths). Previously two overlapping
-        // blocklists ran here; SafetyGuard is now the only one.
-        switch SafetyGuard.validate(rawCommand: command) {
-        case .blocked(let reason):
-            appendLog("⛔ Safety blocked: \(reason)")
-            dbManager.saveEvent(
-                eventType: "safety_blocked",
-                transcript: command,
-                matched: false,
-                metadata: ["reason": reason]
-            )
-            StatsRecorder.shared.recordCommand(success: false)
-            currentCommand = ""
-            assistantState = micActive ? .listening : .idle
-            return
-        case .installPreview(let cmd, let source):
-            appendLog("🔒 Install preview (not executed): '\(cmd)'. \(source)")
-            dbManager.saveEvent(
-                eventType: "install_preview",
-                transcript: command,
-                matched: false,
-                metadata: ["command": cmd, "source": source]
-            )
-            StatsRecorder.shared.recordCommand(success: false)
-            currentCommand = ""
-            assistantState = micActive ? .listening : .idle
-            return
-        case .allowed:
-            break
-        }
-
-        // --- ActionPlanner: multi-step intent parsing ---
-        assistantState = .processing
-        currentCommand = command
-        lastRecognizedSpeech = command
-        appendLog("[Plan] Planning: '\(command)'")
-
-        // One id ties the model_hit/model_miss, plan branch and execute
-        // events together in intent_router.jsonl (RL corpus).
-        let plan = await actionPlanner.plan(from: command, requestID: intentRequestID)
-
-        // ✅ Log the detected intent so the pipeline is fully traceable
-        if let first = plan.first {
-            switch first {
-            case .systemInfo(let i):     appendLog("[Intent] INFO: \(i.description)")
-            case .volumeControl(let a):  appendLog("[Intent] detected: \(a.description) → volume (ActionExecutor)")
-            case .mediaControl(let a):   appendLog("[Intent] detected: \(a.description) → media (ActionExecutor)")
-            case .displayControl(let a): appendLog("[Intent] detected: \(a.description) → display (ActionExecutor)")
-            case .aiQuery:               appendLog("[Intent] detected: ai_query → Ollama")
-            case .openApp(let n):        appendLog("[Intent] detected: open_app(\(n))")
-            case .closeApp(let n):       appendLog("[Intent] detected: close_app(\(n))")
-            case .openURL(let u):        appendLog("[Intent] detected: open_url(\(u))")
-            case .searchWeb(let e, let q): appendLog("[Intent] detected: search(\(e), '\(q)')")
-            case .openFolder(let p):     appendLog("[Intent] detected: open_folder(\(p))")
-            default:                     appendLog("[Intent] detected: \(first.description)")
-            }
-        }
-
-        // == Unified execution: every plan (single or multi-step) runs
-        // through ActionExecutor. The old single-legacy fork re-parsed the
-        // already-planned action through CommandNormalizer + CommandParser
-        // (including a redundant potential Ollama call) — removed.
-        do {
-            if plan.count > 1 {
-                appendLog("[Plan] \(plan.count) steps:")
-                plan.enumerated().forEach { i, a in appendLog("  \(i + 1). \(a)") }
-            } else {
-                appendLog("[Plan] \(plan.first?.description ?? "—")")
-            }
-
-            assistantState = .executing
-            var stepResults: [String] = []
-            let speakResponses = voiceResponseEnabled
-
-            await actionExecutor.execute(
-                plan: plan,
-                onStepStart: { [weak self] action in
-                    Task { @MainActor in
-                        self?.appendLog("  ▶ \(action.description)")
-                    }
-                },
-                onStepComplete: { [weak self] result in
-                    Task { @MainActor in
-                        guard let self else { return }
-                        let prefix = result.success ? "✓" : "✗"
-                        self.appendLog("  \(prefix) \(result.message)")
-                        stepResults.append(result.message)
-                        IntentRouterLog.shared.append([
-                            "event": "execute_step",
-                            "request_id": intentRequestID.uuidString,
-                            "text": command,
-                            "action": result.action.description,
-                            "success": result.success,
-                            "message": result.message,
-                        ])
-                        ResponseEngine.shared.respond(
-                            action: result.action,
-                            result: result,
-                            speak: speakResponses
-                        )
-                        // Single-step informational answers (time/date via
-                        // planner, brightness/contrast reads, volume reads)
-                        // also surface in the floating panel so background
-                        // ⌘⇧A isn't log-only.
-                        if plan.count == 1, result.success, case .systemInfo = result.action {
-                            self.showFloatingResult(result.message, icon: "info.circle.fill")
-                        }
-                    }
-                }
-            )
-
-            let combinedResult = stepResults.joined(separator: " | ")
-            dbManager.saveEvent(
-                eventType: "multi_action_executed",
-                transcript: command,
-                executionResult: combinedResult
-            )
-            currentCommand = ""
-            assistantState = micActive ? .listening : .idle
-            succeeded = true
-        }
-
-    }
-
-    private func verifyThenRunCommand(_ command: String) async {
-        guard voiceProfileReady else {
-            voiceVerificationStatus = "Voice Profile Incomplete ⚠️"
-            appendLog("[Voice] dropped: profile not ready (\(backendEnrollmentSampleCount)/\(voiceEnrollmentSampleTarget)) — command '\(command)' rejected.")
-            StatsRecorder.shared.recordCommand(success: false)
-                    dbManager.saveEvent(
-                eventType: "voice_profile_incomplete",
-                transcript: command,
-                matched: false,
-                metadata: [
-                    "backend_samples": String(backendEnrollmentSampleCount),
-                    "sample_target": String(voiceEnrollmentSampleTarget)
-                ]
-            )
-            return
-        }
-
-        do {
-            // Single verification attempt only — NO retries.
-            // Borderline retry and network retry have been removed per spec requirement.
-            let result = try await attemptVerification()
-
-            let wakeWordDetected = TranscriptSanitizer.containsWakeWord(lastRecognizedSpeech)
-            let effectiveThreshold = wakeWordDetected ? 0.65 : voiceVerificationThreshold
-            let isVerifiedByThreshold = result.similarity >= effectiveThreshold
-
-            appendLog("[Voice] verify: sim=\(fmtScore(result.similarity)) " +
-                      "max=\(fmtScore(result.maxSimilarity)) avg=\(fmtScore(result.avgSimilarity)) " +
-                      "conf=\(result.confidence.rawValue) n=\(result.samplesCompared) " +
-                      "thr=\(fmtScore(effectiveThreshold)) wake=\(wakeWordDetected ? "yes" : "no") " +
-                      "cmd='\(command)'")
-
-            switch result.confidence {
-            case .strong:
-                voiceVerificationStatus = "Verified (Strong) ✅"
-                lastVoiceSimilarity = result.similarity
-                appendLog("[Voice] Verified (strong). Score: \(fmtScore(result.similarity)) " +
-                          "[max: \(fmtScore(result.maxSimilarity)), avg: \(fmtScore(result.avgSimilarity)), " +
-                          "samples: \(result.samplesCompared)]")
-                extendSessionTimeout(forCommand: command)
-                await runCommand(command)
-
-            case .low:
-                if isVerifiedByThreshold {
-                    voiceVerificationStatus = "Verified (Low Confidence) ⚠️"
-                    lastVoiceSimilarity = result.similarity
-                    appendLog("[Voice] Verified (low confidence). Score: \(fmtScore(result.similarity)) " +
-                              "[max: \(fmtScore(result.maxSimilarity)), avg: \(fmtScore(result.avgSimilarity)), threshold: \(fmtScore(effectiveThreshold))]")
-                    dbManager.saveEvent(
-                        eventType: "voice_low_confidence",
-                        transcript: command,
-                        score: result.similarity,
-                        matched: true,
-                        metadata: [
-                            "confidence": "low",
-                            "threshold": fmtScore(effectiveThreshold),
-                            "wake_word": wakeWordDetected ? "true" : "false"
-                        ]
-                    )
-                    extendSessionTimeout(forCommand: command)
-                    await runCommand(command)
-                } else {
-                    voiceVerificationStatus = "Unknown Voice ❌"
-                    lastVoiceSimilarity = result.similarity
-                    appendLog("[Voice] Rejected by threshold. Score: \(fmtScore(result.similarity)) < \(fmtScore(effectiveThreshold)) — need ≥ \(fmtScore(effectiveThreshold)) to run; re-enroll in a quiet room if this persists.")
-                    if voiceSessionState == .active {
-                        appendLog("[VoiceSession] In-session command '\(command)' rejected due to failed verification. Session timer unchanged.")
-                    }
-                    StatsRecorder.shared.recordCommand(success: false)
-                    dbManager.saveEvent(
-                        eventType: "voice_rejected",
-                        transcript: command,
-                        score: result.similarity,
-                        matched: false,
-                        normalizedCommand: command,
-                        metadata: [
-                            "threshold": fmtScore(effectiveThreshold),
-                            "wake_word": wakeWordDetected ? "true" : "false"
-                        ]
-                    )
-                }
-
-            case .rejected:
-                if isVerifiedByThreshold {
-                    voiceVerificationStatus = "Verified (Wake Word Relaxed) ⚠️"
-                    lastVoiceSimilarity = result.similarity
-                    appendLog("[Voice] Wake-word threshold pass. Score: \(fmtScore(result.similarity)) >= \(fmtScore(effectiveThreshold))")
-                    dbManager.saveEvent(
-                        eventType: "voice_low_confidence",
-                        transcript: command,
-                        score: result.similarity,
-                        matched: true,
-                        metadata: [
-                            "confidence": "rejected_override",
-                            "threshold": fmtScore(effectiveThreshold),
-                            "wake_word": wakeWordDetected ? "true" : "false"
-                        ]
-                    )
-                    extendSessionTimeout(forCommand: command)
-                    await runCommand(command)
-                } else {
-                    voiceVerificationStatus = "Unknown Voice ❌"
-                    lastVoiceSimilarity = result.similarity
-                    appendLog("[Voice] Rejected. Score: \(fmtScore(result.similarity)) " +
-                              "[max: \(fmtScore(result.maxSimilarity)), avg: \(fmtScore(result.avgSimilarity)), threshold: \(fmtScore(effectiveThreshold))] — need ≥ \(fmtScore(effectiveThreshold)) to run.")
-                    if voiceSessionState == .active {
-                        appendLog("[VoiceSession] In-session command '\(command)' rejected due to failed verification. Session timer unchanged.")
-                    }
-                    StatsRecorder.shared.recordCommand(success: false)
-                    dbManager.saveEvent(
-                        eventType: "voice_rejected",
-                        transcript: command,
-                        score: result.similarity,
-                        matched: false,
-                        normalizedCommand: command,
-                        metadata: [
-                            "threshold": fmtScore(effectiveThreshold),
-                            "wake_word": wakeWordDetected ? "true" : "false"
-                        ]
-                    )
-                }
-
-            case .none:
-                voiceVerificationStatus = "No Voice Profile ❌"
-                lastVoiceSimilarity = 0
-                appendLog("[Voice] No stored voice profile. Command rejected.")
-            }
-        } catch let authError {
-            // Fix #10: Auth failure — single attempt only.
-            // Network-down fallback allows the command ONLY when it carries
-            // a wake word or arrives in an active session — a hallucinated
-            // singleton ("Thank you.") with no wake word must never execute
-            // just because the backend is offline. Do NOT retry; do NOT
-            // re-enqueue.
-            let isNetworkError = authError.localizedDescription.lowercased().contains("unavailable")
-                || authError.localizedDescription.lowercased().contains("connect")
-                || authError.localizedDescription.lowercased().contains("url")
-
-            if isNetworkError {
-                let hasWake = TranscriptSanitizer.containsWakeWord(lastRecognizedSpeech)
-                    || voiceSessionState == .active
-                guard hasWake else {
-                    voiceVerificationStatus = "Unknown Voice ❌"
-                    appendLog("[Voice] dropped: auth fallback refused — no wake word in '\(command)' (backend offline).")
-                    StatsRecorder.shared.recordCommand(success: false)
-                    dbManager.saveEvent(
-                        eventType: "voice_auth_fallback_refused",
-                        transcript: command,
-                        matched: false,
-                        metadata: ["reason": "backend_offline_no_wake"]
-                    )
-                    return
-                }
-                appendLog("[Voice] ⚠️ Auth backend unreachable — allowing command with fallback (no retry).")
-                voiceVerificationStatus = "Auth Fallback ⚠️"
-                dbManager.saveEvent(
-                    eventType: "voice_auth_fallback",
-                    transcript: command,
-                    matched: true,
-                    metadata: ["reason": "backend_offline"]
-                )
-                await runCommand(command)
-            } else {
-                // Non-network error (e.g. audio capture failure) — hard reject, no retry.
-                voiceVerificationStatus = "Unknown Voice ❌"
-                appendLog("[Voice] Verification error: \(authError.localizedDescription). Command rejected.")
-                StatsRecorder.shared.recordCommand(success: false)
-                    dbManager.saveEvent(
-                    eventType: "voice_verification_error",
-                    transcript: command,
-                    matched: false,
-                    metadata: ["error": authError.localizedDescription]
-                )
-            }
-        }
-    }
-
-    /// Single verification attempt — exports the most recent utterance-length
-    /// audio window at 16 kHz and calls backend. Silence clips (RMS below
-    /// verifyMinClipRMS) are rejected locally: the backend would 400 them
-    /// and Resemblyzer would embed noise, so never POST them.
-    private func attemptVerification() async throws -> VoiceVerificationResult {
-        let sampleURL = try micManager.exportRecentAudioSample(
-            durationSeconds: Self.verifyAudioSeconds,
-            targetSampleRate: Self.voiceSampleRate
-        )
-        defer { try? FileManager.default.removeItem(at: sampleURL) }
-        let rms = Self.clipRMS(ofWavAt: sampleURL)
-        guard rms >= Self.verifyMinClipRMS else {
-            appendLog("[Voice] dropped: verify clip is silence (rms \(String(format: "%.4f", rms))) — backend skipped.")
-            throw MicManagerError.insufficientAudio
-        }
-        return try await voiceAuthClient.verifyDetailed(audioFileURL: sampleURL)
-    }
-
-    /// RMS of a WAV file's samples (float32 mono written by MicManager).
-    /// Returns 0 when the file can't be read — treated as silence upstream.
-    private static func clipRMS(ofWavAt url: URL) -> Float {
-        guard let data = try? Data(contentsOf: url), data.count > 44 else { return 0 }
-        let samples = data.dropFirst(44)
-        let count = samples.count / MemoryLayout<Float>.size
-        guard count > 0 else { return 0 }
-        var squareSum: Float = 0
-        samples.withUnsafeBytes { raw in
-            let ptr = raw.bindMemory(to: Float.self)
-            for i in 0..<count { squareSum += ptr[i] * ptr[i] }
-        }
-        return sqrt(squareSum / Float(count))
-    }
-
-    private func fmtScore(_ value: Double) -> String {
-        String(format: "%.2f", value)
-    }
-
-    private func enrollMatchedVoiceSample(
-        phraseNumber: Int,
-        repetition: Int,
-        transcript: String
-    ) async {
-        do {
-            let sampleURL = try micManager.exportRecentAudioSample(
-                durationSeconds: Self.enrollAudioSeconds,
-                targetSampleRate: Self.voiceSampleRate
-            )
-            defer { try? FileManager.default.removeItem(at: sampleURL) }
-            let enrolledCount = try await voiceAuthClient.enroll(audioFileURL: sampleURL)
-            backendEnrollmentSampleCount = enrolledCount
-            persistBackendSampleCount(enrolledCount)
-
-            appendLog(
-                "Voice sample stored for phrase \(phraseNumber) rep \(repetition) " +
-                "(backend: \(enrolledCount)/\(voiceEnrollmentSampleTarget))."
-            )
-
-            dbManager.saveEvent(
-                eventType: "voice_enroll_sample",
-                transcript: transcript,
-                matched: true,
-                phraseIndex: phraseNumber,
-                metadata: [
-                    "repetition": String(repetition),
-                    "backend_count": String(enrolledCount),
-                    "sample_target": String(voiceEnrollmentSampleTarget)
-                ]
-            )
-
-            if enrollmentCompleted && enrolledCount >= voiceEnrollmentSampleTarget {
-                voiceVerificationStatus = "Voice Enrolled ✅"
-                appendLog("Voice profile finalized (\(enrolledCount)/\(voiceEnrollmentSampleTarget)). Voice mode is ready.")
-            } else if enrollmentCompleted {
-                voiceVerificationStatus = "Finalizing Voice Profile..."
-            }
-        } catch {
-            appendLog("Voice sample capture failed for phrase \(phraseNumber) rep \(repetition): \(error.localizedDescription)")
-            dbManager.saveEvent(
-                eventType: "voice_enroll_error",
-                transcript: transcript,
-                matched: false,
-                phraseIndex: phraseNumber,
-                metadata: [
-                    "repetition": String(repetition),
-                    "error": error.localizedDescription
-                ]
-            )
-        }
-    }
-
-    /// Floating result panel: shows a short answer (time, date, brightness)
-    /// in a global NSPanel above ALL apps — the in-window PopupView only
-    /// renders when Jarvis is frontmost, so background ⌘⇧A answers were
-    /// invisible. Auto-dismisses after 3 s. Callers also mirror into
-    /// ResponseEngine so the main window shows it when frontmost.
-    private func showFloatingResult(_ text: String, icon: String) {
-        FloatPanel.show(text: text, icon: icon)
-    }
-
-    // MARK: - Quick informational command handler
-    @discardableResult
-    private func tryHandleQuickInfoCommand(_ command: String) -> Bool {
-        // Strip wake word and normalize
-        var lower = command.lowercased()
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        if lower.hasPrefix("jarvis ") {
-            lower = String(lower.dropFirst("jarvis ".count))
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-        }
-        // Remove trailing punctuation
-        lower = lower.trimmingCharacters(in: CharacterSet(charactersIn: "?.!"))
-
-        // Detection lives in QuickInfoMatcher (single table shared with the
-        // planner routers). Multi-clause inputs fall through so the
-        // conjunction splitter keeps every clause. This stays a presentation
-        // fast-path: instant answer + floating panel + TTS.
-        guard !QuickInfoMatcher.looksCompound(lower),
-              let kind = QuickInfoMatcher.match(lower) else { return false }
-
-        let now = Date()
-        let calendar = Calendar.current
-        let formatter = DateFormatter()
-
-        switch kind {
-        case .time:
-            formatter.dateStyle = .none
-            formatter.timeStyle = .short
-            let timeStr = formatter.string(from: now)
-            appendLog("[QuickInfo] Detected time query → \(timeStr)")
-            currentCommand = ""
-            assistantState = micActive ? .listening : .idle
-            ResponseEngine.shared.respond(to: timeStr, speak: voiceResponseEnabled)
-            showFloatingResult(timeStr, icon: "clock.fill")
-            return true
-
-        case .date:
-            formatter.dateStyle = .full
-            formatter.timeStyle = .none
-            let dateStr = formatter.string(from: now)
-            appendLog("[QuickInfo] Detected date query → \(dateStr)")
-            currentCommand = ""
-            assistantState = micActive ? .listening : .idle
-            ResponseEngine.shared.respond(to: dateStr, speak: voiceResponseEnabled)
-            showFloatingResult(dateStr, icon: "calendar")
-            return true
-
-        case .day:
-            let dayNames = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
-            let weekday = calendar.component(.weekday, from: now)
-            let dayStr = dayNames[weekday - 1]
-            appendLog("[QuickInfo] Detected day query → \(dayStr)")
-            currentCommand = ""
-            assistantState = micActive ? .listening : .idle
-            ResponseEngine.shared.respond(to: dayStr, speak: voiceResponseEnabled)
-            showFloatingResult(dayStr, icon: "calendar")
-            return true
-
-        case .month:
-            let months = ["January","February","March","April","May","June",
-                          "July","August","September","October","November","December"]
-            let monthIdx = calendar.component(.month, from: now)
-            let monthStr = months[monthIdx - 1]
-            appendLog("[QuickInfo] Detected month query → \(monthStr)")
-            currentCommand = ""
-            assistantState = micActive ? .listening : .idle
-            ResponseEngine.shared.respond(to: monthStr, speak: voiceResponseEnabled)
-            showFloatingResult(monthStr, icon: "calendar.badge.clock")
-            return true
-
-        case .year:
-            let year = calendar.component(.year, from: now)
-            let yearStr = String(year)
-            appendLog("[QuickInfo] Detected year query → \(yearStr)")
-            currentCommand = ""
-            assistantState = micActive ? .listening : .idle
-            ResponseEngine.shared.respond(to: yearStr, speak: voiceResponseEnabled)
-            showFloatingResult(yearStr, icon: "calendar.badge.clock")
-            return true
-        }
-    }
 
     /// Acoustic wake word heard (only fires when a real engine is enabled —
     /// see WakeWordDetector). Anchors the pending-wake state so the command
@@ -2136,7 +1045,7 @@ final class AppState: ObservableObject {
         }
     }
 
-    private func appendLog(_ event: String) {
+    func appendLog(_ event: String) {
         let line = logger.log(event: event)
         logs.append(line)
         if logs.count > 500 {
@@ -2153,41 +1062,5 @@ final class AppState: ObservableObject {
         (alpha * current) + ((1 - alpha) * previous)
     }
 
-    private func normalizeEnrollmentTranscript(_ text: String) -> String {
-        let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !cleaned.isEmpty else { return "" }
 
-        let lowered = cleaned.lowercased()
-        if let range = lowered.range(of: "jarvis", options: .backwards) {
-            return String(cleaned[range.lowerBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
-        }
-
-        let tokens = TranscriptSanitizer.normalizedTokens(from: cleaned)
-        if tokens.count > 14 {
-            return tokens.suffix(14).joined(separator: " ")
-        }
-
-        return cleaned
-    }
-
-    private func requiredIntentTokens(for phrase: String) -> [String] {
-        let stopWords: Set<String> = [
-            "jarvis", "the", "a", "an", "to", "please"
-        ]
-        let tokens = TranscriptSanitizer.normalizedTokens(from: phrase).filter { !stopWords.contains($0) }
-
-        if tokens.contains("open") && tokens.contains("finder") {
-            return ["open", "finder"]
-        }
-
-        if tokens.contains("open") && tokens.contains("chrome") {
-            return ["open", "chrome"]
-        }
-
-        if tokens.contains("close") && tokens.contains("code") {
-            return ["close", "code"]
-        }
-
-        return Array(Set(tokens))
-    }
 }

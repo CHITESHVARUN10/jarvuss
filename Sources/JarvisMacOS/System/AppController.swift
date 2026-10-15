@@ -1,6 +1,36 @@
 import Foundation
+import AppKit
 
 final class AppController {
+    /// Wait for the launched app itself, rather than sleeping after every
+    /// action in a plan. Already-running apps return immediately.
+    func openAndWaitForLaunch(appName: String) async -> (message: String, success: Bool) {
+        guard !Task.isCancelled else { return ("App launch cancelled.", false) }
+        let result = openResult(appName: appName)
+        guard result.success else { return result }
+        let name = AppAliasResolver.resolveSpoken(appName)
+        let deadline = ContinuousClock.now + .seconds(10)
+        while ContinuousClock.now < deadline {
+            guard !Task.isCancelled else { return ("App launch cancelled.", false) }
+            let ready: Bool? = await MainActor.run {
+                let app = NSWorkspace.shared.runningApplications.first { app in
+                    let names = [app.localizedName, app.bundleURL?.deletingPathExtension().lastPathComponent]
+                    return names.compactMap { $0 }.contains {
+                        $0.caseInsensitiveCompare(name) == .orderedSame
+                    }
+                }
+                return app?.isFinishedLaunching
+            }
+            // LaunchServices also accepts names differing from an app's
+            // localized/process name. Preserve its successful acknowledgement
+            // when no exact process can be identified, rather than inventing
+            // a ten-second launch failure for a working app.
+            if ready != false { return result }
+            do { try await Task.sleep(for: .milliseconds(50)) }
+            catch { return ("App launch cancelled.", false) }
+        }
+        return ("Opened \(name), but it did not finish launching within 10 seconds.", false)
+    }
     /// Structured result: success comes from the process exit, not from
     /// sniffing the message text (an app named "ErrorLog" must not read
     /// as a failure). The String wrappers below preserve the old API.

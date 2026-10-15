@@ -7,8 +7,9 @@ import SwiftUI
 // Rust invokes them on background threads — every handler hops to the main
 // queue before touching UI or the router (all STT ownership lives on main).
 
-func on_state_changed(phase: AppPhase, model: ModelPhase) {
+func on_state_changed(phase: AppPhase, model: ModelPhase, session_id: UInt64) {
     DispatchQueue.main.async {
+        guard session_id == get_session_generation() else { return }
         let controller = DictationController.shared
 
         // ALWAYS mirror Rust truth — the toggle state machine, the pill,
@@ -60,9 +61,10 @@ func on_state_changed(phase: AppPhase, model: ModelPhase) {
     }
 }
 
-func on_transcript_ready(text: RustString) {
+func on_transcript_ready(text: RustString, session_id: UInt64) {
     let t = text.toString()
     DispatchQueue.main.async {
+        guard session_id == get_session_generation() else { return }
         // Router decides: pill transcript, command sink, or dropped.
         // Dictate path is pure STT (voice-to-text into the panel) — it
         // never touches onCommandTranscript, so no AI/command execution
@@ -106,9 +108,10 @@ func on_transcript_ready(text: RustString) {
     }
 }
 
-func on_partial_transcript(text: RustString) {
+func on_partial_transcript(text: RustString, session_id: UInt64) {
     let t = text.toString()
     DispatchQueue.main.async {
+        guard session_id == get_session_generation() else { return }
         // Live partials route by owner: pill → preview bubble,
         // command → main-window LIVE TRANSCRIPT card (new).
         if let pillText = STTRouter.shared.routePartial(t) {
@@ -120,10 +123,11 @@ func on_partial_transcript(text: RustString) {
     }
 }
 
-func on_error(message: RustString) {
+func on_error(message: RustString, session_id: UInt64) {
     let msg = message.toString()
     NSLog("[Jarvis][STT] Error: \(msg)")
     DispatchQueue.main.async {
+        guard session_id == get_session_generation() else { return }
         // Router decides: pill error card or command-mode log.
         if let pillMsg = STTRouter.shared.routeError(msg) {
             let controller = DictationController.shared

@@ -27,13 +27,15 @@ if [[ "$(uname)" != "Darwin" ]]; then
   exit 0
 fi
 
+source "$ROOT_DIR/scripts/macos_toolchain.zsh"
+
 if ! command -v cargo >/dev/null 2>&1; then
   echo "[Core][ERROR] cargo not found. Install Rust: brew install rust" >&2
   exit 1
 fi
 
 echo "[Core] Building jarvis_core ($PROFILE)..."
-cargo build $CARGO_PROFILE_FLAG --manifest-path "$CORE_DIR/Cargo.toml"
+cargo build --locked $CARGO_PROFILE_FLAG --manifest-path "$CORE_DIR/Cargo.toml"
 
 LIB="$CORE_DIR/target/$PROFILE/libjarvis_core.a"
 DYLIB="$CORE_DIR/target/$PROFILE/libjarvis_core.dylib"
@@ -51,7 +53,7 @@ mkdir -p "$GEN_DIR"
 # as the working directory.
 (
   cd "$CORE_DIR"
-  cargo run --quiet --bin uniffi-bindgen -- \
+  cargo run --locked --quiet --bin uniffi-bindgen -- \
     generate --library "$DYLIB" --language swift --out-dir "$GEN_DIR" --no-format
 )
 
@@ -116,6 +118,7 @@ FUNCS = {"planCommand": "corePlanCommand",
          "planAfterModel": "corePlanAfterModel",
          "resolveApp": "coreResolveApp",
          "resolveLocalState": "coreResolveLocalState",
+         "matchQuickInfo": "coreMatchQuickInfo",
          "checkSafety": "coreCheckSafety",
          "validateCommandString": "coreValidateCommandString",
          "classifyCommandPriority": "coreClassifyCommandPriority",

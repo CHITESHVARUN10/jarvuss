@@ -12,20 +12,26 @@ final class IntentRouterLog {
 
     private let logURL: URL
     private let lock = NSLock()
+    private let enabled: Bool
+    private let usesDefaultPath: Bool
 
-    private init() {
-        let support = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Application Support/Jarvis/logs", isDirectory: true)
+    init(logURL: URL? = nil, enabled: Bool = true) {
+        self.enabled = enabled
+        usesDefaultPath = logURL == nil
+        let support = logURL?.deletingLastPathComponent() ?? RuntimeConfiguration.dataDirectory
+            .appendingPathComponent("logs", isDirectory: true)
+        self.logURL = logURL ?? support.appendingPathComponent("intent_router.jsonl")
+        guard enabled else { return }
         try? FileManager.default.createDirectory(at: support, withIntermediateDirectories: true)
-        logURL = support.appendingPathComponent("intent_router.jsonl")
-        if !FileManager.default.fileExists(atPath: logURL.path) {
-            FileManager.default.createFile(atPath: logURL.path, contents: nil)
+        if !FileManager.default.fileExists(atPath: self.logURL.path) {
+            FileManager.default.createFile(atPath: self.logURL.path, contents: nil)
         }
     }
 
     func append(_ event: [String: Any]) {
+        guard enabled else { return }
         // Migration cut-over: Rust owns the append (same path, ts, sorted keys).
-        if JarvisFlags.useRustPipeline {
+        if usesDefaultPath && JarvisFlags.useRustPipeline {
             guard JSONSerialization.isValidJSONObject(event),
                   let data = try? JSONSerialization.data(withJSONObject: event),
                   let json = String(data: data, encoding: .utf8) else { return }

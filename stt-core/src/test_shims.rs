@@ -12,19 +12,19 @@
 use crate::ffi::{AppPhase, ModelPhase};
 
 #[export_name = "__swift_bridge__$on_state_changed"]
-pub extern "C" fn test_on_state_changed(_phase: AppPhase, _model: ModelPhase) {
+pub extern "C" fn test_on_state_changed(_phase: AppPhase, _model: ModelPhase, _session_id: u64) {
 }
 
 #[export_name = "__swift_bridge__$on_transcript_ready"]
-pub extern "C" fn test_on_transcript_ready(_text: *mut std::ffi::c_void) {
+pub extern "C" fn test_on_transcript_ready(_text: *mut std::ffi::c_void, _session_id: u64) {
 }
 
 #[export_name = "__swift_bridge__$on_partial_transcript"]
-pub extern "C" fn test_on_partial_transcript(_text: *mut std::ffi::c_void) {
+pub extern "C" fn test_on_partial_transcript(_text: *mut std::ffi::c_void, _session_id: u64) {
 }
 
 #[export_name = "__swift_bridge__$on_error"]
-pub extern "C" fn test_on_error(_message: *mut std::ffi::c_void) {
+pub extern "C" fn test_on_error(_message: *mut std::ffi::c_void, _session_id: u64) {
 }
 
 #[export_name = "__swift_bridge__$on_download_progress"]

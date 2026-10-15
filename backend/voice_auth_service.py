@@ -4,6 +4,10 @@ import base64
 import json
 import os
 import time
+import threading
+from concurrent.futures import ThreadPoolExecutor
+from functools import partial
+import asyncio
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from urllib.parse import urlencode
@@ -17,10 +21,15 @@ import numpy as np
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.responses import RedirectResponse
 from resemblyzer import VoiceEncoder, preprocess_wav
+from runtime_config import RuntimeConfig, data_directory, read_env
 
 BASE_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = BASE_DIR.parent
-EMBEDDINGS_FILE = BASE_DIR / "embeddings.npy"
+EMBEDDINGS_FILE = data_directory() / "embeddings.npy"
+_embeddings_lock = threading.RLock()
+_runtime_config = RuntimeConfig()
+_voice_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="jarvis-voice")
+_voice_slots = threading.BoundedSemaphore(2)
 
 
 def _repo_env_file() -> Path:
@@ -44,8 +53,9 @@ from intent_router_model import router as intent_router  # noqa: E402
 
 app.include_router(intent_router)
 
-# Encoder is initialised ONCE at startup — never reloaded.
-encoder = VoiceEncoder()
+# Load on first voice request, on the dedicated worker. Command routing and
+# health checks no longer wait for the voice model to initialize at startup.
+encoder = None
 
 SPOTIFY_AUTH_URL = "https://accounts.spotify.com/authorize"
 SPOTIFY_TOKEN_URL = "https://accounts.spotify.com/api/token"
@@ -106,68 +116,48 @@ spotify_tokens: Dict[str, Any] = {
 # ──────────────────────────────────────────────────────────────────────
 
 def _load_embeddings() -> np.ndarray:
-    if not EMBEDDINGS_FILE.exists():
-        return np.empty((0, 256), dtype=np.float32)
-
-    embeddings = np.load(EMBEDDINGS_FILE)
-    if embeddings.ndim == 1:
-        embeddings = embeddings.reshape(1, -1)
-    return embeddings.astype(np.float32)
+    with _embeddings_lock:
+        path = EMBEDDINGS_FILE
+        if not path.exists():
+            # Read-only migration source for existing installations.
+            path = BASE_DIR / "embeddings.npy"
+        if not path.exists():
+            return np.empty((0, 256), dtype=np.float32)
+        embeddings = np.load(path, allow_pickle=False)
+        if embeddings.ndim == 1:
+            embeddings = embeddings.reshape(1, -1)
+        if embeddings.ndim != 2 or embeddings.shape[1] != 256:
+            raise ValueError("Invalid voice profile shape")
+        return embeddings.astype(np.float32)
 
 
 def _save_embeddings(embeddings: np.ndarray) -> None:
-    np.save(EMBEDDINGS_FILE, embeddings.astype(np.float32))
+    with _embeddings_lock:
+        EMBEDDINGS_FILE.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        temporary = None
+        try:
+            with NamedTemporaryFile(dir=EMBEDDINGS_FILE.parent, suffix=".npy", delete=False) as handle:
+                temporary = Path(handle.name)
+                np.save(handle, embeddings.astype(np.float32), allow_pickle=False)
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary, EMBEDDINGS_FILE)
+        finally:
+            if temporary is not None:
+                temporary.unlink(missing_ok=True)
 
 
 def _load_env_values() -> dict[str, str]:
-    values: dict[str, str] = {}
-    # Bundled copy first (app bundle: Contents/Resources/backend/.env),
-    # then repo root — either may exist depending on launch mode.
-    candidates = [BASE_DIR / ".env", _repo_env_file()]
-    seen: set[str] = set()
-    for env_file in candidates:
-        key = str(env_file)
-        if key in seen:
-            continue
-        seen.add(key)
-        if env_file.exists():
-            for line in env_file.read_text(encoding="utf-8").splitlines():
-                stripped = line.strip()
-                if not stripped or stripped.startswith("#") or "=" not in stripped:
-                    continue
-                env_key, env_value = stripped.split("=", 1)
-                values.setdefault(env_key.strip(), env_value.strip())
-
-    for key, value in os.environ.items():
-        values[key] = value
-    return values
+    defaults = {**read_env(BASE_DIR / ".env"), **read_env(_repo_env_file()), **os.environ}
+    return _runtime_config.load(defaults)
 
 
 def _persist_env_updates(updates: dict[str, str]) -> None:
-    # Prefer the bundled copy when running inside the app so token refresh
-    # survives relaunch; fall back to the repo .env in dev.
-    bundled = BASE_DIR / ".env"
-    target = bundled if bundled.exists() or not _repo_env_file().exists() else _repo_env_file()
-    lines = []
-    if target.exists():
-        lines = target.read_text(encoding="utf-8").splitlines()
-
-    line_index_by_key: dict[str, int] = {}
-    for index, line in enumerate(lines):
-        stripped = line.strip()
-        if not stripped or stripped.startswith("#") or "=" not in stripped:
-            continue
-        key = stripped.split("=", 1)[0].strip()
-        line_index_by_key[key] = index
-
-    for key, value in updates.items():
-        new_line = f"{key}={value}"
-        if key in line_index_by_key:
-            lines[line_index_by_key[key]] = new_line
-        else:
-            lines.append(new_line)
-
-    target.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    # Kept as a compatibility wrapper; never writes or executes .env files.
+    try:
+        _runtime_config.save(updates)
+    except Exception as error:
+        raise HTTPException(status_code=500, detail=f"Could not save connection settings: {error}") from error
 
 
 def _spotify_config() -> dict[str, str]:
@@ -380,11 +370,29 @@ def _spotify_devices(token: str) -> list[dict]:
     return devices
 
 
+_device_cache_lock = threading.Lock()
+_device_cache: dict[str, Any] = {"token": "", "id": "", "expires_at": 0.0}
+
+
+def _cache_spotify_device(token: str, device_id: str) -> str:
+    with _device_cache_lock:
+        _device_cache.update(token=token, id=device_id, expires_at=time.monotonic() + 5)
+    return device_id
+
+
+def _invalidate_spotify_device() -> None:
+    with _device_cache_lock:
+        _device_cache["expires_at"] = 0.0
+
+
 def _ensure_spotify_active_device(token: str) -> str | None:
+    with _device_cache_lock:
+        if _device_cache["token"] == token and _device_cache["expires_at"] > time.monotonic():
+            return str(_device_cache["id"])
     devices = _spotify_devices(token)
     for device in devices:
         if device.get("is_active") and device.get("id"):
-            return str(device["id"])
+            return _cache_spotify_device(token, str(device["id"]))
 
     print("[Spotify] No active device found; trying transfer")
 
@@ -410,7 +418,7 @@ def _ensure_spotify_active_device(token: str) -> str | None:
     devices_after = _spotify_devices(token)
     for device in devices_after:
         if device.get("is_active") and device.get("id"):
-            return str(device["id"])
+            return _cache_spotify_device(token, str(device["id"]))
 
     return None
 
@@ -470,123 +478,40 @@ def _log_spotify_action_attempt(endpoint: str, status: int, raw: str, reason: st
 
 def _is_retryable_spotify_failure(status: int, raw: str) -> bool:
     lowered = (raw or "").lower()
-    return status == 403 or "no active device" in lowered
+    return "no active device" in lowered or (status in (403, 404) and "device" in lowered)
 
 
 def _spotify_play(token: str, body: dict, action_label: str) -> dict:
-    endpoint = "PUT /v1/me/player/play"
-
-    for attempt in range(2):
-        state_before = _spotify_playback_state(token)
-        print(
-            "[Spotify] pre-action state device_id={id} is_playing={playing} current_track={track}".format(
-                id=state_before.get("device_id", ""),
-                playing=state_before.get("is_playing", False),
-                track=state_before.get("current_track", "unknown"),
-            )
-        )
-
-        device_id = _ensure_spotify_active_device(token)
-        if not device_id:
-            reason = "no active device"
-            _log_spotify_action_attempt(endpoint, 400, "", reason)
-            if attempt == 0:
-                time.sleep(0.3)
-                continue
-            raise HTTPException(status_code=400, detail="No active Spotify device")
-
-        status, _, raw = _spotify_api_request(
-            "PUT",
-            "/v1/me/player/play",
-            token,
-            query={"device_id": device_id},
-            body=body,
-        )
-
-        reason = _spotify_error_reason(status, raw, "spotify play failed")
-        _log_spotify_action_attempt(endpoint, status, raw, reason)
-
-        if 200 <= status < 300:
-            state_after = _spotify_playback_state(token)
-            is_playing = bool(state_after.get("is_playing", False))
-            if is_playing:
-                return {
-                    "status": "ok",
-                    "action": action_label,
-                    "action_confirmed": True,
-                    "device_id": device_id,
-                    "message": "Playback started",
-                    "playback_state": state_after,
-                }
-            if attempt == 0:
-                time.sleep(0.3)
-                continue
-            raise HTTPException(status_code=409, detail="Playback command accepted but playback did not start")
-
-        if attempt == 0 and _is_retryable_spotify_failure(status, raw):
-            time.sleep(0.3)
-            continue
-
-        raise HTTPException(status_code=400, detail=f"Spotify play failed: {reason}")
-
-    raise HTTPException(status_code=400, detail="Spotify play failed after retry")
+    return _spotify_transport_action(token, "PUT", "/v1/me/player/play", action_label, body)
 
 
-def _spotify_transport_action(token: str, method: str, path: str, action_label: str) -> dict:
+def _spotify_transport_action(token: str, method: str, path: str, action_label: str,
+                              body: dict | None = None) -> dict:
     endpoint = f"{method} {path}"
-
     for attempt in range(2):
-        state_before = _spotify_playback_state(token)
-        print(
-            "[Spotify] pre-action state device_id={id} is_playing={playing} current_track={track}".format(
-                id=state_before.get("device_id", ""),
-                playing=state_before.get("is_playing", False),
-                track=state_before.get("current_track", "unknown"),
-            )
-        )
-
         device_id = _ensure_spotify_active_device(token)
         if not device_id:
-            reason = "no active device"
-            _log_spotify_action_attempt(endpoint, 400, "", reason)
             if attempt == 0:
+                # A newly launched Spotify process may not have registered
+                # its Web API device yet. Wait only for this dependency.
                 time.sleep(0.3)
                 continue
             raise HTTPException(status_code=400, detail="No active Spotify device")
-
         status, _, raw = _spotify_api_request(
-            method,
-            path,
-            token,
-            query={"device_id": device_id},
-            body={},
+            method, path, token, query={"device_id": device_id}, body=body or {},
         )
-
-        reason = _spotify_error_reason(status, raw, f"spotify {action_label} failed")
+        reason = "accepted" if 200 <= status < 300 else _spotify_error_reason(status, raw, f"Spotify {action_label} failed")
         _log_spotify_action_attempt(endpoint, status, raw, reason)
-
         if 200 <= status < 300:
-            state_after = _spotify_playback_state(token)
-            message = (
-                "No content (valid for next/previous)"
-                if raw == ""
-                else f"{action_label} command accepted"
-            )
-            return {
-                "status": "ok",
-                "action": action_label,
-                "action_confirmed": True,
-                "device_id": device_id,
-                "message": message,
-                "playback_state": state_after,
-            }
-
+            # API acknowledgement confirms command acceptance. A fresh state
+            # read is both expensive and eventually consistent (not a reliable
+            # immediate playback check), so keep it on the status path.
+            return {"status": "ok", "action": action_label, "action_confirmed": True,
+                    "device_id": device_id, "message": f"{action_label} request accepted"}
         if attempt == 0 and _is_retryable_spotify_failure(status, raw):
-            time.sleep(0.3)
+            _invalidate_spotify_device()
             continue
-
         raise HTTPException(status_code=400, detail=f"Spotify {action_label} failed: {reason}")
-
     raise HTTPException(status_code=400, detail=f"Spotify {action_label} failed after retry")
 
 
@@ -720,6 +645,9 @@ def _normalize_volume(wav: np.ndarray) -> np.ndarray:
 
 
 def _embedding_from_audio_bytes(content: bytes, suffix: str) -> np.ndarray:
+    global encoder
+    if encoder is None:
+        encoder = VoiceEncoder()
     with NamedTemporaryFile(delete=True, suffix=suffix) as temp_file:
         temp_file.write(content)
         temp_file.flush()
@@ -933,7 +861,8 @@ _PG_ALL_KEYS = ["PGHOST", "PGPORT", "PGDATABASE", "PGUSER", "PGPASSWORD"]
 
 def _postgres_values() -> dict[str, str]:
     env = _load_env_values()
-    return {key: str(env.get(key, "") or "").strip() for key in _PG_ALL_KEYS}
+    return {key: (str(env.get(key, "") or "") if key == "PGPASSWORD"
+                  else str(env.get(key, "") or "").strip()) for key in _PG_ALL_KEYS}
 
 
 def _postgres_missing(values: dict[str, str]) -> list[str]:
@@ -991,16 +920,18 @@ def postgres_test(payload: Dict[str, Any]) -> Dict[str, Any]:
         raise HTTPException(
             status_code=400, detail=f"missing: {', '.join(missing)}"
         )
-    psql = shutil.which("psql") or "/opt/homebrew/bin/psql"
-    if not shutil.which("psql") and not os.path.exists(psql):
-        psql = "/usr/bin/psql"
+    candidates = ["/opt/homebrew/bin/psql", "/opt/homebrew/opt/postgresql@18/bin/psql",
+                  "/usr/local/bin/psql", "/usr/local/opt/postgresql@18/bin/psql", "/usr/bin/psql"]
+    psql = shutil.which("psql") or next((path for path in candidates if os.access(path, os.X_OK)), candidates[-1])
     env = dict(os.environ)
     env["PGPASSWORD"] = override_password or values["PGPASSWORD"]
+    env["PGCONNECT_TIMEOUT"] = "5"
+    env["PGOPTIONS"] = (env.get("PGOPTIONS", "") + " -c statement_timeout=8000")
     try:
         proc = subprocess.run(
             [psql, "-h", values["PGHOST"], "-p", values["PGPORT"] or "5432",
              "-d", values["PGDATABASE"], "-U", values["PGUSER"],
-             "-tAc", "SELECT 1"],
+             "-X", "-w", "-v", "ON_ERROR_STOP=1", "-tAc", "SELECT 1"],
             capture_output=True, text=True, timeout=10, env=env,
         )
     except subprocess.TimeoutExpired:
@@ -1080,60 +1011,72 @@ def stats() -> dict[str, int]:
     return {"enrolled_count": int(enrolled)}
 
 
-@app.post("/enroll")
-async def enroll(file: UploadFile = File(...)) -> dict[str, int]:
-    content = await file.read()
+async def _read_voice_upload(file: UploadFile) -> tuple[bytes, str]:
+    # Bound decoded work and memory before handing off to the single worker.
+    content = await file.read(10 * 1024 * 1024 + 1)
     if not content:
         raise HTTPException(status_code=400, detail="Empty audio file")
+    if len(content) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Audio file exceeds 10 MB")
+    return content, Path(file.filename or "sample.wav").suffix or ".wav"
 
-    suffix = Path(file.filename or "sample.wav").suffix or ".wav"
 
+async def _run_voice_job(function, *args):
+    # The thread pool is intentionally single-worker (one shared encoder).
+    # Admission is bounded so repeated requests cannot build an unbounded queue.
+    if not _voice_slots.acquire(blocking=False):
+        raise HTTPException(status_code=503, detail="Voice service busy; try again shortly")
+    try:
+        future = _voice_executor.submit(partial(function, *args))
+    except BaseException:
+        _voice_slots.release()
+        raise
+    # Release when CPU work actually ends, even if its HTTP caller disconnects.
+    future.add_done_callback(lambda _: _voice_slots.release())
+    return await asyncio.wrap_future(future)
+
+
+def _enroll_audio(content: bytes, suffix: str) -> dict[str, int]:
     try:
         embedding = _embedding_from_audio_bytes(content, suffix=suffix)
     except Exception as error:
         raise HTTPException(status_code=400, detail=f"Enrollment failed: {error}")
-
-    existing = _load_embeddings()
-    updated = (
-        np.vstack([existing, embedding.reshape(1, -1)])
-        if existing.size
-        else embedding.reshape(1, -1)
-    )
-    _save_embeddings(updated)
-
+    with _embeddings_lock:
+        existing = _load_embeddings()
+        updated = np.vstack([existing, embedding.reshape(1, -1)]) if existing.size else embedding.reshape(1, -1)
+        _save_embeddings(updated)
     return {"enrolled_count": int(updated.shape[0])}
 
 
-@app.post("/verify")
-async def verify(file: UploadFile = File(...)) -> dict:
-    """
-    Verify speaker against ALL stored embeddings.
-    Returns weighted score (0.6*max + 0.4*avg), confidence level,
-    and detailed similarity breakdown.
-    """
-    content = await file.read()
-    if not content:
-        raise HTTPException(status_code=400, detail="Empty audio file")
-
+def _verify_audio(content: bytes, suffix: str) -> dict:
     known = _load_embeddings()
     if known.shape[0] == 0:
         return {"similarity": 0.0, "max_similarity": 0.0,
-                "avg_similarity": 0.0, "confidence": "none",
-                "samples_compared": 0}
-
-    suffix = Path(file.filename or "sample.wav").suffix or ".wav"
-
+                "avg_similarity": 0.0, "confidence": "none", "samples_compared": 0}
     try:
         candidate = _embedding_from_audio_bytes(content, suffix=suffix)
     except Exception as error:
         raise HTTPException(status_code=400, detail=f"Verification failed: {error}")
-
-    similarities = [_cosine_similarity(candidate, row) for row in known]
-    return _compute_weighted_score(similarities)
+    return _compute_weighted_score([_cosine_similarity(candidate, row) for row in known])
 
 
-@app.post("/reset")
-def reset() -> dict[str, int]:
+@app.post("/enroll")
+async def enroll(file: UploadFile = File(...)) -> dict[str, int]:
+    content, suffix = await _read_voice_upload(file)
+    return await _run_voice_job(_enroll_audio, content, suffix)
+
+
+@app.post("/verify")
+async def verify(file: UploadFile = File(...)) -> dict:
+    content, suffix = await _read_voice_upload(file)
+    return await _run_voice_job(_verify_audio, content, suffix)
+
+
+def _reset_profile() -> dict[str, int]:
     _save_embeddings(np.empty((0, 256), dtype=np.float32))
     return {"enrolled_count": 0}
 
+
+@app.post("/reset")
+async def reset() -> dict[str, int]:
+    return await _run_voice_job(_reset_profile)

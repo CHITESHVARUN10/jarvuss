@@ -1,7 +1,8 @@
 import Foundation
 
-final class DBManager {
-    private struct Config {
+// SQL work is serialized on queue; configuration and toggles use stateLock.
+final class DBManager: @unchecked Sendable {
+    private struct Config: Sendable {
         let host: String
         let port: String
         let database: String
@@ -9,7 +10,10 @@ final class DBManager {
         let password: String?
 
         static func fromEnvironment() -> Config? {
-            let env = mergedEnv()
+            fromValues(mergedEnv())
+        }
+
+        static func fromValues(_ env: [String: String]) -> Config? {
             guard
                 let host = env["PGHOST"], !host.isEmpty,
                 let port = env["PGPORT"], !port.isEmpty,
@@ -34,26 +38,37 @@ final class DBManager {
         }
 
         private static func mergedEnv() -> [String: String] {
-            DotEnvLoader.mergedEnv()
+            RuntimeConfiguration.mergedValues()
         }
     }
 
     static var missingEnvKeys: [String] { Config.missingEnvKeys }
 
     private let queue = DispatchQueue(label: "jarvis.postgres.queue")
-    private var config = Config.fromEnvironment()
+    private let stateLock = NSLock()
+    private var storedConfig: Config?
+    private var storedLoggingEnabled = true
+    private var config: Config? { stateLock.withLock { storedConfig } }
+
+    init(configuration: [String: String]? = nil) {
+        if let configuration { storedConfig = Config.fromValues(configuration) }
+        else { storedConfig = Config.fromEnvironment() }
+    }
 
     /// Kill-switch for the event-logging toggle in the Connections pane.
     /// When false, all PG writes are no-ops (local stats buffer unaffected).
-    var loggingEnabled: Bool = true
+    var loggingEnabled: Bool {
+        get { stateLock.withLock { storedLoggingEnabled } }
+        set { stateLock.withLock { storedLoggingEnabled = newValue } }
+    }
 
     /// Re-read process env + the discovered `.env` after credentials are
     /// saved through the Connections pane. Serializes on the PG queue so no
     /// in-flight write observes a half-replaced config.
     func reloadConfiguration() {
-        queue.sync { [weak self] in
-            self?.config = Config.fromEnvironment()
-        }
+        let updated = Config.fromEnvironment()
+        stateLock.withLock { storedConfig = updated }
+        setup()
     }
 
     var isConfigured: Bool {
@@ -61,7 +76,7 @@ final class DBManager {
     }
 
     func setup() {
-        guard let config else {
+        guard loggingEnabled, let config else {
             return
         }
 
@@ -77,6 +92,10 @@ final class DBManager {
             commands_run INT NOT NULL DEFAULT 0,
             commands_failed INT NOT NULL DEFAULT 0,
             time_saved_secs DOUBLE PRECISION NOT NULL DEFAULT 0
+        );
+        CREATE TABLE IF NOT EXISTS jarvis_usage_batches (
+            id UUID PRIMARY KEY,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
         CREATE TABLE IF NOT EXISTS jarvis_recognition_events (
             id BIGSERIAL PRIMARY KEY,
@@ -140,19 +159,25 @@ final class DBManager {
         }
     }
 
-    func upsertDailyStats(_ bucket: DayBucket) {
-        guard loggingEnabled, let config else { return }
-        let sql = """
+    /// The batch ID and its delta are committed in one statement. Retrying
+    /// after a lost response cannot count the same usage twice.
+    static func dailyStatsSQL(_ batch: StatsBatch) -> String {
+        let bucket = batch.bucket
+        return """
+        WITH accepted AS (
+            INSERT INTO jarvis_usage_batches (id) VALUES ('\(batch.id.uuidString)'::uuid)
+            ON CONFLICT (id) DO NOTHING RETURNING id
+        )
         INSERT INTO jarvis_usage_stats (
             day, talk_secs, sessions, chars_dictated,
             tokens_prompt_est, tokens_completion_est,
             copies, commands_run, commands_failed, time_saved_secs
-        ) VALUES (
-            DATE '\(escapeSQL(bucket.day))',
+        ) SELECT
+            DATE '\(bucket.day.replacingOccurrences(of: "'", with: "''"))',
             \(bucket.talkSecs), \(bucket.sessions), \(bucket.charsDictated),
             \(bucket.tokensPromptEst), \(bucket.tokensCompletionEst),
             \(bucket.copies), \(bucket.commandsRun), \(bucket.commandsFailed), \(bucket.timeSavedSecs)
-        )
+        FROM accepted WHERE true
         ON CONFLICT (day) DO UPDATE SET
             talk_secs = jarvis_usage_stats.talk_secs + EXCLUDED.talk_secs,
             sessions = jarvis_usage_stats.sessions + EXCLUDED.sessions,
@@ -164,8 +189,19 @@ final class DBManager {
             commands_failed = jarvis_usage_stats.commands_failed + EXCLUDED.commands_failed,
             time_saved_secs = jarvis_usage_stats.time_saved_secs + EXCLUDED.time_saved_secs;
         """
-        queue.async {
-            _ = self.runSQL(sql, config: config)
+    }
+
+    func upsertDailyStats(_ batch: StatsBatch) async -> Bool {
+        await withCheckedContinuation { continuation in
+            queue.async { [self] in
+                guard loggingEnabled, let config else {
+                    continuation.resume(returning: false)
+                    return
+                }
+                let result = runSQL(Self.dailyStatsSQL(batch), config: config)
+                if result.0 != 0 { NSLog("[Stats] Database upload failed: %@", result.1) }
+                continuation.resume(returning: result.0 == 0)
+            }
         }
     }
 
@@ -200,42 +236,8 @@ final class DBManager {
     }
 
     private func runSQLQueryRows(_ sql: String, config: Config) -> String {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/opt/homebrew/bin/psql")
-        if !FileManager.default.fileExists(atPath: "/opt/homebrew/bin/psql") {
-            process.executableURL = URL(fileURLWithPath: "/usr/bin/psql")
-        }
-        process.arguments = [
-            "-h", config.host,
-            "-p", config.port,
-            "-d", config.database,
-            "-U", config.user,
-            "--set", "connect_timeout=5",
-            "--set", "statement_timeout=8000",
-            "-tA", "-F", "|", sql
-        ]
-        var env = ProcessInfo.processInfo.environment
-        if let password = config.password {
-            env["PGPASSWORD"] = password
-        }
-        process.environment = env
-        let stdout = Pipe()
-        process.standardOutput = stdout
-        process.standardError = Pipe()
-        do {
-            try process.run()
-            // Bounded wait: psql has connect/statement timeouts, but the
-            // Process itself needs a deadline so a wedged child can't park
-            // the serial PG queue forever. 20 s > 5 s connect + 8 s
-            // statement so psql's own timeouts fire first.
-            guard process.waitUntilExit(timeout: 20) else {
-                return ""
-            }
-            let data = stdout.fileHandleForReading.readDataToEndOfFile()
-            return (String(data: data, encoding: .utf8) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        } catch {
-            return ""
-        }
+        let result = runPSQL(sql, config: config)
+        return result.status == 0 ? result.stdout : ""
     }
 
     /// Async (never blocks @MainActor): UserDefaults fast-path decides
@@ -254,99 +256,33 @@ final class DBManager {
     }
 
     private func runSQL(_ sql: String, config: Config) -> (Int32, String) {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/opt/homebrew/bin/psql")
-        if !FileManager.default.fileExists(atPath: "/opt/homebrew/bin/psql") {
-            process.executableURL = URL(fileURLWithPath: "/usr/bin/psql")
-        }
-
-        process.arguments = [
-            "-h", config.host,
-            "-p", config.port,
-            "-d", config.database,
-            "-U", config.user,
-            "-v", "ON_ERROR_STOP=1",
-            // Timeouts so a dead PG can't wedge the serial queue forever
-            // (boot deadlock: MainActor parked behind a stalled psql).
-            "-v", "connect_timeout=5",
-            "-v", "statement_timeout=8000",
-            "-c", sql
-        ]
-
-        var env = ProcessInfo.processInfo.environment
-        if let password = config.password {
-            env["PGPASSWORD"] = password
-        }
-        process.environment = env
-
-        let pipe = Pipe()
-        process.standardError = pipe
-        process.standardOutput = Pipe()
-
-        do {
-            try process.run()
-            guard process.waitUntilExit(timeout: 20) else {
-                let errorData = pipe.fileHandleForReading.readDataToEndOfFile()
-                let errorOutput = String(data: errorData, encoding: .utf8) ?? ""
-                let suffix = errorOutput.isEmpty ? "" : " (\(errorOutput))"
-                return (-1, "psql timed out after 20 s\(suffix)")
-            }
-
-            let errorData = pipe.fileHandleForReading.readDataToEndOfFile()
-            let errorOutput = String(data: errorData, encoding: .utf8) ?? ""
-            return (process.terminationStatus, errorOutput)
-        } catch {
-            return (-1, error.localizedDescription)
-        }
+        let result = runPSQL(sql, config: config)
+        return (result.status, result.stderr)
     }
 
     private func runSQLQueryValue(_ sql: String, config: Config) -> String {
+        runSQLQueryRows(sql, config: config)
+    }
+
+    private func runPSQL(_ sql: String, config: Config) -> ProcessOutput {
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/opt/homebrew/bin/psql")
-        if !FileManager.default.fileExists(atPath: "/opt/homebrew/bin/psql") {
-            process.executableURL = URL(fileURLWithPath: "/usr/bin/psql")
-        }
-
-        process.arguments = [
-            "-h", config.host,
-            "-p", config.port,
-            "-d", config.database,
-            "-U", config.user,
-            "--set", "connect_timeout=5",
-            "--set", "statement_timeout=8000",
-            "-tAc", sql
-        ]
-
+        let candidates = ["/opt/homebrew/bin/psql", "/opt/homebrew/opt/postgresql@18/bin/psql",
+                          "/usr/local/bin/psql", "/usr/local/opt/postgresql@18/bin/psql", "/usr/bin/psql"]
+        let executable = candidates.first { FileManager.default.isExecutableFile(atPath: $0) } ?? "/usr/bin/psql"
+        process.executableURL = URL(fileURLWithPath: executable)
+        process.arguments = ["-h", config.host, "-p", config.port, "-d", config.database, "-U", config.user,
+                             "-X", "-w", "-v", "ON_ERROR_STOP=1", "-tA", "-F", "|", "-c", sql]
         var env = ProcessInfo.processInfo.environment
-        if let password = config.password {
-            env["PGPASSWORD"] = password
-        }
+        env["PGCONNECT_TIMEOUT"] = "5"
+        env["PGOPTIONS"] = (env["PGOPTIONS"] ?? "") + " -c statement_timeout=8000 -c standard_conforming_strings=on"
+        if let password = config.password { env["PGPASSWORD"] = password }
         process.environment = env
-
-        let stdout = Pipe()
-        process.standardOutput = stdout
-        process.standardError = Pipe()
-
-        do {
-            try process.run()
-            guard process.waitUntilExit(timeout: 20) else {
-                return ""
-            }
-            let data = stdout.fileHandleForReading.readDataToEndOfFile()
-            return (String(data: data, encoding: .utf8) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        } catch {
-            return ""
-        }
+        do { return try process.runCapturingOutput(timeout: 20) }
+        catch { return ProcessOutput(status: -1, stdout: "", stderr: error.localizedDescription) }
     }
 
     private func escapeSQL(_ value: String) -> String {
         value.replacingOccurrences(of: "'", with: "''")
-    }
-
-    private func escapeJSON(_ value: String) -> String {
-        value
-            .replacingOccurrences(of: "\\", with: "\\\\")
-            .replacingOccurrences(of: "\"", with: "\\\"")
     }
 
     private func sqlString(_ value: String) -> String {
@@ -378,12 +314,8 @@ final class DBManager {
             return "NULL"
         }
 
-        let jsonBody = metadata
-            .map { key, value in "\"\(escapeJSON(key))\":\"\(escapeJSON(value))\"" }
-            .sorted()
-            .joined(separator: ",")
-
-        let json = "{\(jsonBody)}"
+        guard let data = try? JSONSerialization.data(withJSONObject: metadata, options: [.sortedKeys]),
+              let json = String(data: data, encoding: .utf8) else { return "NULL" }
         return "'\(escapeSQL(json))'::jsonb"
     }
 }

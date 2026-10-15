@@ -135,7 +135,7 @@ struct StatsView: View {
             // the selected segment (bold label), which resized the whole panel
             // when switching Day/Week/Year/Lifetime. 260 = sidebar 300 − 2×20.
             .frame(width: 260)
-            .onChange(of: range) { _ in Task { await refresh() } }
+            .onChange(of: range) { Task { await refresh() } }
 
             VStack(spacing: 0) {
                 statRow("Talk time", value: formatDuration(summary.talkSecs))

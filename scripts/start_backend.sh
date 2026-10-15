@@ -11,10 +11,10 @@ if [[ -d "$SCRIPT_DIR/../Resources/backend" ]]; then
 else
   BACKEND_DIR="$(cd "$SCRIPT_DIR/../backend" && pwd)"
 fi
-VENV_DIR="$BACKEND_DIR/venv"
+BUNDLED_VENV_DIR="$BACKEND_DIR/venv"
 REQ_FILE="$BACKEND_DIR/requirements.txt"
-REQ_HASH_FILE="$VENV_DIR/.req_hash"
-PID_DIR="$HOME/Library/Application Support/Jarvis"
+PID_DIR="${JARVIS_DATA_DIR:-$HOME/Library/Application Support/Jarvis}"
+case "$PID_DIR" in "~/"*) PID_DIR="$HOME/${PID_DIR:2}" ;; esac
 PID_FILE="$PID_DIR/backend.pid"
 LOG_DIR="$PID_DIR/logs"
 LOG_FILE="$LOG_DIR/backend.log"
@@ -24,13 +24,8 @@ PORT="8000"
 
 mkdir -p "$PID_DIR" "$LOG_DIR"
 
-# Load bundled/repo .env so uvicorn inherits PG*/Spotify keys even when the
-# app was launched from Finder (no shell env). Order: bundle copy, then repo.
-if [[ -f "$BACKEND_DIR/.env" ]]; then
-  set -a
-  source "$BACKEND_DIR/.env"
-  set +a
-fi
+# Configuration is parsed by runtime_config.py; never source app-written data.
+export JARVIS_DATA_DIR="$PID_DIR"
 
 is_pid_running() {
   local pid="$1"
@@ -73,6 +68,16 @@ pick_python() {
   done
   echo "/usr/bin/python3"
 }
+
+# A packaged venv is read-only at runtime. Changed/missing dependencies use
+# an Application Support venv instead of modifying the signed app bundle.
+REQ_HASH="$(shasum -a 256 "$REQ_FILE" | awk '{print $1}')"
+if [[ -x "$BUNDLED_VENV_DIR/bin/python" && -f "$BUNDLED_VENV_DIR/.req_hash" && "$(cat "$BUNDLED_VENV_DIR/.req_hash")" == "$REQ_HASH" ]]; then
+  VENV_DIR="$BUNDLED_VENV_DIR"
+else
+  VENV_DIR="$PID_DIR/backend-venv"
+fi
+REQ_HASH_FILE="$VENV_DIR/.req_hash"
 
 if [[ ! -x "$VENV_DIR/bin/python" ]]; then
   "$(pick_python)" -m venv "$VENV_DIR"

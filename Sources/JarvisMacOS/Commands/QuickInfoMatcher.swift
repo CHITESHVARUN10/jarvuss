@@ -21,14 +21,14 @@ enum QuickInfoKind {
 /// every caller normalizes the same way before matching.
 enum QuickInfoMatcher {
     static func match(_ lower: String) -> QuickInfoKind? {
-        // Priority is significant: "what day is today" appears in both the
-        // date and day tables — date wins, matching historical behavior.
-        if containsAny(lower, timePatterns) { return .time }
-        if containsAny(lower, datePatterns) { return .date }
-        if containsAny(lower, dayPatterns) { return .day }
-        if containsAny(lower, monthPatterns) { return .month }
-        if containsAny(lower, yearPatterns) { return .year }
-        return nil
+        switch coreMatchQuickInfo(lower: lower) {
+        case .currentTime: return .time
+        case .currentDate: return .date
+        case .currentDay: return .day
+        case .currentMonth: return .month
+        case .currentYear: return .year
+        default: return nil
+        }
     }
 
     /// True when the input looks multi-clause — quick-info fast-paths must
@@ -49,36 +49,4 @@ enum QuickInfoMatcher {
         }
     }
 
-    private static func containsAny(_ lower: String, _ patterns: [String]) -> Bool {
-        patterns.contains(where: { lower.contains($0) })
-    }
-
-    private static let timePatterns = [
-        "what is the time", "what's the time", "what time is it",
-        "tell me the time", "current time", "time right now",
-        "what is time", "whats the time", "show me the time",
-        "the time", "time please",
-    ]
-
-    private static let datePatterns = [
-        "what is today's date", "what is the date", "today's date",
-        "what day is today", "what is today", "what date is it",
-        "tell me the date", "current date", "todays date",
-        "what's today's date", "whats todays date", "show me the date",
-        "date today", "date right now",
-    ]
-
-    private static let dayPatterns = [
-        "what day is it", "what day is this", "which day is it",
-        "which day is today", "tell me the day", "what day",
-    ]
-
-    private static let monthPatterns = [
-        "what month is it", "what month", "which month",
-        "tell me the month", "current month",
-    ]
-
-    private static let yearPatterns = [
-        "what year is it", "what year", "current year", "which year",
-    ]
 }

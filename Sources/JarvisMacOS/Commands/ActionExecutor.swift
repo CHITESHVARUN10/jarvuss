@@ -9,6 +9,18 @@ struct ActionResult {
     let message: String
 }
 
+enum CommandOutcome: String {
+    case success, partialFailure, failure, cancelled
+
+    static func evaluate(_ results: [ActionResult], expectedCount: Int,
+                         cancelled: Bool) -> CommandOutcome {
+        if cancelled { return .cancelled }
+        guard expectedCount > 0, results.count == expectedCount else { return .failure }
+        if results.allSatisfy(\.success) { return .success }
+        return results.contains(where: \.success) ? .partialFailure : .failure
+    }
+}
+
 // MARK: - ActionExecutor
 
 /// Executes a plan (array of PlannedActions) sequentially.
@@ -17,7 +29,8 @@ final class ActionExecutor {
 
     private let appController    = AppController()
     private let fileManager      = JarvisFileManager()
-    private let ollamaClient: LLMGenerating = OllamaClient(model: JarvisModel.name)
+    private let ollamaClient: LLMGenerating
+    private let actionRunner: ((PlannedAction) async -> ActionResult)?
     private let volumeController = VolumeController()
     private let displayController = DisplayController()
 
@@ -28,23 +41,29 @@ final class ActionExecutor {
         }
     }
 
-    // ── Delays between steps so macOS has time to open apps ─────────
-    private let interStepDelay: TimeInterval = 0.8
+    init(ollamaClient: LLMGenerating = OllamaClient(),
+         actionRunner: ((PlannedAction) async -> ActionResult)? = nil) {
+        self.ollamaClient = ollamaClient
+        self.actionRunner = actionRunner
+    }
 
     // MARK: - Public entry point
 
     /// Execute the plan and return per-step results.
-    func execute(
+    @discardableResult func execute(
         plan: [PlannedAction],
-        onStepStart: @escaping (PlannedAction) -> Void,
-        onStepComplete: @escaping (ActionResult) -> Void
-    ) async {
+        onStepStart: @escaping @MainActor (PlannedAction) -> Void,
+        onStepComplete: @escaping @MainActor (ActionResult) -> Void
+    ) async -> [ActionResult] {
+        var results: [ActionResult] = []
         for action in plan {
+            guard !Task.isCancelled else { break }
             switch SafetyGuard.validate(action: action) {
             case .blocked(let reason):
                 let result = ActionResult(action: action, success: false,
                                           message: "⛔ Blocked — \(reason)")
-                onStepComplete(result)
+                results.append(result)
+                await onStepComplete(result)
                 continue
 
             case .installPreview(let cmd, let source):
@@ -53,21 +72,27 @@ final class ActionExecutor {
                     message: "🔒 Install Preview: '\(cmd)'. Source: \(source). " +
                              "Requires face auth + confirmation (not yet active)."
                 )
-                onStepComplete(result)
+                results.append(result)
+                await onStepComplete(result)
                 continue
 
             case .allowed:
                 break
             }
 
-            onStepStart(action)
-            let result = await runSingleAction(action)
-            onStepComplete(result)
-
-            if result.success && plan.count > 1 {
-                try? await Task.sleep(nanoseconds: UInt64(interStepDelay * 1_000_000_000))
+            await onStepStart(action)
+            guard !Task.isCancelled else { break }
+            let result: ActionResult
+            if let actionRunner {
+                result = await actionRunner(action)
+            } else {
+                result = await runSingleAction(action)
             }
+            guard !Task.isCancelled else { break }
+            results.append(result)
+            await onStepComplete(result)
         }
+        return results
     }
 
     // MARK: - Single action runner
@@ -76,7 +101,7 @@ final class ActionExecutor {
         switch action {
 
         case .openApp(let name):
-            let result = appController.openResult(appName: name)
+            let result = await appController.openAndWaitForLaunch(appName: name)
             return ActionResult(action: action, success: result.success,
                                 message: result.message)
 
@@ -259,31 +284,10 @@ final class ActionExecutor {
         process.executableURL = URL(fileURLWithPath: "/bin/zsh")
         process.arguments = ["-lc", command]
 
-        let outPipe = Pipe()
-        let errPipe = Pipe()
-        process.standardOutput = outPipe
-        process.standardError = errPipe
-
         do {
-            try process.run()
-            // Deadline: a shell command that waits on input/network must not
-            // hold the action pipeline (and the "Working" state) forever.
-            let exited = process.waitUntilExit(timeout: 30)
-            if !exited {
-                return (false, "Command timed out after 30 s")
-            }
-
-            let outData = outPipe.fileHandleForReading.readDataToEndOfFile()
-            let errData = errPipe.fileHandleForReading.readDataToEndOfFile()
-            let stdout = String(data: outData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
-            let stderr = String(data: errData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
-
-            if process.terminationStatus == 0 {
-                return (true, stdout)
-            }
-
-            let merged = [stdout, stderr].compactMap { $0 }.joined(separator: " ")
-            return (false, merged.isEmpty ? nil : merged)
+            let result = try process.runCapturingOutput(timeout: 30)
+            let merged = [result.stdout, result.stderr].filter { !$0.isEmpty }.joined(separator: " ")
+            return (result.status == 0, merged.isEmpty ? nil : merged)
         } catch {
             return (false, error.localizedDescription)
         }

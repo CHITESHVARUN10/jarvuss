@@ -1,6 +1,6 @@
 import Foundation
 
-/// First routing attempt in `ActionPlanner.plan(from:)`.
+/// Learned routing for ambiguous/compound input after local fast paths.
 ///
 /// Sends the cleaned utterance to the backend's learned intent model
 /// (fine-tuned t5-small). On success it returns the mapped plan and logs a
@@ -22,30 +22,16 @@ final class IntentModelRouter {
     }
 
     func route(_ text: String, requestID: UUID) async -> [PlannedAction]? {
+        guard !Task.isCancelled else { return nil }
         guard isEnabled, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return nil
         }
 
-        // Migration cut-over: Rust owns the HTTP call, the confidence gate,
-        // the strict mapping, and the hit/miss lines in the RL corpus.
-        if JarvisFlags.useRustPipeline {
-            let outcome = await RustPipeline.runBlocking {
-                coreRouteIntent(text: text, requestId: requestID.uuidString, baseUrl: nil)
-            }
-            guard outcome.hit else {
-                NSLog("[IntentModel] miss (rust, %@): '%@'", outcome.reason ?? "unknown", text)
-                return nil
-            }
-            let actions = RustPipeline.map(outcome.actions)
-            NSLog("[IntentModel] hit (rust, %.2f, %dms): %@",
-                  outcome.confidence, outcome.totalMs,
-                  actions.map(\.description).joined(separator: ", "))
-            return actions
-        }
-
+        // URLSession owns cancellable transport in both pipeline modes.
         let start = Date()
         do {
             let response = try await client.parse(text: text)
+            try Task.checkCancellation()
             let elapsedMs = Int(Date().timeIntervalSince(start) * 1000)
 
             guard response.parseOK, !response.actions.isEmpty else {
@@ -78,6 +64,7 @@ final class IntentModelRouter {
                   response.confidence, elapsedMs, actions.map(\.description).joined(separator: ", "))
             return actions
         } catch {
+            guard !Task.isCancelled else { return nil }
             let elapsedMs = Int(Date().timeIntervalSince(start) * 1000)
             logMiss(text: text, requestID: requestID, reason: "unavailable",
                     raw: String(describing: error), confidence: 0, elapsedMs: elapsedMs)

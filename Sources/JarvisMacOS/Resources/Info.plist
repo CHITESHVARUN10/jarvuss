@@ -23,7 +23,7 @@
     <key>ATSApplicationFontsPath</key>
     <string>Fonts</string>
     <key>LSMinimumSystemVersion</key>
-    <string>13.0</string>
+    <string>26.0</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>Jarvis needs microphone access to detect speech and execute voice commands.</string>
     <key>NSAppleEventsUsageDescription</key>

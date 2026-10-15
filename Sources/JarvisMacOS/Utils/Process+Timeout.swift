@@ -12,7 +12,7 @@ extension Process {
     func waitUntilExit(timeout: TimeInterval) -> Bool {
         let deadline = Date().addingTimeInterval(timeout)
         while isRunning {
-            if Date() >= deadline {
+            if Task<Never, Never>.isCancelled || Date() >= deadline {
                 terminate()
                 // Give termination a moment to land; SIGKILL if it refuses.
                 let killDeadline = Date().addingTimeInterval(2)

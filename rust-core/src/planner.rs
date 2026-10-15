@@ -158,10 +158,10 @@ fn fast_path_route(cleaned: &str) -> Option<Vec<PlannedAction>> {
         return Some(vec![search]);
     }
 
-    if is_quick_info(&lower) {
-        return Some(vec![PlannedAction::AiQuery {
-            query: cleaned.to_string(),
-        }]);
+    if !lower.contains(" and ") && !lower.contains(" then ") {
+        if let Some(info) = parse_info_command(&lower) {
+            return Some(vec![PlannedAction::SystemInfo { info }]);
+        }
     }
 
     if let Some(vol) = fast_single_volume(&lower) {
@@ -276,26 +276,6 @@ fn trim_search_query(raw: &str) -> String {
         .to_string()
 }
 
-fn is_quick_info(lower: &str) -> bool {
-    const TERMS: &[&str] = &[
-        "what time",
-        "current time",
-        "time right now",
-        "what day",
-        "what date",
-        "today's date",
-        "todays date",
-        "current date",
-        "what month",
-        "what year",
-        "system volume",
-        "current volume",
-        "wifi",
-        "bluetooth",
-        "battery",
-    ];
-    TERMS.iter().any(|t| lower.contains(t))
-}
 
 fn fast_single_volume(lower: &str) -> Option<PlannedAction> {
     if matches!(lower, "mute" | "mute the sound" | "sound off") {
@@ -518,9 +498,10 @@ fn parse_info_command(lower: &str) -> Option<SystemInfoAction> {
     if trimmed.is_empty() {
         return None;
     }
-    if matches!(trimmed, "what time is it" | "current time" | "time now") {
-        return Some(SystemInfoAction::CurrentTime);
+    if let Some(info) = crate::quick_info::match_query(trimmed) {
+        return Some(info);
     }
+    if trimmed == "time now" { return Some(SystemInfoAction::CurrentTime); }
     if matches!(
         trimmed,
         "what is today's date"
@@ -1563,16 +1544,14 @@ mod tests {
 
     #[test]
     fn plans_info() {
-        // Swift parity: the fast-path quick-info gate intercepts these before
-        // the info rules, so they come back as AI queries (answered locally
-        // downstream by the app).
+        // Informational reads must never be sent to an LLM.
         assert!(matches!(
             plan("what time is it")[0],
-            PlannedAction::AiQuery { .. }
+            PlannedAction::SystemInfo { .. }
         ));
         assert!(matches!(
             plan("battery status")[0],
-            PlannedAction::AiQuery { .. }
+            PlannedAction::SystemInfo { .. }
         ));
         // "volume level" is not in the quick-info list → info rule.
         assert!(matches!(

@@ -119,9 +119,7 @@ final class BackendServiceManager {
     }
 
     private func pidFilePath() -> String? {
-        let support = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Application Support/Jarvis", isDirectory: true)
-        return support.appendingPathComponent("backend.pid").path
+        RuntimeConfiguration.dataDirectory.appendingPathComponent("backend.pid").path
     }
 
     private func runStartScript(scriptPath: String) -> (success: Bool, message: String) {
@@ -129,26 +127,10 @@ final class BackendServiceManager {
         process.executableURL = URL(fileURLWithPath: "/bin/zsh")
         process.arguments = [scriptPath]
 
-        let outPipe = Pipe()
-        let errPipe = Pipe()
-        process.standardOutput = outPipe
-        process.standardError = errPipe
-
         do {
-            try process.run()
-            // Backend boot can take a while (venv + model probe); 60 s
-            // deadline so a wedged start script can't park the caller.
-            guard process.waitUntilExit(timeout: 60) else {
-                return (false, "start script timed out after 60 s")
-            }
-
-            let output = String(data: outPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-            let error  = String(data: errPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-            let merged = [output, error]
-                .joined(separator: "\n")
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-
-            return (process.terminationStatus == 0, merged.isEmpty ? "no output" : merged)
+            let result = try process.runCapturingOutput(timeout: 60)
+            let merged = [result.stdout, result.stderr].filter { !$0.isEmpty }.joined(separator: "\n")
+            return (result.status == 0, merged.isEmpty ? "no output" : merged)
         } catch {
             return (false, error.localizedDescription)
         }

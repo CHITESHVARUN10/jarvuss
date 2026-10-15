@@ -331,6 +331,7 @@ def harvest(log_path: str, schema: dict) -> tuple[list[dict], dict]:
     executed: dict[str, bool] = {}         # request_id -> success
     texts: dict[str, str] = {}
     hits: list[dict] = []
+    steps: dict[str, list[bool]] = {}
     stats = {"lines": 0, "plans": 0, "unmappable": 0, "hits": 0, "misses": 0}
 
     with open(log_path, encoding="utf-8") as handle:
@@ -358,7 +359,7 @@ def harvest(log_path: str, schema: dict) -> tuple[list[dict], dict]:
                 if "e2e-" in text.lower():
                     continue
                 if text and isinstance(actions, list) and schema_score(actions, schema) > 0:
-                    hits.append({"text": text, "intents": actions})
+                    hits.append({"request_id": request_id, "text": text, "intents": actions})
 
             if event == "plan" and request_id:
                 texts[request_id] = text
@@ -375,7 +376,16 @@ def harvest(log_path: str, schema: dict) -> tuple[list[dict], dict]:
                     stats["plans"] += 1
 
             if event == "execute_command" and request_id:
-                executed[request_id] = bool(row.get("success"))
+                executed[request_id] = (row.get("success") is True
+                                        and row.get("outcome", "success") == "success")
+            if event == "execute_step" and request_id:
+                steps.setdefault(request_id, []).append(row.get("success") is True)
+
+    def verified(request_id, intents) -> bool:
+        # No outcome means interrupted/incomplete work, never a gold label.
+        completed = steps.get(request_id, [])
+        return (executed.get(request_id) is True and len(completed) == len(intents)
+                and all(completed))
 
     pairs: list[dict] = []
     seen: set[str] = set()
@@ -383,6 +393,11 @@ def harvest(log_path: str, schema: dict) -> tuple[list[dict], dict]:
     # Verified hits — the model got these right, they ran, and the target does
     # not encode a known bad behaviour or contradict the utterance.
     for row in hits:
+        request_id = row["request_id"]
+        final_plan = plans.get(request_id)
+        if (not verified(request_id, row["intents"]) or final_plan is None
+                or canonical(final_plan) != canonical(row["intents"])):
+            continue
         key = row["text"]
         if key in seen or not target_is_clean(row["intents"]) or not is_consistent(key, row["intents"]):
             stats["rejected"] = stats.get("rejected", 0) + 1
@@ -402,7 +417,7 @@ def harvest(log_path: str, schema: dict) -> tuple[list[dict], dict]:
             continue
         if "e2e-" in text.lower():
             continue          # synthetic system-test traffic, not real usage
-        if executed.get(request_id) is False:
+        if not verified(request_id, intents):
             continue          # it did not work; not a gold target
         if not target_is_clean(intents) or not is_consistent(text, intents):
             stats["rejected"] = stats.get("rejected", 0) + 1

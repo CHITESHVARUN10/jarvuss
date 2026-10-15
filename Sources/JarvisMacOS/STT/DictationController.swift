@@ -2,7 +2,7 @@ import AppKit
 import Combine
 import SwiftUI
 
-/// Dictation state + pill panel management (macOS 13 compatible).
+/// Dictation state + pill panel management (macOS 26+).
 ///
 /// Mirrors the proven AgentTalk HUD behavior:
 /// ⌘⇧D toggles Recording → Transcribing → transcript card (Copy/Close),
@@ -72,6 +72,16 @@ final class DictationController: ObservableObject {
     private var insertLatencyStart: Date?
     private var insertAutoDismiss: DispatchWorkItem?
     private var hardCapDismiss: DispatchWorkItem?
+    private let formattingTask = LatestResultTask<DictationPolisher.PolishResult>()
+    private var warmupTask: Task<Void, Never>?
+
+    private func invalidateFormatting() {
+        formattingTask.invalidate()
+        warmupTask?.cancel()
+        warmupTask = nil
+        insertAutoDismiss?.cancel()
+        hardCapDismiss?.cancel()
+    }
 
     /// Diagnostics timeline (only populated when DictationDevLog is on):
     /// stop stamp for the STT latency, previous final for the segment wall
@@ -333,6 +343,7 @@ final class DictationController: ObservableObject {
     /// Starts an action recording session. The caller must hold action
     /// ownership (via claimForAction, or the router's pending-start path).
     func startActionRecording() {
+        invalidateFormatting()
         mode = .action
         startDictation()
     }
@@ -345,6 +356,7 @@ final class DictationController: ObservableObject {
     }
 
     private func startDictation() {
+        invalidateFormatting()
         // Clear the card's state BEFORE the panel exists: showPanel() renders
         // whatever the last phase/transcript was, so a fresh run that skipped
         // this could flash — or, if start_recording then failed, strand — the
@@ -372,7 +384,7 @@ final class DictationController: ObservableObject {
             // messy dictation of a session wins its race. Utility priority;
             // keep-alive unloads it again after 60 s if the dictation ends up
             // short and clean (rules-only).
-            DictationPolisher.warmUp()
+            warmupTask = DictationPolisher.warmUp()
             // Optimistic mirror: the second press must see .Recording even
             // before the Rust callback round-trips, or it lands on
             // `ignored (core busy, owner: pill)` instead of the stop arm.
@@ -462,6 +474,7 @@ final class DictationController: ObservableObject {
     /// "List: …" directive itself), and what lands at the cursor is what the
     /// card shows — nothing diverges.
     func receiveDictationTranscript(_ raw: String, speechSeconds: Double) {
+        invalidateFormatting()
         let now = Date()
         insertLatencyStart = now
         insertNotice = ""
@@ -511,7 +524,6 @@ final class DictationController: ObservableObject {
         partialTranscript = ""
         phase = .TranscriptReady
         showPanel()
-        scheduleHardCapDismiss()
 
         if TranscriptFormatter.shouldUseLLM(rules, directive: listDirective) {
             formattingInProgress = true
@@ -522,9 +534,9 @@ final class DictationController: ObservableObject {
             // main-thread territory; a background-task polish that jumps
             // straight back to mutating UI crashed (AXIsProcessTrusted*
             // through objc_msgSend on a nil on a bare thread).
-            Task { @MainActor [weak self] in
-                let result = await DictationPolisher.polish(rulesOutput: rules,
-                                                            directive: listDirective)
+            formattingTask.start(operation: {
+                await DictationPolisher.polish(rulesOutput: rules, directive: listDirective)
+            }, completion: { [weak self] result in
                 guard let self, STTRouter.shared.owner == .pill else { return }
                 self.formattingInProgress = false
                 self.transcript = result.text
@@ -533,12 +545,13 @@ final class DictationController: ObservableObject {
                 self.writeDevLog(finalText: result.text,
                                  polishMs: result.elapsedMs,
                                  outcome: result.outcome.rawValue)
-            }
+            })
         } else {
             persistLastDictation(polished: rules.text)
             insertFormattedText()
             writeDevLog(finalText: rules.text, polishMs: 0, outcome: "rules_not_needed")
         }
+        scheduleHardCapDismiss()
     }
 
     /// Paste the final text at the cursor. Insert failure is never silent:
@@ -662,8 +675,10 @@ final class DictationController: ObservableObject {
     /// away; it lingers long enough for Copy/Undo, then leaves on its own.
     private func scheduleInsertAutoDismiss() {
         insertAutoDismiss?.cancel()
+        let generation = formattingTask.generation
         let work = DispatchWorkItem { [weak self] in
-            guard let self, self.phase == .TranscriptReady else { return }
+            guard let self, self.formattingTask.generation == generation,
+                  self.phase == .TranscriptReady else { return }
             self.dismissTranscript()
         }
         insertAutoDismiss = work
@@ -676,8 +691,10 @@ final class DictationController: ObservableObject {
     /// card never lingers forever.
     private func scheduleHardCapDismiss() {
         hardCapDismiss?.cancel()
+        let generation = formattingTask.generation
         let work = DispatchWorkItem { [weak self] in
-            guard let self, self.phase == .TranscriptReady else { return }
+            guard let self, self.formattingTask.generation == generation,
+                  self.phase == .TranscriptReady else { return }
             NSLog("[Jarvis][Dictate] card auto-closed (10 s cap)")
             self.dismissTranscript()
         }
@@ -740,8 +757,10 @@ final class DictationController: ObservableObject {
 
         copied = true
         StatsRecorder.shared.recordCopy(chars: transcript.count)
+        let generation = formattingTask.generation
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
-            self?.dismissTranscript()
+            guard let self, self.formattingTask.generation == generation else { return }
+            self.dismissTranscript()
         }
     }
 
@@ -750,6 +769,8 @@ final class DictationController: ObservableObject {
     }
 
     func dismissTranscript() {
+        invalidateFormatting()
+        formattingInProgress = false
         dismiss_transcript()
         insertAutoDismiss?.cancel()
         insertAutoDismiss = nil

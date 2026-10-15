@@ -114,8 +114,8 @@ struct MicOrbView: View {
         .onHover { hovering = $0 }
         .onTapGesture(perform: onTap)
         .onAppear { updateAnimations() }
-        .onChange(of: assistantState) { _ in updateAnimations() }
-        .onChange(of: micActive) { _ in updateAnimations() }
+        .onChange(of: assistantState) { updateAnimations() }
+        .onChange(of: micActive) { updateAnimations() }
     }
 
     private var glowColor: Color {

@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "JarvisMacOS",
     platforms: [
-        .macOS(.v13)
+        .macOS("26.0")
     ],
     products: [
         .executable(name: "jarvis", targets: ["JarvisMacOS"])
@@ -45,7 +45,8 @@ let package = Package(
         .testTarget(
             name: "JarvisMacOSTests",
             dependencies: ["JarvisMacOS"],
-            path: "Tests/JarvisMacOSTests"
+            path: "Tests/JarvisMacOSTests",
+            resources: [.copy("Fixtures")]
         ),
         // Prebuilt Rust STT core (whisper.cpp + Metal). Rebuild via
         // ./scripts/build_stt.sh [--release] — never checked in.

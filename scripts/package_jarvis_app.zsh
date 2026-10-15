@@ -1,5 +1,6 @@
 #!/bin/zsh
 set -euo pipefail
+export MACOSX_DEPLOYMENT_TARGET=26.0
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 BUILD_DIR="$ROOT_DIR/.build/debug"
@@ -13,14 +14,6 @@ BACKEND_DEST="$APP_RESOURCES/backend"
 USE_PYINSTALLER="${JARVIS_USE_PYINSTALLER:-0}"
 
 cd "$ROOT_DIR"
-
-# Load repo .env (PG*, Spotify) so the launched app inherits them.
-# (Finder-launched apps don't read shell dotfiles; `open` inherits this env.)
-if [[ -f "$ROOT_DIR/.env" ]]; then
-  set -a
-  source "$ROOT_DIR/.env"
-  set +a
-fi
 
 # ── Rust STT core → STTCore.xcframework + Swift bridge (required by swift build) ──
 ./scripts/build_stt.sh --release
@@ -45,17 +38,25 @@ chmod +x "$APP_MACOS/start_backend.sh"
 
 cp "$BACKEND_SRC"/*.py "$BACKEND_DEST/"
 cp "$BACKEND_SRC/requirements.txt" "$BACKEND_DEST/requirements.txt"
-# The Swift app + Python backend both fall back to a bundled .env when the
-# launch environment lacks PG*/Spotify keys (Finder/`open` doesn't inherit
-# shell exports). The backend resolves PROJECT_ROOT/.env in dev and the
-# bundled copy in the app; DBManager reads the same file.
-if [[ -f "$ROOT_DIR/.env" ]]; then
-  cp "$ROOT_DIR/.env" "$BACKEND_DEST/.env"
+# Migrate local development configuration without embedding credentials or
+# biometrics in the signed application. Existing runtime settings win.
+for ENV_SOURCE in "$BACKEND_DEST/.env" "$ROOT_DIR/.env"; do
+  if [[ -f "$ENV_SOURCE" ]]; then
+    /usr/bin/python3 "$BACKEND_SRC/runtime_config.py" --import-env "$ENV_SOURCE"
+  fi
+done
+RUNTIME_DATA_DIR="${JARVIS_DATA_DIR:-$HOME/Library/Application Support/Jarvis}"
+case "$RUNTIME_DATA_DIR" in "~/"*) RUNTIME_DATA_DIR="$HOME/${RUNTIME_DATA_DIR:2}" ;; esac
+mkdir -p "$RUNTIME_DATA_DIR"
+if [[ ! -f "$RUNTIME_DATA_DIR/embeddings.npy" ]]; then
+  if [[ -f "$BACKEND_DEST/embeddings.npy" ]]; then
+    cp "$BACKEND_DEST/embeddings.npy" "$RUNTIME_DATA_DIR/embeddings.npy"
+  elif [[ -f "$BACKEND_SRC/embeddings.npy" ]]; then
+    cp "$BACKEND_SRC/embeddings.npy" "$RUNTIME_DATA_DIR/embeddings.npy"
+  fi
 fi
-
-if [[ -f "$BACKEND_SRC/embeddings.npy" ]]; then
-  cp "$BACKEND_SRC/embeddings.npy" "$BACKEND_DEST/embeddings.npy"
-fi
+# Remove legacy generated bundle copies after migration.
+rm -f "$BACKEND_DEST/.env" "$BACKEND_DEST/embeddings.npy"
 
 # ── Learned intent model (fine-tuned t5-small, int8 ONNX, ~196 MB) ────────
 # Served by voice_auth_service's /parse_intent; the backend resolves it

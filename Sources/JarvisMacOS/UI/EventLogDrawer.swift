@@ -34,7 +34,7 @@ struct EventLogDrawer: View {
                         .padding(.horizontal, 18)
                         .padding(.vertical, 12)
                     }
-                    .onChange(of: appState.logs.count) { _ in
+                    .onChange(of: appState.logs.count) {
                         if let last = appState.logs.indices.last {
                             withAnimation {
                                 proxy.scrollTo(last, anchor: .bottom)

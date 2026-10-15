@@ -5,9 +5,9 @@ import Foundation
 enum JarvisFlags {
     private static let rustPipelineKey = "jarvis.rust.pipeline"
 
-    /// When ON, the command pipeline delegates rule decisions (validator,
-    /// safety, app aliases, fast-path + rules) to the Rust core. Default OFF:
-    /// Swift stays the source of truth until shadow parity is verified.
+    /// When ON, routing/validation delegate to Rust. Safety, priority and
+    /// quick-info patterns already share the Rust policy in BOTH modes.
+    /// Default OFF keeps the remaining Swift routing until parity is verified.
     /// `JARVIS_RUST_PIPELINE=1|0` overrides for tests/A-B runs.
     static var useRustPipeline: Bool {
         get {
@@ -70,6 +70,9 @@ enum RustPipeline {
         switch action {
         case .currentTime:       return .currentTime
         case .currentDate:       return .currentDate
+        case .currentDay:        return .currentDay
+        case .currentMonth:      return .currentMonth
+        case .currentYear:       return .currentYear
         case .wifiStatus:        return .wifiStatus
         case .bluetoothDevices:  return .bluetoothDevices
         case .batteryStatus:     return .batteryStatus
