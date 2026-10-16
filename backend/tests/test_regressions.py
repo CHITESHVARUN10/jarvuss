@@ -12,6 +12,7 @@ import json
 import os
 import sys
 import tempfile
+import subprocess
 import threading
 import types
 import unittest
@@ -41,6 +42,26 @@ from runtime_config import RuntimeConfig, SECRET_KEYS, read_env, Keychain
 spec = importlib.util.spec_from_file_location("post_train_review_tests", ROOT / "training/post_train.py")
 training = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(training)
+
+
+class LazyVoiceImportTests(unittest.TestCase):
+    def test_health_import_does_not_import_voice_dependencies(self):
+        script = """
+import builtins
+original_import = builtins.__import__
+def guarded_import(name, *args, **kwargs):
+    if name.split('.')[0] in {'torch', 'resemblyzer'}:
+        raise AssertionError('Voice dependency imported before a voice request: ' + name)
+    return original_import(name, *args, **kwargs)
+builtins.__import__ = guarded_import
+import voice_auth_service as service
+assert service.encoder is None
+assert service._voice_stack is None
+assert service.health()['status'] == 'ok'
+"""
+        result = subprocess.run([sys.executable, "-B", "-c", script], cwd=ROOT / "backend",
+                                capture_output=True, text=True, timeout=15)
+        self.assertEqual(result.returncode, 0, result.stderr)
 
 
 class MemoryKeychain:
@@ -90,6 +111,15 @@ class ConfigurationTests(unittest.TestCase):
             self.assertEqual(values["PGHOST"], "new-host")
             self.assertEqual(values["PGPASSWORD"], password)
             self.assertEqual(values["SPOTIFY_REFRESH_TOKEN"], "refresh-secret")
+
+    def test_running_backend_reads_secrets_changed_by_swift_setup(self):
+        with tempfile.TemporaryDirectory() as directory:
+            keychain = MemoryKeychain()
+            store = RuntimeConfig(Path(directory), keychain)
+            store.save({"PGPASSWORD": "old"})
+            self.assertEqual(store.load({})["PGPASSWORD"], "old")
+            keychain.set("PGPASSWORD", "updated-by-setup")
+            self.assertEqual(store.load({})["PGPASSWORD"], "updated-by-setup")
 
     def test_env_is_read_as_literal_data(self):
         with tempfile.TemporaryDirectory() as directory:

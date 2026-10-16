@@ -34,6 +34,10 @@ final class IntentModelClient {
     }
 
     func parse(text: String) async throws -> ParsedResponse {
+        if baseURL.host == "127.0.0.1", baseURL.port == 8000 {
+            guard await BackendServiceManager.ensureRunningForFeature() else { throw ClientError.unavailable }
+        }
+        try Task.checkCancellation()
         var request = URLRequest(url: baseURL.appendingPathComponent("parse_intent"))
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")

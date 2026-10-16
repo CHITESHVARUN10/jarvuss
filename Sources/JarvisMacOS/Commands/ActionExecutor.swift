@@ -451,6 +451,16 @@ final class ActionExecutor {
     private func executeMediaAction(_ action: MediaAction) async -> ActionResult {
         emitSpotify("[Media] Routing to backend Spotify: \(action.description)")
 
+        // Spotify lives in the Python backend — start it on demand (Automatic
+        // mode) or surface why it can't run (Off mode).
+        guard await BackendServiceManager.ensureRunningForFeature() else {
+            return ActionResult(
+                action: .mediaControl(action),
+                success: false,
+                message: "Backend is set to Off — Spotify needs it. Assistant → Behaviour → Backend."
+            )
+        }
+
         let backendResult: SpotifyBackendResult
         switch action {
         case .play:

@@ -89,6 +89,24 @@ struct SystemPane: View {
                      sub: "Offer the raw transcript on the ⌘⇧D card") {
                     JSwitch(binding: $dictation.copyOriginalEnabled)
                 }
+                JRow(title: "Card stays visible",
+                     sub: "Seconds the ⌘⇧D card lingers before closing") {
+                    Picker("", selection: $dictation.cardDismissSeconds) {
+                        Text("1 s").tag(1)
+                        Text("2 s").tag(2)
+                        Text("3 s").tag(3)
+                        Text("4 s").tag(4)
+                        Text("5 s").tag(5)
+                        Text("6 s").tag(6)
+                        Text("7 s").tag(7)
+                        Text("8 s").tag(8)
+                        Text("9 s").tag(9)
+                        Text("10 s").tag(10)
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+                    .frame(width: 78)
+                }
             }
             .padding(.top, 9)
 

@@ -3,7 +3,6 @@ import SwiftUI
 /// The new shell: rail + stage + panel, replacing the old single left panel.
 struct AppShellView: View {
     @ObservedObject var appState: AppState
-    @State private var section: RailSection = .assistant
 
     var body: some View {
         GeometryReader { proxy in
@@ -11,12 +10,12 @@ struct AppShellView: View {
             let compact = proxy.size.width < 1180
 
             HStack(spacing: 0) {
-                RailView(appState: appState, section: $section)
+                RailView(appState: appState, section: $appState.activeSection)
 
                 StageView(appState: appState, compact: compact)
                     .frame(minWidth: 420, maxWidth: .infinity)
 
-                PanelView(appState: appState, section: $section, compact: compact)
+                PanelView(appState: appState, section: $appState.activeSection, compact: compact)
             }
         }
         .background(JColor.base)

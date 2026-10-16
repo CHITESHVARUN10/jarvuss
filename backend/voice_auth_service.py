@@ -20,7 +20,6 @@ import ssl
 import numpy as np
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.responses import RedirectResponse
-from resemblyzer import VoiceEncoder, preprocess_wav
 from runtime_config import RuntimeConfig, data_directory, read_env
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -56,6 +55,18 @@ app.include_router(intent_router)
 # Load on first voice request, on the dedicated worker. Command routing and
 # health checks no longer wait for the voice model to initialize at startup.
 encoder = None
+_voice_stack = None
+
+
+def _load_voice_stack():
+    """Import resemblyzer (and transitively torch) on the first voice
+    request. A backend started only for Spotify/intent/health stays ~5x
+    smaller in RAM than one that preloads torch at import time."""
+    global _voice_stack
+    if _voice_stack is None:
+        from resemblyzer import VoiceEncoder as _VE, preprocess_wav as _pw
+        _voice_stack = (_VE, _pw)
+    return _voice_stack
 
 SPOTIFY_AUTH_URL = "https://accounts.spotify.com/authorize"
 SPOTIFY_TOKEN_URL = "https://accounts.spotify.com/api/token"
@@ -646,8 +657,9 @@ def _normalize_volume(wav: np.ndarray) -> np.ndarray:
 
 def _embedding_from_audio_bytes(content: bytes, suffix: str) -> np.ndarray:
     global encoder
+    voice_encoder_cls, preprocess_wav = _load_voice_stack()
     if encoder is None:
-        encoder = VoiceEncoder()
+        encoder = voice_encoder_cls()
     with NamedTemporaryFile(delete=True, suffix=suffix) as temp_file:
         temp_file.write(content)
         temp_file.flush()

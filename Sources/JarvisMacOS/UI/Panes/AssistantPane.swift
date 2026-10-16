@@ -16,10 +16,16 @@ struct AssistantPane: View {
             JLabel(text: "Privacy")
 
             JCard {
-                JRow(title: "Speaker verification",
-                     sub: "Every command is gated on a voice match",
+                JRow(title: "Verification — ⌘⇧A",
+                     sub: "Gate pill commands on a voice match",
                      first: true) {
                     JSwitch(binding: $appState.actionPillRequiresVerify)
+                }
+                JRow(title: "Verification — live mode",
+                     sub: appState.voiceModeRequiresVerify
+                        ? "Wake word + voice match"
+                        : "Wake word only (no voice match)") {
+                    JSwitch(binding: $appState.voiceModeRequiresVerify)
                 }
                 JRow(title: "Threshold",
                      sub: "Similarity required to execute") {
@@ -34,9 +40,20 @@ struct AssistantPane: View {
                 .padding(.top, 22)
 
             JCard {
-                JRow(title: "Spoken replies",
-                     sub: "Read confirmations aloud",
+                JRow(title: "Backend",
+                     sub: "Voice auth, Spotify and the learned intent router live in a Python helper",
                      first: true) {
+                    Picker("", selection: $appState.backendMode) {
+                        ForEach(BackendMode.allCases, id: \.self) { mode in
+                            Text(mode.displayName).tag(mode)
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+                    .frame(width: 118)
+                }
+                JRow(title: "Spoken replies",
+                     sub: "Read confirmations aloud") {
                     JSwitch(binding: $appState.voiceResponseEnabled)
                 }
                 JRow(title: "Voice mode",
@@ -48,9 +65,21 @@ struct AssistantPane: View {
                 }
                 JRow(title: "Follow-up window",
                      sub: "Stay armed after a command") {
-                    Text("\(Int(appState.sessionTimeout))s")
-                        .font(JType.kv)
-                        .foregroundStyle(JColor.ink2)
+                    Picker("", selection: $appState.sessionTimeoutSeconds) {
+                        Text("1 s").tag(1)
+                        Text("2 s").tag(2)
+                        Text("3 s").tag(3)
+                        Text("4 s").tag(4)
+                        Text("5 s").tag(5)
+                        Text("6 s").tag(6)
+                        Text("7 s").tag(7)
+                        Text("8 s").tag(8)
+                        Text("9 s").tag(9)
+                        Text("10 s").tag(10)
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+                    .frame(width: 78)
                 }
                 JRow(title: "Start at login",
                      sub: "Open Jarvis automatically when you log in") {
@@ -89,6 +118,14 @@ struct AssistantPane: View {
                 }
             }
             .padding(.top, 9)
+
+            if appState.backendMode == .off && (appState.actionPillRequiresVerify || appState.voiceModeRequiresVerify) {
+                Text("Backend is Off but verification is on — ⌘⇧A/live commands only run with the wake word present.")
+                    .font(.system(size: 10.5))
+                    .foregroundStyle(JColor.danger)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 9)
+            }
 
             if let error = launchAtLogin.errorText {
                 Text(error)

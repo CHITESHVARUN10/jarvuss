@@ -25,7 +25,14 @@ final class AppState: ObservableObject {
     @Published var assistantState: AssistantState = .idle
     @Published var voiceSessionState: VoiceSessionState = .idle
     @Published var sessionExpiresAt: Date? = nil
-    let sessionTimeout: TimeInterval = 10.0
+    /// Follow-up grace after a command, seconds (1–10, user-selectable).
+    @Published var sessionTimeoutSeconds: Int =
+        min(max(UserDefaults.standard.object(forKey: "jarvis.sessionTimeoutSeconds") as? Int ?? 10, 1), 10) {
+        didSet {
+            UserDefaults.standard.set(sessionTimeoutSeconds, forKey: "jarvis.sessionTimeoutSeconds")
+        }
+    }
+    var sessionTimeout: TimeInterval { TimeInterval(sessionTimeoutSeconds) }
     private var sessionTimer: Timer? = nil
 
     private static let sessionExitPhrases: [String] = [
@@ -49,6 +56,31 @@ final class AppState: ObservableObject {
     @Published var actionPillRequiresVerify: Bool = UserDefaults.standard.object(forKey: "jarvis.actionPillRequiresVerify") as? Bool ?? true {
         didSet { UserDefaults.standard.set(actionPillRequiresVerify, forKey: "jarvis.actionPillRequiresVerify") }
     }
+    /// Live-mode (wake word) verification policy — independent of the ⌘⇧A
+    /// toggle so either mode can be gated independently. Default true.
+    @Published var voiceModeRequiresVerify: Bool = UserDefaults.standard.object(forKey: "jarvis.voiceModeRequiresVerify") as? Bool ?? true {
+        didSet { UserDefaults.standard.set(voiceModeRequiresVerify, forKey: "jarvis.voiceModeRequiresVerify") }
+    }
+    /// Python backend process policy — Automatic (start on demand, idle out),
+    /// Always running (launch at boot), or Off (never start).
+    @Published var backendMode: BackendMode = BackendServiceManager.mode {
+        didSet {
+            guard oldValue != backendMode else { return }
+            BackendServiceManager.mode = backendMode
+            Task { @MainActor in
+                await applyBackendMode(backendMode)
+            }
+        }
+    }
+    /// First-run setup: false until "Finish setup" (Setup pane). Drives the
+    /// initial pane selection and the rail badge.
+    @Published var setupCompleted: Bool = UserDefaults.standard.bool(forKey: "jarvis.setup.completed") {
+        didSet { UserDefaults.standard.set(setupCompleted, forKey: "jarvis.setup.completed") }
+    }
+    /// Active rail section — AppState-owned so panes can deep-link each other
+    /// (Setup → Connections) and the first run opens on Setup.
+    @Published var activeSection: RailSection =
+        UserDefaults.standard.bool(forKey: "jarvis.setup.completed") ? .assistant : .setup
     /// Swift → Rust migration flag: command understanding routed through the
     /// Rust core (validator, safety, app aliases, fast-path + rules). OFF keeps
     /// the Swift pipeline and logs shadow-parity lines for comparison.
@@ -88,6 +120,7 @@ final class AppState: ObservableObject {
     @Published var postgresMissingKeys: [String] = []
     /// Local Ollama server reachability (GET /api/tags probe).
     @Published var ollamaReachable: Bool = false
+    @Published var ollamaModelInstalled: Bool = false
     @Published var ollamaStatusText: String = "qwen2.5 · 1.5b instruct"
     /// Reads the backend's configured values (never the password) for
     /// prefilling the Connections pane form.
@@ -133,6 +166,8 @@ final class AppState: ObservableObject {
         "Jarvis next song"
     ]
     @Published var enrollmentIndex = 0
+    var enrollmentPreparing = false
+    var enrollmentPreparationTask: Task<Void, Never>?
     @Published var enrollmentActive = false
     @Published var enrollmentCompleted = false
     @Published var enrollmentMatchedCount = 0
@@ -160,7 +195,7 @@ final class AppState: ObservableObject {
     let statsRecorder: StatsRecorder
     let intentLog: IntentRouterLog
     let presentsUI: Bool
-    private let backendServiceManager = BackendServiceManager()
+    private let backendServiceManager = BackendServiceManager.shared
     private let displayController = DisplayController()
     let commandQueue = CommandQueueManager()
 
@@ -423,16 +458,21 @@ final class AppState: ObservableObject {
     }
 
     func bootstrap() async {
-        await startBundledBackendIfNeeded()
-
-        dbManager.setup()
-        if dbManager.isConfigured {
-            appendLog("PostgreSQL logging is enabled.")
-        } else {
-            appendLog("PostgreSQL logging disabled (optional). To enable: export PGHOST=127.0.0.1 PGPORT=5432 PGDATABASE=jarvis_db PGUSER=jarvis_user — missing: \(DBManager.missingEnvKeys.joined(separator: ","))")
+        BackendServiceManager.statusChangeHandler = { [weak self] status in
+            self?.backendStatus = status
         }
-        await refreshPostgresStatus()
+        BackendServiceManager.idleStopHandler = { [weak self] message in
+            Task { @MainActor in
+                self?.backendStatus = "Not started"
+                self?.appendLog(message)
+            }
+        }
+        setupTablesIfConfigured()
+
+        await applyBackendModeAtLaunch(BackendServiceManager.mode)
+
         await refreshOllamaStatus()
+        reflectPostgresConfigWithoutBackend()
 
         restoreEnrollmentStateFast()
         await reconcileEnrollmentFromDB()
@@ -443,7 +483,74 @@ final class AppState: ObservableObject {
         appendLog("Ready. Tap the orb (or press ⌘⇧D / ⌘⇧A) to start listening.")
     }
 
+    /// Backend lifecycle at launch. `.always` starts the process; the other
+    /// modes probe and report only — nothing Python is spawned until a
+    /// feature needs it (verification, enrollment, Spotify, Connections).
+    private func applyBackendModeAtLaunch(_ mode: BackendMode) async {
+        guard mode != .off else {
+            backendStatus = "Backend off"
+            appendLog("[Backend] Mode is Off — voice auth, Spotify and the intent model are unavailable.")
+            return
+        }
+
+        if await BackendServiceManager.shared.isHealthy() {
+            BackendServiceManager.noteActivity()
+            BackendServiceManager.armIdleWatchdog()
+            backendStatus = "Backend running"
+            appendLog("[Backend] Found an already-running backend on port 8000 — reusing it.")
+            await refreshSpotifyStatus()
+            return
+        }
+
+        if mode == .automatic {
+            backendStatus = "Not started"
+            appendLog("[Backend] Automatic mode — backend starts on demand (0 MB Python at idle).")
+        } else {
+            await startBundledBackendIfNeeded()
+        }
+    }
+
+    /// Reacts to a mode change made in Settings while running.
+    private func applyBackendMode(_ mode: BackendMode) async {
+        switch mode {
+        case .off:
+            backendServiceManager.stopIfNeeded { [weak self] message in
+                Task { @MainActor in self?.appendLog(message) }
+            }
+            backendStatus = "Backend off"
+            appendLog("[Backend] Mode set to Off — voice auth, Spotify and the intent model are unavailable.")
+        case .always:
+            await startBundledBackendIfNeeded()
+        case .automatic:
+            BackendServiceManager.noteActivity()
+            BackendServiceManager.armIdleWatchdog()
+            if await BackendServiceManager.shared.isHealthy() {
+                backendStatus = "Backend running"
+            } else {
+                backendStatus = "Not started"
+                appendLog("[Backend] Mode set to Automatic — backend will start on demand.")
+            }
+        }
+    }
+
+    /// Table creation + the Rails-style status that needs no backend: the
+    /// merged RuntimeConfiguration IS the configuration truth on this Mac.
+    private func setupTablesIfConfigured() {
+        dbManager.setup()
+        if dbManager.isConfigured {
+            appendLog("PostgreSQL logging is enabled.")
+        } else {
+            appendLog("PostgreSQL logging disabled (optional). To enable: export PGHOST=127.0.0.1 PGPORT=5432 PGDATABASE=jarvis_db PGUSER=jarvis_user — missing: \(DBManager.missingEnvKeys.joined(separator: ","))")
+        }
+    }
+
+    private func reflectPostgresConfigWithoutBackend() {
+        postgresConfigured = dbManager.isConfigured
+        postgresStatusText = postgresConfigured ? "Configured" : "Not configured"
+    }
+
     func shutdown() {
+        stopEnrollment()
         statsRecorder.flush()
         stopMicrophone()
         backendServiceManager.stopIfNeeded { [weak self] message in
@@ -466,6 +573,8 @@ final class AppState: ObservableObject {
             backendStartupError = nil
             backendStatus = "Backend running"
             appendLog("[Backend] \(result.message)")
+            BackendServiceManager.noteActivity()
+            BackendServiceManager.armIdleWatchdog()
             await refreshSpotifyStatus()
         } else {
             backendStartupError = result.message
@@ -857,7 +966,11 @@ final class AppState: ObservableObject {
         for validated in sanitized {
             let priority = CommandPriority.classify(validated)
             let accepted = commandQueue.enqueue(text: validated, priority: priority) { [weak self] in
-                await self?.verifyThenRunCommand(validated)
+                if self?.voiceModeRequiresVerify == true {
+                    await self?.verifyThenRunCommand(validated)
+                } else {
+                    await self?.runCommand(validated)
+                }
             }
             if !accepted {
                 appendLog("[Voice] dropped: queue rejected '\(validated)' (see [Queue] line above).")
@@ -866,14 +979,16 @@ final class AppState: ObservableObject {
     }
 
     func toggleVoiceMode() {
-        guard voiceProfileReady else {
-            voiceModeEnabled = false
-            appendLog("Complete 7x3 enrollment voice samples before enabling voice mode.")
-            return
+        if voiceModeRequiresVerify {
+            guard voiceProfileReady else {
+                voiceModeEnabled = false
+                appendLog("Complete 7x3 enrollment voice samples before enabling verified voice mode (or turn live-mode verification off).")
+                return
+            }
         }
         voiceModeEnabled.toggle()
         pendingWakeWordDetected = false
-        appendLog("Voice mode \(voiceModeEnabled ? "enabled" : "disabled").")
+        appendLog("Voice mode \(voiceModeEnabled ? "enabled" : "disabled")\(voiceModeRequiresVerify ? "" : " (wake word only — verification off)").")
     }
 
     // MARK: - Speech session helpers (Whisper era)

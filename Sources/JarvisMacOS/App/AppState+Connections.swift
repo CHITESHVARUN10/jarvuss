@@ -3,6 +3,13 @@ import Foundation
 
 extension AppState {
     func refreshSpotifyStatus() async {
+        BackendServiceManager.noteActivity()
+        guard await BackendServiceManager.ensureRunningForFeature() else {
+            spotifyLinked = false
+            spotifyStatusText = "Backend unavailable"
+            appendLog("[Spotify] Status check skipped: backend unavailable/off.")
+            return
+        }
         do {
             let st = try await spotifyClient.status()
             spotifyExpired = st.expired
@@ -21,8 +28,16 @@ extension AppState {
     // MARK: - Connectors (PostgreSQL)
 
     /// Refresh from GET /postgres/status; prefills the Connections form
-    /// (host/port/db/user — never the password) for editing.
+    /// (host/port/db/user — never the password) for editing. Starts the
+    /// backend on demand when the user opens this pane (not at launch).
     func refreshPostgresStatus() async {
+        BackendServiceManager.noteActivity()
+        guard await BackendServiceManager.ensureRunningForFeature() else {
+            postgresConfigured = dbManager.isConfigured
+            postgresStatusText = postgresConfigured ? "Configured (backend unavailable)" : "Backend unavailable"
+            appendLog("[Postgres] Status check skipped: backend unavailable/off.")
+            return
+        }
         do {
             let st = try await postgresClient.status()
             postgresConfigured = st.configured
@@ -47,6 +62,7 @@ extension AppState {
     }
 
     func savePostgresCredentials() async -> String {
+        guard await BackendServiceManager.ensureRunningForFeature() else { return "Backend unavailable or turned off." }
         do {
             let msg = try await postgresClient.save(
                 host: postgresForm.host, port: postgresForm.port,
@@ -63,6 +79,7 @@ extension AppState {
     }
 
     func testPostgresConnection() async -> String {
+        guard await BackendServiceManager.ensureRunningForFeature() else { return "Backend unavailable or turned off." }
         do {
             return try await postgresClient.test()
         } catch {
@@ -76,12 +93,17 @@ extension AppState {
         var request = URLRequest(url: url)
         request.timeoutInterval = 2
         do {
-            let (_, response) = try await URLSession.shared.data(for: request)
+            let (data, response) = try await URLSession.shared.data(for: request)
             ollamaReachable = ((response as? HTTPURLResponse)?.statusCode ?? 0) / 100 == 2
+            let payload = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+            let models = payload?["models"] as? [[String: Any]] ?? []
+            ollamaModelInstalled = ollamaReachable && models.contains { $0["name"] as? String == JarvisModel.name }
         } catch {
             ollamaReachable = false
+            ollamaModelInstalled = false
         }
-        ollamaStatusText = ollamaReachable ? "qwen2.5 · 1.5b instruct" : "Offline — commands still work"
+        ollamaStatusText = !ollamaReachable ? "Offline — commands still work"
+            : ollamaModelInstalled ? "qwen2.5 · 1.5b instruct" : "Model missing — pull it in Setup"
     }
 
 }

@@ -2,6 +2,7 @@ import SwiftUI
 
 /// Rail navigation sections, in mock order. About is pinned to the rail bottom.
 enum RailSection: String, CaseIterable, Identifiable {
+    case setup
     case assistant
     case voice
     case insights
@@ -14,6 +15,7 @@ enum RailSection: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
+        case .setup:       return "Setup"
         case .assistant:   return "Assistant"
         case .voice:       return "Voice"
         case .insights:    return "Insights"
@@ -26,6 +28,7 @@ enum RailSection: String, CaseIterable, Identifiable {
 
     var icon: String {
         switch self {
+        case .setup:       return "wand.and.stars"
         case .assistant:   return "message"
         case .voice:       return "mic"
         case .insights:    return "chart.xyaxis.line"
@@ -38,7 +41,7 @@ enum RailSection: String, CaseIterable, Identifiable {
 
     /// Sections shown in the main nav column (about is pinned to the bottom).
     static var main: [RailSection] {
-        [.assistant, .voice, .insights, .routines, .system, .connections]
+        [.setup, .assistant, .voice, .insights, .routines, .system, .connections]
     }
 }
 
@@ -132,9 +135,12 @@ struct RailView: View {
         .accessibilityLabel(item.title)
     }
 
-    /// Voice: profile not ready. Connections: Spotify expired/missing or PG off.
+    /// Setup: wizard not finished. Voice: profile not ready. Connections:
+    /// Spotify expired/missing or PG off.
     private func showsBadge(for item: RailSection) -> Bool {
         switch item {
+        case .setup:
+            return !appState.setupCompleted
         case .voice:
             return !appState.voiceProfileReady
         case .connections:

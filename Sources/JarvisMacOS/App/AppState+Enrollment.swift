@@ -3,6 +3,40 @@ import Foundation
 
 extension AppState {
     func startEnrollment(resetStore: Bool = true) {
+        guard !enrollmentActive, !enrollmentPreparing else { return }
+        enrollmentPreparing = true
+        enrollmentActive = true
+        voiceVerificationStatus = "Preparing Voice Enrollment…"
+        enrollmentPreparationTask = Task {
+            guard await BackendServiceManager.ensureRunningForFeature(), !Task.isCancelled else {
+                if !Task.isCancelled {
+                    enrollmentPreparing = false
+                    enrollmentActive = false
+                    voiceVerificationStatus = "Backend unavailable"
+                    appendLog("[Voice] Enrollment not started — backend unavailable/off. Existing profile preserved.")
+                }
+                return
+            }
+            do {
+                if resetStore { try await voiceAuthClient.reset() }
+                try Task.checkCancellation()
+                if resetStore {
+                    backendEnrollmentSampleCount = 0
+                    persistBackendSampleCount(0)
+                }
+                enrollmentPreparing = false
+                beginEnrollmentCapture()
+            } catch {
+                guard !Task.isCancelled else { return }
+                enrollmentPreparing = false
+                enrollmentActive = false
+                voiceVerificationStatus = "Enrollment could not start"
+                appendLog("[Voice] Enrollment aborted: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    private func beginEnrollmentCapture() {
         enrollmentIndex = 0
         enrollmentMatchedCount = 0
         enrollmentAttemptCount = 0
@@ -36,63 +70,28 @@ extension AppState {
             appendLog("Microphone started for enrollment.")
             Task {
                 await startMicrophone()
-                if !micActive {
+                if !enrollmentActive {
+                    releaseEnrollmentMicIfNeeded()
+                } else if !micActive {
                     appendLog("[Voice] Enrollment can't capture — microphone failed to start.")
-                }
-            }
-        }
-
-        guard resetStore else {
-            appendLog("Enrolling from a clean slate (0/\(voiceEnrollmentSampleTarget)) — only these new samples will be used.")
-            return
-        }
-
-        appendLog("Existing voice profile is preserved until new samples are collected.")
-        // Reset the backend store so re-enrollment starts from a clean slate —
-        // the store is append-only, so without this every re-run stacks on the
-        // old samples (the 63-vs-42 pollution) and drags similarity averages down.
-        // Runs detached: enrollment must not block on a cold backend.
-        Task {
-            do {
-                try await voiceAuthClient.reset()
-                await MainActor.run {
-                    backendEnrollmentSampleCount = 0
-                    persistBackendSampleCount(0)
-                    appendLog("Voice profile store reset — re-enrolling from 0/\(voiceEnrollmentSampleTarget).")
-                }
-            } catch {
-                await MainActor.run {
-                    appendLog("[Voice] Profile reset failed (\(error.localizedDescription)) — old samples preserved; scores may skew high-N. POST /reset manually to clear.")
+                    stopEnrollment()
                 }
             }
         }
     }
 
-    /// Wipe every previously stored voice sample, then start a fresh enrollment
-    /// so verification uses ONLY the new recordings. Aborts (without touching
-    /// the old samples) if the backend wipe fails.
+    /// Prepare and reset the store before accepting any new audio samples.
     func retrainVoiceProfile() {
-        guard !enrollmentActive else { return }
-        Task {
-            do {
-                try await voiceAuthClient.reset()
-                await MainActor.run {
-                    backendEnrollmentSampleCount = 0
-                    persistBackendSampleCount(0)
-                    voiceVerificationStatus = "No Voice Profile ❌"
-                    appendLog("Voice profile wiped — all \(voiceEnrollmentSampleTarget)-sample history deleted. Starting fresh enrollment.")
-                    startEnrollment(resetStore: false)
-                }
-            } catch {
-                await MainActor.run {
-                    appendLog("[Voice] Retrain aborted — could not wipe old samples: \(error.localizedDescription)")
-                }
-            }
-        }
+        startEnrollment()
     }
 
     func resetVoiceProfile() {
+        guard !enrollmentActive else { return }
         Task {
+            guard await BackendServiceManager.ensureRunningForFeature() else {
+                appendLog("[Voice] Profile clear skipped — backend unavailable/off.")
+                return
+            }
             do {
                 try await voiceAuthClient.reset()
                 backendEnrollmentSampleCount = 0
@@ -106,6 +105,9 @@ extension AppState {
     }
 
     func stopEnrollment() {
+        enrollmentPreparationTask?.cancel()
+        enrollmentPreparationTask = nil
+        enrollmentPreparing = false
         enrollmentActive = false
         releaseEnrollmentMicIfNeeded()
         appendLog("Voice enrollment stopped.")
@@ -125,6 +127,7 @@ extension AppState {
     }
 
     func handleEnrollmentTranscript(_ transcript: String, isFinal: Bool) {
+        guard enrollmentActive, !enrollmentPreparing else { return }
         let cleanedTranscript = normalizeEnrollmentTranscript(transcript)
         guard !cleanedTranscript.isEmpty else { return }
         guard enrollmentPhrases.indices.contains(enrollmentIndex) else { return }
@@ -343,11 +346,19 @@ extension AppState {
         transcript: String
     ) async {
         do {
+            // Snapshot this utterance before a cold backend can replace it
+            // with silence or a subsequent phrase in the rolling buffer.
             let sampleURL = try micManager.exportRecentAudioSample(
                 durationSeconds: Self.enrollAudioSeconds,
                 targetSampleRate: Self.voiceSampleRate
             )
             defer { try? FileManager.default.removeItem(at: sampleURL) }
+            guard await BackendServiceManager.ensureRunningForFeature() else {
+                appendLog("[Voice] Enrollment stopped — backend unavailable/off.")
+                stopEnrollment()
+                return
+            }
+            try Task.checkCancellation()
             let enrolledCount = try await voiceAuthClient.enroll(audioFileURL: sampleURL)
             backendEnrollmentSampleCount = enrolledCount
             persistBackendSampleCount(enrolledCount)

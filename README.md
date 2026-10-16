@@ -24,11 +24,11 @@ Full walkthrough with every command and exact phrasings: **[practice.md](practic
 **Voice & dictation**
 - **Manual-start listening**: nothing is captured at launch. Tap the orb — or just press ⌘⇧D / ⌘⇧A; a hotkey press is itself the manual start — and only then does the mic pipeline (VAD, wake word, dictation) come up.
 - ⌘⇧D dictation with WISPR-style formatting: deterministic rules (fillers, stutters, self-corrections, punctuation, casing, `25%`, `3pm`) plus a small-model polish pass for messy or structured speech (lists get typeset).
-- **Insert at cursor**: the formatted text is pasted into whatever app you were in — your clipboard is preserved. The card offers **Copy** (formatted), **Copy original** (raw STT, toggleable), and **Undo** (⌘Z in the target app), and it closes itself after 10 seconds no matter what. With no Accessibility grant it silently copies instead and tells you.
+- **Insert at cursor**: the formatted text is pasted into whatever app you were in — your clipboard is preserved. The card offers **Copy** (formatted), **Copy original** (raw STT, toggleable), and **Undo** (⌘Z in the target app); how long it stays is user-settable — System → Dictation → *Card stays visible* (1–10 s, default 10). With no Accessibility grant it silently copies instead and tells you.
 - **Last dictation is kept across restarts**: the System pane shows the latest original + polished pair — and only that pair. A new dictation immediately and unrecoverably replaces the previous one (no history by design).
 - **Dictation diagnostics (dev)**: Assistant → Behaviour → *Dictation diagnostics* writes one JSONL line per dictation — raw input, rules and final text, and the timing breakdown (wall, speech, STT, rules, polish, insert) to `~/Library/Application Support/Jarvis/logs/dictation_dev.jsonl`.
 - **"Jarvis" wake word**: wake-word command mode with a 0.7 s audio pre-roll so the wake word and the first syllables are never lost to VAD latency; "Jarvis" → pause → command works; continuous speech is segmented at 8 s with the tail re-armed, not dropped.
-- **Speaker verification (optional)**: Resemblyzer voiceprint enrollment can gate execution to your voice.
+- **Speaker verification (optional, per mode)**: Resemblyzer voiceprint enrollment can gate execution to your voice — independently for ⌘⇧A commands and for live mode (Assistant → Privacy). With live-mode verification off, the wake word alone is the gate.
 
 **Command execution (⌘⇧A or "Jarvis …")**
 - Apps: open/close with fuzzy matching and aliases ("get her desktop" → GitHub Desktop).
@@ -40,9 +40,11 @@ Full walkthrough with every command and exact phrasings: **[practice.md](practic
 - **SafetyGuard**: blocks sudo, destructive operations, protected paths, and installs before anything runs.
 
 **The rest**
+- **Setup pane (first run)**: a checklist that detects what's missing and fixes it in-app — microphone and Accessibility grants, the Whisper model plus a custom model-folder picker, Ollama (install via brew / start / pull `qwen2.5:1.5b-instruct` with download status), PostgreSQL (install, start, **create the jarvis database with an editable user + password**, configure itself, enable logging), and a Spotify API-app guide. Reopen it anytime from the rail.
+- **On-demand backend (default: Automatic)**: the Python helper that serves voice auth, Spotify and the learned intent router starts only when a feature needs it and idles out after 5 minutes — `pgrep uvicorn` is empty on a fresh boot and torch loads only on the first voice request. Assistant → Behaviour → *Backend* offers Automatic / Always running / Off.
 - **Insights**: local stats on dictation, commands, success rates, LLM usage.
 - **Connections**: Spotify (OAuth via local backend) and PostgreSQL (schema-browsing status/credentials/test).
-- **rail + panes shell**: Assistant, Voice, Routines, Connections, Insights, System, About.
+- **rail + panes shell**: Setup, Assistant, Voice, Routines, Connections, Insights, System, About.
 - **Start at login**: Assistant → Behaviour — macOS opens Jarvis for you when you log in (Login Items via `SMAppService`; no helper app).
 - **Memory guard**: if the app's footprint ever exceeds the limit (Assistant → Behaviour, default ~¼ of RAM), it writes the reason to `~/Library/Application Support/Jarvis/logs/memory.log` and terminates itself instead of dragging your Mac into swap.
 - **Rust core (in progress)**: command understanding can route through the Rust pipeline (toggle in About), with shadow-parity logging. Safety, priority and instant information patterns share one Rust policy in both modes. Model HTTP requests use the same cancellable Swift client in both modes.
@@ -153,6 +155,20 @@ or say "Jarvis, open chrome" hands-free.
 ---
 
 ## 🛠️ Installation & Setup
+
+### First run: the Setup pane
+
+On first launch the app opens on **Setup** — a checklist with inline fixes, so
+the manual steps below become optional:
+
+- **Microphone / Accessibility** — grant buttons, right there.
+- **Whisper model** — status + auto-download; optionally point it at a folder that already has `ggml-large-v3-turbo.bin`.
+- **Ollama** — Install (brew, else the download page), Start, and **Pull model** with download status.
+- **PostgreSQL (optional)** — Install & start, then **Create** the `jarvis_db` database + `jarvis_user` role (defaults prefilled, fully editable; the generated password is saved to the Keychain and event logging turns on).
+- **Python helper (optional)** — Prepare installs Python 3.11 via Homebrew if needed and prepares the helper dependencies. Voice models remain lazy-loaded.
+- **Spotify (optional)** — a two-step guide (create the API app with the right redirect, then paste keys in Connections).
+
+Nothing on this checklist blocks dictation: mic + Whisper are the only requirements, and the Whisper download starts automatically at launch. PostgreSQL setup preserves existing role passwords; use the existing password or configure an existing database in Connections.
 
 ### 1) Prerequisites (macOS)
 

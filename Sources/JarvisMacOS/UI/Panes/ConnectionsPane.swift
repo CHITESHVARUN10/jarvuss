@@ -159,7 +159,7 @@ private struct SpotifyDetail: View {
         JCard {
             JCardHead(icon: "music.note", title: "Spotify", accessory: refreshButton)
 
-            Text("Paste your Spotify Developer keys, Save, then Connect to authorize. Keys are stored in the backend .env — never logged.")
+            Text("Paste your Spotify Developer keys, Save, then Connect to authorize. The client secret is stored in your macOS Keychain.")
                 .font(JType.rowSub)
                 .foregroundStyle(JColor.ink2)
                 .fixedSize(horizontal: false, vertical: true)
@@ -204,6 +204,11 @@ private struct SpotifyDetail: View {
         isSaving = true
         notice = nil
         do {
+            guard await BackendServiceManager.ensureRunningForFeature() else {
+                notice = "Backend unavailable or turned off."
+                isSaving = false
+                return
+            }
             try await appState.spotifyClient.saveCredentials(clientID: clientID, clientSecret: clientSecret)
             clientID = ""
             clientSecret = ""
@@ -218,6 +223,10 @@ private struct SpotifyDetail: View {
     private func connect() async {
         notice = nil
         do {
+            guard await BackendServiceManager.ensureRunningForFeature() else {
+                notice = "Backend unavailable or turned off."
+                return
+            }
             let url = try await appState.spotifyClient.connectURL()
             NSWorkspace.shared.open(url)
             notice = "Browser opened — approve Spotify access, then hit refresh."
@@ -292,7 +301,7 @@ private struct PostgresDetail: View {
         JCard {
             JCardHead(icon: "cylinder", title: "PostgreSQL", accessory: refreshButton)
 
-            Text("Event logging target. Credentials persist to the backend .env — never logged.")
+            Text("Event logging target. The password is stored in your macOS Keychain.")
                 .font(JType.rowSub)
                 .foregroundStyle(JColor.ink2)
                 .fixedSize(horizontal: false, vertical: true)

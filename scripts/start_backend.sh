@@ -32,7 +32,10 @@ is_pid_running() {
   if [[ -z "$pid" ]]; then
     return 1
   fi
-  kill -0 "$pid" >/dev/null 2>&1
+  kill -0 "$pid" >/dev/null 2>&1 || return 1
+  local backend_command
+  backend_command="$(/bin/ps -p "$pid" -o command= 2>/dev/null)" || return 1
+  [[ "$backend_command" == *"-m uvicorn voice_auth_service:app"* || "$backend_command" == "$BACKEND_DIR/main" || "$backend_command" == "$BACKEND_DIR/main "* ]]
 }
 
 is_port_open() {
@@ -60,13 +63,14 @@ fi
 # Prefer a modern Python (>=3.10) for the venv: /usr/bin/python3 on macOS
 # is Apple-shipped 3.9, which cannot evaluate `X | Y` type annotations.
 pick_python() {
-  for candidate in /opt/homebrew/bin/python3.11 /opt/homebrew/bin/python3 /usr/local/bin/python3 /usr/bin/python3; do
+  for candidate in /opt/homebrew/bin/python3.11 /opt/homebrew/bin/python3 /usr/local/bin/python3.11 /usr/local/bin/python3 /usr/bin/python3; do
     if [[ -x "$candidate" ]] && "$candidate" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then
       echo "$candidate"
       return 0
     fi
   done
-  echo "/usr/bin/python3"
+  echo "Python 3.10+ is required. Open Jarvis Setup → Python helper → Prepare." >&2
+  return 1
 }
 
 # A packaged venv is read-only at runtime. Changed/missing dependencies use
@@ -80,7 +84,8 @@ fi
 REQ_HASH_FILE="$VENV_DIR/.req_hash"
 
 if [[ ! -x "$VENV_DIR/bin/python" ]]; then
-  "$(pick_python)" -m venv "$VENV_DIR"
+  PYTHON_BIN="$(pick_python)"
+  "$PYTHON_BIN" -m venv "$VENV_DIR"
 fi
 
 # ── Dependency install: skip entirely if requirements.txt hasn't changed ──

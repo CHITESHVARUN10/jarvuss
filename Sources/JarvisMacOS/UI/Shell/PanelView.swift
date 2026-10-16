@@ -38,6 +38,7 @@ struct PanelView: View {
 
     private var headTitle: String {
         switch section {
+        case .setup:       return "Setup"
         case .assistant:   return "Assistant"
         case .voice:       return "Voice"
         case .insights:    return "Insights"
@@ -50,6 +51,7 @@ struct PanelView: View {
 
     private var headSub: String {
         switch section {
+        case .setup:       return "Get ready — microphone, speech model and optional tools"
         case .assistant:   return "How Jarvis should behave"
         case .voice:       return "Your speaker profile"
         case .insights:    return "Your usage, on device"
@@ -63,6 +65,8 @@ struct PanelView: View {
     @ViewBuilder
     private var pane: some View {
         switch section {
+        case .setup:
+            SetupPane(appState: appState)
         case .assistant:
             AssistantPane(appState: appState)
         case .voice:

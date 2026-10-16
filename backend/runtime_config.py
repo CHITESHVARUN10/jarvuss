@@ -8,9 +8,10 @@ from __future__ import annotations
 import ctypes
 import json
 import os
+import fcntl
 import sys
 import threading
-from contextlib import ExitStack
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
@@ -144,9 +145,9 @@ class RuntimeConfig:
         with self._lock:
             values = {**defaults, **self._settings()}
             for key in SECRET_KEYS:
-                if key not in self._secrets:
-                    self._secrets[key] = self.keychain.get(key)
-                secret = self._secrets[key]
+                # The Swift setup wizard also writes this Keychain service.
+                # Read current values so a running backend sees those edits.
+                secret = self._secrets[key] = self.keychain.get(key)
                 if secret is None and values.get(key):
                     # Migrate existing local setup without changing its .env.
                     self.keychain.set(key, values[key])
@@ -155,8 +156,19 @@ class RuntimeConfig:
                     values[key] = secret
             return values
 
+    @contextmanager
+    def _write_lock(self):
+        self.directory.mkdir(parents=True, exist_ok=True, mode=0o700)
+        descriptor = os.open(self.directory / "connection_settings.lock", os.O_CREAT | os.O_RDWR, 0o600)
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_EX)
+            yield
+        finally:
+            fcntl.flock(descriptor, fcntl.LOCK_UN)
+            os.close(descriptor)
+
     def save(self, updates: dict[str, str]) -> None:
-        with self._lock:
+        with self._lock, self._write_lock():
             settings = self._settings()
             for key, value in updates.items():
                 if key in SECRET_KEYS:

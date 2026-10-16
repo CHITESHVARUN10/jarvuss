@@ -2,6 +2,32 @@ import XCTest
 @testable import JarvisMacOS
 
 final class DatabaseIntegrationTests: XCTestCase {
+    func testSetupProvisioningHandlesQuotedValuesAndPreservesExistingRole() throws {
+        guard let host = ProcessInfo.processInfo.environment["JARVIS_TEST_PGHOST"] else {
+            throw XCTSkip("Requires the disposable PostgreSQL test server.")
+        }
+        XCTAssertTrue(PostgresProvisioner.serverReachable(host: host, administrator: "jarvis_test"))
+        let plan = PostgresProvisioner.Plan(database: "setup\"db", user: "setup\"role",
+            password: "p'$$\n\\quoted", host: host, administrator: "jarvis_test")
+        try PostgresProvisioner.provision(plan)
+        let psql = try XCTUnwrap(PostgresProvisioner.findPSQL())
+        func passwordHash() throws -> String {
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: psql)
+            process.arguments = ["-X", "-w", "-h", host, "-U", "jarvis_test", "-d", "postgres", "-tAc",
+                "SELECT rolpassword FROM pg_authid WHERE rolname = \(PostgresProvisioner.quoteLiteral(plan.user))"]
+            let output = try process.runCapturingOutput(timeout: 10)
+            XCTAssertEqual(output.status, 0)
+            return output.stdout
+        }
+        let original = try passwordHash()
+        XCTAssertFalse(original.isEmpty)
+        var repeated = plan
+        repeated.password = "a-different-password"
+        try PostgresProvisioner.provision(repeated)
+        XCTAssertEqual(try passwordHash(), original, "Repeating setup must preserve existing passwords")
+    }
+
     func testAcknowledgedBatchRetryCountsOnceAndStatsQueryReturnsRows() async throws {
         let env = ProcessInfo.processInfo.environment
         guard let host = env["JARVIS_TEST_PGHOST"] else {

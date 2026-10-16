@@ -58,6 +58,15 @@ final class DictationController: ObservableObject {
         }
     }
 
+    /// Seconds the ⌘⇧D card stays on screen before closing itself
+    /// (1–10, user-selectable in the System pane). Gates both the
+    /// post-insert dismissal and the card-appeared hard cap.
+    @Published var cardDismissSeconds: Int {
+        didSet {
+            UserDefaults.standard.set(cardDismissSeconds, forKey: Self.cardDismissDefaultsKey)
+        }
+    }
+
     /// The most recent dictation, original + polished. Persisted as a PAIR:
     /// each new dictation overwrites both, so the previous text is gone for
     /// good (no history, no recovery — by request). Survives restarts.
@@ -66,6 +75,7 @@ final class DictationController: ObservableObject {
 
     private static let insertAtCursorDefaultsKey = "jarvis.dictation.insertAtCursor"
     private static let copyOriginalDefaultsKey = "jarvis.dictation.copyOriginal"
+    private static let cardDismissDefaultsKey = "jarvis.dictation.cardDismissSeconds"
     private static let lastOriginalDefaultsKey = "jarvis.dictation.lastOriginal"
     private static let lastPolishedDefaultsKey = "jarvis.dictation.lastPolished"
 
@@ -125,11 +135,19 @@ final class DictationController: ObservableObject {
         // Init assignments bypass didSet — load persisted settings directly.
         insertAtCursorEnabled = defaults.object(forKey: Self.insertAtCursorDefaultsKey) as? Bool ?? true
         copyOriginalEnabled = defaults.object(forKey: Self.copyOriginalDefaultsKey) as? Bool ?? true
+        cardDismissSeconds = min(max(defaults.object(forKey: Self.cardDismissDefaultsKey) as? Int ?? 10, 1), 10)
         lastOriginal = defaults.string(forKey: Self.lastOriginalDefaultsKey) ?? ""
         lastPolished = defaults.string(forKey: Self.lastPolishedDefaultsKey) ?? ""
     }
 
     func launch() {
+        // Setup pane's "Choose model folder" applies here — the Rust core
+        // reads this env once at initialize_core.
+        if let modelDir = UserDefaults.standard.string(forKey: "jarvis.stt.modelDir"),
+           !modelDir.isEmpty {
+            setenv("JARVIS_STT_MODEL_DIR", modelDir, 1)
+            NSLog("[Jarvis][STT] Model dir override: %@", modelDir)
+        }
         let ok = initialize_core()
         NSLog("[Jarvis][STT] Core initialized: \(ok)")
         // Loud, early, and in the app log: this is THE diagnostic for "paste
@@ -682,24 +700,24 @@ final class DictationController: ObservableObject {
             self.dismissTranscript()
         }
         insertAutoDismiss = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + 6, execute: work)
+        DispatchQueue.main.asyncAfter(deadline: .now() + TimeInterval(cardDismissSeconds), execute: work)
     }
 
     /// Hard cap: whatever happened (paste failed, insert disabled, nobody
-    /// clicked anything), the card closes itself 10 s after it appears. The
-    /// 6 s success-dismiss above is a nicety; THIS is the guarantee that the
-    /// card never lingers forever.
+    /// clicked anything), the card closes itself `cardDismissSeconds` after
+    /// it appears — the same duration the user picked for the post-insert
+    /// dismissal, so the card never lingers forever.
     private func scheduleHardCapDismiss() {
         hardCapDismiss?.cancel()
         let generation = formattingTask.generation
         let work = DispatchWorkItem { [weak self] in
             guard let self, self.formattingTask.generation == generation,
                   self.phase == .TranscriptReady else { return }
-            NSLog("[Jarvis][Dictate] card auto-closed (10 s cap)")
+            NSLog("[Jarvis][Dictate] card auto-closed (%d s cap)", self.cardDismissSeconds)
             self.dismissTranscript()
         }
         hardCapDismiss = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + 10, execute: work)
+        DispatchQueue.main.asyncAfter(deadline: .now() + TimeInterval(cardDismissSeconds), execute: work)
     }
 
     /// Overwrite-in-place persistence for the latest dictation pair. No
