@@ -55,6 +55,12 @@ enum OllamaSetup {
 
     static func pullModel(onProgress: @escaping (String) -> Void) async -> String? {
         guard let ollamaPath = ollamaBinary() else { return "Install Ollama first." }
+        // The server can still be starting right after Install/Start — pull
+        // would fail with "connection refused" and look like a broken button.
+        onProgress("Waiting for Ollama to start…")
+        guard await waitUntilReachable(timeout: 30) else {
+            return "Ollama is not responding on port 11434. Press Start, then retry Pull."
+        }
         let process = Process()
         process.executableURL = URL(fileURLWithPath: ollamaPath)
         process.arguments = ["pull", JarvisModel.name]
@@ -64,6 +70,21 @@ enum OllamaSetup {
             onProgress(result.status == 0 ? "Model installed." : "Download failed. Retry when Ollama is running.")
             return result.status == 0 ? nil : "Model download failed: \(result.stderr)"
         } catch { return error.localizedDescription }
+    }
+
+    static func waitUntilReachable(timeout: TimeInterval) async -> Bool {
+        guard let url = URL(string: "http://127.0.0.1:11434/api/tags") else { return false }
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            var request = URLRequest(url: url)
+            request.timeoutInterval = 2
+            if let (_, response) = try? await URLSession.shared.data(for: request),
+               ((response as? HTTPURLResponse)?.statusCode ?? 0) / 100 == 2 {
+                return true
+            }
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
+        }
+        return false
     }
 
     static func brewPath() -> String? {

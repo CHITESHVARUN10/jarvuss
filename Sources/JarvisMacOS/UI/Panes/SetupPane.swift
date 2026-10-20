@@ -208,7 +208,7 @@ struct SetupPane: View {
                     return failure ?? "Server started."
                 }
             }
-            JRow(title: "Database", sub: "Created if missing; existing roles keep their passwords") {
+            JRow(title: "Database", sub: "Created if missing; an existing role gets the password you enter") {
                 TextField("", text: $pgDatabase)
                     .textFieldStyle(.plain)
                     .font(.system(size: 12, design: .monospaced))

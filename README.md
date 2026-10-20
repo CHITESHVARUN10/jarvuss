@@ -227,6 +227,35 @@ python3 -m uvicorn voice_auth_service:app --app-dir backend --host 127.0.0.1 --p
 swift run
 ```
 
+### Sharing the app with a friend (no Apple Developer account)
+
+The packaged bundle is self-contained (app, Whisper STT core, intent model,
+backend) and signed with your development certificate — it is **not**
+notarized, which costs $99/year. That only affects the *first launch*: macOS
+quarantines the zip and shows "unidentified developer". The friend does this
+once:
+
+```zsh
+# you
+ditto -c -k --sequesterRsrc --keepParent /Applications/Jarvis.app ~/Desktop/Jarvis.zip
+
+# your friend (after moving Jarvis.app to /Applications)
+xattr -dr com.apple.quarantine /Applications/Jarvis.app
+```
+
+(Or: right-click the app → **Open** → **Open** again.)
+
+On their first launch, Jarvis opens on **Setup**, which handles the rest:
+microphone + Accessibility grants, the Whisper model download (~1.5 GB), Ollama
+(install / start / pull the model), PostgreSQL (install, start, create the
+database with an editable user + password), and a Python-helper *Prepare* that
+installs Python 3.11 when missing and builds the backend venv. Without Homebrew
+the one-click installs fall back to the vendor download pages, and dictation
+still works as soon as the mic and Whisper are ready.
+
+Their data (settings, Keychain secrets, logs, models) lives in **their**
+`~/Library/Application Support/Jarvis` — nothing personal is inside the bundle.
+
 ### Start at login
 
 Toggle **Assistant → Behaviour → Start at login** and macOS opens Jarvis for you when you log in. Enable it from the packaged app (`./scripts/package_jarvis_app.zsh`) — a bare `swift run` binary has no bundle identity to register. If macOS wants approval first, the same card shows an **Open Settings** row that lands in System Settings → General → Login Items.
