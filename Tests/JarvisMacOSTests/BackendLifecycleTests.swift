@@ -68,6 +68,19 @@ final class BackendLifecycleTests: XCTestCase {
         XCTAssertFalse(BackendServiceManager.isBackendCommand("/path/python -m uvicorn voice_auth_service:app_wrong"))
     }
 
+    @MainActor
+    func testIntentMissDoesNotStartPythonWhenBackendIsStopped() async {
+        setTestMode(BackendMode.automatic.rawValue)
+        var probes = 0
+        let client = IntentModelClient(backendIsRunning: { probes += 1; return false })
+        do {
+            _ = try await client.parse(text: "open Safari and Notes")
+            XCTFail("An absent learned parser must be a miss")
+        } catch IntentModelClient.ClientError.unavailable {
+            XCTAssertEqual(probes, 1)
+        } catch { XCTFail("Unexpected error: \(error)") }
+    }
+
     func testDefaultModeIsAutomatic() {
         setTestMode(nil)
         XCTAssertEqual(BackendServiceManager.mode, .automatic)

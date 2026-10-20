@@ -23,20 +23,13 @@ struct QueuedCommand: Identifiable {
 
 // MARK: - CommandQueueManager
 
-/// Single-active-execution command queue with priority, deduplication, and time-window
-/// duplicate suppression.
-///
-/// Deduplication rules:
-///   1. If the same command text was EXECUTED within `deduplicationWindow` seconds → drop.
-///   2. If the same command text is ALREADY PENDING in queue → drop.
-///   3. HIGH priority commands skip the queue and cancel whatever is running.
+/// Single-active-execution queue. Only repeated delivery IDs are suppressed;
+/// separate requests with identical text retain their intended side effects.
+/// A different high-priority command can interrupt the current plan.
 @MainActor
 final class CommandQueueManager: ObservableObject {
 
     static let maxQueueSize = 3
-
-    /// How long (seconds) to suppress a repeated identical command after execution.
-    private let deduplicationWindow: TimeInterval = 1.2
 
     @Published private(set) var isExecuting = false
     @Published private(set) var currentCommandText: String = ""
@@ -47,16 +40,8 @@ final class CommandQueueManager: ObservableObject {
     private var generation: Int = 0
     private var queue: [QueuedCommand] = []
 
-    // ── Time-based deduplication state ───────────────────────────────
-    private var lastExecutedText: String = ""
-    private var lastExecutedAt: Date = .distantPast
-
-    // ── High-priority cycle guard ─────────────────────────────────
-    // Multiple high-priority interrupts within `highPriorityCooldown` are
-    // collapsed to one. This prevents rapid-fire cancellations (e.g., voice
-    // echo loop triggering volume commands repeatedly).
-    private var lastHighPriorityAt: Date = .distantPast
-    private let highPriorityCooldown: TimeInterval = 0.5
+    private var acceptedDeliveries: Set<UUID> = []
+    private var deliveryOrder: [UUID] = []
 
     // External log sink — set this to append to AppState.logs
     var onLog: ((String) -> Void)?
@@ -70,32 +55,19 @@ final class CommandQueueManager: ObservableObject {
     func enqueue(
         text: String,
         priority: CommandPriority = .normal,
+        deliveryID: UUID = UUID(),
         handler: @escaping () async -> Void
     ) -> Bool {
 
-        // ── Time-window duplicate suppression ────────────────────────
-        // If the exact same command was executed within `deduplicationWindow`,
-        // silently drop it. This prevents double-firing from debounce edge-cases.
-        let now = Date()
-        if text == lastExecutedText &&
-           now.timeIntervalSince(lastExecutedAt) < deduplicationWindow {
-            log("[Queue] Skipped duplicate (within \(String(format: "%.1f", deduplicationWindow))s): '\(text)'")
+        guard !acceptedDeliveries.contains(deliveryID) else {
+            log("[Queue] Skipped repeated delivery: \(deliveryID)")
             return false
         }
 
         let cmd = QueuedCommand(text: text, priority: priority, handler: handler)
 
         // ── HIGH priority: cancel current AND clear queue ───────────────
-        if priority == .high {
-            // Cycle guard: ignore additional high-priority interrupts within
-            // `highPriorityCooldown` to prevent rapid-fire cancellation instability.
-            let now = Date()
-            if now.timeIntervalSince(lastHighPriorityAt) < highPriorityCooldown {
-                log("[Queue] High-priority '\(text)' suppressed — cooldown active (\(String(format: "%.2f", now.timeIntervalSince(lastHighPriorityAt)))s < \(highPriorityCooldown)s)")
-                return false
-            }
-            lastHighPriorityAt = now
-
+        if priority == .high && text != currentCommandText {
             let dropped = queue.map { "'\($0.text)'" }.joined(separator: ", ")
             if !dropped.isEmpty {
                 log("[Queue] cleared due to high-priority '\(text)': \(dropped)")
@@ -103,15 +75,10 @@ final class CommandQueueManager: ObservableObject {
             queue.removeAll()
             cancelCurrent(reason: "superseded by high-priority '\(text)'")
             queue.append(cmd)
+            recordDelivery(deliveryID)
             log("[Queue] HIGH priority queued: '\(text)'")
             drainIfIdle()
             return true
-        }
-
-        // ── Pending-queue duplicate suppression ───────────────────────
-        if queue.contains(where: { $0.text == text }) {
-            log("[Queue] Skipped duplicate (already pending): '\(text)'")
-            return false
         }
 
         // ── Queue capacity management ─────────────────────────────────
@@ -126,9 +93,17 @@ final class CommandQueueManager: ObservableObject {
         }
 
         queue.append(cmd)
+        recordDelivery(deliveryID)
         log("[Queue] Enqueued (\(priority)): '\(text)' [queue size: \(queue.count)]")
         drainIfIdle()
         return true
+    }
+
+    private func recordDelivery(_ deliveryID: UUID) {
+        acceptedDeliveries.insert(deliveryID)
+        deliveryOrder.append(deliveryID)
+        if deliveryOrder.count > 256 { acceptedDeliveries.remove(deliveryOrder.removeFirst()) }
+
     }
 
     // MARK: - Cancel current
@@ -177,10 +152,6 @@ final class CommandQueueManager: ObservableObject {
         let cmd = queue.removeFirst()
         isExecuting = true
         currentCommandText = cmd.text
-
-        // Record execution for time-based deduplication
-        lastExecutedText = cmd.text
-        lastExecutedAt = Date()
 
         log("[Execution] started: '\(cmd.text)'")
 

@@ -24,6 +24,8 @@
     <string>Fonts</string>
     <key>LSMinimumSystemVersion</key>
     <string>26.0</string>
+    <key>NSDocumentsFolderUsageDescription</key>
+    <string>Jarvis saves files and folders you ask it to create in Documents/Jarvis.</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>Jarvis needs microphone access to detect speech and execute voice commands.</string>
     <key>NSAppleEventsUsageDescription</key>

@@ -282,7 +282,7 @@ final class DBManager: @unchecked Sendable {
     }
 
     private func escapeSQL(_ value: String) -> String {
-        value.replacingOccurrences(of: "'", with: "''")
+        value.replacingOccurrences(of: "\0", with: "").replacingOccurrences(of: "'", with: "''")
     }
 
     private func sqlString(_ value: String) -> String {
@@ -314,7 +314,11 @@ final class DBManager: @unchecked Sendable {
             return "NULL"
         }
 
-        guard let data = try? JSONSerialization.data(withJSONObject: metadata, options: [.sortedKeys]),
+        var sanitized: [String: String] = [:]
+        for (key, value) in metadata {
+            sanitized[key.replacingOccurrences(of: "\0", with: "")] = value.replacingOccurrences(of: "\0", with: "")
+        }
+        guard let data = try? JSONSerialization.data(withJSONObject: sanitized, options: [.sortedKeys]),
               let json = String(data: data, encoding: .utf8) else { return "NULL" }
         return "'\(escapeSQL(json))'::jsonb"
     }

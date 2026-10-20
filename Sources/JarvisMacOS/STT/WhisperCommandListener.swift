@@ -11,6 +11,7 @@ import Foundation
 /// Enrollment matching, wake-word splitting, verification, and execution
 /// all stay exactly as before — only the transcript source changed
 /// (discrete Whisper finals instead of the Apple streaming recognizer).
+@MainActor
 final class WhisperCommandListener {
     static let shared = WhisperCommandListener()
 

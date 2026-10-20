@@ -2,6 +2,8 @@
 .build/
 .vscode/
 logs/
+/htmls/
+./htmls
 .commandcode/
 backend/.venv/
 backend/venv/

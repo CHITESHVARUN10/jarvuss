@@ -21,8 +21,12 @@ final class IntentModelClient {
 
     private let baseURL: URL
     private let session: URLSession
+    private let backendIsRunning: () async -> Bool
 
-    init(baseURL: URL? = nil) {
+    init(baseURL: URL? = nil, backendIsRunning: @escaping () async -> Bool = {
+        await BackendServiceManager.isBackendResponding()
+    }) {
+        self.backendIsRunning = backendIsRunning
         let configured = ProcessInfo.processInfo.environment["JARVIS_BACKEND_URL"]
             ?? ProcessInfo.processInfo.environment["BACKEND_BASE_URL"]
             ?? "http://127.0.0.1:8000"
@@ -35,7 +39,8 @@ final class IntentModelClient {
 
     func parse(text: String) async throws -> ParsedResponse {
         if baseURL.host == "127.0.0.1", baseURL.port == 8000 {
-            guard await BackendServiceManager.ensureRunningForFeature() else { throw ClientError.unavailable }
+            guard BackendServiceManager.mode != .off, await backendIsRunning() else { throw ClientError.unavailable }
+            BackendServiceManager.noteActivity()
         }
         try Task.checkCancellation()
         var request = URLRequest(url: baseURL.appendingPathComponent("parse_intent"))
@@ -43,7 +48,7 @@ final class IntentModelClient {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONSerialization.data(withJSONObject: ["text": text])
 
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await BackendAccess.data(for: request, session: session)
         guard let http = response as? HTTPURLResponse else { throw ClientError.badPayload }
         guard http.statusCode == 200 else { throw ClientError.badStatus(http.statusCode) }
         guard let obj = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {

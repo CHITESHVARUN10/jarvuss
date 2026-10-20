@@ -46,8 +46,8 @@ final class DatabaseIntegrationTests: XCTestCase {
         let rows = await manager.fetchDailyStats(sinceDays: 0)
         XCTAssertEqual(rows.first?.commandsRun, 3)
 
-        manager.saveEvent(eventType: "enrollment_completed", transcript: "quotes ' and\nnewlines",
-                          metadata: ["line": "first\nsecond", "quote": "a\"b\\c"])
+        manager.saveEvent(eventType: "enrollment_completed", transcript: "quotes ' and\nnewlines\0suffix",
+                          metadata: ["line": "first\nsecond\0suffix", "quote": "a\"b\\c"])
         let eventSaved = await manager.hasEnrollmentCompletionEvent()
         XCTAssertTrue(eventSaved, "event metadata must be valid JSON even with control characters")
 

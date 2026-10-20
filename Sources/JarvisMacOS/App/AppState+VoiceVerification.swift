@@ -131,14 +131,9 @@ extension AppState {
         } catch let authError {
             guard !Task.isCancelled else { return }
             // Fix #10: Auth failure — single attempt only.
-            // Network-down fallback allows the command ONLY when it carries
-            // a wake word or arrives in an active session — a hallucinated
-            // singleton ("Thank you.") with no wake word must never execute
-            // just because the backend is offline. Do NOT retry; do NOT
-            // re-enqueue.
-            let isNetworkError = authError.localizedDescription.lowercased().contains("unavailable")
-                || authError.localizedDescription.lowercased().contains("connect")
-                || authError.localizedDescription.lowercased().contains("url")
+            // Preserve transport vs HTTP rejection. Required verification
+            // never becomes implicit permission to execute while offline.
+            let isNetworkError = VoiceAuthClient.isUnavailable(authError)
 
             if isNetworkError {
                 await handleVerificationUnavailable(command)
@@ -179,35 +174,15 @@ extension AppState {
         return try await voiceAuthClient.verifyDetailed(audioFileURL: sampleURL)
     }
 
-    /// Backend down/Off while verification is required: the command runs ONLY
-    /// when it carries a wake word or arrives in an active session — a
-    /// hallucinated singleton with no wake word must never execute just
-    /// because the backend is offline. Single attempt, no retries.
+    /// Required verification fails closed. Users can explicitly select
+    /// wake-word-only mode by disabling verification in settings.
     private func handleVerificationUnavailable(_ command: String) async {
         guard !Task.isCancelled else { return }
-        let hasWake = TranscriptSanitizer.containsWakeWord(lastRecognizedSpeech)
-            || voiceSessionState == .active
-        guard hasWake else {
-            voiceVerificationStatus = "Unknown Voice ❌"
-            appendLog("[Voice] dropped: auth fallback refused — no wake word in '\(command)' (backend offline).")
-            statsRecorder.recordCommand(success: false)
-            dbManager.saveEvent(
-                eventType: "voice_auth_fallback_refused",
-                transcript: command,
-                matched: false,
-                metadata: ["reason": "backend_offline_no_wake"]
-            )
-            return
-        }
-        appendLog("[Voice] ⚠️ Auth backend unreachable — allowing command with fallback (no retry).")
-        voiceVerificationStatus = "Auth Fallback ⚠️"
-        dbManager.saveEvent(
-            eventType: "voice_auth_fallback",
-            transcript: command,
-            matched: true,
-            metadata: ["reason": "backend_offline"]
-        )
-        await runCommand(command)
+        voiceVerificationStatus = "Verification unavailable"
+        appendLog("[Voice] Command rejected: required speaker verification is unavailable.")
+        statsRecorder.recordCommand(success: false)
+        dbManager.saveEvent(eventType: "voice_auth_unavailable", transcript: command,
+                            matched: false, metadata: ["reason": "verification_required"])
     }
 
     /// RMS of a WAV file's samples (float32 mono written by MicManager).

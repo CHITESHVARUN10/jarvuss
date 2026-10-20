@@ -58,9 +58,12 @@ enum VoiceConfidence: String {
 enum VoiceAuthClientError: LocalizedError {
     case invalidResponse
     case backendUnavailable
+    case rejected(Int)
 
     var errorDescription: String? {
         switch self {
+        case .rejected(let status):
+            return "Voice verification was rejected by the service (HTTP \(status))."
         case .invalidResponse:
             return "Voice auth service returned an invalid response."
         case .backendUnavailable:
@@ -112,18 +115,33 @@ final class VoiceAuthClient {
         )
     }
 
+    static func validate(_ response: URLResponse) throws {
+        guard let http = response as? HTTPURLResponse else { throw VoiceAuthClientError.invalidResponse }
+        guard (200...299).contains(http.statusCode) else { throw VoiceAuthClientError.rejected(http.statusCode) }
+    }
+
+    static func classify(_ error: Error) -> Error {
+        if error is CancellationError || (error as? URLError)?.code == .cancelled { return CancellationError() }
+        if error is URLError || error is BackendAccessError { return VoiceAuthClientError.backendUnavailable }
+        return error
+    }
+
+    static func isUnavailable(_ error: Error) -> Bool {
+        if case VoiceAuthClientError.backendUnavailable = error { return true }
+        if let network = error as? URLError { return network.code != .cancelled }
+        return error is BackendAccessError
+    }
+
     func reset() async throws {
         var request = URLRequest(url: baseURL.appendingPathComponent("reset"))
         request.httpMethod = "POST"
         request.timeoutInterval = 30
 
         do {
-            let (_, response) = try await URLSession.shared.data(for: request)
-            guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-                throw VoiceAuthClientError.invalidResponse
-            }
+            let (_, response) = try await BackendAccess.data(for: request)
+            try Self.validate(response)
         } catch {
-            throw VoiceAuthClientError.backendUnavailable
+            throw Self.classify(error)
         }
     }
 
@@ -133,14 +151,12 @@ final class VoiceAuthClient {
         request.timeoutInterval = 10
 
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-            guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-                throw VoiceAuthClientError.invalidResponse
-            }
+            let (data, response) = try await BackendAccess.data(for: request)
+            try Self.validate(response)
             let decoded = try JSONDecoder().decode(VoiceAuthStatsResponse.self, from: data)
             return decoded.enrolled_count
         } catch {
-            throw VoiceAuthClientError.backendUnavailable
+            throw Self.classify(error)
         }
     }
 
@@ -165,13 +181,11 @@ final class VoiceAuthClient {
         request.httpBody = body
 
         do {
-            let (responseData, response) = try await URLSession.shared.data(for: request)
-            guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-                throw VoiceAuthClientError.invalidResponse
-            }
+            let (responseData, response) = try await BackendAccess.data(for: request)
+            try Self.validate(response)
             return responseData
         } catch {
-            throw VoiceAuthClientError.backendUnavailable
+            throw Self.classify(error)
         }
     }
 }

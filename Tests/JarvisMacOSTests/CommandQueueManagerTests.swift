@@ -7,6 +7,24 @@ import XCTest
 @MainActor
 final class CommandQueueManagerTests: XCTestCase {
 
+    func testRepeatedUserCommandsArePreservedButDuplicateDeliveryIsNot() async {
+        let queue = CommandQueueManager()
+        let firstStarted = expectation(description: "first command started")
+        let bothRan = expectation(description: "both commands ran")
+        bothRan.expectedFulfillmentCount = 2
+        let id = UUID()
+        XCTAssertTrue(queue.enqueue(text: "next song", priority: .high, deliveryID: id) {
+            firstStarted.fulfill()
+            try? await Task.sleep(for: .milliseconds(30))
+            XCTAssertFalse(Task.isCancelled, "A repeated next must queue, not cancel the first next")
+            bothRan.fulfill()
+        })
+        await fulfillment(of: [firstStarted], timeout: 1)
+        XCTAssertFalse(queue.enqueue(text: "next song", priority: .high, deliveryID: id) { XCTFail("Duplicate delivery") })
+        XCTAssertTrue(queue.enqueue(text: "next song", priority: .high) { bothRan.fulfill() })
+        await fulfillment(of: [bothRan], timeout: 1)
+    }
+
     func testWedgedHandlerIsReleasedByWatchdogAndNextCommandRuns() async throws {
         let previous = CommandQueueManager.executionWatchdogSeconds
         CommandQueueManager.executionWatchdogSeconds = 0.5

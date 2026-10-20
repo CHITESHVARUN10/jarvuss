@@ -57,10 +57,9 @@ final class AppController {
 
     func closeResult(appName: String) -> (message: String, success: Bool) {
         let normalized = AppAliasResolver.resolveSpoken(appName)
-        let script = "tell application \"\(normalized)\" to quit"
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
-        process.arguments = ["-e", script]
+        process.arguments = Self.quitArguments(appName: normalized)
 
         do {
             try process.run()
@@ -79,6 +78,10 @@ final class AppController {
         } catch {
             return ("Error closing app: \(error.localizedDescription)", false)
         }
+    }
+
+    static func quitArguments(appName: String) -> [String] {
+        ["-e", "on run argv\n tell application (item 1 of argv) to quit\nend run", "--", appName]
     }
 
     func open(appName: String) -> String {
@@ -106,6 +109,11 @@ enum AppAliasResolver {
         }
 
         return name
+    }
+
+    static func knownAppName(_ input: String) -> String? {
+        let value = normalize(input)
+        return aliasMap.first { $0.value.contains(value) }?.key
     }
 
     private static let aliasMap: [String: Set<String>] = [

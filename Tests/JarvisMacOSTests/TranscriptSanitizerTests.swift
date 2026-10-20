@@ -53,6 +53,11 @@ final class TranscriptSanitizerTests: XCTestCase {
         XCTAssertNil(TranscriptSanitizer.cleanVoiceSegment("   "))
     }
 
+    func testSanitizeBatchPreservesRepeatedMediaAndVolumeActions() {
+        XCTAssertEqual(TranscriptSanitizer.sanitizeBatch(["next song", "next song", "volume up"]),
+                       ["next song", "next song", "volume up"])
+    }
+
     func testSanitizeBatchDedupsLastWins() {
         var notices: [String] = []
         let out = TranscriptSanitizer.sanitizeBatch(

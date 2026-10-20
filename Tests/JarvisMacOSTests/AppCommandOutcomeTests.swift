@@ -90,6 +90,26 @@ final class AppCommandOutcomeTests: XCTestCase {
             }
     }
 
+    func testVerificationOffAllowsUnenrolledRepeatedWakeWordCommands() async {
+        let previous = UserDefaults.standard.object(forKey: "jarvis.voiceModeRequiresVerify")
+        defer {
+            if let previous { UserDefaults.standard.set(previous, forKey: "jarvis.voiceModeRequiresVerify") }
+            else { UserDefaults.standard.removeObject(forKey: "jarvis.voiceModeRequiresVerify") }
+        }
+        app.voiceModeRequiresVerify = false
+        app.enrollmentCompleted = false
+        app.backendEnrollmentSampleCount = 0
+        XCTAssertTrue(app.canUseVoiceMode)
+        app.voiceModeEnabled = true
+        app.handleTranscript("Jarvis open Safari", isFinal: true)
+        app.handleTranscript("Jarvis open Safari", isFinal: true)
+        for _ in 0..<100 {
+            if executor.calls == 2 { break }
+            await Task.yield()
+        }
+        XCTAssertEqual(executor.calls, 2)
+    }
+
     func testFailedStepsProduceOneFailureAndFailureTrainingOutcome() async throws {
         await app.runCommand("open test")
         XCTAssertEqual(stats.snapshot().commandsFailed, 1)

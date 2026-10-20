@@ -108,5 +108,5 @@ if [[ -f "$REQ_FILE" ]]; then
 fi
 
 cd "$BACKEND_DIR"
-nohup "$VENV_DIR/bin/python" -m uvicorn voice_auth_service:app --host "$HOST" --port "$PORT" >> "$LOG_FILE" 2>&1 &
+nohup "$VENV_DIR/bin/python" -m uvicorn voice_auth_service:app --host "$HOST" --port "$PORT" --workers 1 >> "$LOG_FILE" 2>&1 &
 echo $! > "$PID_FILE"

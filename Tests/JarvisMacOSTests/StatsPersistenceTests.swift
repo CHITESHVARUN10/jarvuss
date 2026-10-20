@@ -22,6 +22,20 @@ private actor StatsUpload {
     func finish(_ success: Bool) { continuation?.resume(returning: success); continuation = nil }
 }
 
+private final class BlockingStatsStore: StatsStoring, @unchecked Sendable {
+    let entered: XCTestExpectation
+    let release = DispatchSemaphore(value: 0)
+    private var blocked = false
+    init(entered: XCTestExpectation) { self.entered = entered }
+    func load() throws -> [StatsBatch] { [] }
+    func save(_ batches: [StatsBatch]) throws {
+        guard !blocked else { return }
+        blocked = true
+        entered.fulfill()
+        _ = release.wait(timeout: .now() + 3)
+    }
+}
+
 final class StatsPersistenceTests: XCTestCase {
     private var directory: URL!
     private var store: StatsBufferStore!
@@ -33,6 +47,26 @@ final class StatsPersistenceTests: XCTestCase {
     }
 
     override func tearDownWithError() throws { try FileManager.default.removeItem(at: directory) }
+
+    func testUIReadsAndCallbackChangesDoNotWaitForDiskIO() async {
+        let entered = expectation(description: "persistence blocked")
+        let read = expectation(description: "UI reads complete while persistence blocked")
+        let sink = BlockingStatsStore(entered: entered)
+        let recorder = StatsRecorder(buffer: sink, retryInterval: 0)
+        recorder.recordCommand(success: true)
+        recorder.requestFlush()
+        await fulfillment(of: [entered], timeout: 1)
+        let reader = Task.detached {
+            XCTAssertEqual(recorder.snapshot().commandsRun, 1)
+            XCTAssertEqual(recorder.bufferedDays().first?.commandsRun, 1)
+            recorder.onFlush = { _ in false }
+            read.fulfill()
+        }
+        await fulfillment(of: [read], timeout: 0.5)
+        sink.release.signal()
+        await reader.value
+        recorder.flush()
+    }
 
     func testMidnightRolloverPersistsBothDaysWithoutDeadlocking() throws {
         let clock = TestDate(Date(timeIntervalSince1970: 1_700_000_000))

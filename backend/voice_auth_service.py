@@ -16,11 +16,14 @@ from urllib.request import Request, urlopen
 from typing import Any, Dict
 
 import ssl
+import logging
+from functools import wraps
 
 import numpy as np
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 from runtime_config import RuntimeConfig, data_directory, read_env
+from local_auth import HEADER, OAuthStates, authorized, create_token
 
 BASE_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = BASE_DIR.parent
@@ -45,6 +48,27 @@ if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
 app = FastAPI(title="Jarvis Voice Auth Service", version="2.1.0")
+logger = logging.getLogger("uvicorn.error.jarvis")
+app.state.auth_token = None
+_oauth_states = OAuthStates()
+
+
+@app.on_event("startup")
+def initialize_local_auth():
+    app.state.auth_token = create_token(data_directory())
+
+
+@app.middleware("http")
+async def require_local_auth(request, call_next):
+    # OAuth redirects are browser requests; their single-use state is checked
+    # by the callback before any token exchange or credential mutation.
+    if request.method == "GET" and request.url.path in {"/spotify/callback", "/callback"}:
+        return await call_next(request)
+    if not authorized(app.state.auth_token, request.headers.get(HEADER)):
+        return JSONResponse(status_code=401, content={"detail": "Local authentication required"})
+    return await call_next(request)
+
+
 
 # Learned intent parser (t5-small int8 ONNX) — lazy-loaded on first request;
 # missing model degrades to 503 and the app falls back to the rule router.
@@ -115,6 +139,17 @@ def _spotify_token_error_detail(prefix: str, error: Exception) -> str:
     return f"{prefix}: {error}"
 
 
+_spotify_token_lock = threading.RLock()
+
+
+def _token_serialized(function):
+    @wraps(function)
+    def protected(*args, **kwargs):
+        with _spotify_token_lock:
+            return function(*args, **kwargs)
+    return protected
+
+
 spotify_tokens: Dict[str, Any] = {
     "access_token": "",
     "refresh_token": "",
@@ -183,6 +218,7 @@ def _spotify_config() -> dict[str, str]:
     }
 
 
+@_token_serialized
 def _store_spotify_tokens(access_token: str, refresh_token: str, expires_in: int) -> None:
     expires_at = int(time.time()) + int(expires_in)
     spotify_tokens["access_token"] = access_token
@@ -228,7 +264,7 @@ def _exchange_code_for_token(code: str) -> dict:
         },
     )
 
-    print(f"[Spotify] Exchange redirect_uri: {redirect_uri}")
+    logger.info(f"[Spotify] Exchange redirect_uri: {redirect_uri}")
     try:
         with urlopen(request, timeout=15, context=_https_context()) as response:
             payload = json.loads(response.read().decode("utf-8"))
@@ -240,6 +276,7 @@ def _exchange_code_for_token(code: str) -> dict:
         )
 
 
+@_token_serialized
 def _refresh_spotify_token() -> str:
     config = _spotify_config()
     client_id = config["client_id"]
@@ -293,10 +330,11 @@ def _refresh_spotify_token() -> str:
         refresh_token=returned_refresh,
         expires_in=expires_in,
     )
-    print("[Spotify] Token refreshed")
+    logger.info("[Spotify] Token refreshed")
     return access_token
 
 
+@_token_serialized
 def _get_valid_spotify_access_token() -> str:
     env_values = _load_env_values()
     now = int(time.time())
@@ -364,13 +402,13 @@ def _spotify_api_request(
 
 def _spotify_devices(token: str) -> list[dict]:
     status, payload, raw = _spotify_api_request("GET", "/v1/me/player/devices", token)
-    print(f"[Spotify] GET /v1/me/player/devices status={status}")
+    logger.info(f"[Spotify] GET /v1/me/player/devices status={status}")
     if status < 200 or status >= 300:
-        print(f"[Spotify][ERROR] devices failed: {raw}")
+        logger.info(f"[Spotify][ERROR] devices failed: {raw}")
         return []
     devices = payload.get("devices", []) if isinstance(payload, dict) else []
     for device in devices:
-        print(
+        logger.info(
             "[Spotify] Device id={id} name={name} active={active} type={type}".format(
                 id=device.get("id", ""),
                 name=device.get("name", "unknown"),
@@ -405,7 +443,7 @@ def _ensure_spotify_active_device(token: str) -> str | None:
         if device.get("is_active") and device.get("id"):
             return _cache_spotify_device(token, str(device["id"]))
 
-    print("[Spotify] No active device found; trying transfer")
+    logger.info("[Spotify] No active device found; trying transfer")
 
     if not devices:
         return None
@@ -420,9 +458,9 @@ def _ensure_spotify_active_device(token: str) -> str | None:
         token,
         body={"device_ids": [candidate_id], "play": True},
     )
-    print(f"[Spotify] PUT /v1/me/player transfer status={status}")
+    logger.info(f"[Spotify] PUT /v1/me/player transfer status={status}")
     if status < 200 or status >= 300:
-        print(f"[Spotify][ERROR] transfer failed: {raw}")
+        logger.info(f"[Spotify][ERROR] transfer failed: {raw}")
         return None
 
     time.sleep(1.0)
@@ -436,7 +474,7 @@ def _ensure_spotify_active_device(token: str) -> str | None:
 
 def _spotify_playback_state(token: str) -> dict:
     status, payload, raw = _spotify_api_request("GET", "/v1/me/player", token)
-    print(f"[Spotify] GET /v1/me/player status={status}")
+    logger.info(f"[Spotify] GET /v1/me/player status={status}")
     if status == 204:
         state = {
             "is_playing": False,
@@ -445,11 +483,11 @@ def _spotify_playback_state(token: str) -> dict:
             "current_track": "none",
             "item": "none",
         }
-        print(f"[Spotify] Playback state {state}")
+        logger.info(f"[Spotify] Playback state {state}")
         return state
 
     if status < 200 or status >= 300 or not isinstance(payload, dict):
-        print(f"[Spotify][ERROR] playback state failed: {raw}")
+        logger.info(f"[Spotify][ERROR] playback state failed: {raw}")
         return {"is_playing": False, "device": "unknown", "item": "unknown"}
 
     device = payload.get("device") or {}
@@ -461,7 +499,7 @@ def _spotify_playback_state(token: str) -> dict:
         "current_track": item.get("name", "unknown"),
         "item": item.get("name", "unknown"),
     }
-    print(f"[Spotify] Playback state {state}")
+    logger.info(f"[Spotify] Playback state {state}")
     return state
 
 
@@ -481,10 +519,10 @@ def _spotify_error_reason(status: int, raw: str, fallback: str) -> str:
 
 
 def _log_spotify_action_attempt(endpoint: str, status: int, raw: str, reason: str) -> None:
-    print(f"[Spotify] endpoint={endpoint}")
-    print(f"[Spotify] status_code={status}")
-    print(f"[Spotify] raw_body={raw}")
-    print(f"[Spotify] interpreted_reason={reason}")
+    logger.info(f"[Spotify] endpoint={endpoint}")
+    logger.info(f"[Spotify] status_code={status}")
+    logger.info(f"[Spotify] raw_body={raw}")
+    logger.info(f"[Spotify] interpreted_reason={reason}")
 
 
 def _is_retryable_spotify_failure(status: int, raw: str) -> bool:
@@ -533,9 +571,9 @@ def _spotify_search_track_uri(token: str, query_text: str) -> str | None:
         token,
         query={"q": query_text, "type": "track", "limit": "1"},
     )
-    print(f"[Spotify] GET /v1/search(track) status={status} q='{query_text}'")
+    logger.info(f"[Spotify] GET /v1/search(track) status={status} q='{query_text}'")
     if status < 200 or status >= 300:
-        print(f"[Spotify][ERROR] track search failed: {raw}")
+        logger.info(f"[Spotify][ERROR] track search failed: {raw}")
         return None
 
     if not isinstance(payload, dict):
@@ -559,9 +597,9 @@ def _spotify_find_playlist_uri(token: str, query_text: str) -> tuple[str, str] |
         token,
         query={"limit": "50"},
     )
-    print(f"[Spotify] GET /v1/me/playlists status={status}")
+    logger.info(f"[Spotify] GET /v1/me/playlists status={status}")
     if status < 200 or status >= 300:
-        print(f"[Spotify][ERROR] playlist list failed: {raw}")
+        logger.info(f"[Spotify][ERROR] playlist list failed: {raw}")
         return None
 
     if not isinstance(payload, dict):
@@ -595,9 +633,9 @@ def _spotify_liked_track_uris(token: str) -> list[str]:
         token,
         query={"limit": "50"},
     )
-    print(f"[Spotify] GET /v1/me/tracks status={status}")
+    logger.info(f"[Spotify] GET /v1/me/tracks status={status}")
     if status < 200 or status >= 300:
-        print(f"[Spotify][ERROR] liked tracks failed: {raw}")
+        logger.info(f"[Spotify][ERROR] liked tracks failed: {raw}")
         return []
 
     if not isinstance(payload, dict):
@@ -721,8 +759,8 @@ def _compute_weighted_score(similarities: list[float]) -> dict:
 # ──────────────────────────────────────────────────────────────────────
 
 @app.get("/health")
-def health() -> dict[str, str]:
-    return {"status": "ok"}
+def health() -> dict[str, Any]:
+    return {"status": "ok", "api_version": 3}
 
 
 @app.get("/spotify/login")
@@ -738,17 +776,22 @@ def spotify_login() -> RedirectResponse:
         "response_type": "code",
         "redirect_uri": redirect_uri,
         "scope": " ".join(SPOTIFY_SCOPES),
+        "state": _oauth_states.issue(),
     }
-    print(f"[Spotify] Login redirect_uri: {redirect_uri}")
+    logger.info(f"[Spotify] Login redirect_uri: {redirect_uri}")
     auth_url = f"{SPOTIFY_AUTH_URL}?{urlencode(params)}"
     return RedirectResponse(url=auth_url, status_code=307)
 
 
 @app.get("/spotify/callback")
+@_token_serialized
 def spotify_callback(
     code: str | None = Query(default=None),
     error: str | None = Query(default=None),
+    state: str | None = Query(default=None),
 ) -> Dict[str, Any]:
+    if not isinstance(state, str) or not _oauth_states.consume(state):
+        raise HTTPException(status_code=400, detail="Invalid or expired OAuth state; connect again from Jarvis")
     if error:
         raise HTTPException(
             status_code=400, detail=f"Spotify authorization refused: {error}"
@@ -765,8 +808,8 @@ def spotify_callback(
         raise HTTPException(status_code=400, detail="Spotify callback missing access token")
 
     _store_spotify_tokens(access_token=access_token, refresh_token=refresh_token, expires_in=expires_in)
-    print("[Spotify] Access token received")
-    print(f"[Spotify] Refresh token received: {bool(refresh_token)}")
+    logger.info("[Spotify] Access token received")
+    logger.info(f"[Spotify] Refresh token received: {bool(refresh_token)}")
 
     return {
         "status": "ok",
@@ -779,11 +822,13 @@ def spotify_callback(
 def spotify_callback_alias(
     code: str | None = Query(default=None),
     error: str | None = Query(default=None),
+    state: str | None = Query(default=None),
 ) -> Dict[str, Any]:
-    return spotify_callback(code=code, error=error)
+    return spotify_callback(code=code, error=error, state=state)
 
 
 @app.get("/spotify/status")
+@_token_serialized
 def spotify_status() -> Dict[str, Any]:
     env_values = _load_env_values()
     client_id = env_values.get("SPOTIFY_CLIENT_ID", "")
@@ -813,6 +858,7 @@ def spotify_status() -> Dict[str, Any]:
 
 
 @app.post("/spotify/credentials")
+@_token_serialized
 def spotify_save_credentials(payload: Dict[str, Any]) -> Dict[str, Any]:
     client_id = str(payload.get("client_id", "") or "").strip()
     client_secret = str(payload.get("client_secret", "") or "").strip()
@@ -824,13 +870,18 @@ def spotify_save_credentials(payload: Dict[str, Any]) -> Dict[str, Any]:
     updates = {
         "SPOTIFY_CLIENT_ID": client_id,
         "SPOTIFY_CLIENT_SECRET": client_secret,
+        "SPOTIFY_ACCESS_TOKEN": "",
+        "SPOTIFY_REFRESH_TOKEN": "",
+        "SPOTIFY_ACCESS_TOKEN_EXPIRES_AT": "0",
     }
     if redirect_uri:
         updates["SPOTIFY_REDIRECT_URI"] = redirect_uri
     _persist_env_updates(updates)
     # Drop cached tokens so the next call re-auths against the new app keys.
     spotify_tokens["access_token"] = ""
+    spotify_tokens["refresh_token"] = ""
     spotify_tokens["expires_at"] = 0
+    _invalidate_spotify_device()
     return {"status": "ok", "message": "Spotify credentials saved. Open the connect link to authorize."}
 
 
@@ -844,6 +895,7 @@ def spotify_connect_url() -> Dict[str, Any]:
         "response_type": "code",
         "redirect_uri": config["redirect_uri"],
         "scope": " ".join(SPOTIFY_SCOPES),
+        "state": _oauth_states.issue(),
     }
     return {
         "status": "ok",
@@ -853,6 +905,7 @@ def spotify_connect_url() -> Dict[str, Any]:
 
 
 @app.get("/spotify/token")
+@_token_serialized
 def spotify_token() -> Dict[str, Any]:
     token = _get_valid_spotify_access_token()
     expires_at = int(spotify_tokens.get("expires_at") or 0)
@@ -959,14 +1012,14 @@ def postgres_test(payload: Dict[str, Any]) -> Dict[str, Any]:
 @app.post("/spotify/play")
 def spotify_play() -> dict:
     token = _get_valid_spotify_access_token()
-    print(f"[Spotify] /spotify/play token_present={bool(token)}")
+    logger.info(f"[Spotify] /spotify/play token_present={bool(token)}")
     return _spotify_play(token=token, body={}, action_label="play")
 
 
 @app.post("/spotify/play-song")
 def spotify_play_song(name: str = Query(..., min_length=1)) -> dict:
     token = _get_valid_spotify_access_token()
-    print(f"[Spotify] /spotify/play-song name='{name}' token_present={bool(token)}")
+    logger.info(f"[Spotify] /spotify/play-song name='{name}' token_present={bool(token)}")
     uri = _spotify_search_track_uri(token, name)
     if not uri:
         raise HTTPException(status_code=404, detail=f"Song not found: {name}")
@@ -976,7 +1029,7 @@ def spotify_play_song(name: str = Query(..., min_length=1)) -> dict:
 @app.post("/spotify/play-playlist")
 def spotify_play_playlist(name: str = Query(..., min_length=1)) -> dict:
     token = _get_valid_spotify_access_token()
-    print(f"[Spotify] /spotify/play-playlist name='{name}' token_present={bool(token)}")
+    logger.info(f"[Spotify] /spotify/play-playlist name='{name}' token_present={bool(token)}")
     match = _spotify_find_playlist_uri(token, name)
     if not match:
         raise HTTPException(status_code=404, detail=f"Playlist not found: {name}")
@@ -989,7 +1042,7 @@ def spotify_play_playlist(name: str = Query(..., min_length=1)) -> dict:
 @app.post("/spotify/play-liked")
 def spotify_play_liked() -> dict:
     token = _get_valid_spotify_access_token()
-    print(f"[Spotify] /spotify/play-liked token_present={bool(token)}")
+    logger.info(f"[Spotify] /spotify/play-liked token_present={bool(token)}")
     uris = _spotify_liked_track_uris(token)
     if not uris:
         raise HTTPException(status_code=404, detail="No liked songs found")
@@ -999,21 +1052,21 @@ def spotify_play_liked() -> dict:
 @app.post("/spotify/pause")
 def spotify_pause() -> dict:
     token = _get_valid_spotify_access_token()
-    print(f"[Spotify] /spotify/pause token_present={bool(token)}")
+    logger.info(f"[Spotify] /spotify/pause token_present={bool(token)}")
     return _spotify_transport_action(token, "PUT", "/v1/me/player/pause", "pause")
 
 
 @app.post("/spotify/next")
 def spotify_next() -> dict:
     token = _get_valid_spotify_access_token()
-    print(f"[Spotify] /spotify/next token_present={bool(token)}")
+    logger.info(f"[Spotify] /spotify/next token_present={bool(token)}")
     return _spotify_transport_action(token, "POST", "/v1/me/player/next", "next")
 
 
 @app.post("/spotify/previous")
 def spotify_previous() -> dict:
     token = _get_valid_spotify_access_token()
-    print(f"[Spotify] /spotify/previous token_present={bool(token)}")
+    logger.info(f"[Spotify] /spotify/previous token_present={bool(token)}")
     return _spotify_transport_action(token, "POST", "/v1/me/player/previous", "previous")
 
 

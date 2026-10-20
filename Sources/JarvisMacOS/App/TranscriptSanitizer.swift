@@ -109,8 +109,8 @@ enum TranscriptSanitizer {
         return validated
     }
 
-    /// Dedup (last wins) + open/close conflict resolution (last wins per
-    /// target) + cap. Notices go through `onLog`, keeping this testable.
+    /// Resolve app-target conflicts (last wins per target) and cap. Repeated
+    /// side-effecting commands such as next/volume-up retain their order.
     static func sanitizeBatch(
         _ raw: [String],
         maxBatchSize: Int = 3,
@@ -118,13 +118,8 @@ enum TranscriptSanitizer {
     ) -> [String] {
         let original = raw.count
 
-        // Step 1: Deduplicate — last occurrence wins
-        var seen = Set<String>()
-        var deduplicated: [String] = []
-        for cmd in raw.reversed() {
-            let key = cmd.lowercased().trimmingCharacters(in: .whitespaces)
-            if seen.insert(key).inserted { deduplicated.insert(cmd, at: 0) }
-        }
+        // Separate utterances can intentionally repeat a side effect.
+        let commands = raw
 
         // Step 2: Build app-target → winning command map
         let appPrefixes = ["open ", "close ", "launch ", "start ", "run "]
@@ -140,7 +135,7 @@ enum TranscriptSanitizer {
         }
 
         var winner = [String: String]()
-        for cmd in deduplicated {
+        for cmd in commands {
             if let (verb, target) = appTarget(for: cmd) {
                 if let prev = winner[target] {
                     let prevVerb = appTarget(for: prev)?.verb ?? "?"
@@ -153,7 +148,7 @@ enum TranscriptSanitizer {
         // Step 3: Rebuild in ORIGINAL ORDER
         var emittedTargets = Set<String>()
         var combined: [String] = []
-        for cmd in deduplicated {
+        for cmd in commands {
             if let (_, target) = appTarget(for: cmd) {
                 if let w = winner[target], w == cmd, !emittedTargets.contains(target) {
                     combined.append(cmd)

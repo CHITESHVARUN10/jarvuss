@@ -44,10 +44,31 @@ extension DayBucket {
         commandsFailed += delta.commandsFailed
         timeSavedSecs += delta.timeSavedSecs
     }
+    var negated: DayBucket {
+        var result = self
+        result.talkSecs = -talkSecs
+        result.sessions = -sessions
+        result.charsDictated = -charsDictated
+        result.tokensPromptEst = -tokensPromptEst
+        result.tokensCompletionEst = -tokensCompletionEst
+        result.copies = -copies
+        result.commandsRun = -commandsRun
+        result.commandsFailed = -commandsFailed
+        result.timeSavedSecs = -timeSavedSecs
+        return result
+    }
+
+    var isEmpty: Bool { abs(talkSecs) < 0.000001 && sessions == 0 && charsDictated == 0 && tokensPromptEst == 0 && tokensCompletionEst == 0 && copies == 0 && commandsRun == 0 && commandsFailed == 0 && abs(timeSavedSecs) < 0.000001 }
+
+}
+
+protocol StatsStoring {
+    func load() throws -> [StatsBatch]
+    func save(_ batches: [StatsBatch]) throws
 }
 
 /// Accessed only by StatsRecorder's serial queue.
-final class StatsBufferStore {
+final class StatsBufferStore: StatsStoring {
     private let fileURL: URL
 
     init(fileURL: URL? = nil) {
@@ -79,7 +100,7 @@ final class StatsRecorder: @unchecked Sendable {
     static let shared = StatsRecorder()
 
     private let queue = DispatchQueue(label: "jarvis.stats.persistence", qos: .utility)
-    private let buffer: StatsBufferStore
+    private let buffer: StatsStoring
     private let now: @Sendable () -> Date
     private var today: DayBucket
     private var batches: [StatsBatch] = []
@@ -90,24 +111,34 @@ final class StatsRecorder: @unchecked Sendable {
     private var uploadInProgress = false
     private var lastUploadAt = Date.distantPast
     private var storageReadable = true
+    // UI reads use only this short in-memory lock, never the I/O queue.
+    private let viewLock = NSLock()
+    private var cachedToday: DayBucket
+    private var cachedDays: [String: DayBucket] = [:]
     private var upload: (@Sendable (StatsBatch) async -> Bool)?
 
     var onFlush: (@Sendable (StatsBatch) async -> Bool)? {
-        get { queue.sync { upload } }
-        set { queue.sync { upload = newValue } }
+        get { viewLock.withLock { upload } }
+        set { viewLock.withLock { upload = newValue } }
     }
 
-    init(buffer: StatsBufferStore = StatsBufferStore(),
+    init(buffer: StatsStoring = StatsBufferStore(),
          now: @escaping @Sendable () -> Date = { Date() },
          retryInterval: TimeInterval = 60) {
         self.buffer = buffer
         self.now = now
         today = DayBucket(day: DayBucket.dayString(now()))
+        cachedToday = today
         do { batches = try buffer.load() }
         catch {
             // Do not overwrite a damaged/unreadable outbox with an empty one.
             storageReadable = false
             NSLog("[Stats] Could not read outbox: %@", error.localizedDescription)
+        }
+        for batch in batches {
+            var day = cachedDays[batch.bucket.day] ?? DayBucket(day: batch.bucket.day)
+            day.add(batch.bucket)
+            cachedDays[batch.bucket.day] = day
         }
         if retryInterval > 0 {
             let timer = DispatchSource.makeTimerSource(queue: queue)
@@ -165,6 +196,13 @@ final class StatsRecorder: @unchecked Sendable {
     }
 
     private func record(_ delta: DayBucket) {
+        viewLock.withLock {
+            if cachedToday.day != delta.day { cachedToday = DayBucket(day: delta.day) }
+            cachedToday.add(delta)
+            var day = cachedDays[delta.day] ?? DayBucket(day: delta.day)
+            day.add(delta)
+            cachedDays[delta.day] = day
+        }
         queue.async { [self] in
             // Day rollover only rotates the in-memory snapshot. No recursive
             // locking or callbacks while mutating persistence state.
@@ -203,7 +241,7 @@ final class StatsRecorder: @unchecked Sendable {
     }
 
     private func uploadIfNeeded(force: Bool) {
-        guard !uploadInProgress, let upload, !batches.isEmpty,
+        guard !uploadInProgress, let upload = onFlush, !batches.isEmpty,
               force || now().timeIntervalSince(lastUploadAt) >= 60 else { return }
         uploadInProgress = true
         lastUploadAt = now()
@@ -220,10 +258,21 @@ final class StatsRecorder: @unchecked Sendable {
     private func acknowledge(_ id: UUID) async {
         await withCheckedContinuation { continuation in
             queue.async { [self] in
+                let acknowledged = batches.first { $0.id == id }
                 let remaining = batches.filter { $0.id != id }
                 do {
                     try buffer.save(remaining)
                     batches = remaining
+                    if let acknowledged {
+                        viewLock.withLock {
+                            let delta = acknowledged.bucket
+                            if var day = cachedDays[delta.day] {
+                                day.add(delta.negated)
+                                if day.isEmpty { cachedDays.removeValue(forKey: delta.day) }
+                                else { cachedDays[delta.day] = day }
+                            }
+                        }
+                    }
                 } catch {
                     // The same batch ID can safely be submitted again.
                     NSLog("[Stats] Could not persist acknowledgement: %@", error.localizedDescription)
@@ -233,7 +282,7 @@ final class StatsRecorder: @unchecked Sendable {
         }
     }
 
-    func snapshot() -> DayBucket { queue.sync { today } }
+    func snapshot() -> DayBucket { viewLock.withLock { cachedToday } }
 
     /// Persist immediately on shutdown; upload remains asynchronous. A failed
     /// or interrupted upload leaves its immutable batches available on relaunch.
@@ -246,15 +295,16 @@ final class StatsRecorder: @unchecked Sendable {
         }
     }
 
-    func bufferedDays() -> [DayBucket] {
-        queue.sync {
-            var days = pending
-            for batch in batches {
-                var day = days[batch.bucket.day] ?? DayBucket(day: batch.bucket.day)
-                day.add(batch.bucket)
-                days[day.day] = day
-            }
-            return days.values.sorted { $0.day < $1.day }
+    /// Non-blocking flush for settings changes while the app is running.
+    func requestFlush() {
+        queue.async { [self] in
+            persistPending()
+            uploadIfNeeded(force: true)
         }
+    }
+
+    func bufferedDays() -> [DayBucket] {
+        let days = viewLock.withLock { Array(cachedDays.values) }
+        return days.sorted { $0.day < $1.day }
     }
 }

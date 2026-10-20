@@ -73,7 +73,9 @@ final class DisplayController {
 
     // MARK: - Execute
 
-    func execute(_ action: DisplayAction) -> String {
+    func execute(_ action: DisplayAction) -> String { executeResult(action).message }
+
+    func executeResult(_ action: DisplayAction) -> ControllerResult {
         switch action {
 
         // ── Brightness ──────────────────────────────────────────────
@@ -144,7 +146,7 @@ final class DisplayController {
     private var cachedBrightnessPct: Int = 50
     private var cachedContrastPct: Int = 50
 
-    private func setBrightness(_ percent: Int) -> String {
+    private func setBrightness(_ percent: Int) -> ControllerResult {
         let safePct = clamp(percent, 0, 100)
         let level = Float(safePct) / 100.0
 
@@ -153,7 +155,7 @@ final class DisplayController {
             let ok = builtIn.setBrightness(level)
             if ok {
                 cachedBrightnessPct = safePct
-                return "Brightness set to \(safePct)%"
+                return ControllerResult(message: "Brightness set to \(safePct)%", success: true)
             }
             emit("[Display] Built-in brightness failed, trying external DDC")
         }
@@ -163,16 +165,16 @@ final class DisplayController {
             ddc.onLog = onLog
             if ddc.setBrightness(displayID: displayID, percent: safePct) {
                 cachedBrightnessPct = safePct
-                return "External display brightness set to \(safePct)%"
+                return ControllerResult(message: "External display brightness set to \(safePct)%", success: true)
             }
         }
 
-        return "Brightness change failed — no controllable display found"
+        return ControllerResult(message: "Brightness change failed — no controllable display found", success: false)
     }
 
     private enum Direction { case up, down }
 
-    private func adjustBrightness(delta: Float, direction: Direction) -> String {
+    private func adjustBrightness(delta: Float, direction: Direction) -> ControllerResult {
         if builtIn.canChangeBrightness() {
             let current = builtIn.getBrightness() ?? Float(cachedBrightnessPct) / 100.0
             let newLevel = direction == .up ? current + delta : current - delta
@@ -180,7 +182,7 @@ final class DisplayController {
             if ok {
                 let pct = Int(min(max(newLevel, 0), 1) * 100)
                 cachedBrightnessPct = pct
-                return "Brightness \(direction == .up ? "increased" : "decreased") to \(pct)%"
+                return ControllerResult(message: "Brightness \(direction == .up ? "increased" : "decreased") to \(pct)%", success: true)
             }
         }
 
@@ -192,52 +194,52 @@ final class DisplayController {
             let newPct = clamp(direction == .up ? currentPct + step : currentPct - step, 0, 100)
             if ddc.setBrightness(displayID: displayID, percent: newPct) {
                 cachedBrightnessPct = newPct
-                return "External display brightness \(direction == .up ? "increased" : "decreased") to \(newPct)%"
+                return ControllerResult(message: "External display brightness \(direction == .up ? "increased" : "decreased") to \(newPct)%", success: true)
             }
         }
 
-        return "Brightness adjustment failed — no controllable display found"
+        return ControllerResult(message: "Brightness adjustment failed — no controllable display found", success: false)
     }
 
     // MARK: - Contrast
 
-    private func setContrast(_ percent: Int) -> String {
+    private func setContrast(_ percent: Int) -> ControllerResult {
         ddc.onLog = onLog
         for displayID in DDCController.externalDisplayIDs() {
             if ddc.setContrast(displayID: displayID, percent: percent) {
                 cachedContrastPct = clamp(percent, 0, 100)
-                return "Contrast set to \(percent)%"
+                return ControllerResult(message: "Contrast set to \(percent)%", success: true)
             }
         }
-        return "Contrast control requires an external monitor connected via DDC/CI"
+        return ControllerResult(message: "Contrast control requires an external monitor connected via DDC/CI", success: false)
     }
 
-    private func adjustContrast(delta: Int, direction: Direction) -> String {
+    private func adjustContrast(delta: Int, direction: Direction) -> ControllerResult {
         ddc.onLog = onLog
         for displayID in DDCController.externalDisplayIDs() {
             let currentPct = ddc.getContrast(displayID: displayID)?.current ?? cachedContrastPct
             let newPct = clamp(direction == .up ? currentPct + delta : currentPct - delta, 0, 100)
             if ddc.setContrast(displayID: displayID, percent: newPct) {
                 cachedContrastPct = newPct
-                return "Contrast \(direction == .up ? "increased" : "decreased") to \(newPct)%"
+                return ControllerResult(message: "Contrast \(direction == .up ? "increased" : "decreased") to \(newPct)%", success: true)
             }
         }
-        return "Contrast adjustment requires an external monitor connected via DDC/CI"
+        return ControllerResult(message: "Contrast adjustment requires an external monitor connected via DDC/CI", success: false)
     }
 
     // MARK: - Resolution
 
-    private func setResolution(width: Int, height: Int, refreshRate: Double?) -> String {
+    private func setResolution(width: Int, height: Int, refreshRate: Double?) -> ControllerResult {
         let displayID = DisplayModeController.mainDisplayID()
         modeController.onLog = onLog
-        return modeController.setMode(displayID: displayID, width: width,
+        return modeController.setModeResult(displayID: displayID, width: width,
                                       height: height, refreshRate: refreshRate)
     }
 
-    private func listResolutions() -> String {
+    private func listResolutions() -> ControllerResult {
         let displayID = DisplayModeController.mainDisplayID()
         modeController.onLog = onLog
-        return modeController.listModes(for: displayID)
+        return modeController.listModesResult(for: displayID)
     }
 
     // MARK: - Helpers

@@ -78,7 +78,7 @@ final class PostgresClient {
         var request = URLRequest(url: baseURL.appendingPathComponent(path))
         request.timeoutInterval = 5
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
+            let (data, response) = try await BackendAccess.data(for: request)
             guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
                 throw PostgresClientError.transport("unexpected HTTP response")
             }
@@ -97,7 +97,7 @@ final class PostgresClient {
         request.timeoutInterval = 15
         request.httpBody = try JSONSerialization.data(withJSONObject: payload)
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
+            let (data, response) = try await BackendAccess.data(for: request)
             guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
                 throw PostgresClientError.server(errorDetail(data) ?? "unexpected HTTP response")
             }

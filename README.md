@@ -29,11 +29,11 @@ Full walkthrough with every command and exact phrasings: **[practice.md](practic
 - **Last dictation is kept across restarts**: the System pane shows the latest original + polished pair — and only that pair. A new dictation immediately and unrecoverably replaces the previous one (no history by design).
 - **Dictation diagnostics (dev)**: Assistant → Behaviour → *Dictation diagnostics* writes one JSONL line per dictation — raw input, rules and final text, and the timing breakdown (wall, speech, STT, rules, polish, insert) to `~/Library/Application Support/Jarvis/logs/dictation_dev.jsonl`.
 - **"Jarvis" wake word**: wake-word command mode with a 0.7 s audio pre-roll so the wake word and the first syllables are never lost to VAD latency; "Jarvis" → pause → command works; continuous speech is segmented at 8 s with the tail re-armed, not dropped.
-- **Speaker verification (optional, per mode)**: Resemblyzer voiceprint enrollment can gate execution to your voice — independently for ⌘⇧A commands and for live mode (Assistant → Privacy). With live-mode verification off, the wake word alone is the gate.
+- **Speaker verification (optional, per mode)**: Resemblyzer voiceprint enrollment can gate execution to your voice — independently for ⌘⇧A commands and for live mode (Assistant → Privacy). With live-mode verification off, enrollment is not required and the wake word alone is the gate. When verification is required, unavailable or rejected verification never executes the command.
 
 **Command execution (⌘⇧A or "Jarvis …")**
 - Apps: open/close with fuzzy matching and aliases ("get her desktop" → GitHub Desktop).
-- Files & folders: create, move, and **explore** — "how many files are in my downloads folder", "what is the latest ppt I have", "open the most recent pdf in downloads", "how much space do my pdfs take" (count, folders, list, largest, oldest, newest, total size, open newest/oldest).
+- Files & folders: create files/folders in `~/Documents/Jarvis`, move, and **explore** — "how many files are in my downloads folder", "what is the latest ppt I have", "open the most recent pdf in downloads", "how much space do my pdfs take" (count, folders, list, largest, oldest, newest, total size, open newest/oldest).
 - Media & system: Spotify playback (play/pause/next/previous, by song, playlist, liked), volume, mute, display brightness (DDC + software), display modes.
 - Web: search and open URLs.
 - Chained commands: "open spotify, open whatsapp and also open youtube, in spotify play a song" — split and executed in order.
@@ -42,7 +42,7 @@ Full walkthrough with every command and exact phrasings: **[practice.md](practic
 
 **The rest**
 - **Setup pane (first run)**: a checklist that detects what's missing and fixes it in-app — microphone and Accessibility grants, the Whisper model plus a custom model-folder picker, Ollama (install via brew / start / pull `qwen2.5:1.5b-instruct` with download status), PostgreSQL (install, start, **create the jarvis database with an editable user + password**, configure itself, enable logging), and a Spotify API-app guide. Reopen it anytime from the rail.
-- **On-demand backend (default: Automatic)**: the Python helper that serves voice auth, Spotify and the learned intent router starts only when a feature needs it and idles out after 5 minutes — `pgrep uvicorn` is empty on a fresh boot and torch loads only on the first voice request. Assistant → Behaviour → *Backend* offers Automatic / Always running / Off.
+- **On-demand backend (default: Automatic)**: the Python helper that serves voice auth, Spotify and the learned intent router starts for verification, Spotify, or explicit connector/setup actions and idles out after 5 minutes. Learned routing uses it only when already running; otherwise rules/Qwen handle the command — `pgrep uvicorn` is empty on a fresh boot and torch loads only on the first voice request. Assistant → Behaviour → *Backend* offers Automatic / Always running / Off.
 - **Insights**: local stats on dictation, commands, success rates, LLM usage.
 - **Connections**: Spotify (OAuth via local backend) and PostgreSQL (schema-browsing status/credentials/test).
 - **rail + panes shell**: Setup, Assistant, Voice, Routines, Connections, Insights, System, About.
@@ -189,7 +189,7 @@ ollama serve
 ```
 
 Speech is offline Whisper (`large-v3-turbo`, via the Rust `stt-core`) and needs
-no extra setup — the model downloads on first use.
+no extra setup — the model downloads at launch when missing. Partial downloads survive restarts and are published only after size, header and SHA-256 verification against the [pinned upstream revision](https://huggingface.co/ggerganov/whisper.cpp/blob/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-large-v3-turbo.bin).
 
 ### 3) Python backend
 
@@ -223,7 +223,7 @@ swift build && swift run             # dev run; the window opens behind your ter
 Manual backend + app:
 
 ```zsh
-python3 -m uvicorn voice_auth_service:app --app-dir backend --host 127.0.0.1 --port 8000
+python3 -m uvicorn voice_auth_service:app --app-dir backend --host 127.0.0.1 --port 8000 --workers 1
 swift run
 ```
 
@@ -342,6 +342,14 @@ Jarvis explain quantum computing
 
 ## 📂 Local backend endpoints (`http://127.0.0.1:8000`)
 
+Requests require `X-Jarvis-Token`, read from the private
+`~/Library/Application Support/Jarvis/backend_auth.token` file (or `JARVIS_DATA_DIR`).
+The token rotates at each backend startup; app clients read it automatically.
+Run one backend worker. OAuth browser callbacks use expiring, single-use `state`
+instead of the header. `/spotify/token` reports presence/expiry, never token bytes.
+This protects API access from other OS users and unauthenticated browser requests;
+it does not isolate the app from processes that can read files as the same user.
+
 | Endpoint | Method | Description |
 |:---|:---:|:---|
 | `/health` | `GET` | Backend health check |
@@ -391,3 +399,9 @@ python3 scripts/test_postgres.py         # disposable DB; never uses your databa
 `JARVIS_RUN_SYSTEM_TESTS=1 swift test --filter SystemPipelineE2ETests` runs the
 separate harness that opens/closes real apps and controls Spotify. See
 [docs/architecture.md](docs/architecture.md) for policy ownership and lifecycle rules.
+
+### Continuous integration
+
+[GitHub Actions](.github/workflows/tests.yml) builds both native bridges and runs
+Swift, Rust, Python, and disposable PostgreSQL regression tests on macOS 26.
+Live microphone, hardware-control, and Keychain integration checks remain opt-in.

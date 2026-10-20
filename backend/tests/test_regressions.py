@@ -246,7 +246,8 @@ class VoiceSchedulingTests(unittest.IsolatedAsyncioTestCase):
         try:
             await asyncio.wait_for(asyncio.to_thread(started.wait), timeout=1)
             async with httpx.AsyncClient(transport=httpx.ASGITransport(app=service.app), base_url="http://test") as client:
-                response = await asyncio.wait_for(client.get("/health"), timeout=0.5)
+                with patch.object(service.app.state, "auth_token", "health-test-token"):
+                    response = await asyncio.wait_for(client.get("/health", headers={"X-Jarvis-Token": "health-test-token"}), timeout=0.5)
             self.assertEqual(response.status_code, 200)
         finally:
             release.set()

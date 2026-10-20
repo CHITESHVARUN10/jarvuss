@@ -2,6 +2,12 @@ import Foundation
 
 final class JarvisFileManager {
     private let fileManager = Foundation.FileManager.default
+    let creationDirectory: URL
+
+    init(creationDirectory: URL? = nil) {
+        self.creationDirectory = (creationDirectory ?? Foundation.FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Documents/Jarvis", isDirectory: true)).standardizedFileURL
+    }
     private let protectedPathPrefixes = [
         "/System", "/Library", "/private", "/usr", "/bin", "/sbin", "/etc", "/var"
     ]
@@ -18,15 +24,16 @@ final class JarvisFileManager {
             return ("Blocked: file creation in protected or invalid paths is not allowed.", false)
         }
 
-        let targetURL = URL(fileURLWithPath: fileManager.currentDirectoryPath).appendingPathComponent(name)
+        let targetURL = creationDirectory.appendingPathComponent(name.trimmingCharacters(in: .whitespacesAndNewlines))
         if fileManager.fileExists(atPath: targetURL.path) {
             return ("File already exists: \(name)", false)
         }
 
-        let created = fileManager.createFile(atPath: targetURL.path, contents: Data(), attributes: nil)
-        return created
-            ? ("Created file: \(targetURL.path)", true)
-            : ("Failed to create file: \(name)", false)
+        do {
+            try fileManager.createDirectory(at: creationDirectory, withIntermediateDirectories: true)
+            try Data().write(to: targetURL, options: .withoutOverwriting)
+            return ("Created file: \(targetURL.path)", true)
+        } catch { return ("Failed to create file: \(error.localizedDescription)", false) }
     }
 
     func createFolder(named name: String) -> String {
@@ -38,7 +45,7 @@ final class JarvisFileManager {
             return ("Blocked: folder creation in protected or invalid paths is not allowed.", false)
         }
 
-        let targetURL = URL(fileURLWithPath: fileManager.currentDirectoryPath).appendingPathComponent(name)
+        let targetURL = creationDirectory.appendingPathComponent(name.trimmingCharacters(in: .whitespacesAndNewlines))
         do {
             try fileManager.createDirectory(at: targetURL, withIntermediateDirectories: true)
             return ("Created folder: \(targetURL.path)", true)
@@ -171,10 +178,16 @@ final class JarvisFileManager {
         guard !trimmed.isEmpty else { return false }
         guard !trimmed.contains("..") else { return false }
         guard !trimmed.hasPrefix("/") else { return false }
-        return isAllowedPath(
-            URL(fileURLWithPath: fileManager.currentDirectoryPath)
-                .appendingPathComponent(trimmed).path
-        )
+        guard !trimmed.contains("\0") else { return false }
+        // Resolving a nonexistent leaf does not reliably resolve its parent
+        // symlinks. Reject symlink components before creating anything.
+        var candidate = creationDirectory
+        for component in trimmed.split(separator: "/") {
+            candidate.appendPathComponent(String(component))
+            if let attributes = try? fileManager.attributesOfItem(atPath: candidate.path),
+               attributes[.type] as? FileAttributeType == .typeSymbolicLink { return false }
+        }
+        return true
     }
 
     private func isAllowedPath(_ path: String) -> Bool {

@@ -7,8 +7,9 @@ import Foundation
 /// - `.action` — push-to-talk action pill (⌘⇧A, voice-to-command)
 /// - `.command` — VAD-segmented voice-command utterances
 ///
-/// All access happens on the main queue (VAD ticks, hotkey hops, and Rust
-/// callbacks all land there), so no locking is needed.
+/// MainActor owns all routing state. Rust callbacks hop to main before
+/// entering this router.
+@MainActor
 final class STTRouter {
     static let shared = STTRouter()
 
@@ -28,9 +29,7 @@ final class STTRouter {
     /// push-to-talk pill (dictate OR action) owns it. Set by
     /// DictationController.startDictation, cleared by dismissTranscript.
     /// Level metering keeps running; only begin/endUtterance claims are
-    /// suppressed. Lives here (not on the @MainActor AppState) so the
-    /// nonisolated DictationController can flip it; all readers/writers
-    /// already hop to main.
+    /// suppressed. The controller and router share MainActor isolation.
     var pillSuppressesCommandVAD = false
 
     /// Set when the pill preempts a command utterance: the in-flight
@@ -74,7 +73,31 @@ final class STTRouter {
         onLog?("[STT] Command utterance dropped — \(reason)")
     }
 
-    private init() {}
+    private let currentPhase: () -> AppPhase
+    private let cancelCapture: () -> Void
+    private let startModal: @MainActor (PillMode) -> Void
+    private let startFailed: () -> Void
+    private let scheduleRetry: (@escaping @MainActor () -> Void) -> Void
+    private var pendingGeneration = UUID()
+
+    init(currentPhase: @escaping () -> AppPhase = { get_app_phase() },
+         cancelCapture: @escaping () -> Void = { cancel_recording() },
+         startModal: @escaping @MainActor (PillMode) -> Void = { mode in
+             if mode == .action { DictationController.shared.startActionRecording() }
+             else { DictationController.shared.startPillRecording() }
+         },
+         startFailed: @escaping () -> Void = {
+             MainActor.assumeIsolated { AppState.shared?.restoreMicAfterTransientStartIfNeeded() }
+         },
+         scheduleRetry: @escaping (@escaping @MainActor () -> Void) -> Void = { callback in
+             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { callback() }
+         }) {
+        self.currentPhase = currentPhase
+        self.cancelCapture = cancelCapture
+        self.startModal = startModal
+        self.startFailed = startFailed
+        self.scheduleRetry = scheduleRetry
+    }
 
     // MARK: - Claims
 
@@ -122,11 +145,16 @@ final class STTRouter {
     }
 
     func cancelPendingModalStarts() {
+        pendingGeneration = UUID()
         pendingPillAfterCommand = false
         pendingPillRetries = 0
         pendingActionAfterCommand = false
         pendingActionRetries = 0
         suppressCommandResult = false
+        if !isModalOwner {
+            pillSuppressesCommandVAD = false
+            suppressCommandClaimsUntil = .distantPast
+        }
     }
 
     // MARK: - Preemption (pill steals an in-flight command utterance)
@@ -153,7 +181,7 @@ final class STTRouter {
         // behavior) left the pill dead whenever the empty-stop path emitted
         // no job; AgentTalk never waits, it just starts.
         WhisperCommandListener.shared.cancelUtterance()
-        cancel_recording()
+        cancelCapture()
         owner = .none
         onLog?("[STT] Pill preempted a command utterance — abandoned instantly, starting pill.")
         startPendingPillIfNeeded()
@@ -171,6 +199,9 @@ final class STTRouter {
         if owner == .command { owner = .none }
         startPendingPillIfNeeded()
         startPendingActionIfNeeded()
+        if !pendingPillAfterCommand, !pendingActionAfterCommand, !isModalOwner {
+            cancelPendingModalStarts()
+        }
     }
 
     // MARK: - Result routing (called from BridgeCallbacks on main)
@@ -186,7 +217,7 @@ final class STTRouter {
         pendingActionRetries = 0
         suppressCommandResult = false
         WhisperCommandListener.shared.cancelUtterance()
-        cancel_recording()
+        cancelCapture()
         releaseModalOwner()
     }
 
@@ -254,23 +285,25 @@ final class STTRouter {
     /// Action-pill twin of startPendingPillIfNeeded (⌘⇧A after preempt).
     func startPendingActionIfNeeded() {
         guard pendingActionAfterCommand else { return }
-        guard get_app_phase() == .Ready else {
+        guard currentPhase() == .Ready else {
             pendingActionRetries += 1
             if pendingActionRetries > 20 {
-                onLog?("[STT] Action start timed out waiting for Ready (phase: \(get_app_phase())) — press ⌘⇧A again.")
-                pendingActionAfterCommand = false
-                pendingActionRetries = 0
+                onLog?("[STT] Action start timed out waiting for Ready (phase: \(currentPhase())) — press ⌘⇧A again.")
+                cancelPendingModalStarts()
+                startFailed()
                 return
             }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-                self?.startPendingActionIfNeeded()
+            let token = pendingGeneration
+            scheduleRetry { [weak self] in
+                guard let self, self.pendingGeneration == token else { return }
+                self.startPendingActionIfNeeded()
             }
             return
         }
         pendingActionAfterCommand = false
         pendingActionRetries = 0
         owner = .action
-        DictationController.shared.startActionRecording()
+        startModal(.action)
     }
 
     /// Preempt a command utterance for the ACTION pill (⌘⇧A twin of
@@ -283,7 +316,7 @@ final class STTRouter {
         pillSuppressesCommandVAD = true
         suppressCommandClaimsUntil = Date().addingTimeInterval(0.5)
         WhisperCommandListener.shared.cancelUtterance()
-        cancel_recording()
+        cancelCapture()
         owner = .none
         onLog?("[STT] Action preempted a command utterance — abandoned instantly, starting action pill.")
         startPendingActionIfNeeded()
@@ -296,22 +329,24 @@ final class STTRouter {
         // cancel_recording dismisses Recording/Processing/Error → Ready, but
         // the callback round-trips async. Retry briefly instead of dying on
         // the first non-Ready poll — the pill must appear on this press.
-        guard get_app_phase() == .Ready else {
+        guard currentPhase() == .Ready else {
             pendingPillRetries += 1
             if pendingPillRetries > 20 {
-                onLog?("[STT] Pill start timed out waiting for Ready (phase: \(get_app_phase())) — press ⌘⇧D again.")
-                pendingPillAfterCommand = false
-                pendingPillRetries = 0
+                onLog?("[STT] Pill start timed out waiting for Ready (phase: \(currentPhase())) — press ⌘⇧D again.")
+                cancelPendingModalStarts()
+                startFailed()
                 return
             }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-                self?.startPendingPillIfNeeded()
+            let token = pendingGeneration
+            scheduleRetry { [weak self] in
+                guard let self, self.pendingGeneration == token else { return }
+                self.startPendingPillIfNeeded()
             }
             return
         }
         pendingPillAfterCommand = false
         pendingPillRetries = 0
         owner = .pill
-        DictationController.shared.startPillRecording()
+        startModal(.dictate)
     }
 }

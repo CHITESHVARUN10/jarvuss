@@ -112,7 +112,8 @@ final class OllamaClient {
                     throw GenerationError.deadlineExceeded
                 }
                 defer { group.cancelAll() }
-                return try await group.next()!
+                guard let first = try await group.next() else { throw CancellationError() }
+                return first
             }
         } catch GenerationError.deadlineExceeded {
             return Self.timeoutMessage

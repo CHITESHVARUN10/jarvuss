@@ -166,6 +166,16 @@ final class BackendServiceManager {
             )
         }
 
+        // Upgrade only a process identified by our own PID file. An old
+        // unauthenticated helper must not be silently reused after an upgrade.
+        if launchOverride == nil, let pid = stopOwnedProcess(log: log) {
+            let deadline = Date().addingTimeInterval(3)
+            while kill(pid, 0) == 0 && Date() < deadline {
+                do { try await Task.sleep(for: .milliseconds(100)) }
+                catch { return BackendStartupResult(success: false, message: "Backend startup cancelled") }
+            }
+        }
+
         // Torch imports lazily (first voice request), but a cold Python
         // interpreter + uvicorn bind still takes a few seconds. Allow 20 s per
         // attempt so the total retry budget (40 s across 2 attempts) covers it.
@@ -199,13 +209,18 @@ final class BackendServiceManager {
         startupTask?.cancel()
         startupTask = nil
         startupID = nil
-        guard let pidFile = pidFilePath() else { return }
+        _ = stopOwnedProcess(log: log)
+    }
+
+    @MainActor
+    private func stopOwnedProcess(log: @escaping (String) -> Void) -> Int32? {
+        guard let pidFile = pidFilePath() else { return nil }
 
         guard let pidText = try? String(contentsOf: URL(fileURLWithPath: pidFile), encoding: .utf8)
             .trimmingCharacters(in: .whitespacesAndNewlines),
               let pid = Int32(pidText),
               pid > 0 else {
-            return
+            return nil
         }
 
         // A stale PID file can point at an unrelated process after PID reuse.
@@ -216,7 +231,7 @@ final class BackendServiceManager {
               output.status == 0, Self.isBackendCommand(output.stdout) else {
             log("[Backend] Ignoring stale PID file; process is not the Jarvis helper")
             try? FileManager.default.removeItem(atPath: pidFile)
-            return
+            return nil
         }
 
         let terminated = kill(pid, SIGTERM) == 0
@@ -225,6 +240,7 @@ final class BackendServiceManager {
         }
 
         try? FileManager.default.removeItem(atPath: pidFile)
+        return terminated ? pid : nil
     }
 
     static func isBackendCommand(_ command: String) -> Bool {
@@ -327,9 +343,11 @@ final class BackendServiceManager {
         var request = URLRequest(url: healthURL)
         request.timeoutInterval = 2
         do {
-            let (_, response) = try await URLSession.shared.data(for: request)
+            let (data, response) = try await BackendAccess.data(for: request)
             let code = (response as? HTTPURLResponse)?.statusCode ?? 0
-            return (200..<300).contains(code) ? .healthy : .unhealthy(statusCode: code)
+            guard (200..<300).contains(code) else { return .unhealthy(statusCode: code) }
+            let health = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+            return health?["api_version"] as? Int == 3 ? .healthy : .unhealthy(statusCode: 409)
         } catch {
             return .noResponse(error: error.localizedDescription)
         }

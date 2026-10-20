@@ -6,6 +6,8 @@ private final class DeferredMicrophone: AudioCapturing {
     var continuation: CheckedContinuation<Void, Never>?
     var started: XCTestExpectation?
     var capturing = false
+    var interruption: ((String) -> Void)?
+    func setInterruptionHandler(_ handler: @escaping (String) -> Void) { interruption = handler }
     var starts = 0
     var stops = 0
 
@@ -47,6 +49,25 @@ final class MicrophoneLifecycleTests: XCTestCase {
         app = nil
         microphone = nil
         try FileManager.default.removeItem(at: directory)
+    }
+
+    func testTransientlyUnavailableInputFormatIsRejectedBeforeInstallingATap() {
+        XCTAssertFalse(MicManager.isUsableInputFormat(sampleRate: 0, channels: 1))
+        XCTAssertFalse(MicManager.isUsableInputFormat(sampleRate: 48000, channels: 0))
+        XCTAssertFalse(MicManager.isUsableInputFormat(sampleRate: .nan, channels: 1))
+        XCTAssertTrue(MicManager.isUsableInputFormat(sampleRate: 48000, channels: 2))
+    }
+
+    func testInputDeviceChangeStopsTheVisibleMicrophoneSession() async {
+        microphone.started = expectation(description: "permission pending")
+        let start = Task { await app.startMicrophone() }
+        await fulfillment(of: [microphone.started!], timeout: 1)
+        microphone.continuation?.resume()
+        await start.value
+        XCTAssertTrue(app.micActive)
+        microphone.interruption?("Input device changed")
+        XCTAssertFalse(app.micActive)
+        XCTAssertFalse(microphone.capturing)
     }
 
     func testStopDuringPermissionPromptCannotRestartMicrophone() async {

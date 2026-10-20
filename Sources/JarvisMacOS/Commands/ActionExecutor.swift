@@ -131,10 +131,8 @@ final class ActionExecutor {
             return await executeMediaAction(mediaAction)
 
         case .volumeControl(let volumeAction):
-            let msg = volumeController.execute(volumeAction)
-            let displayMsg = msg.isEmpty ? volumeAction.responseText : msg
-            let success = !displayMsg.lowercased().contains("no actual volume change")
-            return ActionResult(action: action, success: success, message: displayMsg)
+            let result = volumeController.executeResult(volumeAction)
+            return ActionResult(action: action, success: result.success, message: result.message)
 
         case .createFile(let name):
             let result = fileManager.createFileResult(named: name)
@@ -166,14 +164,8 @@ final class ActionExecutor {
                                 message: "🔒 Install blocked: '\(pkg)'. Source: \(source).")
 
         case .displayControl(let displayAction):
-            let msg = displayController.execute(displayAction)
-            // Failure sentinels emitted by DisplayController itself
-            // (setBrightness/adjustBrightness); kept narrow so a display
-            // name containing "error" can't flip the result.
-            let lower = msg.lowercased()
-            let success = !(lower.contains("failed") || lower.contains("unable")
-                || lower.contains("no controllable display") || lower.contains("not supported"))
-            return ActionResult(action: action, success: success, message: msg)
+            let result = displayController.executeResult(displayAction)
+            return ActionResult(action: action, success: result.success, message: result.message)
 
         case .fileQuery(let query):
             return executeFileQuery(query, action: action)
@@ -323,6 +315,14 @@ final class ActionExecutor {
 
     // MARK: - Search URL builder + opener
 
+    static func searchURL(base: String, query: String) -> URL? {
+        guard var parts = URLComponents(string: base), let key = parts.queryItems?.first?.name else { return nil }
+        parts.queryItems = [URLQueryItem(name: key, value: query)]
+        // Search servers decode query values as form data, where '+' is a space.
+        parts.percentEncodedQuery = parts.percentEncodedQuery?.replacingOccurrences(of: "+", with: "%2B")
+        return parts.url
+    }
+
     private func executeSearchWeb(engine: String, query: String, action: PlannedAction) -> ActionResult {
         // Map engine name → base search URL
         let engineURLs: [String: String] = [
@@ -339,10 +339,8 @@ final class ActionExecutor {
         let baseURL = engineURLs[key] ?? "https://www.google.com/search?q="
         let engineLabel = engineURLs[key] != nil ? engine : "Google (fallback)"
 
-        guard let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let url = URL(string: baseURL + encoded) else {
-            return ActionResult(action: action, success: false,
-                                message: "Could not build search URL for query: '\(query)'")
+        guard let url = Self.searchURL(base: baseURL, query: query) else {
+            return ActionResult(action: action, success: false, message: "Could not build search URL.")
         }
 
         let process = Process()
@@ -525,7 +523,7 @@ final class ActionExecutor {
         request.httpBody = Data("{}".utf8)
 
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
+            let (data, response) = try await BackendAccess.data(for: request)
             let status = (response as? HTTPURLResponse)?.statusCode ?? -1
             let raw = String(data: data, encoding: .utf8) ?? ""
             emitSpotify("[Spotify][Backend] Response status: \(status)")

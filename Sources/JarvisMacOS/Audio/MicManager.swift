@@ -5,6 +5,7 @@ enum MicManagerError: LocalizedError {
     case permissionDenied
     case missingUsageDescription
     case insufficientAudio
+    case inputUnavailable
 
     var errorDescription: String? {
         switch self {
@@ -12,6 +13,8 @@ enum MicManagerError: LocalizedError {
             return "Microphone permission denied. Enable it in System Settings > Privacy & Security > Microphone."
         case .missingUsageDescription:
             return "Missing `NSMicrophoneUsageDescription` in app Info.plist. Launch as an app bundle with this key."
+        case .inputUnavailable:
+            return "No microphone input is ready. Reconnect or choose an input device, then try again."
         case .insufficientAudio:
             return "Not enough recent microphone audio collected yet."
         }
@@ -32,11 +35,29 @@ final class MicManager {
     private var recentSamples: [Float] = []
     private var recentSampleRate: Double = 16_000
     private let maxBufferedSeconds: Double = 8.0
+    private var configurationObserver: NSObjectProtocol?
+    private var interruptionHandler: ((String) -> Void)?
+
+    init() {
+        configurationObserver = NotificationCenter.default.addObserver(
+            forName: .AVAudioEngineConfigurationChange, object: audioEngine, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self, self.isListening else { return }
+                self.stopListening()
+                self.interruptionHandler?("Audio input changed. Microphone stopped; start it again when ready.")
+            }
+        }
+    }
+
+    @MainActor
+    func setInterruptionHandler(_ handler: @escaping (String) -> Void) { interruptionHandler = handler }
 
     private var startGeneration = UUID()
     private(set) var isListening = false
     var voiceDetectionThresholdDB: Float = -35.0
 
+    @MainActor
     func requestPermission() async -> Bool {
         if Bundle.main.object(forInfoDictionaryKey: "NSMicrophoneUsageDescription") == nil {
             NSLog("[Jarvis][Mic] NSMicrophoneUsageDescription missing in Bundle.main (%@) — still requesting access (dev run?). Launch .build/Jarvis.app for the system prompt.",
@@ -61,6 +82,7 @@ final class MicManager {
         }
     }
 
+    @MainActor
     func startListening(
         onLevelUpdate: @escaping (Float) -> Void,
         onAudioBuffer: ((AVAudioPCMBuffer) -> Void)? = nil
@@ -72,13 +94,16 @@ final class MicManager {
         self.onAudioBuffer = onAudioBuffer
         let inputNode = audioEngine.inputNode
         let format = inputNode.outputFormat(forBus: 0)
+        guard Self.isUsableInputFormat(sampleRate: format.sampleRate, channels: format.channelCount) else {
+            throw MicManagerError.inputUnavailable
+        }
 
         if !isTapInstalled {
             inputNode.installTap(onBus: 0, bufferSize: 2048, format: format) { [weak self] buffer, _ in
                 guard let self else { return }
                 let dbLevel = Self.rmsToDecibels(from: buffer)
-                self.onLevelUpdate?(dbLevel)
-                self.onAudioBuffer?(buffer)
+                onLevelUpdate(dbLevel)
+                onAudioBuffer?(buffer)
                 self.captureRecentSamples(from: buffer, sampleRate: format.sampleRate)
             }
             isTapInstalled = true
@@ -89,9 +114,11 @@ final class MicManager {
         isListening = true
     }
 
+    @MainActor
     func stopListening() {
         startGeneration = UUID()
         guard isListening || isTapInstalled else { return }
+        isListening = false
         audioEngine.stop()
 
         if isTapInstalled {
@@ -122,6 +149,10 @@ final class MicManager {
             throw MicManagerError.permissionDenied
         }
         try startListening(onLevelUpdate: onLevelUpdate, onAudioBuffer: onAudioBuffer)
+    }
+
+    static func isUsableInputFormat(sampleRate: Double, channels: AVAudioChannelCount) -> Bool {
+        sampleRate.isFinite && sampleRate > 0 && channels > 0
     }
 
     func isVoiceLikelyPresent(decibelLevel: Float) -> Bool {
@@ -206,7 +237,17 @@ final class MicManager {
     }
 
     deinit {
-        stopListening()
+        if let configurationObserver { NotificationCenter.default.removeObserver(configurationObserver) }
+        // A tap can release the last reference on its audio thread. Retain
+        // resources until main tears them down, without retaining this object.
+        let engine = audioEngine
+        let removeTap = isTapInstalled
+        let teardown = {
+            engine.stop()
+            if removeTap { engine.inputNode.removeTap(onBus: 0) }
+        }
+        if Thread.isMainThread { teardown() }
+        else { DispatchQueue.main.async(execute: teardown) }
     }
 
     private static func rmsToDecibels(from buffer: AVAudioPCMBuffer) -> Float {

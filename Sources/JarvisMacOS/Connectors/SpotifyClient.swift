@@ -50,7 +50,7 @@ final class SpotifyClient {
         request.httpMethod = "GET"
         request.timeoutInterval = 10
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
+            let (data, response) = try await BackendAccess.data(for: request)
             guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
                 throw SpotifyClientError.backendUnavailable
             }
@@ -71,7 +71,7 @@ final class SpotifyClient {
             "client_id": clientID.trimmingCharacters(in: .whitespacesAndNewlines),
             "client_secret": clientSecret.trimmingCharacters(in: .whitespacesAndNewlines),
         ])
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await BackendAccess.data(for: request)
         guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
             let detail = String(data: data, encoding: .utf8) ?? ""
             throw SpotifyClientError.saveFailed(detail.isEmpty ? "Save rejected." : detail)
@@ -82,7 +82,7 @@ final class SpotifyClient {
         var request = URLRequest(url: baseURL.appendingPathComponent("spotify/connect-url"))
         request.httpMethod = "GET"
         request.timeoutInterval = 10
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await BackendAccess.data(for: request)
         guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
             throw SpotifyClientError.backendUnavailable
         }

@@ -132,7 +132,7 @@ final class AppState: ObservableObject {
             dbManager.loggingEnabled = eventLoggingEnabled
             if eventLoggingEnabled {
                 dbManager.setup()
-                statsRecorder.flush()
+                statsRecorder.requestFlush()
             }
         }
     }
@@ -206,7 +206,6 @@ final class AppState: ObservableObject {
     /// seed replaces the -160 dB cold start that delayed VAD onset ~250 ms.
     private var smoothedAudioLevelSeeded = false
     private var recordingStartedAt = Date.distantPast
-    private var lastFinalTranscriptAt = Date.distantPast
     /// Last text spoken aloud by TTS — used to suppress echo capture.
     private var lastSpokenResponseText: String = ""
     private var lastSpokenResponseAt: Date = .distantPast
@@ -267,6 +266,8 @@ final class AppState: ObservableObject {
         logs.joined(separator: "\n")
     }
 
+    var canUseVoiceMode: Bool { !voiceModeRequiresVerify || voiceProfileReady }
+
     var currentEnrollmentPhrase: String {
         guard enrollmentPhrases.indices.contains(enrollmentIndex) else { return "Completed" }
         return enrollmentPhrases[enrollmentIndex]
@@ -292,6 +293,12 @@ final class AppState: ObservableObject {
         self.statsRecorder = statsRecorder
         self.intentLog = intentLog
         self.presentsUI = activateServices
+        micManager.setInterruptionHandler { [weak self] message in
+            MainActor.assumeIsolated {
+                self?.stopMicrophone()
+                self?.appendLog(message)
+            }
+        }
         guard activateServices else { return }
         AppState.shared = self
         commandQueue.onCancel = { [weak self] in self?.invalidateActiveCommand() }
@@ -443,7 +450,7 @@ final class AppState: ObservableObject {
         if voiceSessionState != .active {
             transitionToSessionState(.active, reason: "verified speaker command: '\(command)'")
         } else {
-            appendLog("[VoiceSession] Session extended (+10s) by command: '\(command)'. Expires at \(timeStr)")
+            appendLog("[VoiceSession] Session extended (+\(sessionTimeoutSeconds)s) by command: '\(command)'. Expires at \(timeStr)")
         }
     }
 
@@ -454,7 +461,6 @@ final class AppState: ObservableObject {
         lastBatchHandledTranscript   = ""
         pendingWakeWordDetected      = false
         pendingWakeWordDetectedAt    = .distantPast
-        lastFinalTranscriptAt        = .distantPast
         smoothedAudioLevelSeeded     = false
         appendLog("[Voice] Pipeline state hard-reset.")
     }
@@ -814,7 +820,7 @@ final class AppState: ObservableObject {
         }
     }
 
-    private func handleTranscript(_ transcript: String, isFinal: Bool) {
+    func handleTranscript(_ transcript: String, isFinal: Bool) {
         lastRecognizedSpeech = transcript
 
         // Live partials update the on-screen card immediately (the user
@@ -867,13 +873,12 @@ final class AppState: ObservableObject {
         // a bare known-app noun in voice mode becomes "open <app>".
         let repairedTranscript: String = {
             let t = transcript.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-            let apps: Set<String> = ["spotify", "chrome", "whatsapp"]
-            if apps.contains(t) { return "open \(t)" }
+            if let app = AppAliasResolver.knownAppName(t) { return "open \(app)" }
             return transcript
         }()
         let transcriptForCommand = repairedTranscript
 
-        guard enrollmentCompleted else {
+        guard canUseVoiceMode else {
             appendLog("Enrollment required before voice command execution.")
             return
         }
@@ -898,11 +903,8 @@ final class AppState: ObservableObject {
         }
 
         let now = Date()
-        guard now.timeIntervalSince(lastFinalTranscriptAt) > 0.7 else {
-            appendLog("[Voice] dropped: debounce (≤0.7 s since last final) — transcript '\(transcript)' ignored.")
-            return
-        }
-        lastFinalTranscriptAt = now
+        // Each native capture has its own generation; do not drop a second
+        // intentional utterance merely because it arrives quickly.
 
         // Check session expiration before evaluating transcript
         checkSessionExpiration()

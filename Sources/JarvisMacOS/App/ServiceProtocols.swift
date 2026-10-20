@@ -65,8 +65,13 @@ protocol AudioCapturing {
         onLevelUpdate: @escaping (Float) -> Void,
         onAudioBuffer: ((AVAudioPCMBuffer) -> Void)?
     ) async throws
-    func stopListening()
+    @MainActor func stopListening()
+    @MainActor func setInterruptionHandler(_ handler: @escaping (String) -> Void)
     func exportRecentAudioSample(durationSeconds: Double, targetSampleRate: Double?) throws -> URL
+}
+
+extension AudioCapturing {
+    @MainActor func setInterruptionHandler(_ handler: @escaping (String) -> Void) {}
 }
 
 extension MicManager: AudioCapturing {}

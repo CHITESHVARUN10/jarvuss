@@ -57,11 +57,11 @@ struct AssistantPane: View {
                     JSwitch(binding: $appState.voiceResponseEnabled)
                 }
                 JRow(title: "Voice mode",
-                     sub: appState.voiceProfileReady
+                     sub: appState.canUseVoiceMode
                         ? "Hands-free follow-ups"
                         : "Finish enrollment to unlock") {
                     JSwitch(binding: $appState.voiceModeEnabled)
-                        .disabled(!appState.voiceProfileReady)
+                        .disabled(!appState.canUseVoiceMode && !appState.voiceModeEnabled)
                 }
                 JRow(title: "Follow-up window",
                      sub: "Stay armed after a command") {
@@ -120,7 +120,7 @@ struct AssistantPane: View {
             .padding(.top, 9)
 
             if appState.backendMode == .off && (appState.actionPillRequiresVerify || appState.voiceModeRequiresVerify) {
-                Text("Backend is Off but verification is on — ⌘⇧A/live commands only run with the wake word present.")
+                Text("Verification requires the Python helper. Enable the backend or turn verification off for that mode.")
                     .font(.system(size: 10.5))
                     .foregroundStyle(JColor.danger)
                     .fixedSize(horizontal: false, vertical: true)

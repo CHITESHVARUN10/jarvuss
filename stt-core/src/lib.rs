@@ -250,7 +250,7 @@ fn initialize_core() -> bool {
     let config = config::AppConfig::load();
 
     let state = AppStateMachine::new(config);
-    *APP.lock().unwrap() = Some(state);
+    *APP.lock().unwrap_or_else(|p| p.into_inner()) = Some(state);
 
     tracing::info!("Jarvis STT core initialized");
 
@@ -260,7 +260,7 @@ fn initialize_core() -> bool {
         let dir = resolve_model_dir(&model_dir);
         let filename = with_app(|app| app.config.model.filename.clone());
         let path = std::path::PathBuf::from(&dir).join(&filename);
-        *MODEL_PATH.lock().unwrap() = Some(path);
+        *MODEL_PATH.lock().unwrap_or_else(|p| p.into_inner()) = Some(path);
 
         let threads = with_app(|app| app.config.inference.n_threads);
         N_THREADS.store(threads.max(1) as u64, Ordering::SeqCst);
@@ -302,17 +302,8 @@ fn initialize_core() -> bool {
             }
         };
 
-        if mgr.is_installed() {
-            with_app(|app| {
-                app.model_state = ModelState::Ready;
-                app.phase = SessionPhase::Ready;
-            });
-            notify_state();
-            return;
-        }
-
         with_app(|app| {
-            app.model_state = ModelState::Downloading;
+            app.model_state = if mgr.is_installed() { ModelState::Verifying } else { ModelState::Downloading };
             app.phase = SessionPhase::Preparing;
         });
         notify_state();
@@ -1253,7 +1244,8 @@ fn undo_last_insert() -> bool {
 /// the duration of the call (Swift `withUnsafeBufferPointer` does exactly
 /// that); a null pointer or zero length is a safe no-op.
 fn prime_recording(samples: *const f32, len: usize) -> u32 {
-    if samples.is_null() || len == 0 {
+    if samples.is_null() || len == 0 || len > 16_000 * 8
+        || (samples as usize) % std::mem::align_of::<f32>() != 0 {
         return 0;
     }
     let slice = unsafe { std::slice::from_raw_parts(samples, len) };

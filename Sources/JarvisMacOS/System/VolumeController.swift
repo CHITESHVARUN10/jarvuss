@@ -196,7 +196,9 @@ final class VolumeController {
         lastOperationSucceeded = hasMeaningfulChange(before: before, after: after)
     }
 
-    func execute(_ action: VolumeAction) -> String {
+    func execute(_ action: VolumeAction) -> String { executeResult(action).message }
+
+    func executeResult(_ action: VolumeAction) -> ControllerResult {
         emit("========== VOLUME DEBUG START ==========")
 
         let device = getCurrentOutputDevice()
@@ -254,9 +256,9 @@ final class VolumeController {
         emit("========== VOLUME DEBUG END ==========")
 
         if changed {
-            return resultText
+            return ControllerResult(message: resultText, success: true)
         }
-        return "Volume command executed but no actual volume change was detected"
+        return ControllerResult(message: "Volume command executed but no actual volume change was detected", success: false)
     }
 
     private func syncCurrentVolumeFromSystem() {

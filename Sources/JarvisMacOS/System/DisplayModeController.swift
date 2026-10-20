@@ -98,22 +98,26 @@ final class DisplayModeController {
     /// Matching priority: width → height → refreshRate (exact or closest).
     /// Returns a human-readable result string.
     @discardableResult
-    func setMode(
+    func setMode(displayID: CGDirectDisplayID, width: Int, height: Int, refreshRate: Double? = nil) -> String {
+        setModeResult(displayID: displayID, width: width, height: height, refreshRate: refreshRate).message
+    }
+
+    func setModeResult(
         displayID: CGDirectDisplayID,
         width: Int,
         height: Int,
         refreshRate: Double? = nil
-    ) -> String {
+    ) -> ControllerResult {
         let modes = availableModes(for: displayID)
         guard !modes.isEmpty else {
-            return "No display modes available for display \(displayID)"
+            return ControllerResult(message: "No display modes available for display \(displayID)", success: false)
         }
 
         // Score-based matching: prefer exact width/height, then closest refresh.
         let candidates = modes.filter { $0.width == width && $0.height == height }
         if candidates.isEmpty {
             let available = modes.map { $0.description }.prefix(5).joined(separator: ", ")
-            return "No mode matching \(width)×\(height) found. Available: \(available)…"
+            return ControllerResult(message: "No mode matching \(width)×\(height) found. Available: \(available)…", success: false)
         }
 
         // Among matching width×height, pick by refresh rate preference.
@@ -134,34 +138,36 @@ final class DisplayModeController {
         // CGDisplaySetDisplayMode requires a CGDisplayConfigRef transaction.
         var config: CGDisplayConfigRef?
         guard CGBeginDisplayConfiguration(&config) == .success else {
-            return "Failed to begin display configuration"
+            return ControllerResult(message: "Failed to begin display configuration", success: false)
         }
 
         let configResult = CGConfigureDisplayWithDisplayMode(config, displayID, best.cgMode, nil)
         guard configResult == .success else {
             CGCancelDisplayConfiguration(config)
-            return "Failed to configure display mode (CGError \(configResult.rawValue))"
+            return ControllerResult(message: "Failed to configure display mode (CGError \(configResult.rawValue))", success: false)
         }
 
         let applyResult = CGCompleteDisplayConfiguration(config, .forSession)
         if applyResult == .success {
             let msg = "Resolution changed to \(best)"
             emit("[Resolution] \(msg)")
-            return msg
+            return ControllerResult(message: msg, success: true)
         } else {
             CGCancelDisplayConfiguration(config)
-            return "Failed to apply display mode (CGError \(applyResult.rawValue))"
+            return ControllerResult(message: "Failed to apply display mode (CGError \(applyResult.rawValue))", success: false)
         }
     }
 
     // MARK: - List helper
 
     /// Returns a formatted list of modes for voice/text display.
-    func listModes(for displayID: CGDirectDisplayID) -> String {
+    func listModes(for displayID: CGDirectDisplayID) -> String { listModesResult(for: displayID).message }
+
+    func listModesResult(for displayID: CGDirectDisplayID) -> ControllerResult {
         let modes = availableModes(for: displayID)
-        if modes.isEmpty { return "No display modes available" }
+        if modes.isEmpty { return ControllerResult(message: "No display modes available", success: false) }
         let lines = modes.prefix(8).map { "  • \($0)" }.joined(separator: "\n")
-        return "Available modes:\n\(lines)"
+        return ControllerResult(message: "Available modes:\n\(lines)", success: true)
     }
 
     // MARK: - Resolution from voice keywords

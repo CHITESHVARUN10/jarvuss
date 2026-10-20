@@ -27,6 +27,7 @@ struct DictationCapture {
         stop: { stop_recording() }, cancel: { cancel_recording() })
 }
 
+@MainActor
 final class DictationController: ObservableObject {
     static let shared = DictationController()
 
@@ -202,9 +203,11 @@ final class DictationController: ObservableObject {
     private func startLevelPolling() {
         stopLevelPolling()
         levelTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
-            guard let self else { return }
-            guard self.phase == .Recording, STTRouter.shared.isModalOwner else { return }
-            self.audioLevel = get_audio_level()
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                guard self.phase == .Recording, STTRouter.shared.isModalOwner else { return }
+                self.audioLevel = get_audio_level()
+            }
         }
     }
 
@@ -219,13 +222,15 @@ final class DictationController: ObservableObject {
         // Pill-owned only: command utterances have their own 30 s failsafe
         // (WhisperCommandListener) and must never be stopped from here.
         watchdogTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            guard let self,
-                  self.phase == .Recording,
-                  STTRouter.shared.isModalOwner else { return }
-            let elapsed = self.recordingStartedAt.map { Date().timeIntervalSince($0) } ?? 0
-            if elapsed > 300 {
-                NSLog("[Jarvis][STT] Recording timeout — auto stop")
-                self.stopDictation()
+            MainActor.assumeIsolated {
+                guard let self,
+                      self.phase == .Recording,
+                      STTRouter.shared.isModalOwner else { return }
+                let elapsed = self.recordingStartedAt.map { Date().timeIntervalSince($0) } ?? 0
+                if elapsed > 300 {
+                    NSLog("[Jarvis][STT] Recording timeout — auto stop")
+                    self.stopDictation()
+                }
             }
         }
     }
@@ -843,7 +848,7 @@ final class DictationController: ObservableObject {
     }
 
     func dismissTranscript() {
-        MainActor.assumeIsolated { PillShortcutCoordinator.shared.cancel() }
+        PillShortcutCoordinator.shared.cancel()
         let ownedCapture = hasModalSession
         pendingStartExpiry?.cancel()
         pendingStartExpiry = nil

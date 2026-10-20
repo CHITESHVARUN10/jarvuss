@@ -179,13 +179,24 @@ fn log_miss(
 fn post_parse_intent(base: &str, text: &str) -> Result<String, String> {
     let client = reqwest::blocking::Client::builder()
         .timeout(Duration::from_secs(3))
+        .redirect(reqwest::redirect::Policy::none())
         .build()
         .map_err(|e| e.to_string())?;
     let url = format!("{}/parse_intent", base.trim_end_matches('/'));
-    let response = client
-        .post(&url)
-        .json(&json!({ "text": text }))
-        .send()
+    let parsed = reqwest::Url::parse(&url).map_err(|e| e.to_string())?;
+    let mut request = client.post(parsed.clone()).json(&json!({ "text": text }));
+    if matches!(parsed.host_str(), Some("127.0.0.1" | "localhost" | "::1")) && parsed.port_or_known_default() == Some(8000) {
+        let home = dirs::home_dir().unwrap_or_default();
+        let directory = std::env::var("JARVIS_DATA_DIR").map(|value| {
+            value.strip_prefix("~/").map(|rest| home.join(rest)).unwrap_or_else(|| value.into())
+        }).unwrap_or_else(|_| home.join("Library/Application Support/Jarvis"));
+        let token = std::fs::read_to_string(directory.join("backend_auth.token")).map_err(|_| "backend authentication unavailable")?;
+        if token.len() < 32 || token.len() > 128 || !token.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-') {
+            return Err("invalid backend authentication token".into());
+        }
+        request = request.header("X-Jarvis-Token", token);
+    }
+    let response = request.send()
         .map_err(|e| e.to_string())?;
     let status = response.status();
     if !status.is_success() {
