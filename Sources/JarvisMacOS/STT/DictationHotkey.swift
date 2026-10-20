@@ -27,21 +27,6 @@ private let gActionHotKeySignature: OSType = OSType(0x4A565341) // "JVSA"
 private var gDictationHotkeyHeld = false
 private var gActionHotkeyHeld = false
 
-/// Resets the hotkey held-state. Called when a dictation cycle completes
-/// (dismiss/close) so a stale held flag can't swallow the next press.
-func resetDictationHotkeyHeldState() {
-    DispatchQueue.main.async {
-        gDictationHotkeyHeld = false
-    }
-}
-
-/// Same, for the action pill (⌘⇧A).
-func resetActionHotkeyHeldState() {
-    DispatchQueue.main.async {
-        gActionHotkeyHeld = false
-    }
-}
-
 // Global C callback for Carbon hotkey events.
 private func dictationHotkeyEventHandler(
     _ nextHandler: EventHandlerCallRef?,
@@ -76,12 +61,12 @@ private func dictationHotkeyEventHandler(
                 guard !gActionHotkeyHeld else { return }
                 gActionHotkeyHeld = true
                 NSLog("[Jarvis][Hotkey] DOWN — toggle action")
-                startMicThen { DictationController.shared.toggleAction() }
+                PillShortcutCoordinator.shared.press(.action)
             } else {
                 guard !gDictationHotkeyHeld else { return }
                 gDictationHotkeyHeld = true
                 NSLog("[Jarvis][Hotkey] DOWN — toggle dictation")
-                startMicThen { DictationController.shared.toggleDictation() }
+                PillShortcutCoordinator.shared.press(.dictate)
             }
         } else {
             // Release: clear the held flag, do NOT toggle.
@@ -94,24 +79,6 @@ private func dictationHotkeyEventHandler(
     }
 
     return noErr
-}
-
-/// Listening is manual-start (no launch auto-listen): a hotkey press IS a
-/// manual start, so bring the mic pipeline up first — recording against a
-/// cold pipeline captures silence and would look like the hotkey broke.
-@MainActor
-private func startMicThen(_ action: @escaping () -> Void) {
-    guard let app = AppState.shared, !app.micActive else {
-        action()
-        return
-    }
-    // Transient: this press is a one-shot, not "start listening". When the
-    // pill finishes, the mic goes back down (no surprise wake-word mode).
-    app.markTransientMicStart()
-    Task { @MainActor in
-        await app.startMicrophone()
-        action()
-    }
 }
 
 func registerDictationHotkey() {

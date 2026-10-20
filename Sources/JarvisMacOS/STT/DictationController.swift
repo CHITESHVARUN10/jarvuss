@@ -16,6 +16,17 @@ enum PillMode {
     case action
 }
 
+/// Injectable capture operations let lifecycle tests run without a mic/model/UI.
+struct DictationCapture {
+    var phase: () -> AppPhase
+    var start: () -> Bool
+    var stop: () -> Void
+    var cancel: () -> Void
+
+    static let native = DictationCapture(phase: { get_app_phase() }, start: { start_recording() },
+        stop: { stop_recording() }, cancel: { cancel_recording() })
+}
+
 final class DictationController: ObservableObject {
     static let shared = DictationController()
 
@@ -120,8 +131,17 @@ final class DictationController: ObservableObject {
     private var panel: NSPanel?
     private var panelHost: NSHostingView<DictationHUDView>?
     private var recordingStartedAt: Date?
-    private var pendingStartOnReady = false
+    private(set) var pendingStartOnReady = false
+    var hasModalSession: Bool { pendingStartOnReady || STTRouter.shared.isModalOwner }
+    private let capture: DictationCapture
+    private let presentsUI: Bool
+    private let releaseTransientMic: () -> Void
+    private let requestRestart: (PillMode) -> Void
     private var pendingStartMode: PillMode = .dictate
+    private var pendingStartDeadline: Date?
+    private var pendingStartExpiry: DispatchWorkItem?
+    private var pendingStartID = UUID()
+    private let now: () -> Date
 
     /// Sticky anchor for the pill — computed once per run, bottom-center.
     private var recordingAnchor: NSPoint?
@@ -130,8 +150,18 @@ final class DictationController: ObservableObject {
     private var watchdogTimer: Timer?
     var pendingSpeechSecs: Double = 0
 
-    private init() {
-        let defaults = UserDefaults.standard
+    init(defaults: UserDefaults = .standard, capture: DictationCapture = .native,
+         presentsUI: Bool = true, releaseTransientMic: (() -> Void)? = nil,
+         requestRestart: ((PillMode) -> Void)? = nil, now: @escaping () -> Date = Date.init) {
+        self.capture = capture
+        self.now = now
+        self.presentsUI = presentsUI
+        self.requestRestart = requestRestart ?? { mode in
+            MainActor.assumeIsolated { PillShortcutCoordinator.shared.press(mode) }
+        }
+        self.releaseTransientMic = releaseTransientMic ?? {
+            MainActor.assumeIsolated { AppState.shared?.restoreMicAfterTransientStartIfNeeded() }
+        }
         // Init assignments bypass didSet — load persisted settings directly.
         insertAtCursorEnabled = defaults.object(forKey: Self.insertAtCursorDefaultsKey) as? Bool ?? true
         copyOriginalEnabled = defaults.object(forKey: Self.copyOriginalDefaultsKey) as? Bool ?? true
@@ -155,7 +185,7 @@ final class DictationController: ObservableObject {
         // untrusted when the grant was issued for an older build's signature
         // (see package_jarvis_app.zsh — sign with a stable identity).
         NSLog("[Jarvis][STT] Accessibility (auto-paste) trusted: \(has_accessibility_permission())")
-        phase = get_app_phase()
+        phase = capture.phase()
         modelPhase = get_model_phase()
         livePreviewEnabled = get_live_preview_enabled()
         NSLog("[Jarvis][STT] Initial phase: \(phase), model: \(modelPhase)")
@@ -217,6 +247,16 @@ final class DictationController: ObservableObject {
     // Behavior is driven entirely by the current phase.
 
     func toggleDictation() {
+        if STTRouter.shared.isModalOwner,
+           phase == .Processing || phase == .TranscriptReady || phase == .Error {
+            dismissTranscript()
+            return
+        }
+        if pendingStartOnReady {
+            if pendingStartMode == .dictate { dismissTranscript() }
+            else { pendingStartMode = .dictate; self.mode = .dictate }
+            return
+        }
         NSLog("[Jarvis][STT] toggleDictation — phase: \(phase), model: \(modelPhase), owner: \(STTRouter.shared.owner)")
 
         switch STTRouter.shared.owner {
@@ -245,13 +285,9 @@ final class DictationController: ObservableObject {
             break // core free — phase switch below
         }
 
-        // Stale-mirror guard: our `phase` may lag Rust (missed dismiss after
-        // a command result routed). can_record only allows Ready, so sync
-        // before deciding — otherwise a Ready core looks wedged.
-        if (phase == .TranscriptReady || phase == .Error), get_app_phase() == .Ready {
-            dismiss_transcript()
-            phase = .Ready
-        }
+        // Resync only when no pill owns a session. A finished card is a
+        // close action even if its UI/native phase mirrors briefly differ.
+        if STTRouter.shared.owner == .none { phase = capture.phase() }
 
         switch phase {
         case .Ready:
@@ -271,25 +307,13 @@ final class DictationController: ObservableObject {
             // recordings divert to preemption above).
             NSLog("[Jarvis][STT] toggleDictation result: stopping pill recording")
             stopDictation()
-        case .TranscriptReady:
-            // One press: close the transcript AND immediately start
-            // a new recording.
-            NSLog("[Jarvis][STT] toggleDictation result: close + new recording")
+        case .TranscriptReady, .Processing, .Error:
             dismissTranscript()
-            guard STTRouter.shared.claimForPill() else { return }
-            mode = .dictate
-            startDictation()
         case .Idle, .Preparing:
             // Model still loading/downloading. Queue a start for when
             // Ready arrives so the press is not lost.
             NSLog("[Jarvis][STT] toggleDictation result: queued on Ready (model: \(modelPhase))")
-            mode = .dictate
-            pendingStartOnReady = true
-            pendingStartMode = .dictate
-            showPanel()
-        default:
-            // Processing, Error
-            NSLog("[Jarvis][STT] toggleDictation result: ignored in phase \(phase)")
+            queuePendingStart(.dictate)
         }
     }
 
@@ -298,6 +322,16 @@ final class DictationController: ObservableObject {
     // a command (no wake word) instead of landing on a Copy/Close card.
 
     func toggleAction() {
+        if STTRouter.shared.isModalOwner,
+           phase == .Processing || phase == .TranscriptReady || phase == .Error {
+            dismissTranscript()
+            return
+        }
+        if pendingStartOnReady {
+            if pendingStartMode == .action { dismissTranscript() }
+            else { pendingStartMode = .action; self.mode = .action }
+            return
+        }
         NSLog("[Jarvis][STT] toggleAction — phase: \(phase), model: \(modelPhase), owner: \(STTRouter.shared.owner)")
 
         switch STTRouter.shared.owner {
@@ -323,10 +357,7 @@ final class DictationController: ObservableObject {
             break // core free — phase switch below
         }
 
-        if (phase == .TranscriptReady || phase == .Error), get_app_phase() == .Ready {
-            dismiss_transcript()
-            phase = .Ready
-        }
+        if STTRouter.shared.owner == .none { phase = capture.phase() }
 
         switch phase {
         case .Ready:
@@ -341,20 +372,11 @@ final class DictationController: ObservableObject {
         case .Recording:
             NSLog("[Jarvis][STT] toggleAction result: stopping action recording")
             stopDictation()
-        case .TranscriptReady:
-            NSLog("[Jarvis][STT] toggleAction result: close + new action recording")
+        case .TranscriptReady, .Processing, .Error:
             dismissTranscript()
-            mode = .action
-            guard STTRouter.shared.claimForAction() else { return }
-            startDictation()
         case .Idle, .Preparing:
             NSLog("[Jarvis][STT] toggleAction result: queued on Ready (model: \(modelPhase))")
-            mode = .action
-            pendingStartOnReady = true
-            pendingStartMode = .action
-            showPanel()
-        default:
-            NSLog("[Jarvis][STT] toggleAction result: ignored in phase \(phase)")
+            queuePendingStart(.action)
         }
     }
 
@@ -394,7 +416,7 @@ final class DictationController: ObservableObject {
         // Panel FIRST (agentTalk order): the press must always produce
         // something visible, even if the core then refuses to record.
         showPanel()
-        let ok = start_recording()
+        let ok = capture.start()
         NSLog("[Jarvis][STT] start_recording returned: \(ok)")
         if ok {
             recordingStartedAt = Date()
@@ -402,7 +424,7 @@ final class DictationController: ObservableObject {
             // messy dictation of a session wins its race. Utility priority;
             // keep-alive unloads it again after 60 s if the dictation ends up
             // short and clean (rules-only).
-            warmupTask = DictationPolisher.warmUp()
+            if presentsUI { warmupTask = DictationPolisher.warmUp() }
             // Optimistic mirror: the second press must see .Recording even
             // before the Rust callback round-trips, or it lands on
             // `ignored (core busy, owner: pill)` instead of the stop arm.
@@ -425,6 +447,7 @@ final class DictationController: ObservableObject {
             resizePanelForCurrentState()
             positionPanelForCurrentState()
             panel?.orderFrontRegardless()
+            releaseTransientMic()
             STTRouter.shared.pillSuppressesCommandVAD = false
             if mode == .action {
                 STTRouter.shared.releaseFromAction()
@@ -434,10 +457,35 @@ final class DictationController: ObservableObject {
         }
     }
 
+    private func queuePendingStart(_ mode: PillMode) {
+        pendingStartExpiry?.cancel()
+        pendingStartID = UUID()
+        let token = pendingStartID
+        self.mode = mode
+        pendingStartMode = mode
+        pendingStartOnReady = true
+        pendingStartDeadline = now().addingTimeInterval(10)
+        let expiry = DispatchWorkItem { [weak self] in
+            guard let self, self.pendingStartOnReady, self.pendingStartID == token else { return }
+            NSLog("[Jarvis][STT] Pending shortcut expired — a fresh press is required")
+            self.dismissTranscript()
+        }
+        pendingStartExpiry = expiry
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10, execute: expiry)
+        showPanel()
+    }
+
     /// Called when the model finishes loading and phase becomes Ready.
     /// Starts a queued dictation if the user pressed the shortcut early.
     func flushPendingStart() {
         guard pendingStartOnReady, phase == .Ready else { return }
+        guard let deadline = pendingStartDeadline, now() < deadline else {
+            dismissTranscript()
+            return
+        }
+        pendingStartExpiry?.cancel()
+        pendingStartID = UUID()
+        pendingStartDeadline = nil
         pendingStartOnReady = false
         let queuedMode = pendingStartMode
         pendingStartMode = .dictate
@@ -458,13 +506,14 @@ final class DictationController: ObservableObject {
         pendingSpeechSecs = speechSecs
         recordingStartedAt = nil
         stopActivityTimers()
-        let rustPhase = get_app_phase()
+        let rustPhase = capture.phase()
         guard rustPhase == .Recording else {
             // Stale mirror (e.g. a command result just routed and freed
             // the core) — nothing to stop; release so we can't wedge.
             // Also unmute VAD: with owner .none and the mute still set,
             // command mode would go deaf.
             NSLog("[Jarvis][STT] stop ignored — core not recording (mirror: \(phase), rust: \(rustPhase))")
+            releaseTransientMic()
             STTRouter.shared.pillSuppressesCommandVAD = false
             if mode == .action {
                 STTRouter.shared.releaseFromAction()
@@ -476,7 +525,13 @@ final class DictationController: ObservableObject {
         // FFI runs on main thread: captures audio (thread_local),
         // transitions to Processing, then spawns its own inference thread.
         stopRequestedAt = Date()
-        stop_recording()
+        capture.stop()
+        releaseTransientMic()
+        // Silence-gated/empty stops have no final callback to close the pill.
+        if capture.phase() == .Ready {
+            dismissTranscript()
+            return
+        }
         // Optimistic flip: the SAME panel shows Transcribing instantly while
         // inference runs (the user waits on the pill). The Rust
         // Recording → Processing callback confirms and re-syncs.
@@ -492,6 +547,7 @@ final class DictationController: ObservableObject {
     /// "List: …" directive itself), and what lands at the cursor is what the
     /// card shows — nothing diverges.
     func receiveDictationTranscript(_ raw: String, speechSeconds: Double) {
+        guard STTRouter.shared.owner == .pill else { return }
         invalidateFormatting()
         let now = Date()
         insertLatencyStart = now
@@ -787,31 +843,39 @@ final class DictationController: ObservableObject {
     }
 
     func dismissTranscript() {
+        MainActor.assumeIsolated { PillShortcutCoordinator.shared.cancel() }
+        let ownedCapture = hasModalSession
+        pendingStartExpiry?.cancel()
+        pendingStartExpiry = nil
+        pendingStartID = UUID()
+        pendingStartDeadline = nil
+        pendingStartOnReady = false
+        pendingStartMode = .dictate
+        STTRouter.shared.cancelPendingModalStarts()
         invalidateFormatting()
         formattingInProgress = false
-        dismiss_transcript()
-        insertAutoDismiss?.cancel()
-        insertAutoDismiss = nil
-        hardCapDismiss?.cancel()
-        hardCapDismiss = nil
+        if ownedCapture { capture.cancel() }
+        phase = capture.phase()
+        transcript = ""
+        partialTranscript = ""
+        recordingStartedAt = nil
+        pendingSpeechSecs = 0
         stopActivityTimers()
         hidePanel()
         STTRouter.shared.releaseModalOwner()
         STTRouter.shared.pillSuppressesCommandVAD = false
-        // One-shot pills that started the mic transiently hand it back:
-        // listening is manual, so a ⌘⇧A/⌘⇧D press must not leave the app
-        // live-listening afterwards (no-op when the user had listening on).
-        // AppState is main-actor isolated and this controller is not — hop.
-        Task { @MainActor in
-            AppState.shared?.restoreMicAfterTransientStartIfNeeded()
-        }
-        resetDictationHotkeyHeldState()
-        resetActionHotkeyHeldState()
+        releaseTransientMic()
+        // Held flags belong to physical key-up, never popup dismissal:
+        // resetting while a key is held lets auto-repeat start another session.
     }
 
     func retryRecording() {
-        stopActivityTimers()
-        retry_recording()
+        guard STTRouter.shared.isModalOwner else { return }
+        let retryMode = mode
+        dismissTranscript()
+        // Preparation is required again: the previous one-shot microphone
+        // was released at stop, and action verification needs fresh audio.
+        requestRestart(retryMode)
     }
 
     // ── Panel management ────────────────────────────────────
@@ -820,6 +884,7 @@ final class DictationController: ObservableObject {
     /// (`BridgeCallbacks.on_error`) can show the Error card for pill-owned
     /// failures instead of leaving a stale/invisible state.
     func showPanel() {
+        guard presentsUI else { return }
         if panel == nil {
             createPanel()
         }

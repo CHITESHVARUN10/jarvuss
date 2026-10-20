@@ -69,11 +69,14 @@ static SAMPLE_RATE: AtomicU64 = AtomicU64::new(16000);
 /// the silence it hallucinates ("Thank you.") from. Conservative: quiet but
 /// real speech (~0.01+ RMS, many frames hot) passes easily; digital silence
 /// (~0.0005 RMS) never reaches the decoder. Tuned in Phase 4 from live logs.
+#[cfg(test)]
 const SILENCE_RMS_FLOOR: f32 = 0.004;
 /// Minimum share of 20 ms frames above the floor for a clip to count as speech.
+#[cfg(test)]
 const SILENCE_VOICED_MIN: f32 = 0.15;
 /// Minimum clip length for the whole-buffer (no-chunk) path — 0.5 s. Shorter
 /// is a tap/breath even if one frame is loud.
+#[cfg(test)]
 const MIN_SPEECH_SAMPLES: usize = 8000;
 /// Model path + thread count for engine creation (resolved once at init).
 static MODEL_PATH: Mutex<Option<std::path::PathBuf>> = Mutex::new(None);
@@ -889,7 +892,7 @@ fn chunker_thread(stop_rx: mpsc::Receiver<()>, chunk_seconds: u64, overlap_secon
 
         // Silence gate: a silent 7 s window decodes to "Thank you." — skip it
         // without bumping counters so the tail-final math is unaffected.
-        if audio::AudioCapture::rms(&chunk) < SILENCE_RMS_FLOOR {
+        if inference::speech_filter::speech_window(&chunk).is_none() {
             tracing::debug!("Chunker: silent window, skipping");
             continue;
         }
@@ -1040,30 +1043,16 @@ fn stop_recording() {
         return;
     }
 
-    // Silence gate (whole-buffer path only): a short/silent clip with no
-    // prior chunks would decode to "Thank you." — dismiss back to Ready
-    // without inference. Long sessions (chunks already sent) always proceed:
-    // their transcript lives in the stitched session text and the tail job
-    // decodes under the tuned no-speech threshold instead.
-    if CHUNKS_SENT.load(Ordering::SeqCst) == 0 {
-        let rms = audio::AudioCapture::rms(&samples);
-        let voiced = audio::AudioCapture::voiced_fraction(&samples, SILENCE_RMS_FLOOR);
-        if samples.len() < MIN_SPEECH_SAMPLES
-            || rms < SILENCE_RMS_FLOOR
-            || voiced < SILENCE_VOICED_MIN
-        {
-            tracing::info!(
-                samples = samples.len(),
-                rms,
-                voiced,
-                "Silence-gated stop — skipped inference"
-            );
-            with_app(|app| {
-                app.dismiss();
-            });
-            notify_state();
-            return;
-        }
+    // Use the same acoustic evidence for short recordings and every chunk.
+    // A long quiet tail must neither generate an outro nor reject real
+    // speech solely because it occupies a small fraction of the recording.
+    if CHUNKS_SENT.load(Ordering::SeqCst) == 0
+        && inference::speech_filter::speech_window(&samples).is_none()
+    {
+        tracing::info!(samples = samples.len(), "Silence-gated stop — skipped inference");
+        with_app(|app| app.dismiss());
+        notify_state();
+        return;
     }
 
     // 3. Transition to Processing — Swift renders the Transcribing pill immediately
@@ -1146,6 +1135,9 @@ fn cancel_recording() {
     //    mic stop never postpones the idle unload.
     with_app(|app| {
         app.dismiss();
+        if matches!(app.model_state, ModelState::NotInstalled | ModelState::Downloading) {
+            app.phase = SessionPhase::Preparing;
+        }
     });
     notify_state();
 }
@@ -1273,16 +1265,14 @@ fn prime_recording(samples: *const f32, len: usize) -> u32 {
 }
 
 fn dismiss_transcript() {
-    with_app(|app| {
-        // No clipboard restore — the copied transcript stays the newest entry.
-        app.dismiss();
-    });
-    notify_state();
+    // Dismiss is also cancellation: stop the cpal stream/chunker and
+    // invalidate queued callbacks, even when the popup closes mid-recording.
+    cancel_recording();
 }
 
 fn retry_recording() {
-    with_app(|app| app.retry());
-    notify_state();
+    cancel_recording();
+    start_recording();
 }
 
 fn get_audio_level() -> f32 {

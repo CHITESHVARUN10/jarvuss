@@ -307,24 +307,26 @@ final class AppState: ObservableObject {
         // Wire Whisper command transcripts (VAD-segmented utterances from the
         // Rust STT core) into the existing transcript pipeline.
         STTRouter.shared.onCommandTranscript = { [weak self] text in
-            Task { @MainActor in
-                self?.appendLog("[Speech][Whisper] FINAL: '\(text)'")
-                self?.handleTranscript(text, isFinal: true)
+            MainActor.assumeIsolated {
+                guard let self, self.isLiveListening, !self.isStoppingMicrophone else { return }
+                self.appendLog("[Speech][Whisper] FINAL: '\(text)'")
+                self.handleTranscript(text, isFinal: true)
             }
         }
         // Action pill (⌘⇧A): the press is the intent — no wake word, no
         // voice-mode gate. Runs through the SAME verify/execute path as
         // typed commands (verify per the user setting above).
         STTRouter.shared.onActionTranscript = { [weak self] text in
-            Task { @MainActor in
+            MainActor.assumeIsolated {
                 self?.handleActionPillCommand(text)
             }
         }
         // Live partials (per-chunk stitch, ~6 s cadence) drive the main
         // window "LIVE TRANSCRIPT" card while the user is still talking.
         STTRouter.shared.onCommandPartial = { [weak self] text in
-            Task { @MainActor in
-                self?.handleTranscript(text, isFinal: false)
+            MainActor.assumeIsolated {
+                guard let self, self.isLiveListening, !self.isStoppingMicrophone else { return }
+                self.handleTranscript(text, isFinal: false)
             }
         }
         STTRouter.shared.onLog = { [weak self] msg in
@@ -584,7 +586,17 @@ final class AppState: ObservableObject {
         }
     }
 
+    private var microphoneSessionID: UUID?
+    private var microphoneStartPending = false
+
     func startMicrophone() async {
+        guard !micActive, !microphoneStartPending else { return }
+        let sessionID = UUID()
+        microphoneSessionID = sessionID
+        microphoneStartPending = true
+        defer {
+            if microphoneSessionID == sessionID { microphoneStartPending = false }
+        }
         do {
             isStoppingMicrophone = false
 
@@ -598,7 +610,9 @@ final class AppState: ObservableObject {
             try await micManager.startListeningWithPermission(
                 onLevelUpdate: { [weak self] level in
                     Task { @MainActor in
-                        self?.handleAudioLevel(level)
+                        guard let self, self.microphoneSessionID == sessionID,
+                              self.micActive, !self.isStoppingMicrophone else { return }
+                        self.handleAudioLevel(level)
                     }
                 },
                 onAudioBuffer: { buffer in
@@ -607,6 +621,16 @@ final class AppState: ObservableObject {
                     WakeWordDetector.shared.ingest(buffer: buffer)
                 }
             )
+
+            guard microphoneSessionID == sessionID, !Task.isCancelled else {
+                // A stop during the permission dialog must win. A newer
+                // session owns its own capture and must not be stopped here.
+                if microphoneSessionID == sessionID || microphoneSessionID == nil {
+                    micManager.stopListening()
+                    micActive = false
+                }
+                return
+            }
 
             // Detection anchors the pre-roll window and arms the command —
             // the follow-up utterance is then accepted even if "Jarvis"
@@ -625,14 +649,23 @@ final class AppState: ObservableObject {
                 ? "[AX] Auto-paste permission: granted."
                 : "[AX] Auto-paste permission: MISSING — dictation will copy instead. Remove + re-add Jarvis in Privacy & Security → Accessibility.")
         } catch {
+            guard microphoneSessionID == sessionID else { return }
+            micManager.stopListening()
             micActive = false
+            micTransientAutoStart = false
             assistantState = .idle
             appendLog("Microphone start failed: \(error.localizedDescription)")
         }
     }
 
-    func stopMicrophone() {
+    func stopMicrophone(cancelPill: Bool = true) {
+        microphoneSessionID = nil
+        microphoneStartPending = false
         isStoppingMicrophone = true
+        if cancelPill, presentsUI {
+            PillShortcutCoordinator.shared.cancel()
+            if DictationController.shared.hasModalSession { DictationController.shared.dismissTranscript() }
+        }
         micTransientAutoStart = false
         pendingWakeWordDetected = false
         WhisperCommandListener.shared.reset()
@@ -672,9 +705,8 @@ final class AppState: ObservableObject {
     func restoreMicAfterTransientStartIfNeeded() {
         guard micTransientAutoStart else { return }
         micTransientAutoStart = false
-        guard micActive else { return }
         appendLog("One-shot use finished — mic back to idle (listening stays manual).")
-        stopMicrophone()
+        stopMicrophone(cancelPill: false)
     }
 
     /// Action-pill (⌘⇧A) command entry. Same shape as executeTypedCommand:
@@ -1008,7 +1040,7 @@ final class AppState: ObservableObject {
     /// about to be spoken is accepted even if the transcript never contains
     /// "Jarvis", and confirms audibly so the user knows the mic is hot.
     private func handleAcousticWakeWord() {
-        guard micActive, voiceModeEnabled, !isStoppingMicrophone, !isTTSSpeaking else { return }
+        guard isLiveListening, voiceModeEnabled, !isStoppingMicrophone, !isTTSSpeaking else { return }
         pendingWakeWordDetected = true
         pendingWakeWordDetectedAt = Date()
         appendLog("[Wake] Acoustic wake word detected — pre-roll anchored.")
@@ -1018,6 +1050,7 @@ final class AppState: ObservableObject {
     }
 
     private func handleAudioLevel(_ level: Float) {
+        guard micActive, !micTransientAutoStart, !isStoppingMicrophone else { return }
         // A pill owns this audio (⌘⇧D / ⌘⇧A recording): its own HUD and its
         // own meter are the UI for it. Driving the main window from the same
         // audio lit up the orb as "Recording"/"Processing" during every

@@ -23,6 +23,7 @@ Full walkthrough with every command and exact phrasings: **[practice.md](practic
 
 **Voice & dictation**
 - **Manual-start listening**: nothing is captured at launch. Tap the orb — or just press ⌘⇧D / ⌘⇧A; a hotkey press is itself the manual start — and only then does the mic pipeline (VAD, wake word, dictation) come up.
+- **One-shot microphone lifecycle**: the second shortcut press ends recording and releases its microphone before transcription/polish completes. Pressing the shortcut on a result card closes it; during processing it cancels. Closing a pill cancels pending model/permission starts and discards late results. Live listening remains on only when explicitly started with the orb.
 - ⌘⇧D dictation with WISPR-style formatting: deterministic rules (fillers, stutters, self-corrections, punctuation, casing, `25%`, `3pm`) plus a small-model polish pass for messy or structured speech (lists get typeset).
 - **Insert at cursor**: the formatted text is pasted into whatever app you were in — your clipboard is preserved. The card offers **Copy** (formatted), **Copy original** (raw STT, toggleable), and **Undo** (⌘Z in the target app); how long it stays is user-settable — System → Dictation → *Card stays visible* (1–10 s, default 10). With no Accessibility grant it silently copies instead and tells you.
 - **Last dictation is kept across restarts**: the System pane shows the latest original + polished pair — and only that pair. A new dictation immediately and unrecoverably replaces the previous one (no history by design).

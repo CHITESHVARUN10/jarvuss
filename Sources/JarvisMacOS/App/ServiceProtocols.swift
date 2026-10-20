@@ -61,7 +61,7 @@ extension ActionExecutor: PlanExecuting {}
 
 /// Microphone lifecycle + recent-audio export. Production: MicManager.
 protocol AudioCapturing {
-    func startListeningWithPermission(
+    @MainActor func startListeningWithPermission(
         onLevelUpdate: @escaping (Float) -> Void,
         onAudioBuffer: ((AVAudioPCMBuffer) -> Void)?
     ) async throws

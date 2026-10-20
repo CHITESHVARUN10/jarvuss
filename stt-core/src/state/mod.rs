@@ -132,6 +132,10 @@ impl AppStateMachine {
     }
 
     pub fn dismiss(&mut self) {
+        self.is_recording = false;
+        self.recording_start = None;
+        self.audio_samples = None;
+        self.audio_level = 0.0;
         self.transcript = None;
         self.error_message = None;
         self.transition(SessionPhase::Ready);
@@ -144,3 +148,22 @@ impl AppStateMachine {
     }
 }
 pub mod session;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn dismissal_clears_recording_state_and_cannot_accept_late_audio() {
+        let mut state = AppStateMachine::new(AppConfig::default());
+        state.phase = SessionPhase::Ready;
+        state.begin_recording().unwrap();
+        state.append_samples(&[0.5; 320]);
+        state.dismiss();
+        state.append_samples(&[0.5; 320]);
+        assert_eq!(state.phase, SessionPhase::Ready);
+        assert!(!state.is_recording);
+        assert!(state.recording_start.is_none());
+        assert!(state.audio_samples.is_none());
+    }
+}

@@ -10,6 +10,7 @@
 /// Optimized for short dictation: English only, greedy sampling,
 /// no timestamps, no translation, no language detection.
 use std::path::PathBuf;
+use super::speech_filter::{speech_window, remove_sound_captions};
 use std::sync::{Arc, Mutex};
 
 pub struct InferenceEngine {
@@ -123,23 +124,8 @@ impl InferenceEngine {
             whisper_rs::FullParams::new(whisper_rs::SamplingStrategy::Greedy { best_of: 1 });
         params.set_n_threads(self.n_threads);
         params.set_language(Some("en"));
-        // Same anti-hallucination set as the live path (warmup/fallback).
-        params.set_suppress_blank(true);
-        params.set_no_speech_thold(0.6);
-        params.set_temperature(0.0);
-        params.set_temperature_inc(0.2);
-        params.set_entropy_thold(2.4);
-        params.set_logprob_thold(-1.0);
-        params.set_single_segment(true);
-        params.set_no_timestamps(true);
-        // Anti-hallucination: silence must decode to nothing, not "Thank you."
-        params.set_suppress_blank(true);
-        params.set_no_speech_thold(0.6);
-        params.set_temperature(0.0);
-        params.set_temperature_inc(0.2);
-        params.set_entropy_thold(2.4);
-        params.set_logprob_thold(-1.0);
-        params.set_single_segment(true);
+        configure_decode(&mut params);
+        let Some(samples) = speech_window(samples) else { return Ok(None); };
 
         self.state = InferenceState::Running;
         let start = std::time::Instant::now();
@@ -176,7 +162,7 @@ impl InferenceEngine {
 
         self.state = InferenceState::Ready;
 
-        let trimmed = text.trim().to_string();
+        let trimmed = remove_sound_captions(&text);
         if trimmed.is_empty() {
             Ok(None)
         } else {
@@ -203,6 +189,7 @@ impl InferenceEngine {
             whisper_rs::FullParams::new(whisper_rs::SamplingStrategy::Greedy { best_of: 1 });
         params.set_n_threads(self.n_threads);
         params.set_language(Some("en"));
+        configure_decode(&mut params);
 
         let mut state = ctx.create_state()?;
 
@@ -217,7 +204,7 @@ impl InferenceEngine {
             }
         }
 
-        Ok(transcript.trim().to_string())
+        Ok(remove_sound_captions(&transcript))
     }
 
     pub fn is_loaded(&self) -> bool {
@@ -233,4 +220,19 @@ impl InferenceEngine {
         self.context = None;
         self.state = InferenceState::NotLoaded;
     }
+}
+
+/// Keep fallback/warmup and chunk decoding consistent. Acoustic evidence is
+/// checked separately; a decoder threshold alone does not prove speech.
+fn configure_decode(params: &mut whisper_rs::FullParams<'_, '_>) {
+    params.set_no_context(true);
+    params.set_suppress_blank(true);
+    params.set_suppress_non_speech_tokens(true);
+    params.set_no_speech_thold(0.6);
+    params.set_temperature(0.0);
+    params.set_temperature_inc(0.0);
+    params.set_entropy_thold(2.4);
+    params.set_logprob_thold(-1.0);
+    params.set_no_timestamps(true);
+    params.set_single_segment(true);
 }

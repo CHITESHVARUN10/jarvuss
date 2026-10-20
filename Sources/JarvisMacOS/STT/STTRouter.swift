@@ -121,6 +121,14 @@ final class STTRouter {
         if owner == .command { owner = .none }
     }
 
+    func cancelPendingModalStarts() {
+        pendingPillAfterCommand = false
+        pendingPillRetries = 0
+        pendingActionAfterCommand = false
+        pendingActionRetries = 0
+        suppressCommandResult = false
+    }
+
     // MARK: - Preemption (pill steals an in-flight command utterance)
 
     /// Called from toggleDictation/toggleAction when a command utterance

@@ -164,7 +164,7 @@ final class WhisperCommandListener {
     /// inference and NO callback, then releases the claim. Use when the
     /// utterance must never produce a transcript (mic off, app exit).
     func reset() {
-        if utteranceActive {
+        if utteranceActive || STTRouter.shared.owner == .command {
             utteranceActive = false
             utteranceStartedAt = nil
             cancel_recording()

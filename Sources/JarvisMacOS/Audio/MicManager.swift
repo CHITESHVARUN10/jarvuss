@@ -33,6 +33,7 @@ final class MicManager {
     private var recentSampleRate: Double = 16_000
     private let maxBufferedSeconds: Double = 8.0
 
+    private var startGeneration = UUID()
     private(set) var isListening = false
     var voiceDetectionThresholdDB: Float = -35.0
 
@@ -66,6 +67,7 @@ final class MicManager {
     ) throws {
         guard !isListening else { return }
 
+        recentAudioQueue.sync { recentSamples.removeAll(keepingCapacity: true) }
         self.onLevelUpdate = onLevelUpdate
         self.onAudioBuffer = onAudioBuffer
         let inputNode = audioEngine.inputNode
@@ -88,6 +90,7 @@ final class MicManager {
     }
 
     func stopListening() {
+        startGeneration = UUID()
         guard isListening || isTapInstalled else { return }
         audioEngine.stop()
 
@@ -102,6 +105,7 @@ final class MicManager {
         isListening = false
     }
 
+    @MainActor
     func startListeningWithPermission(
         onLevelUpdate: @escaping (Float) -> Void,
         onAudioBuffer: ((AVAudioPCMBuffer) -> Void)? = nil
@@ -111,7 +115,9 @@ final class MicManager {
                   Bundle.main.bundlePath)
         }
 
+        let generation = startGeneration
         let granted = await requestPermission()
+        guard generation == startGeneration, !Task.isCancelled else { throw CancellationError() }
         guard granted else {
             throw MicManagerError.permissionDenied
         }
