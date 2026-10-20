@@ -256,6 +256,43 @@ still works as soon as the mic and Whisper are ready.
 Their data (settings, Keychain secrets, logs, models) lives in **their**
 `~/Library/Application Support/Jarvis` — nothing personal is inside the bundle.
 
+### Updating Jarvis (delete the old app, unzip the new one)
+
+Updates are safe by design: **nothing that matters lives inside the app
+bundle.** Replace the app and the friend's setup carries over:
+
+| What | Where it lives | Survives an update |
+|:---|:---|:---|
+| Postgres database + credentials | The database itself; `connection_settings.json` + Keychain | Yes |
+| Whisper model | `~/Library/Application Support/AgentTalk/models` (or the folder picked in Setup) | Yes |
+| Ollama + qwen model | `~/.ollama/models` | Yes |
+| Voice enrollment | `Application Support/Jarvis/embeddings.npy` + prefs | Yes |
+| Settings (toggles, backend mode, follow-up window, setup state) | `~/Library/Preferences/local.jarvis.macos.plist` | Yes (same bundle id) |
+| Microphone + Accessibility grants | macOS TCC, keyed to the signing identity | Yes — **sign every build with the same certificate**; an ad-hoc or different-cert build breaks the grants |
+| Spotify tokens / PG password | Keychain (`local.jarvis.credentials`) | Yes (same signing identity) |
+| Learned intent model, STT core, app code | Inside the bundle | Replaced by the new build |
+
+The steps:
+
+```zsh
+# you: build, sign, zip
+./scripts/package_jarvis_app.zsh
+ditto -c -k --sequesterRsrc --keepParent /Applications/Jarvis.app ~/Desktop/Jarvis.zip
+
+# friend: quit first (quitting also stops the Python helper), then swap
+#   ⌘Q in Jarvis → drag the new Jarvis.app over the old one in /Applications
+#   right-click → Open once (quarantine applies to every fresh download)
+```
+
+Do **not** delete `~/Library/Application Support/Jarvis` — that is where the
+friend's configuration, enrollment, logs and stats live. If the backend ever
+reports a stale helper, quitting Jarvis also stops it; the new version starts
+its own.
+
+After an update the Setup pane still shows every optional item as configured
+(Postgres connection prefilled, password left blank so an existing role is
+never altered; "Create" is safe to re-run as a verification).
+
 ### Start at login
 
 Toggle **Assistant → Behaviour → Start at login** and macOS opens Jarvis for you when you log in. Enable it from the packaged app (`./scripts/package_jarvis_app.zsh`) — a bare `swift run` binary has no bundle identity to register. If macOS wants approval first, the same card shows an **Open Settings** row that lands in System Settings → General → Login Items.

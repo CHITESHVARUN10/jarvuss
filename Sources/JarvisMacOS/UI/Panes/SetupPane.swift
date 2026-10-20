@@ -18,6 +18,9 @@ struct SetupPane: View {
     @State private var pgDatabase = "jarvis_db"
     @State private var pgUser = "jarvis_user"
     @State private var pgPassword = PostgresProvisioner.generatedPassword()
+    /// Update path: fill the form from the saved connection (outside the
+    /// bundle, so it survives replacing the app) and blank the password.
+    @State private var pgPrefilled = false
 
     @ObservedObject private var activity = SetupActivity.shared
 
@@ -220,14 +223,14 @@ struct SetupPane: View {
                     .font(.system(size: 12, design: .monospaced))
                     .frame(width: 120)
             }
-            JRow(title: "Password", sub: "Editable — saved to the Keychain") {
+            JRow(title: "Password", sub: "Leave blank to keep the current password") {
                 SecureField("", text: $pgPassword)
                     .textFieldStyle(.plain)
                     .font(.system(size: 12, design: .monospaced))
                     .frame(width: 120)
             }
             JRow(title: "Create & configure",
-                 sub: "Creates role + database, enables event logging") {
+                 sub: "Creates role + database, enables event logging. Safe to re-run after an update.") {
                 actionButton("Create") { await createJarvisDatabase() }
             }
         case .backend:
@@ -338,6 +341,19 @@ struct SetupPane: View {
 
     private func refreshProbes() async {
         micAuthorized = AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
+        if !pgPrefilled {
+            // Saved settings live in Application Support, so an app update
+            // arrives with the connection intact; keep the password blank to
+            // mean "don't touch the existing role".
+            let saved = RuntimeConfiguration.mergedValues()
+            if let database = saved["PGDATABASE"], !database.isEmpty,
+               let user = saved["PGUSER"], !user.isEmpty {
+                pgDatabase = database
+                pgUser = user
+                pgPassword = ""
+            }
+            pgPrefilled = true
+        }
         let probes = await Task.detached(priority: .utility) {
             (OllamaSetup.isInstalled(), PostgresProvisioner.serverReachable())
         }.value
@@ -376,8 +392,8 @@ struct SetupPane: View {
             port: "5432",
             host: "127.0.0.1"
         )
-        guard !plan.database.isEmpty, !plan.user.isEmpty, !plan.password.isEmpty else {
-            return "Database, user and password are all required."
+        guard !plan.database.isEmpty, !plan.user.isEmpty else {
+            return "Database and user are both required."
         }
         do {
             let message = try await Task.detached(priority: .utility) {

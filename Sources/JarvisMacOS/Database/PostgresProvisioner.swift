@@ -117,27 +117,53 @@ enum PostgresProvisioner {
 
     /// Creates the role (preserves an existing role) and the database
     /// (only when missing). Connects with trust auth as the current user.
+    ///
+    /// Update path: after replacing the app, the Setup form is prefilled from
+    /// the saved connection and its password field is blank. An existing role
+    /// is then left untouched — no password reset, no login verification with
+    /// a stale guess — while a missing role still requires a password.
     @discardableResult
     static func provision(_ plan: Plan) throws -> String {
         guard let psql = findPSQL() else { throw ProvisionError.psqlNotFound }
 
         try validate(plan)
-        try run(psql, plan: plan, sql: createRoleSQL(user: plan.user, password: plan.password))
 
+        let roleOutput = try run(psql, plan: plan, sql: roleExistsQuery(user: plan.user))
+        let roleExists = roleOutput.stdout.trimmingCharacters(in: .whitespacesAndNewlines) == "1"
         let dbOutput = try run(psql, plan: plan, sql: databaseExistsQuery(database: plan.database))
-        if dbOutput.stdout.trimmingCharacters(in: .whitespacesAndNewlines) != "1" {
+        let databaseExists = dbOutput.stdout.trimmingCharacters(in: .whitespacesAndNewlines) == "1"
+
+        if !roleExists {
+            guard !plan.password.isEmpty else {
+                throw ProvisionError.commandFailed(
+                    "Role '\(plan.user)' does not exist — enter a password to create it.")
+            }
+            try run(psql, plan: plan, sql: createRoleSQL(user: plan.user, password: plan.password))
+        }
+
+        if !databaseExists {
             try run(psql, plan: plan, sql: createDatabaseSQL(database: plan.database, user: plan.user))
         }
-        // Verify the credentials before persisting or showing Configured.
-        try run(psql, plan: plan, sql: "SELECT 1;", verifyLogin: true)
+
+        // Verify credentials only when the caller supplied a password (fresh
+        // creation, or a deliberate password change). Blank = keep the
+        // existing role's password, which provisioning never touches.
+        if !plan.password.isEmpty {
+            try run(psql, plan: plan, sql: "SELECT 1;", verifyLogin: true)
+        }
+
+        if roleExists && databaseExists {
+            return "Verified role '\(plan.user)' and database '\(plan.database)' — nothing changed."
+        }
         return "Created role '\(plan.user)' and database '\(plan.database)' (or verified they exist)."
     }
 
     static func validate(_ plan: Plan) throws {
         guard [plan.database, plan.user].allSatisfy({ !$0.isEmpty && $0.utf8.count <= 63 && !$0.contains("\0") }),
-              !plan.password.isEmpty, !plan.password.contains("\0"),
+              !plan.password.contains("\0"),
               let port = Int(plan.port), (1...65535).contains(port) else {
-            throw ProvisionError.commandFailed("Use database and role names of 1–63 bytes, a password, and a valid port.")
+            throw ProvisionError.commandFailed(
+                "Use database and role names of 1–63 bytes, a password without NUL bytes, and a valid port.")
         }
     }
 

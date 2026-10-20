@@ -132,6 +132,12 @@ final class PostgresProvisionerTests: XCTestCase {
         XCTAssertNoThrow(try PostgresProvisioner.validate(.init(database: "db", user: "user", password: "p'$$\\q")))
     }
 
+    /// Update path: after replacing the app the password field is blank and
+    /// an existing role must be left untouched, so a blank password is valid.
+    func testValidateAllowsBlankPasswordForExistingRoleUpdates() {
+        XCTAssertNoThrow(try PostgresProvisioner.validate(.init(database: "db", user: "user", password: "")))
+    }
+
     func testCreateDatabaseSQLEscapesIdentifiers() {
         let sql = PostgresProvisioner.createDatabaseSQL(database: "jar\"vis_db", user: "jarvis_user")
         XCTAssertEqual(sql, "CREATE DATABASE \"jar\"\"vis_db\" OWNER \"jarvis_user\";")
