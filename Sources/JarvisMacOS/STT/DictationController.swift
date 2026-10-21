@@ -949,17 +949,13 @@ final class DictationController: ObservableObject {
         }
         switch phase {
         case .Recording:
-            let previewVisible = livePreviewEnabled && !partialTranscript.isEmpty
-            if previewVisible {
-                return CGSize(width: 400, height: 120)
-            }
-            return CGSize(width: 240, height: 44)
+            return CGSize(width: 370, height: 150)
         case .Processing:
-            return CGSize(width: 240, height: 44)
+            return CGSize(width: 370, height: 105)
         case .TranscriptReady:
             // Keep in sync with DictationTranscriptOverlayView
-            // (baseHeight / noticeHeight / cardWidth). 400pt wide: four
-            // equal-width actions sit on one row without clipping.
+            // (baseHeight / noticeHeight / cardWidth). The noir card keeps
+            // three actions on one row inside 370pt.
             if !insertNotice.isEmpty {
                 return CGSize(width: DictationTranscriptOverlayView.cardWidth,
                               height: DictationTranscriptOverlayView.noticeHeight)

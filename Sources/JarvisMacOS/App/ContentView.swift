@@ -6,14 +6,12 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
-            // ── Background ──────────────────────────────────────────
-            JColor.base
+            NoirPalette.desktop
                 .ignoresSafeArea()
 
-            // ── Layout: rail + stage + panel ────────────────────────
             AppShellView(appState: appState)
+                .ignoresSafeArea()
 
-            // ── Popup overlay ────────────────────────────────────────
             if appState.popupManager.isVisible {
                 Color.black.opacity(0.30)
                     .ignoresSafeArea()
@@ -23,6 +21,6 @@ struct ContentView: View {
                     .frame(maxWidth: 360)
             }
         }
-        .frame(minWidth: 1160, minHeight: 720)
+        .frame(minWidth: 1080, minHeight: 700)
     }
 }

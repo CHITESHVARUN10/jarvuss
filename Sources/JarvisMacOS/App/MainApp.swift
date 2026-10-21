@@ -35,5 +35,7 @@ struct MainApp: App {
                     appState.shutdown()
                 }
         }
+        .windowStyle(.hiddenTitleBar)
+        .defaultSize(width: 1360, height: 860)
     }
 }

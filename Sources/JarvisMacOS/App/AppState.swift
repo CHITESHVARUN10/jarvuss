@@ -77,10 +77,10 @@ final class AppState: ObservableObject {
     @Published var setupCompleted: Bool = UserDefaults.standard.bool(forKey: "jarvis.setup.completed") {
         didSet { UserDefaults.standard.set(setupCompleted, forKey: "jarvis.setup.completed") }
     }
-    /// Active rail section — AppState-owned so panes can deep-link each other
-    /// (Setup → Connections) and the first run opens on Setup.
-    @Published var activeSection: RailSection =
-        UserDefaults.standard.bool(forKey: "jarvis.setup.completed") ? .assistant : .setup
+    /// Active section — AppState-owned so pages can deep-link each other
+    /// (Setup → Connections). Assistant is the workspace entry point; the
+    /// first-run checklist lives under Preferences and keeps its own badge.
+    @Published var activeSection: RailSection = .assistant
     /// Swift → Rust migration flag: command understanding routed through the
     /// Rust core (validator, safety, app aliases, fast-path + rules). OFF keeps
     /// the Swift pipeline and logs shadow-parity lines for comparison.
@@ -259,7 +259,10 @@ final class AppState: ObservableObject {
     }
 
     var voiceProfileReady: Bool {
-        enrollmentCompleted && backendEnrollmentSampleCount >= voiceEnrollmentSampleTarget
+        // The backend sample count is the source of truth. The local
+        // `enrollmentCompleted` flag is only a cache and can lag behind a
+        // restored profile (e.g. after deleting preferences).
+        backendEnrollmentSampleCount >= voiceEnrollmentSampleTarget
     }
 
     var eventLogText: String {

@@ -3,9 +3,7 @@ import SwiftUI
 // MARK: - HUD root
 
 /// Dictation HUD content, hosted in a borderless NSPanel by DictationController.
-/// Switches on the mirrored Rust phase: Recording → Transcribing →
-/// transcript card. Glass pill language: 240×44, ultra-thin material,
-//  0.5px white-12% border, soft shadow.
+/// Noir language: graphite card, lavender hairline, flat controls.
 struct DictationHUDView: View {
     @ObservedObject private var model = DictationController.shared
 
@@ -59,15 +57,10 @@ struct DictationHUDView: View {
                 .frame(width: 300)
 
             case .Idle, .Ready:
-                // Reloading after an idle-unload: session phase may still read
-                // Ready/Idle while the model itself is Loading/Unloading.
                 if model.modelPhase == .Loading || model.modelPhase == .Unloading {
                     DictationReloadingView()
                         .frame(width: 300)
                 } else {
-                    // Panel exists but core is idle-ready (e.g. press landed
-                    // while Ready, or start_recording was refused). Never a
-                    // bare EmptyView — user must see *something*.
                     DictationReadyView()
                         .frame(width: 240)
                 }
@@ -80,186 +73,108 @@ struct DictationHUDView: View {
     }
 }
 
-// MARK: - Recording pill
+// MARK: - Card chrome
 
-/// 240×44 glass pill: breathing red dot + live waveform + "Recording".
-/// Grows a preview bubble above when live-preview text is showing.
+private struct DictationCard<Content: View>: View {
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        content()
+            .padding(18)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .background(
+                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                    .fill(DictationCardPalette.card)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                    .strokeBorder(DictationCardPalette.edge, lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.5), radius: 28, y: 14)
+    }
+}
+
+// MARK: - Recording
+
 struct DictationRecordingPillView: View {
-    @State private var isVisible = false
     var audioLevel: Float = 0.2
     var livePreview: String = ""
     var livePreviewEnabled: Bool = false
     var isAction: Bool = false
 
     var body: some View {
-        VStack(spacing: 6) {
-            if livePreviewEnabled && !livePreview.isEmpty {
-                DictationLivePreviewBubble(text: livePreview)
-            }
+        DictationCard {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 7) {
+                    Image(systemName: isAction ? "bolt" : "mic")
+                        .font(.system(size: 11))
+                    Text(isAction ? "COMMAND · LISTENING" : "DICTATION · RECORDING")
+                        .font(.system(size: 10, weight: .medium))
+                        .tracking(0.5)
+                    Spacer(minLength: 8)
+                    Text("LIVE")
+                        .font(.system(size: 9, design: .monospaced))
+                        .foregroundStyle(DictationCardPalette.muted)
+                }
+                .foregroundStyle(DictationCardPalette.accent)
 
-            pill
-        }
-        .frame(width: previewVisible ? 400 : 240)
-        .shadow(color: .black.opacity(0.4), radius: 20, y: 10)
-        .scaleEffect(isVisible ? 1 : 0.85)
-        .opacity(isVisible ? 1 : 0)
-        .onAppear {
-            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                isVisible = true
-            }
-        }
-    }
+                NoirWaveform(level: audioLevel, active: true)
 
-    private var previewVisible: Bool {
-        livePreviewEnabled && !livePreview.isEmpty
-    }
-
-    private var pill: some View {
-        HStack(spacing: 10) {
-            DictationRecordingStatusDot(isAction: isAction)
-                .padding(.leading, 14)
-
-            Spacer(minLength: 2)
-
-            PillWaveformView(audioLevel: audioLevel)
-                .frame(height: 20)
-                .frame(maxWidth: 110)
-
-            Spacer(minLength: 2)
-
-            Text(isAction ? "Listening" : "Recording")
-                .font(.system(size: 11, weight: .medium, design: .default))
-                .foregroundStyle(.white.opacity(0.4))
-                .padding(.trailing, 14)
-        }
-        .frame(width: 240, height: 44)
-        .background {
-            RoundedRectangle(cornerRadius: 22)
-                .fill(.ultraThinMaterial)
-                .environment(\.colorScheme, .dark)
-        }
-        .overlay {
-            RoundedRectangle(cornerRadius: 22)
-                .stroke(.white.opacity(0.12), lineWidth: 0.5)
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 22))
-        .compositingGroup()
-    }
-}
-
-/// Glass bubble above the pill showing the live transcript so far.
-private struct DictationLivePreviewBubble: View {
-    let text: String
-
-    var body: some View {
-        Text(text)
-            .font(.system(size: 12, weight: .regular, design: .default))
-            .foregroundStyle(.white.opacity(0.75))
-            .lineLimit(3)
-            .truncationMode(.tail)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
-            .frame(maxWidth: 400, alignment: .leading)
-            .background {
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(.ultraThinMaterial)
-                    .environment(\.colorScheme, .dark)
-            }
-            .overlay {
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(.white.opacity(0.12), lineWidth: 0.5)
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 14))
-            .compositingGroup()
-            .transition(.opacity.combined(with: .move(edge: .bottom)))
-    }
-}
-
-/// 8px status dot with soft glow and breathing pulse.
-/// Red for dictate (⌘⇧D), indigo for action (⌘⇧A) — same glass, own color.
-private struct DictationRecordingStatusDot: View {
-    @State private var isPulsing = false
-    var isAction: Bool = false
-
-    private var dotColor: Color {
-        isAction ? Color(red: 0.45, green: 0.50, blue: 1.0)
-                 : Color(red: 0.73, green: 0.10, blue: 0.10)
-    }
-
-    var body: some View {
-        Circle()
-            .fill(dotColor)
-            .frame(width: 8, height: 8)
-            .shadow(color: dotColor.opacity(0.6), radius: 6)
-            .opacity(isPulsing ? 0.55 : 1.0)
-            .onAppear {
-                withAnimation(
-                    .easeInOut(duration: 1.6)
-                    .repeatForever(autoreverses: true)
-                ) {
-                    isPulsing = true
+                HStack(spacing: 8) {
+                    Text(isAction ? "Listening for your command…" : "Listening… audio stays on this Mac.")
+                        .font(.system(size: 11))
+                        .foregroundStyle(DictationCardPalette.muted)
+                    Spacer(minLength: 8)
+                    Button("Finish") {
+                        if isAction {
+                            DictationController.shared.toggleAction()
+                        } else {
+                            DictationController.shared.toggleDictation()
+                        }
+                    }
+                    .buttonStyle(NoirButtonStyle(intent: .quiet, small: true))
                 }
             }
+        }
+        .frame(width: 370, height: 150)
     }
 }
 
-// MARK: - Transcribing pill
+// MARK: - Transcribing
 
-/// Same 240×44 glass, spinner + dimmed waveform + "Transcribing".
 struct DictationTranscribingPillView: View {
-    @State private var isVisible = false
     var isAction: Bool = false
 
     var body: some View {
-        HStack(spacing: 10) {
-            ProgressView()
-                .controlSize(.small)
-                .tint(.white.opacity(0.5))
-                .padding(.leading, 14)
+        DictationCard {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 7) {
+                    Image(systemName: isAction ? "bolt" : "mic")
+                        .font(.system(size: 11))
+                    Text(isAction ? "COMMAND · WORKING" : "DICTATION · POLISHING")
+                        .font(.system(size: 10, weight: .medium))
+                        .tracking(0.5)
+                    Spacer(minLength: 8)
+                }
+                .foregroundStyle(DictationCardPalette.accent)
 
-            Spacer(minLength: 2)
-
-            PillWaveformView(audioLevel: 0.0)
-                .frame(height: 20)
-                .frame(maxWidth: 110)
-                .opacity(0.5)
-
-            Spacer(minLength: 2)
-
-            Text((isAction ? "Working" : "Transcribing"))
-                .font(.system(size: 11, weight: .medium, design: .default))
-                .foregroundStyle(.white.opacity(0.4))
-                .padding(.trailing, 14)
-        }
-        .frame(width: 240, height: 44)
-        .background {
-            RoundedRectangle(cornerRadius: 22)
-                .fill(.ultraThinMaterial)
-                .environment(\.colorScheme, .dark)
-        }
-        .overlay {
-            RoundedRectangle(cornerRadius: 22)
-                .stroke(.white.opacity(0.12), lineWidth: 0.5)
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 22))
-        .compositingGroup()
-        .shadow(color: .black.opacity(0.4), radius: 20, y: 10)
-        .scaleEffect(isVisible ? 1 : 0.85)
-        .opacity(isVisible ? 1 : 0)
-        .onAppear {
-            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                isVisible = true
+                HStack(spacing: 10) {
+                    ProgressView()
+                        .controlSize(.small)
+                        .tint(DictationCardPalette.accent)
+                    Text("Transcribing on this Mac…")
+                        .font(.system(size: 12))
+                        .foregroundStyle(DictationCardPalette.secondary)
+                    Spacer(minLength: 8)
+                }
             }
         }
+        .frame(width: 370, height: 105)
     }
 }
 
 // MARK: - Transcript card
 
-/// Glass result card, styled after the dictation-card mockup: 26pt radius,
-/// material + dark tint, top gloss, mono tag/meta header, serif transcript,
-/// and a four-slot action bar (Copy / Original / Undo / Close).
-/// Card height mirrors panelSizeForCurrentState in DictationController.
 struct DictationTranscriptOverlayView: View {
     let transcript: String
     var original: String = ""
@@ -275,11 +190,10 @@ struct DictationTranscriptOverlayView: View {
     let onClose: () -> Void
 
     /// Keep in sync with DictationController.panelSizeForCurrentState.
-    static let baseHeight: CGFloat = 250
-    static let noticeHeight: CGFloat = 298
-    static let cardWidth: CGFloat = 400
+    static let baseHeight: CGFloat = 300
+    static let noticeHeight: CGFloat = 350
+    static let cardWidth: CGFloat = 370
 
-    @State private var appeared = false
     @State private var showRaw = false
     @State private var undone = false
     @State private var copiedFlash = false
@@ -296,16 +210,16 @@ struct DictationTranscriptOverlayView: View {
     }
 
     private var tagText: String {
-        if undone { return "Undone" }
-        return showRaw ? "Original" : "Polished"
+        if undone { return "UNDONE · DICTATION" }
+        return showRaw ? "ORIGINAL · DICTATION" : "READY · DICTATION"
     }
 
     private var metaText: String {
-        if undone { return "nothing pasted" }
         if formatting { return "polishing…" }
         let words = "\(wordCount) word\(wordCount == 1 ? "" : "s")"
-        let state = inserted ? "pasted" : (copied ? "copied" : "")
-        return state.isEmpty ? words : "\(words) · \(state)"
+        if inserted { return "\(words) · pasted" }
+        if copied { return "\(words) · copied" }
+        return words
     }
 
     private var cardHeight: CGFloat {
@@ -313,289 +227,210 @@ struct DictationTranscriptOverlayView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            header
-            transcriptScroll
-            Divider()
-                .overlay(DictationCardPalette.hairline)
-                .padding(.bottom, 10)
-            actionBar
-            insertNoticeRow
-        }
-        .padding(EdgeInsets(top: 22, leading: 22, bottom: 14, trailing: 22))
-        .frame(width: Self.cardWidth, height: cardHeight, alignment: .top)
-        .background(cardBackground)
-        .overlay {
-            RoundedRectangle(cornerRadius: 26)
-                .stroke(DictationCardPalette.edge, lineWidth: 0.5)
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 26))
-        .compositingGroup()
-        .shadow(color: .black.opacity(0.4), radius: 40, y: 20)
-        .scaleEffect(appeared ? 1 : 0.97)
-        .offset(y: appeared ? 0 : 14)
-        .opacity(appeared ? 1 : 0)
-        .onAppear {
-            withAnimation(.timingCurve(0.2, 0.9, 0.3, 1, duration: 0.45)) {
-                appeared = true
+        DictationCard {
+            VStack(alignment: .leading, spacing: 0) {
+                header
+
+                ScrollView(.vertical, showsIndicators: false) {
+                    Text(displayText)
+                        .font(.system(size: 13))
+                        .lineSpacing(6)
+                        .foregroundStyle(undone ? DictationCardPalette.muted : DictationCardPalette.text)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .textSelection(.enabled)
+                }
+                .frame(maxHeight: 120)
+
+                HStack(spacing: 6) {
+                    Button {
+                        if showRaw { onCopyOriginal() } else { onCopy() }
+                        copiedFlash = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
+                            copiedFlash = false
+                        }
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: copiedFlash ? "checkmark" : "doc.on.doc")
+                                .font(.system(size: 11, weight: .medium))
+                            Text(copiedFlash ? "Copied" : "Copy text")
+                        }
+                    }
+                    .buttonStyle(NoirButtonStyle(intent: .primary, small: true))
+                    .disabled(undone)
+
+                    if canToggleOriginal {
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.15)) { showRaw.toggle() }
+                        } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "clock.arrow.circlepath")
+                                    .font(.system(size: 11))
+                                Text(showRaw ? "Polished" : "Original")
+                            }
+                        }
+                        .buttonStyle(NoirButtonStyle(intent: .quiet, small: true))
+                        .disabled(undone)
+                    }
+
+                    Button {
+                        undone = true
+                        onUndo()
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "arrow.uturn.backward")
+                                .font(.system(size: 11))
+                            Text("Undo")
+                        }
+                    }
+                    .buttonStyle(NoirButtonStyle(intent: .quiet, small: true))
+                    .disabled(undone)
+
+                    Spacer(minLength: 0)
+                }
+                .padding(.top, 14)
+
+                footer
             }
         }
+        .frame(width: Self.cardWidth, height: cardHeight, alignment: .topLeading)
     }
 
-    // MARK: Header
-
     private var header: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 7) {
             Circle()
-                .fill(DictationCardPalette.accent)
-                .frame(width: 7, height: 7)
-                .shadow(color: DictationCardPalette.accent.opacity(0.85), radius: 5)
+                .fill(undone ? DictationCardPalette.muted : DictationCardPalette.accent)
+                .frame(width: 6, height: 6)
 
             Text(tagText)
-                .font(JarvisFonts.mono(11))
-                .textCase(.uppercase)
-                .tracking(1.0)
-                .foregroundStyle(DictationCardPalette.muted)
+                .font(.system(size: 10, weight: .medium))
+                .tracking(0.6)
+                .foregroundStyle(undone ? DictationCardPalette.muted : DictationCardPalette.accent)
 
             Spacer(minLength: 8)
 
             Text(metaText)
-                .font(JarvisFonts.mono(11))
+                .font(.system(size: 9.5, design: .monospaced))
                 .foregroundStyle(DictationCardPalette.muted)
+
+            Button(action: onClose) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(DictationCardPalette.muted)
+                    .frame(width: 22, height: 22)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
         }
         .padding(.bottom, 12)
     }
 
-    // MARK: Transcript
-
-    private var transcriptScroll: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            Text(displayText)
-                .font(JarvisFonts.serif(30))
-                .foregroundStyle(undone ? DictationCardPalette.muted : DictationCardPalette.text)
-                .lineSpacing(4)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentTransition(.opacity)
-        }
-        .frame(minHeight: 92, maxHeight: 150)
-        .animation(.easeInOut(duration: 0.16), value: displayText)
-        .padding(.bottom, 14)
-    }
-
-    // MARK: Action bar
-
-    private var actionBar: some View {
-        HStack(spacing: 4) {
-            CardActionButton(
-                icon: copiedFlash ? "checkmark" : "doc.on.doc",
-                label: copiedFlash ? "Copied" : "Copy",
-                primary: true,
-                done: copiedFlash,
-                disabled: undone
-            ) {
-                if showRaw {
-                    onCopyOriginal()
-                } else {
-                    onCopy()
-                }
-                copiedFlash = true
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
-                    copiedFlash = false
-                }
-            }
-
-            if canToggleOriginal {
-                CardActionButton(
-                    icon: "clock.arrow.circlepath",
-                    label: showRaw ? "Polished" : "Original",
-                    disabled: undone
-                ) {
-                    withAnimation(.easeInOut(duration: 0.16)) {
-                        showRaw.toggle()
-                    }
-                }
-                .help("Show what you actually said, before formatting")
-            }
-
-            CardActionButton(icon: "arrow.uturn.backward", label: "Undo", disabled: undone) {
-                undone = true
-                onUndo()
-            }
-
-            CardActionButton(icon: "xmark", label: "Close") {
-                onClose()
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var insertNoticeRow: some View {
-        if !insertNotice.isEmpty {
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Image(systemName: "lock.open")
-                    .font(.system(size: 10, weight: .medium))
-                Text(insertNotice)
-                    .font(JarvisFonts.sans(11))
-                    .fixedSize(horizontal: false, vertical: true)
-                Button(action: onGrantAccessibility) {
-                    Text("Grant")
-                        .font(JarvisFonts.sans(11, weight: .semibold))
+    private var footer: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            if !insertNotice.isEmpty {
+                HStack(spacing: 6) {
+                    Image(systemName: "lock.open")
+                        .font(.system(size: 9, weight: .medium))
+                    Text(insertNotice)
+                        .font(.system(size: 10.5))
+                        .fixedSize(horizontal: false, vertical: true)
+                    Button("Grant", action: onGrantAccessibility)
+                        .buttonStyle(.plain)
+                        .font(.system(size: 10.5, weight: .medium))
                         .foregroundStyle(DictationCardPalette.accent)
                 }
-                .buttonStyle(.plain)
+                .foregroundStyle(DictationCardPalette.muted)
             }
-            .foregroundStyle(DictationCardPalette.muted)
-            .padding(.top, 12)
+
+            Text(footerText)
+                .font(.system(size: 10))
+                .foregroundStyle(DictationCardPalette.muted)
         }
+        .padding(.top, 12)
     }
 
-    private var cardBackground: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 26)
-                .fill(.ultraThinMaterial)
-            RoundedRectangle(cornerRadius: 26)
-                .fill(DictationCardPalette.cardTint.opacity(0.45))
-            RoundedRectangle(cornerRadius: 26)
-                .fill(
-                    LinearGradient(
-                        colors: [Color.white.opacity(0.10), .clear],
-                        startPoint: .topLeading,
-                        endPoint: .center))
-        }
-        .environment(\.colorScheme, .dark)
+    private var footerText: String {
+        if inserted { return "Pasted at your cursor." }
+        if copiedFlash { return "Copied to the clipboard." }
+        return "Copy the text, then paste where you need it."
     }
 }
 
-/// Mockup palette (dark) — the HTML design tokens 1:1.
-enum DictationCardPalette {
-    static let text     = Color(red: 0.949, green: 0.953, blue: 0.965)  // #F2F3F6
-    static let muted    = Color(red: 0.604, green: 0.624, blue: 0.682)  // #9A9FAE
-    static let accent   = Color(red: 0.561, green: 0.890, blue: 0.839)  // #8FE3D6
-    static let ok       = Color(red: 0.498, green: 0.863, blue: 0.745)  // #7FDCBE
-    static let ink      = Color(red: 0.031, green: 0.035, blue: 0.047)  // #08090C
-    static let cardTint = Color(red: 0.118, green: 0.125, blue: 0.157)  // #1E2028
-    static let edge     = Color.white.opacity(0.14)
-    static let hairline = Color.white.opacity(0.09)
-    static let hover    = Color.white.opacity(0.08)
-}
+// MARK: - Waveform
 
-/// One slot of the four-button bar: equal width, 13pt radius, hover fill,
-/// filled/ink treatment for the primary Copy action, green when done.
-private struct CardActionButton: View {
-    let icon: String
-    let label: String
-    var primary: Bool = false
-    var done: Bool = false
-    var disabled: Bool = false
-    let action: () -> Void
-
-    @State private var hovering = false
+struct NoirWaveform: View {
+    var level: Float = 0.2
+    var active: Bool = true
+    var color: Color = DictationCardPalette.accent
+    private let barCount = 36
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 7) {
-                Image(systemName: icon)
-                    .font(.system(size: 13, weight: .medium))
-                Text(label)
-                    .font(JarvisFonts.sans(13, weight: primary ? .semibold : .medium))
-                    .lineLimit(1)
+        TimelineView(.animation(minimumInterval: 0.06)) { context in
+            let t = context.date.timeIntervalSinceReferenceDate
+            HStack(alignment: .center, spacing: 3) {
+                ForEach(0..<barCount, id: \.self) { index in
+                    let wave = abs(sin(t * 2.1 + Double(index) * 0.52))
+                    let levelBump = Double(level) * 20 * abs(sin(t * 1.5 + Double(index) * 0.27))
+                    RoundedRectangle(cornerRadius: 3, style: .continuous)
+                        .fill(color)
+                        .frame(width: 2, height: max(4, min(38, 9 + wave * 16 + levelBump)))
+                }
             }
-            .foregroundStyle(foreground)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
-            .padding(.horizontal, 6)
-            .background {
-                RoundedRectangle(cornerRadius: 13)
-                    .fill(background)
-            }
-            .contentShape(RoundedRectangle(cornerRadius: 13))
+            .frame(height: 42)
+            .opacity(active ? 1 : 0.35)
         }
-        .buttonStyle(.plain)
-        .disabled(disabled)
-        .opacity(disabled ? 0.35 : 1)
-        .onHover { inside in
-            hovering = inside && !disabled
-        }
-    }
-
-    private var foreground: Color {
-        if primary { return DictationCardPalette.ink }
-        if done { return DictationCardPalette.ok }
-        return DictationCardPalette.muted
-    }
-
-    private var background: Color {
-        if primary { return hovering ? Color.white.opacity(0.92) : DictationCardPalette.text }
-        return hovering ? DictationCardPalette.hover : .clear
+        .frame(height: 42)
     }
 }
 
-// MARK: - Error / Download / Reload / Ready states
+// MARK: - Ready / reloading / error / download
 
-/// Shown when the panel exists but the core is idle-ready — e.g. the press
-/// landed while Ready, or start_recording was refused. Guarantees the user
-/// always sees *something* instead of a transparent 240×44 window.
 struct DictationReadyView: View {
-    @State private var isVisible = false
-
     var body: some View {
         HStack(spacing: 10) {
             Circle()
-                .fill(Color(red: 0.35, green: 0.90, blue: 0.65))
-                .frame(width: 8, height: 8)
-                .padding(.leading, 14)
-            Spacer(minLength: 2)
+                .fill(DictationCardPalette.ok)
+                .frame(width: 7, height: 7)
+                .padding(.leading, 16)
             Text(DictationController.shared.mode == .action ? "Ready — say a command" : "Ready — speak")
-                .font(.system(size: 11, weight: .medium, design: .default))
-                .foregroundStyle(.white.opacity(0.4))
-                .padding(.trailing, 14)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(DictationCardPalette.secondary)
+            Spacer(minLength: 8)
         }
         .frame(width: 240, height: 44)
-        .background {
-            RoundedRectangle(cornerRadius: 22)
-                .fill(.ultraThinMaterial)
-                .environment(\.colorScheme, .dark)
-        }
-        .overlay {
-            RoundedRectangle(cornerRadius: 22)
-                .stroke(.white.opacity(0.12), lineWidth: 0.5)
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 22))
-        .compositingGroup()
+        .background(
+            RoundedRectangle(cornerRadius: 13, style: .continuous)
+                .fill(DictationCardPalette.card)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 13, style: .continuous)
+                .strokeBorder(DictationCardPalette.edge, lineWidth: 1)
+        )
         .shadow(color: .black.opacity(0.4), radius: 20, y: 10)
-        .scaleEffect(isVisible ? 1 : 0.85)
-        .opacity(isVisible ? 1 : 0)
-        .onAppear {
-            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                isVisible = true
-            }
-        }
     }
 }
 
-/// Shown when the model is reloading after an idle-unload (5 min rule):
-/// first use pays a multi-second mmap + warmup, and the pill must say so
-/// instead of hanging on "Transcribing" or rendering nothing.
 struct DictationReloadingView: View {
     var body: some View {
         HStack(spacing: 10) {
             ProgressView()
                 .controlSize(.small)
-                .tint(.white.opacity(0.5))
-                .padding(.leading, 14)
+                .tint(DictationCardPalette.accent)
+                .padding(.leading, 16)
             Text("Reloading model…")
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(.white.opacity(0.7))
-            Spacer()
+                .font(.system(size: 12))
+                .foregroundStyle(DictationCardPalette.secondary)
+            Spacer(minLength: 8)
         }
-        .padding(.vertical, 14)
-        .padding(.trailing, 14)
-        .background {
-            RoundedRectangle(cornerRadius: 14)
-                .fill(.ultraThinMaterial)
-                .environment(\.colorScheme, .dark)
-        }
+        .frame(height: 52)
+        .background(
+            RoundedRectangle(cornerRadius: 13, style: .continuous)
+                .fill(DictationCardPalette.card)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 13, style: .continuous)
+                .strokeBorder(DictationCardPalette.edge, lineWidth: 1)
+        )
     }
 }
 
@@ -605,22 +440,28 @@ struct DictationErrorView: View {
     let onDismiss: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 12) {
             Text(message)
-                .font(.system(size: 13))
-                .foregroundStyle(.white.opacity(0.8))
-            HStack {
+                .font(.system(size: 12))
+                .lineSpacing(4)
+                .foregroundStyle(DictationCardPalette.secondary)
+            HStack(spacing: 8) {
                 Button("Retry", action: onRetry)
-                Spacer()
+                    .buttonStyle(NoirButtonStyle(intent: .primary, small: true))
                 Button("Dismiss", action: onDismiss)
+                    .buttonStyle(NoirButtonStyle(intent: .quiet, small: true))
             }
         }
-        .padding(14)
-        .background {
-            RoundedRectangle(cornerRadius: 14)
-                .fill(.ultraThinMaterial)
-                .environment(\.colorScheme, .dark)
-        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 13, style: .continuous)
+                .fill(DictationCardPalette.card)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 13, style: .continuous)
+                .strokeBorder(DictationCardPalette.edge, lineWidth: 1)
+        )
     }
 }
 
@@ -630,27 +471,43 @@ struct DictationDownloadProgressView: View {
     let remaining: String
 
     var body: some View {
-        VStack(spacing: 10) {
-            Text("Downloading Whisper model...")
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Downloading the speech model…")
                 .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(.white.opacity(0.7))
+                .foregroundStyle(DictationCardPalette.secondary)
             ProgressView(value: Double(progress))
                 .progressViewStyle(.linear)
+                .tint(DictationCardPalette.accent)
             if !speed.isEmpty {
                 HStack {
                     Text(speed)
                     Spacer()
                     Text(remaining)
                 }
-                .font(.system(size: 10))
-                .foregroundStyle(.white.opacity(0.5))
+                .font(.system(size: 10, design: .monospaced))
+                .foregroundStyle(DictationCardPalette.muted)
             }
         }
-        .padding(16)
-        .background {
-            RoundedRectangle(cornerRadius: 14)
-                .fill(.ultraThinMaterial)
-                .environment(\.colorScheme, .dark)
-        }
+        .padding(18)
+        .background(
+            RoundedRectangle(cornerRadius: 13, style: .continuous)
+                .fill(DictationCardPalette.card)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 13, style: .continuous)
+                .strokeBorder(DictationCardPalette.edge, lineWidth: 1)
+        )
     }
+}
+
+// MARK: - Palette
+
+enum DictationCardPalette {
+    static let text      = NoirPalette.text
+    static let muted     = NoirPalette.muted
+    static let secondary = NoirPalette.secondary
+    static let accent    = NoirPalette.accent
+    static let ok        = NoirPalette.green
+    static let card      = Color(hex: 0x26262D)
+    static let edge      = NoirPalette.accent.opacity(0.29)
 }
