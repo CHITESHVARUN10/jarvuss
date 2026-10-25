@@ -1,11 +1,13 @@
 import Foundation
 import AVFoundation
+import CDDCShim
 
 enum MicManagerError: LocalizedError {
     case permissionDenied
     case missingUsageDescription
     case insufficientAudio
     case inputUnavailable
+    case inputFailure(String)
 
     var errorDescription: String? {
         switch self {
@@ -15,19 +17,23 @@ enum MicManagerError: LocalizedError {
             return "Missing `NSMicrophoneUsageDescription` in app Info.plist. Launch as an app bundle with this key."
         case .inputUnavailable:
             return "No microphone input is ready. Reconnect or choose an input device, then try again."
+        case .inputFailure(let detail):
+            return "Microphone input could not be started: \(detail). Check the input device and Retry."
         case .insufficientAudio:
             return "Not enough recent microphone audio collected yet."
         }
     }
 }
 
-final class MicManager {
+/// Engine lifecycle is main-actor confined; tap callbacks only enqueue sample
+/// data on recentAudioQueue. Exporters read the same queue synchronously.
+final class MicManager: @unchecked Sendable {
     /// Shared instance — AppState's default and the STT pre-roll need the
     /// SAME audio ring: the pre-roll is only correct if it observes exactly
     /// the samples captured by the tap that drives the VAD.
     static let shared = MicManager()
 
-    private let audioEngine = AVAudioEngine()
+    private var audioEngine = AVAudioEngine()
     private var isTapInstalled = false
     private var onLevelUpdate: ((Float) -> Void)?
     private var onAudioBuffer: ((AVAudioPCMBuffer) -> Void)?
@@ -37,8 +43,15 @@ final class MicManager {
     private let maxBufferedSeconds: Double = 8.0
     private var configurationObserver: NSObjectProtocol?
     private var interruptionHandler: ((String) -> Void)?
+    private var inputWatchdog: Timer?
+    private var lastBufferAt: Date?
 
     init() {
+        observeConfiguration()
+    }
+
+    private func observeConfiguration() {
+        if let configurationObserver { NotificationCenter.default.removeObserver(configurationObserver) }
         configurationObserver = NotificationCenter.default.addObserver(
             forName: .AVAudioEngineConfigurationChange, object: audioEngine, queue: .main
         ) { [weak self] _ in
@@ -92,39 +105,69 @@ final class MicManager {
         recentAudioQueue.sync { recentSamples.removeAll(keepingCapacity: true) }
         self.onLevelUpdate = onLevelUpdate
         self.onAudioBuffer = onAudioBuffer
-        let inputNode = audioEngine.inputNode
-        let format = inputNode.outputFormat(forBus: 0)
-        guard Self.isUsableInputFormat(sampleRate: format.sampleRate, channels: format.channelCount) else {
-            throw MicManagerError.inputUnavailable
-        }
-
-        if !isTapInstalled {
-            inputNode.installTap(onBus: 0, bufferSize: 2048, format: format) { [weak self] buffer, _ in
-                guard let self else { return }
-                let dbLevel = Self.rmsToDecibels(from: buffer)
-                onLevelUpdate(dbLevel)
-                onAudioBuffer?(buffer)
-                self.captureRecentSamples(from: buffer, sampleRate: format.sampleRate)
+        var startupError: Error?
+        do {
+            try Self.performAudioOperation {
+                let inputNode = self.audioEngine.inputNode
+                let format = inputNode.outputFormat(forBus: 0)
+                guard Self.isUsableInputFormat(sampleRate: format.sampleRate, channels: format.channelCount) else {
+                    startupError = MicManagerError.inputUnavailable
+                    return
+                }
+                if !self.isTapInstalled {
+                    inputNode.installTap(onBus: 0, bufferSize: 2048, format: format) { [weak self] buffer, _ in
+                        guard let self else { return }
+                        let dbLevel = Self.rmsToDecibels(from: buffer)
+                        onLevelUpdate(dbLevel)
+                        onAudioBuffer?(buffer)
+                        self.captureRecentSamples(from: buffer, sampleRate: format.sampleRate)
+                    }
+                    self.isTapInstalled = true
+                }
+                self.audioEngine.prepare()
+                do { try self.audioEngine.start() }
+                catch { startupError = error }
             }
-            isTapInstalled = true
+            if let startupError { throw startupError }
+        } catch {
+            stopListening()
+            // An Objective-C startup exception can leave a graph only partly
+            // configured. A fresh graph makes Retry independent of that state.
+            audioEngine = AVAudioEngine()
+            observeConfiguration()
+            throw error
         }
-
-        audioEngine.prepare()
-        try audioEngine.start()
         isListening = true
+        recentAudioQueue.sync { lastBufferAt = Date() }
+        let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self, self.isListening else { return }
+                let last = self.recentAudioQueue.sync { self.lastBufferAt }
+                if !self.audioEngine.isRunning || Self.inputHasStalled(lastBufferAt: last, now: Date()) {
+                    self.stopListening()
+                    self.interruptionHandler?("Microphone input stopped delivering audio. Check the input device, close any app using it exclusively, then Retry.")
+                }
+            }
+        }
+        inputWatchdog = timer
+        RunLoop.main.add(timer, forMode: .common)
     }
 
     @MainActor
     func stopListening() {
         startGeneration = UUID()
+        inputWatchdog?.invalidate()
+        inputWatchdog = nil
         guard isListening || isTapInstalled else { return }
         isListening = false
-        audioEngine.stop()
-
-        if isTapInstalled {
-            audioEngine.inputNode.removeTap(onBus: 0)
-            isTapInstalled = false
+        let removeTap = isTapInstalled
+        if let reason = JarvisCatchAudioException({
+            self.audioEngine.stop()
+            if removeTap { self.audioEngine.inputNode.removeTap(onBus: 0) }
+        }) {
+            NSLog("[Jarvis][Mic] Audio teardown exception: %@", reason as String)
         }
+        isTapInstalled = false
 
         onAudioBuffer = nil
         onLevelUpdate = nil
@@ -153,6 +196,17 @@ final class MicManager {
 
     static func isUsableInputFormat(sampleRate: Double, channels: AVAudioChannelCount) -> Bool {
         sampleRate.isFinite && sampleRate > 0 && channels > 0
+    }
+
+    static func inputHasStalled(lastBufferAt: Date?, now: Date) -> Bool {
+        guard let lastBufferAt else { return true }
+        return now.timeIntervalSince(lastBufferAt) > 3
+    }
+
+    static func performAudioOperation(_ operation: @escaping () -> Void) throws {
+        if let reason = JarvisCatchAudioException(operation) {
+            throw MicManagerError.inputFailure(reason as String)
+        }
     }
 
     func isVoiceLikelyPresent(decibelLevel: Float) -> Bool {
@@ -237,14 +291,17 @@ final class MicManager {
     }
 
     deinit {
+        inputWatchdog?.invalidate()
         if let configurationObserver { NotificationCenter.default.removeObserver(configurationObserver) }
         // A tap can release the last reference on its audio thread. Retain
         // resources until main tears them down, without retaining this object.
         let engine = audioEngine
         let removeTap = isTapInstalled
         let teardown = {
-            engine.stop()
-            if removeTap { engine.inputNode.removeTap(onBus: 0) }
+            _ = JarvisCatchAudioException {
+                engine.stop()
+                if removeTap { engine.inputNode.removeTap(onBus: 0) }
+            }
         }
         if Thread.isMainThread { teardown() }
         else { DispatchQueue.main.async(execute: teardown) }
@@ -277,6 +334,7 @@ final class MicManager {
         let slice = Array(UnsafeBufferPointer(start: channel, count: frameLength))
 
         recentAudioQueue.async {
+            self.lastBufferAt = Date()
             self.recentSampleRate = sampleRate
             self.recentSamples.append(contentsOf: slice)
 

@@ -9,9 +9,8 @@
 //! mic stop / cancel NEVER unloads — only `idle_unload_seconds` of no
 //! dictation activity unloads; the next use reloads transparently.
 //!
-//! The default model directory points at the already-installed AgentTalk
-//! model (`ggml-large-v3-turbo.bin`, ~1.5 GB) so Jarvis reuses it in place
-//! instead of downloading a duplicate.
+//! New installations use Jarvis/models. Existing AgentTalk models or partial
+//! downloads are reused in place instead of downloading a duplicate.
 
 use serde::{Deserialize, Serialize};
 
@@ -73,11 +72,16 @@ impl AppConfig {
         cfg
     }
 
-    fn default_model_dir() -> String {
+    pub fn default_model_dir() -> String {
         if let Some(dir) = dirs::data_dir() {
-            return dir.join("AgentTalk").join("models").to_string_lossy().to_string();
+            let legacy = dir.join("AgentTalk").join("models");
+            if legacy.join("ggml-large-v3-turbo.bin").is_file()
+                || legacy.join("ggml-large-v3-turbo.bin.part").is_file() {
+                return legacy.to_string_lossy().to_string();
+            }
+            return dir.join("Jarvis").join("models").to_string_lossy().to_string();
         }
-        "~/Library/Application Support/AgentTalk/models".into()
+        "~/Library/Application Support/Jarvis/models".into()
     }
 
     pub fn default() -> Self {

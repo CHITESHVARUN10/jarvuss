@@ -18,6 +18,8 @@ struct SetupPane: View {
     @State private var pgDatabase = "jarvis_db"
     @State private var pgUser = "jarvis_user"
     @State private var pgPassword = PostgresProvisioner.generatedPassword()
+    @State private var pgAdministrator = NSUserName()
+    @State private var pgAdministratorPassword = ""
     /// Update path: fill the form from the saved connection (outside the
     /// bundle, so it survives replacing the app) and blank the password.
     @State private var pgPrefilled = false
@@ -175,6 +177,15 @@ struct SetupPane: View {
                 }
             }
             modelPhaseRow
+            Text(get_model_path().toString())
+                .font(.system(size: 10, design: .monospaced))
+                .foregroundStyle(JColor.ink3)
+                .textSelection(.enabled)
+                .fixedSize(horizontal: false, vertical: true)
+            if dictation.modelPhase == .Error || dictation.modelPhase == .NotInstalled {
+                Button("Retry model setup") { dictation.retryModelSetup() }
+                    .jButton()
+            }
         case .ollama:
             JRow(title: ollamaInstalled ? "Start Ollama" : "Install Ollama",
                  sub: ollamaInstalled
@@ -211,7 +222,7 @@ struct SetupPane: View {
                     return failure ?? "Server started."
                 }
             }
-            JRow(title: "Database", sub: "Created if missing; an existing role gets the password you enter") {
+            JRow(title: "Database", sub: "Created if missing; existing roles and passwords are preserved") {
                 TextField("", text: $pgDatabase)
                     .textFieldStyle(.plain)
                     .font(.system(size: 12, design: .monospaced))
@@ -223,10 +234,20 @@ struct SetupPane: View {
                     .font(.system(size: 12, design: .monospaced))
                     .frame(width: 120)
             }
-            JRow(title: "Password", sub: "Leave blank to keep the current password") {
+            JRow(title: "Jarvis password", sub: "Blank generates a secure password for a new role, or keeps an existing password") {
                 SecureField("", text: $pgPassword)
                     .textFieldStyle(.plain)
                     .font(.system(size: 12, design: .monospaced))
+                    .frame(width: 120)
+            }
+            JRow(title: "Server administrator", sub: "An existing PostgreSQL role allowed to create roles and databases") {
+                TextField("Administrator", text: $pgAdministrator)
+                    .textFieldStyle(.plain)
+                    .frame(width: 120)
+            }
+            JRow(title: "Administrator password", sub: "Your server's existing password; blank only if local trust authentication is enabled") {
+                SecureField("Server password", text: $pgAdministratorPassword)
+                    .textFieldStyle(.plain)
                     .frame(width: 120)
             }
             JRow(title: "Create & configure",
@@ -283,7 +304,7 @@ struct SetupPane: View {
     private var modelPhaseNote: String {
         let phase = dictation.modelPhase
         if case .NotInstalled = phase {
-            return "The model downloads automatically when Jarvis launches. Restart Jarvis to retry a failed download."
+            return "The model is not ready. Use Retry model setup to resume its download."
         }
         if case .Ready = phase {
             return "Installed and ready."
@@ -291,7 +312,8 @@ struct SetupPane: View {
         if case .Downloading = phase {
             return "Downloading: \(Int(dictation.downloadProgress * 100))% · \(dictation.downloadSpeed) · \(dictation.downloadRemaining) remaining"
         }
-        if case .Error = phase { return "Download failed. Check your connection and restart Jarvis to retry." }
+        if case .Error = phase { return dictation.errorMessage.isEmpty ? "Model setup failed. Use Retry to resume the download." : dictation.errorMessage }
+        if case .Verifying = phase { return "Download complete. Verifying the model before it can be used…" }
         return "Phase: \(phase)"
     }
 
@@ -385,27 +407,34 @@ struct SetupPane: View {
     }
 
     private func createJarvisDatabase() async -> String {
+        let saved = RuntimeConfiguration.mergedValues()
+        let sameConnection = saved["PGUSER"] == pgUser.trimmingCharacters(in: .whitespaces)
+            && saved["PGDATABASE"] == pgDatabase.trimmingCharacters(in: .whitespaces)
+            && ["127.0.0.1", "localhost"].contains(saved["PGHOST"] ?? "127.0.0.1")
+            && (saved["PGPORT"] ?? "5432") == "5432"
         let plan = PostgresProvisioner.Plan(
             database: pgDatabase.trimmingCharacters(in: .whitespaces),
             user: pgUser.trimmingCharacters(in: .whitespaces),
-            password: pgPassword,
+            password: pgPassword.isEmpty && sameConnection ? (saved["PGPASSWORD"] ?? "") : pgPassword,
             port: "5432",
-            host: "127.0.0.1"
+            host: "127.0.0.1",
+            administrator: pgAdministrator.trimmingCharacters(in: .whitespacesAndNewlines),
+            administratorPassword: pgAdministratorPassword
         )
         guard !plan.database.isEmpty, !plan.user.isEmpty else {
             return "Database and user are both required."
         }
         do {
             let message = try await Task.detached(priority: .utility) {
-                let message = try PostgresProvisioner.provision(plan)
+                let result = try PostgresProvisioner.provisionConnection(plan)
                 try ConnectionSettingsStore.save([
                     "PGHOST": plan.host,
                     "PGPORT": plan.port,
                     "PGDATABASE": plan.database,
                     "PGUSER": plan.user,
-                    "PGPASSWORD": plan.password,
+                    "PGPASSWORD": result.password,
                 ])
-                return message
+                return result.message
             }.value
             await MainActor.run {
                 appState.dbManager.reloadConfiguration()
@@ -415,6 +444,8 @@ struct SetupPane: View {
                 appState.postgresConfigured = true
                 appState.postgresStatusText = "Configured"
             }
+            pgAdministratorPassword = ""
+            pgPassword = ""
             return message
         } catch {
             return "Provisioning failed: \(error.localizedDescription)"

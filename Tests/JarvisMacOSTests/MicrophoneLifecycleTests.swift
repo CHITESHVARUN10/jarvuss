@@ -58,6 +58,23 @@ final class MicrophoneLifecycleTests: XCTestCase {
         XCTAssertTrue(MicManager.isUsableInputFormat(sampleRate: 48000, channels: 2))
     }
 
+    func testInputWatchdogDistinguishesSilentBuffersFromStoppedDelivery() {
+        let now = Date()
+        XCTAssertFalse(MicManager.inputHasStalled(lastBufferAt: now, now: now))
+        XCTAssertFalse(MicManager.inputHasStalled(lastBufferAt: now.addingTimeInterval(-2), now: now))
+        XCTAssertTrue(MicManager.inputHasStalled(lastBufferAt: now.addingTimeInterval(-4), now: now))
+        XCTAssertTrue(MicManager.inputHasStalled(lastBufferAt: nil, now: now))
+    }
+
+    func testAudioDeviceExceptionIsConvertedToARetryableError() {
+        XCTAssertThrowsError(try MicManager.performAudioOperation {
+            NSException(name: .invalidArgumentException, reason: "Input device changed during tap installation").raise()
+        }) { error in
+            XCTAssertTrue(error.localizedDescription.contains("Input device changed"))
+            XCTAssertTrue(error.localizedDescription.contains("Retry"))
+        }
+    }
+
     func testInputDeviceChangeStopsTheVisibleMicrophoneSession() async {
         microphone.started = expectation(description: "permission pending")
         let start = Task { await app.startMicrophone() }

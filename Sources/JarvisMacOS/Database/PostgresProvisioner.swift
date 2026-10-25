@@ -1,9 +1,8 @@
 import Foundation
 
 /// Creates the local Jarvis role + database on an already-running PostgreSQL
-/// server (Homebrew installs default to trust auth for local connections, so
-/// the provisioning connection runs as the current macOS user against the
-/// `postgres` maintenance database). Pure SQL building is separated for tests.
+/// server. The administrator credentials are used only for provisioning;
+/// the Jarvis role credentials are verified independently and saved by the UI.
 enum PostgresProvisioner {
     struct Plan: Sendable {
         var database: String
@@ -12,6 +11,13 @@ enum PostgresProvisioner {
         var port: String = "5432"
         var host: String = "127.0.0.1"
         var administrator: String = NSUserName()
+        /// Credentials for the existing server, distinct from the new Jarvis role.
+        var administratorPassword: String = ""
+    }
+
+    struct ProvisionedConnection {
+        let message: String
+        let password: String
     }
 
     enum ProvisionError: LocalizedError {
@@ -109,21 +115,24 @@ enum PostgresProvisioner {
         probe.environment = ["PGCONNECT_TIMEOUT": "3", "PATH": "/usr/bin:/bin:/opt/homebrew/bin"]
         do {
             let result = try probe.runCapturingOutput(timeout: 8)
-            return result.status == 0 && result.stdout.trimmingCharacters(in: .whitespacesAndNewlines) == "1"
+            let detail = result.stderr.lowercased()
+            return (result.status == 0 && result.stdout.trimmingCharacters(in: .whitespacesAndNewlines) == "1")
+                || detail.contains("no password supplied") || detail.contains("password authentication failed")
+                || (detail.contains("fatal:") && detail.contains("does not exist"))
         } catch {
             return false
         }
     }
 
-    /// Creates the role (preserves an existing role) and the database
-    /// (only when missing). Connects with trust auth as the current user.
-    ///
-    /// Update path: after replacing the app, the Setup form is prefilled from
-    /// the saved connection and its password field is blank. An existing role
-    /// is then left untouched — no password reset, no login verification with
-    /// a stale guess — while a missing role still requires a password.
+    /// Compatibility entry point for callers that only need a summary.
+    /// Setup uses provisionConnection so generated credentials can be saved.
     @discardableResult
     static func provision(_ plan: Plan) throws -> String {
+        try provisionConnection(plan).message
+    }
+
+    static func provisionConnection(_ requested: Plan) throws -> ProvisionedConnection {
+        var plan = requested
         guard let psql = findPSQL() else { throw ProvisionError.psqlNotFound }
 
         try validate(plan)
@@ -134,10 +143,7 @@ enum PostgresProvisioner {
         let databaseExists = dbOutput.stdout.trimmingCharacters(in: .whitespacesAndNewlines) == "1"
 
         if !roleExists {
-            guard !plan.password.isEmpty else {
-                throw ProvisionError.commandFailed(
-                    "Role '\(plan.user)' does not exist — enter a password to create it.")
-            }
+            if plan.password.isEmpty { plan.password = generatedPassword() }
             try run(psql, plan: plan, sql: createRoleSQL(user: plan.user, password: plan.password))
         }
 
@@ -145,22 +151,21 @@ enum PostgresProvisioner {
             try run(psql, plan: plan, sql: createDatabaseSQL(database: plan.database, user: plan.user))
         }
 
-        // Verify credentials only when the caller supplied a password (fresh
-        // creation, or a deliberate password change). Blank = keep the
-        // existing role's password, which provisioning never touches.
-        if !plan.password.isEmpty {
-            try run(psql, plan: plan, sql: "SELECT 1;", verifyLogin: true)
-        }
+        // Do not report success unless the application role can connect.
+        // Existing passwords are preserved; Setup reuses saved credentials.
+        try run(psql, plan: plan, sql: "SELECT 1;", verifyLogin: true)
 
         if roleExists && databaseExists {
-            return "Verified role '\(plan.user)' and database '\(plan.database)' — nothing changed."
+            return ProvisionedConnection(message: "Verified role '\(plan.user)' and database '\(plan.database)' — nothing changed.", password: plan.password)
         }
-        return "Created role '\(plan.user)' and database '\(plan.database)' (or verified they exist)."
+        return ProvisionedConnection(message: "Created role '\(plan.user)' and database '\(plan.database)' (or verified they exist).", password: plan.password)
     }
 
     static func validate(_ plan: Plan) throws {
         guard [plan.database, plan.user].allSatisfy({ !$0.isEmpty && $0.utf8.count <= 63 && !$0.contains("\0") }),
               !plan.password.contains("\0"),
+              !plan.administrator.isEmpty, !plan.administrator.contains("\0"),
+              !plan.administratorPassword.contains("\0"),
               let port = Int(plan.port), (1...65535).contains(port) else {
             throw ProvisionError.commandFailed(
                 "Use database and role names of 1–63 bytes, a password without NUL bytes, and a valid port.")
@@ -180,13 +185,14 @@ enum PostgresProvisioner {
             "PGOPTIONS": "-c statement_timeout=15000 -c standard_conforming_strings=on",
             "PATH": "/usr/bin:/bin:/opt/homebrew/bin",
         ]
-        if verifyLogin { environment["PGPASSWORD"] = plan.password }
+        let password = verifyLogin ? plan.password : plan.administratorPassword
+        if !password.isEmpty { environment["PGPASSWORD"] = password }
         process.environment = environment
         do {
             let result = try process.runCapturingOutput(timeout: 25, input: Data((sql + "\n").utf8))
             guard result.status == 0 else {
                 let detail = [result.stderr, result.stdout].filter { !$0.isEmpty }.joined(separator: "\n")
-                throw ProvisionError.commandFailed(detail.isEmpty ? "psql exited \(result.status)" : detail)
+                throw ProvisionError.commandFailed(connectionFailure(detail: detail, plan: plan, verifyLogin: verifyLogin))
             }
             return (result.stdout, result.stderr)
         } catch let error as ProvisionError {
@@ -194,5 +200,20 @@ enum PostgresProvisioner {
         } catch {
             throw ProvisionError.commandFailed(error.localizedDescription)
         }
+    }
+
+    static func connectionFailure(detail: String, plan: Plan, verifyLogin: Bool) -> String {
+        let lower = detail.lowercased()
+        if !verifyLogin && (lower.contains("no password supplied") || lower.contains("password authentication failed")) {
+            return "PostgreSQL requires the existing server administrator's credentials. Enter the PostgreSQL administrator name and password in Setup. The Jarvis password field belongs to the application account, not the administrator."
+        }
+        if verifyLogin && (lower.contains("no password supplied") || lower.contains("password authentication failed")) {
+            return "The existing Jarvis role '\(plan.user)' rejected this password. Enter its current password; setup preserves existing role passwords."
+        }
+        var redacted = detail
+        for secret in [plan.password, plan.administratorPassword] where !secret.isEmpty {
+            redacted = redacted.replacingOccurrences(of: secret, with: "[redacted]")
+        }
+        return redacted.isEmpty ? "PostgreSQL command failed." : redacted
     }
 }

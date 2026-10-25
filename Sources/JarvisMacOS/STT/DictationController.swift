@@ -22,9 +22,12 @@ struct DictationCapture {
     var start: () -> Bool
     var stop: () -> Void
     var cancel: () -> Void
+    var fail: (String) -> Void = { _ in }
+    var error: () -> String = { "" }
 
     static let native = DictationCapture(phase: { get_app_phase() }, start: { start_recording() },
-        stop: { stop_recording() }, cancel: { cancel_recording() })
+        stop: { stop_recording() }, cancel: { cancel_recording() },
+        fail: { fail_recording($0) }, error: { get_error_message().toString() })
 }
 
 @MainActor
@@ -194,6 +197,38 @@ final class DictationController: ObservableObject {
         // Timers start/stop around each Recording (see startDictation /
         // stopActivityTimers) — never polling at idle, so App Nap works
         // and SwiftUI isn't re-rendered 30×/s forever.
+    }
+
+    func retryModelSetup() {
+        if retry_model_setup() {
+            errorMessage = ""
+            modelPhase = .Verifying
+        }
+    }
+
+    /// Preparation can fail before an owner or a panel exists. Retain modal
+    /// ownership so the visible Retry button can prepare a fresh microphone.
+    func presentCaptureFailure(_ message: String, mode: PillMode? = nil) {
+        if let mode { self.mode = mode }
+        pendingStartExpiry?.cancel()
+        pendingStartOnReady = false
+        if !STTRouter.shared.isModalOwner {
+            let claimed = self.mode == .action ? STTRouter.shared.claimForAction() : STTRouter.shared.claimForPill()
+            guard claimed else { return }
+        }
+        capture.fail(message)
+        receiveCaptureError(message)
+    }
+
+    func receiveCaptureError(_ message: String) {
+        stopActivityTimers()
+        invalidateFormatting()
+        recordingStartedAt = nil
+        phase = .Error
+        errorMessage = message
+        releaseTransientMic()
+        STTRouter.shared.pillSuppressesCommandVAD = false
+        showPanel()
     }
 
     /// 30 Hz FFI meter — runs ONLY while a pill owns a recording.
@@ -445,20 +480,10 @@ final class DictationController: ObservableObject {
         } else {
             // Core refused (race with command mode) — surface the failure as
             // an Error card instead of an invisible panel, then release.
-            phase = .Error
-            errorMessage = mode == .action
-                ? "Could not start recording — core busy. Press ⌘⇧A again."
-                : "Could not start recording — core busy. Press ⌘⇧D again."
-            resizePanelForCurrentState()
-            positionPanelForCurrentState()
-            panel?.orderFrontRegardless()
-            releaseTransientMic()
-            STTRouter.shared.pillSuppressesCommandVAD = false
-            if mode == .action {
-                STTRouter.shared.releaseFromAction()
-            } else {
-                STTRouter.shared.releaseFromPill()
-            }
+            let detail = capture.error()
+            receiveCaptureError(detail.isEmpty
+                ? "Could not start microphone capture. Check the input device and Retry."
+                : detail)
         }
     }
 
@@ -535,6 +560,11 @@ final class DictationController: ObservableObject {
         // Silence-gated/empty stops have no final callback to close the pill.
         if capture.phase() == .Ready {
             dismissTranscript()
+            return
+        }
+        if capture.phase() == .Error {
+            let detail = capture.error()
+            receiveCaptureError(detail.isEmpty ? "No speech was captured. Check the microphone input and Retry." : detail)
             return
         }
         // Optimistic flip: the SAME panel shows Transcribing instantly while
@@ -962,7 +992,10 @@ final class DictationController: ObservableObject {
             }
             return CGSize(width: DictationTranscriptOverlayView.cardWidth,
                           height: DictationTranscriptOverlayView.baseHeight)
-        case .Error, .Preparing:
+        case .Error:
+            return CGSize(width: DictationErrorView.cardWidth,
+                          height: max(120, DictationErrorView.messageHeight(errorMessage) + 80))
+        case .Preparing:
             return CGSize(width: 300, height: 120)
         default:
             return CGSize(width: 240, height: 44)

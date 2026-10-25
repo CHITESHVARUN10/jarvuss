@@ -163,13 +163,17 @@ On first launch the app opens on **Setup** — a checklist with inline fixes, so
 the manual steps below become optional:
 
 - **Microphone / Accessibility** — grant buttons, right there.
-- **Whisper model** — status + auto-download; optionally point it at a folder that already has `ggml-large-v3-turbo.bin`.
+- **Whisper model** — status, active file path, auto-download, verification, and an in-app retry that resumes partial downloads. Optionally choose a model folder; the selection applies on the next launch.
 - **Ollama** — Install (brew, else the download page), Start, and **Pull model** with download status.
-- **PostgreSQL (optional)** — Install & start, then **Create** the `jarvis_db` database + `jarvis_user` role (defaults prefilled, fully editable; the generated password is saved to the Keychain and event logging turns on).
+- **PostgreSQL (optional)** — Install & start, then **Create** the `jarvis_db` database + `jarvis_user` role. A blank new-role password generates a secure password and saves it to the Keychain. If the server requires authentication, supply its existing administrator name/password in the separate administrator fields; these credentials are used only during setup. Existing Jarvis role passwords are preserved and verified before setup reports success.
 - **Python helper (optional)** — Prepare installs Python 3.11 via Homebrew if needed and prepares the helper dependencies. Voice models remain lazy-loaded.
 - **Spotify (optional)** — a two-step guide (create the API app with the right redirect, then paste keys in Connections).
 
 Nothing on this checklist blocks dictation: mic + Whisper are the only requirements, and the Whisper download starts automatically at launch. PostgreSQL setup preserves existing role passwords; use the existing password or configure an existing database in Connections.
+
+At 100% download, the model is still verified before it becomes ready. If setup fails, the Whisper detail shows the actual error and **Retry model setup** resumes the download without restarting. New installs store the model under `~/Library/Application Support/Jarvis/models`; an existing AgentTalk model or partial download is reused in place. The active path is shown in Setup.
+
+Audio input uses the device's native format and converts it to mono 16 kHz for Whisper. Other apps can usually share the microphone; an unavailable/exclusive input, device change, or stopped audio stream produces a visible error with **Retry**. No-speech recordings also show an error instead of silently disappearing. On a fresh install, ⌘⇧A with verification enabled requires enrollment in **Voice**; dictation (⌘⇧D) does not require enrollment or Ollama.
 
 ### 1) Prerequisites (macOS)
 
@@ -264,7 +268,7 @@ bundle.** Replace the app and the friend's setup carries over:
 | What | Where it lives | Survives an update |
 |:---|:---|:---|
 | Postgres database + credentials | The database itself; `connection_settings.json` + Keychain | Yes |
-| Whisper model | `~/Library/Application Support/AgentTalk/models` (or the folder picked in Setup) | Yes |
+| Whisper model | `~/Library/Application Support/Jarvis/models`, an existing AgentTalk model, or the folder picked in Setup | Yes |
 | Ollama + qwen model | `~/.ollama/models` | Yes |
 | Voice enrollment | `Application Support/Jarvis/embeddings.npy` + prefs | Yes |
 | Settings (toggles, backend mode, follow-up window, setup state) | `~/Library/Preferences/local.jarvis.macos.plist` | Yes (same bundle id) |

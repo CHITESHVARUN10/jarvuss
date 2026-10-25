@@ -149,4 +149,61 @@ final class PillLifecycleTests: XCTestCase {
         coordinator.press(.action)
         XCTAssertEqual(toggles, 1)
     }
+
+    func testMicrophoneFailureShowsAnActionErrorThatCanRetryWithFreshPreparation() {
+        controller.presentCaptureFailure("Input device is unavailable", mode: .action)
+        XCTAssertEqual(controller.phase, .Error)
+        XCTAssertEqual(controller.errorMessage, "Input device is unavailable")
+        XCTAssertEqual(STTRouter.shared.owner, .action)
+        XCTAssertTrue(controller.hasModalSession)
+        controller.retryRecording()
+        XCTAssertEqual(STTRouter.shared.owner, .none)
+        XCTAssertEqual(restartModes, [.action])
+        XCTAssertEqual(starts, 0)
+    }
+
+    func testStopFailureDoesNotBecomeAnEndlessProcessingPill() {
+        controller = DictationController(defaults: defaults, capture: DictationCapture(
+            phase: { self.nativePhase },
+            start: { self.nativePhase = .Recording; return true },
+            stop: { self.nativePhase = .Error }, cancel: { self.nativePhase = .Ready },
+            error: { "No microphone audio was received" }
+        ), presentsUI: false, releaseTransientMic: {}, requestRestart: { self.restartModes.append($0) })
+        controller.toggleDictation()
+        controller.toggleDictation()
+        XCTAssertEqual(controller.phase, .Error)
+        XCTAssertEqual(controller.errorMessage, "No microphone audio was received")
+        XCTAssertTrue(controller.hasModalSession)
+        controller.retryRecording()
+        XCTAssertEqual(restartModes, [.dictate])
+    }
+
+    func testFailedPreparationReportsTheRequestedModeInsteadOfSilentlyDoingNothing() async {
+        for mode in [PillMode.dictate, .action] {
+            let reported = expectation(description: "preparation failed")
+            var cleanups = 0
+            let coordinator = PillShortcutCoordinator(prepare: { false },
+                cancelPreparation: { cleanups += 1 }, hasSession: { false },
+                toggle: { _ in XCTFail("Unavailable input must not start recording") },
+                preparationFailed: { receivedMode in
+                    XCTAssertEqual(receivedMode, mode)
+                    reported.fulfill()
+                })
+            coordinator.press(mode)
+            await fulfillment(of: [reported], timeout: 1)
+            XCTAssertEqual(cleanups, 1)
+            XCTAssertNil(coordinator.pendingMode)
+        }
+    }
+
+    func testMissedHotkeyReleaseRecoversButPhysicalAutoRepeatIsSuppressed() {
+        var latch = HotkeyLatch()
+        XCTAssertTrue(latch.press())
+        latch.recover(physicalKeyDown: true)
+        XCTAssertFalse(latch.press())
+        latch.recover(physicalKeyDown: false)
+        XCTAssertTrue(latch.press(), "A swallowed Carbon key-up must not disable subsequent presses")
+        latch.release()
+        XCTAssertFalse(latch.held)
+    }
 }

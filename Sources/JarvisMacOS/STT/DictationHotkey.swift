@@ -24,8 +24,41 @@ private let gActionHotKeySignature: OSType = OSType(0x4A565341) // "JVSA"
 // holding ⌘⇧D can't swallow a ⌘⇧A press and vice versa.
 // Lives outside any class so the C callback can touch it.
 // Only accessed from the main queue (all hotkey events hop there).
-private var gDictationHotkeyHeld = false
-private var gActionHotkeyHeld = false
+struct HotkeyLatch {
+    private(set) var held = false
+    mutating func press() -> Bool {
+        guard !held else { return false }
+        held = true
+        return true
+    }
+    mutating func release() { held = false }
+    mutating func recover(physicalKeyDown: Bool) {
+        if !physicalKeyDown { release() }
+    }
+}
+
+private var gDictationLatch = HotkeyLatch()
+private var gActionLatch = HotkeyLatch()
+private var gHotkeyReleaseTimer: Timer?
+
+/// System permission dialogs can consume a Carbon key-up. Poll only while
+/// a registered key is held, so one missed release cannot disable it forever.
+@MainActor
+private func watchHotkeyRelease() {
+    guard gHotkeyReleaseTimer == nil else { return }
+    let timer = Timer(timeInterval: 0.05, repeats: true) { _ in
+        MainActor.assumeIsolated {
+            gDictationLatch.recover(physicalKeyDown: CGEventSource.keyState(.combinedSessionState, key: CGKeyCode(kVK_ANSI_D)))
+            gActionLatch.recover(physicalKeyDown: CGEventSource.keyState(.combinedSessionState, key: CGKeyCode(kVK_ANSI_A)))
+            if !gDictationLatch.held && !gActionLatch.held {
+                gHotkeyReleaseTimer?.invalidate()
+                gHotkeyReleaseTimer = nil
+            }
+        }
+    }
+    gHotkeyReleaseTimer = timer
+    RunLoop.main.add(timer, forMode: .common)
+}
 
 // Global C callback for Carbon hotkey events.
 private func dictationHotkeyEventHandler(
@@ -58,22 +91,22 @@ private func dictationHotkeyEventHandler(
             // Toggle ON the first key-down only.
             // Suppress auto-repeat presses while the key is held.
             if isAction {
-                guard !gActionHotkeyHeld else { return }
-                gActionHotkeyHeld = true
+                guard gActionLatch.press() else { return }
+                watchHotkeyRelease()
                 NSLog("[Jarvis][Hotkey] DOWN — toggle action")
                 PillShortcutCoordinator.shared.press(.action)
             } else {
-                guard !gDictationHotkeyHeld else { return }
-                gDictationHotkeyHeld = true
+                guard gDictationLatch.press() else { return }
+                watchHotkeyRelease()
                 NSLog("[Jarvis][Hotkey] DOWN — toggle dictation")
                 PillShortcutCoordinator.shared.press(.dictate)
             }
         } else {
             // Release: clear the held flag, do NOT toggle.
             if isAction {
-                gActionHotkeyHeld = false
+                gActionLatch.release()
             } else {
-                gDictationHotkeyHeld = false
+                gDictationLatch.release()
             }
         }
     }
@@ -162,6 +195,8 @@ func unregisterDictationHotkey() {
     if let handler = gDictationEventHandlerRef { RemoveEventHandler(handler) }
     gDictationEventHandlerRef = nil
     gDictationEventHandlerUPP = nil
-    gDictationHotkeyHeld = false
-    gActionHotkeyHeld = false
+    gDictationLatch.release()
+    gActionLatch.release()
+    gHotkeyReleaseTimer?.invalidate()
+    gHotkeyReleaseTimer = nil
 }

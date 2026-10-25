@@ -298,6 +298,8 @@ struct SetupDetailSheet: View {
     @State private var pgDatabase = "jarvis_db"
     @State private var pgUser = "jarvis_user"
     @State private var pgPassword = ""
+    @State private var pgAdministrator = NSUserName()
+    @State private var pgAdministratorPassword = ""
     @State private var pgPrefilled = false
 
     var body: some View {
@@ -426,6 +428,17 @@ struct SetupDetailSheet: View {
                 .font(.system(size: 11))
                 .foregroundStyle(NoirPalette.muted)
 
+            Text(get_model_path().toString())
+                .font(.system(size: 10, design: .monospaced))
+                .foregroundStyle(NoirPalette.secondary)
+                .textSelection(.enabled)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if dictation.modelPhase == .Error || dictation.modelPhase == .NotInstalled {
+                Button("Retry model setup") { dictation.retryModelSetup() }
+                    .buttonStyle(NoirButtonStyle(intent: .primary))
+            }
+
             Button("Choose model folder") { chooseModelFolder() }
                 .buttonStyle(NoirButtonStyle(intent: .primary))
 
@@ -487,9 +500,19 @@ struct SetupDetailSheet: View {
                 TextField("User", text: $pgUser)
                     .noirField()
                     .noirFieldLabel("User")
-                SecureField("Leave blank to keep the current password", text: $pgPassword)
+                SecureField("Blank: generate for a new role; keep for an existing role", text: $pgPassword)
                     .noirField()
-                    .noirFieldLabel("Password")
+                    .noirFieldLabel("Jarvis account password")
+                TextField("Existing PostgreSQL administrator", text: $pgAdministrator)
+                    .noirField()
+                    .noirFieldLabel("Server administrator")
+                SecureField("Blank only for local trust authentication", text: $pgAdministratorPassword)
+                    .noirField()
+                    .noirFieldLabel("Administrator password")
+                Text("The administrator credentials belong to your existing PostgreSQL server. The Jarvis password is for the application account. Existing role passwords are preserved.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(NoirPalette.muted)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
         case .backend:
@@ -561,7 +584,7 @@ struct SetupDetailSheet: View {
     private var whisperPhaseNote: String {
         let phase = dictation.modelPhase
         if case .NotInstalled = phase {
-            return "The model downloads automatically when Jarvis launches. Restart Jarvis to retry a failed download."
+            return "The model is not ready. Use Retry model setup to resume the download."
         }
         if case .Ready = phase { return "Installed and ready." }
         if case .Downloading = phase {
@@ -569,8 +592,11 @@ struct SetupDetailSheet: View {
             return "Downloading: \(pct)% · \(dictation.downloadSpeed) · \(dictation.downloadRemaining) remaining"
         }
         if case .Error = phase {
-            return "Download failed. Check your connection and restart Jarvis to retry."
+            return dictation.errorMessage.isEmpty
+                ? "Model setup failed. Use Retry to resume the download."
+                : dictation.errorMessage
         }
+        if case .Verifying = phase { return "Download complete. Verifying the model before it can be used…" }
         return "Phase: \(phase)"
     }
 
@@ -722,12 +748,19 @@ struct SetupDetailSheet: View {
     }
 
     private func createDatabase() {
+        let saved = RuntimeConfiguration.mergedValues()
+        let sameConnection = saved["PGUSER"] == pgUser.trimmingCharacters(in: .whitespaces)
+            && saved["PGDATABASE"] == pgDatabase.trimmingCharacters(in: .whitespaces)
+            && ["127.0.0.1", "localhost"].contains(saved["PGHOST"] ?? "127.0.0.1")
+            && (saved["PGPORT"] ?? "5432") == "5432"
         let plan = PostgresProvisioner.Plan(
             database: pgDatabase.trimmingCharacters(in: .whitespaces),
             user: pgUser.trimmingCharacters(in: .whitespaces),
-            password: pgPassword,
+            password: pgPassword.isEmpty && sameConnection ? (saved["PGPASSWORD"] ?? "") : pgPassword,
             port: "5432",
-            host: "127.0.0.1"
+            host: "127.0.0.1",
+            administrator: pgAdministrator.trimmingCharacters(in: .whitespacesAndNewlines),
+            administratorPassword: pgAdministratorPassword
         )
         guard !plan.database.isEmpty, !plan.user.isEmpty else {
             notice = "Database and user are both required."
@@ -737,15 +770,15 @@ struct SetupDetailSheet: View {
         Task {
             do {
                 let message = try await Task.detached(priority: .utility) {
-                    let message = try PostgresProvisioner.provision(plan)
+                    let result = try PostgresProvisioner.provisionConnection(plan)
                     try ConnectionSettingsStore.save([
                         "PGHOST": plan.host,
                         "PGPORT": plan.port,
                         "PGDATABASE": plan.database,
                         "PGUSER": plan.user,
-                        "PGPASSWORD": plan.password,
+                        "PGPASSWORD": result.password,
                     ])
-                    return message
+                    return result.message
                 }.value
                 appState.dbManager.reloadConfiguration()
                 appState.eventLoggingEnabled = true
@@ -760,6 +793,8 @@ struct SetupDetailSheet: View {
                 appState.postgresStatusText = "Configured"
                 notice = message
                 toasts.show("Database configured.")
+                pgPassword = ""
+                pgAdministratorPassword = ""
             } catch {
                 notice = "Provisioning failed: \(error.localizedDescription)"
             }

@@ -5,6 +5,9 @@ extension AppState {
     func verifyThenRunCommand(_ command: String) async {
         guard voiceProfileReady else {
             voiceVerificationStatus = "Voice Profile Incomplete ⚠️"
+            if presentsUI {
+                popupManager.show(message: "Enroll in Voice to use verified commands.", icon: "person.wave.2", duration: 7)
+            }
             appendLog("[Voice] dropped: profile not ready (\(backendEnrollmentSampleCount)/\(voiceEnrollmentSampleTarget)) — command '\(command)' rejected.")
             statsRecorder.recordCommand(success: false)
                     dbManager.saveEvent(
@@ -179,6 +182,9 @@ extension AppState {
     private func handleVerificationUnavailable(_ command: String) async {
         guard !Task.isCancelled else { return }
         voiceVerificationStatus = "Verification unavailable"
+        if presentsUI {
+            popupManager.show(message: "Enable the Python helper in Setup to verify voice commands.", icon: "shield.slash", duration: 6)
+        }
         appendLog("[Voice] Command rejected: required speaker verification is unavailable.")
         statsRecorder.recordCommand(success: false)
         dbManager.saveEvent(eventType: "voice_auth_unavailable", transcript: command,

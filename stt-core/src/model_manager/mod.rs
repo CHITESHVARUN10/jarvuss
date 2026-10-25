@@ -256,15 +256,12 @@ fn get_model_dir() -> anyhow::Result<PathBuf> {
     // inference MODEL_PATH resolution in lib.rs via AppConfig::load).
     if let Ok(dir) = std::env::var("JARVIS_STT_MODEL_DIR") {
         if !dir.trim().is_empty() {
-            let p = PathBuf::from(dir.trim());
+            let p = PathBuf::from(crate::resolve_model_dir(&dir));
             fs::create_dir_all(&p)?;
             return Ok(p);
         }
     }
-    let dir = dirs::data_dir()
-        .ok_or_else(|| anyhow::anyhow!("Cannot determine Application Support directory"))?
-        .join("AgentTalk")
-        .join("models");
+    let dir = PathBuf::from(crate::resolve_model_dir(&crate::config::AppConfig::default_model_dir()));
     fs::create_dir_all(&dir)?;
     Ok(dir)
 }
@@ -302,7 +299,9 @@ mod tests {
     }
 
     fn fixture(url: String) -> (ModelManager, PathBuf) {
-        let dir = std::env::temp_dir().join(format!("jarvis-model-{}-{}", std::process::id(),
+        static NEXT_FIXTURE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+        let sequence = NEXT_FIXTURE.fetch_add(1, Ordering::Relaxed);
+        let dir = std::env::temp_dir().join(format!("jarvis-model-{}-{sequence}-{}", std::process::id(),
             std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
         let mut manager = ModelManager::new_with_dir_override(Some(dir.clone())).unwrap();
         manager.spec = ModelSpec { url, bytes: 1024, sha256: format!("{:x}", Sha256::digest(bytes())) };

@@ -17,6 +17,10 @@ final class PillShortcutCoordinator {
         toggle: { mode in
             if mode == .action { DictationController.shared.toggleAction() }
             else { DictationController.shared.toggleDictation() }
+        },
+        preparationFailed: { mode in
+            DictationController.shared.presentCaptureFailure(
+                AppState.shared?.microphoneError ?? "Microphone input is unavailable. Check your input device and Retry.", mode: mode)
         }
     )
 
@@ -26,13 +30,16 @@ final class PillShortcutCoordinator {
     private let cancelPreparation: () -> Void
     private let hasSession: () -> Bool
     private let toggle: (PillMode) -> Void
+    private let preparationFailed: (PillMode) -> Void
 
     init(prepare: @escaping () async -> Bool, cancelPreparation: @escaping () -> Void,
-         hasSession: @escaping () -> Bool, toggle: @escaping (PillMode) -> Void) {
+         hasSession: @escaping () -> Bool, toggle: @escaping (PillMode) -> Void,
+         preparationFailed: @escaping (PillMode) -> Void = { _ in }) {
         self.prepare = prepare
         self.cancelPreparation = cancelPreparation
         self.hasSession = hasSession
         self.toggle = toggle
+        self.preparationFailed = preparationFailed
     }
 
     func press(_ mode: PillMode) {
@@ -47,7 +54,10 @@ final class PillShortcutCoordinator {
             guard let self else { return }
             self.pendingMode = nil
             if ready { self.toggle(mode) }
-            else { self.cancelPreparation() }
+            else {
+                self.cancelPreparation()
+                self.preparationFailed(mode)
+            }
         }
     }
 

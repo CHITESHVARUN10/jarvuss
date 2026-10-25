@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 // MARK: - HUD root
 
@@ -46,7 +47,7 @@ struct DictationHUDView: View {
                     onRetry: { model.retryRecording() },
                     onDismiss: { model.dismissTranscript() }
                 )
-                .frame(width: 300)
+                .frame(width: DictationErrorView.cardWidth)
 
             case .Preparing:
                 DictationDownloadProgressView(
@@ -435,16 +436,31 @@ struct DictationReloadingView: View {
 }
 
 struct DictationErrorView: View {
+    static let cardWidth: CGFloat = 360
+    static func messageHeight(_ message: String) -> CGFloat {
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.lineSpacing = 4
+        let bounds = (message as NSString).boundingRect(
+            with: NSSize(width: cardWidth - 36, height: .greatestFiniteMagnitude),
+            options: [.usesLineFragmentOrigin, .usesFontLeading],
+            attributes: [.font: NSFont.systemFont(ofSize: 12), .paragraphStyle: paragraph])
+        return min(220, max(20, ceil(bounds.height) + 6))
+    }
     let message: String
     let onRetry: () -> Void
     let onDismiss: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(message)
-                .font(.system(size: 12))
-                .lineSpacing(4)
-                .foregroundStyle(DictationCardPalette.secondary)
+            ScrollView {
+                Text(message)
+                    .font(.system(size: 12))
+                    .lineSpacing(4)
+                    .foregroundStyle(DictationCardPalette.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(height: Self.messageHeight(message))
             HStack(spacing: 8) {
                 Button("Retry", action: onRetry)
                     .buttonStyle(NoirButtonStyle(intent: .primary, small: true))

@@ -10,6 +10,9 @@ import SwiftUI
 func on_state_changed(phase: AppPhase, model: ModelPhase, session_id: UInt64) {
     DispatchQueue.main.async {
         guard session_id == get_session_generation() else { return }
+        // A queued Recording snapshot must not roll the UI back after Stop.
+        guard phase == get_app_phase() else { return }
+        let model = get_model_phase()
         let controller = DictationController.shared
 
         // ALWAYS mirror Rust truth — the toggle state machine, the pill,
@@ -18,6 +21,7 @@ func on_state_changed(phase: AppPhase, model: ModelPhase, session_id: UInt64) {
         // controller at Idle forever when callbacks arrived unowned.)
         controller.phase = phase
         controller.modelPhase = model
+        if phase == .Error { controller.errorMessage = get_error_message().toString() }
 
         // Panel side-effects are pill-only: command utterances must never
         // pop the pill.
@@ -131,8 +135,7 @@ func on_error(message: RustString, session_id: UInt64) {
         // Router decides: pill error card or command-mode log.
         if let pillMsg = STTRouter.shared.routeError(msg) {
             let controller = DictationController.shared
-            controller.errorMessage = pillMsg
-            controller.phase = .Error
+            controller.receiveCaptureError(pillMsg)
             // showPanel (create), not showPanelIfNeeded (nil-guard no-op):
             // audio-start failures (permission, no device) must surface the
             // Error card instead of leaving no visible pill at all.

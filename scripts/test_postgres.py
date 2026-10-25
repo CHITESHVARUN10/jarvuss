@@ -28,7 +28,7 @@ def main() -> int:
         subprocess.run([str(binaries / "pg_ctl"), "-D", str(data), "-l", str(temporary / "postgres.log"),
                         "-o", f"-k {socket} -h '' -p 5432", "-w", "start"], check=True)
         try:
-            environment = {**os.environ, "JARVIS_TEST_PGHOST": str(socket)}
+            environment = {**os.environ, "JARVIS_TEST_PGHOST": str(socket), "JARVIS_TEST_PGDATA": str(data)}
             result = subprocess.run(["swift", "test", "--filter", "DatabaseIntegrationTests"], cwd=root, env=environment)
             return result.returncode
         finally:

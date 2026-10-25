@@ -2,6 +2,55 @@ import XCTest
 @testable import JarvisMacOS
 
 final class DatabaseIntegrationTests: XCTestCase {
+    func testPasswordProtectedAdministratorAndGeneratedJarvisPassword() throws {
+        let env = ProcessInfo.processInfo.environment
+        guard let host = env["JARVIS_TEST_PGHOST"], let data = env["JARVIS_TEST_PGDATA"] else {
+            throw XCTSkip("Requires the disposable PostgreSQL test server.")
+        }
+        let psql = try XCTUnwrap(PostgresProvisioner.findPSQL())
+        func execute(_ sql: String, as user: String = "jarvis_test", password: String = "") throws -> ProcessOutput {
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: psql)
+            process.arguments = ["-X", "-w", "-h", host, "-d", "postgres", "-U", user, "-v", "ON_ERROR_STOP=1", "-f", "-"]
+            process.environment = ["PGPASSWORD": password, "PGCONNECT_TIMEOUT": "3"]
+            return try process.runCapturingOutput(timeout: 10, input: Data(sql.utf8))
+        }
+        let admin = "jarvis_setup_admin"
+        let user = "jarvis_setup_generated"
+        XCTAssertEqual(try execute("CREATE ROLE \(admin) SUPERUSER LOGIN PASSWORD 'admin-test-password';").status, 0)
+        let hba = URL(fileURLWithPath: data).appendingPathComponent("pg_hba.conf")
+        let original = try String(contentsOf: hba, encoding: .utf8)
+        defer {
+            try? original.write(to: hba, atomically: true, encoding: .utf8)
+            _ = try? execute("SELECT pg_reload_conf();")
+        }
+        try ("local all \(admin) scram-sha-256\nlocal all \(user) scram-sha-256\n" + original)
+            .write(to: hba, atomically: true, encoding: .utf8)
+        XCTAssertEqual(try execute("SELECT pg_reload_conf();").status, 0)
+        var passwordRequired = false
+        for _ in 0..<40 {
+            if try execute("SELECT 1;", as: admin).status != 0 { passwordRequired = true; break }
+            Thread.sleep(forTimeInterval: 0.05)
+        }
+        XCTAssertTrue(passwordRequired)
+        var plan = PostgresProvisioner.Plan(database: "jarvis_setup_generated_db", user: user,
+            password: "", host: host, administrator: admin)
+        XCTAssertThrowsError(try PostgresProvisioner.provisionConnection(plan)) { error in
+            XCTAssertTrue(error.localizedDescription.contains("administrator"))
+        }
+        plan.administratorPassword = "admin-test-password"
+        let result = try PostgresProvisioner.provisionConnection(plan)
+        XCTAssertEqual(result.password.count, 24, "Blank new-role passwords must generate usable credentials")
+        plan.password = result.password
+        XCTAssertNoThrow(try PostgresProvisioner.provisionConnection(plan))
+        plan.password = "wrong-app-password"
+        XCTAssertThrowsError(try PostgresProvisioner.provisionConnection(plan)) { error in
+            XCTAssertTrue(error.localizedDescription.contains("existing Jarvis role"))
+        }
+        XCTAssertEqual(try execute("SELECT 1;", as: user, password: result.password).status, 0,
+                       "Repeated setup must preserve the original role password")
+    }
+
     func testSetupProvisioningHandlesQuotedValuesAndPreservesExistingRole() throws {
         guard let host = ProcessInfo.processInfo.environment["JARVIS_TEST_PGHOST"] else {
             throw XCTSkip("Requires the disposable PostgreSQL test server.")

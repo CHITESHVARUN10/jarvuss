@@ -298,8 +298,15 @@ final class AppState: ObservableObject {
         self.presentsUI = activateServices
         micManager.setInterruptionHandler { [weak self] message in
             MainActor.assumeIsolated {
-                self?.stopMicrophone()
-                self?.appendLog(message)
+                guard let self else { return }
+                let pillActive = self.presentsUI && DictationController.shared.hasModalSession
+                self.stopMicrophone(cancelPill: false)
+                self.microphoneError = message
+                self.appendLog(message)
+                if pillActive { DictationController.shared.presentCaptureFailure(message) }
+                else if self.presentsUI {
+                    self.popupManager.show(message: message, icon: "mic.slash", duration: 6)
+                }
             }
         }
         guard activateServices else { return }
@@ -597,12 +604,14 @@ final class AppState: ObservableObject {
 
     private var microphoneSessionID: UUID?
     private var microphoneStartPending = false
+    @Published private(set) var microphoneError: String?
 
     func startMicrophone() async {
         guard !micActive, !microphoneStartPending else { return }
         let sessionID = UUID()
         microphoneSessionID = sessionID
         microphoneStartPending = true
+        microphoneError = nil
         defer {
             if microphoneSessionID == sessionID { microphoneStartPending = false }
         }
@@ -664,6 +673,10 @@ final class AppState: ObservableObject {
             micTransientAutoStart = false
             assistantState = .idle
             appendLog("Microphone start failed: \(error.localizedDescription)")
+            microphoneError = error.localizedDescription
+            if presentsUI && !Task.isCancelled {
+                popupManager.show(message: error.localizedDescription, icon: "mic.slash", duration: 6)
+            }
         }
     }
 

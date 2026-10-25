@@ -208,7 +208,7 @@ impl InferenceEngine {
     }
 
     pub fn is_loaded(&self) -> bool {
-        matches!(self.state, InferenceState::Ready | InferenceState::Running)
+        self.context.is_some()
     }
 
     pub fn state(&self) -> InferenceState {

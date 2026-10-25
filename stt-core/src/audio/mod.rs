@@ -6,7 +6,7 @@
 //! Amplitude is stored as RMS bits in an AtomicU32.
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use cpal::Stream;
+use cpal::{Sample, Stream};
 use std::sync::{
     atomic::{AtomicU32, AtomicUsize, Ordering},
     Arc, Mutex, OnceLock,
@@ -130,6 +130,7 @@ pub struct AudioCapture {
     stream: Stream,
     buffer: Arc<Mutex<Vec<f32>>>,
     level: Arc<AtomicU32>,
+    failure: Arc<Mutex<Option<String>>>,
 }
 
 impl AudioCapture {
@@ -142,60 +143,41 @@ impl AudioCapture {
         let device_name = device.name()?;
         tracing::info!(device = %device_name, "Opening audio input");
 
-        let config: cpal::StreamConfig = cpal::StreamConfig {
-            channels: 1,
-            sample_rate: cpal::SampleRate(16000),
-            buffer_size: cpal::BufferSize::Default,
-        };
-
-        let max_samples = 16000 * max_seconds as usize;
+        // Open the native device format. Requesting 16 kHz on the device itself
+        // can be unsupported or reconfigure the Swift/VAD stream (or another app).
+        let supported = device.default_input_config()?;
+        let sample_format = supported.sample_format();
+        let config: cpal::StreamConfig = supported.into();
+        anyhow::ensure!(config.channels > 0 && config.sample_rate.0 > 0, "Microphone has no usable input format");
+        let max_samples = 16000 * max_seconds.clamp(1, 300) as usize;
         MAX_SAMPLES.store(max_samples, Ordering::Relaxed);
         let buffer = Arc::new(Mutex::new(Vec::with_capacity(max_samples)));
         let level = Arc::new(AtomicU32::new(0));
-
-        let buf_clone = buffer.clone();
-        let lvl_clone = level.clone();
-
-        let err_fn = |err| {
-            tracing::error!(?err, "Audio stream error");
+        let failure = Arc::new(Mutex::new(None));
+        macro_rules! build {
+            ($ty:ty) => { build_stream::<$ty>(&device, &config, buffer.clone(), level.clone(), failure.clone(), max_samples)? };
+        }
+        let stream = match sample_format {
+            cpal::SampleFormat::F32 => build!(f32),
+            cpal::SampleFormat::F64 => build!(f64),
+            cpal::SampleFormat::I8 => build!(i8),
+            cpal::SampleFormat::I16 => build!(i16),
+            cpal::SampleFormat::I32 => build!(i32),
+            cpal::SampleFormat::I64 => build!(i64),
+            cpal::SampleFormat::U8 => build!(u8),
+            cpal::SampleFormat::U16 => build!(u16),
+            cpal::SampleFormat::U32 => build!(u32),
+            cpal::SampleFormat::U64 => build!(u64),
+            other => anyhow::bail!("Unsupported microphone sample format: {other:?}"),
         };
-
-        let stream = device.build_input_stream(
-            &config,
-            {
-                let buf_clone = buf_clone.clone();
-                let lvl_clone = lvl_clone.clone();
-                move |data: &[f32], _: &cpal::InputCallbackInfo| {
-                    // Audio callback: never panic here (would abort the app).
-                    let mut buf = match buf_clone.lock() {
-                        Ok(buf) => buf,
-                        Err(poisoned) => poisoned.into_inner(),
-                    };
-                    if buf.len() + data.len() > max_samples {
-                        let excess = (buf.len() + data.len()) - max_samples;
-                        if excess < buf.len() {
-                            buf.drain(..excess);
-                        }
-                    }
-                    buf.extend_from_slice(data);
-
-                    let sum: f32 = data.iter().map(|s| s * s).sum();
-                    let rms = (sum / data.len() as f32).sqrt();
-                    lvl_clone.store(rms.to_bits(), Ordering::Relaxed);
-                }
-            },
-            err_fn,
-            None,
-        )?;
-
-
         stream.play()?;
-        tracing::info!(max_seconds, "Audio capture started");
-
-        // Make the buffer visible to other threads (chunker).
         register_buffer(buffer.clone());
+        tracing::info!(max_seconds, rate = config.sample_rate.0, channels = config.channels, "Audio capture started");
+        Ok(Self { stream, buffer, level, failure })
+    }
 
-        Ok(Self { stream, buffer, level })
+    pub fn failure(&self) -> Option<String> {
+        self.failure.lock().unwrap_or_else(|p| p.into_inner()).clone()
     }
 
     pub fn drain_samples(&self) -> Vec<f32> {
@@ -273,9 +255,110 @@ impl AudioCapture {
     }
 }
 
+/// Stateful interpolation keeps time continuous across callback boundaries,
+/// including 44.1 kHz stereo devices. Whisper always receives mono 16 kHz.
+struct InputResampler {
+    rate: u32,
+    channels: usize,
+    index: u64,
+    next_output: f64,
+    previous: f32,
+}
+
+impl InputResampler {
+    fn new(rate: u32, channels: usize) -> Self {
+        Self { rate, channels, index: 0, next_output: 0.0, previous: 0.0 }
+    }
+
+    fn convert<T: cpal::Sample>(&mut self, data: &[T]) -> Vec<f32>
+    where f32: cpal::FromSample<T> {
+        let mut output = Vec::new();
+        for frame in data.chunks_exact(self.channels) {
+            let mono = frame.iter().map(|v| f32::from_sample(*v)).sum::<f32>() / self.channels as f32;
+            let mono = if mono.is_finite() { mono } else { 0.0 };
+            while self.next_output <= self.index as f64 {
+                let value = if self.index == 0 { mono } else {
+                    let fraction = (self.next_output - (self.index - 1) as f64) as f32;
+                    self.previous + (mono - self.previous) * fraction
+                };
+                output.push(value);
+                self.next_output += self.rate as f64 / 16000.0;
+            }
+            self.previous = mono;
+            self.index += 1;
+        }
+        output
+    }
+}
+
+fn append_bounded(buffer: &mut Vec<f32>, data: &[f32], max: usize) {
+    if data.len() >= max {
+        buffer.clear();
+        buffer.extend_from_slice(&data[data.len() - max..]);
+    } else {
+        let excess = (buffer.len() + data.len()).saturating_sub(max);
+        buffer.drain(..excess);
+        buffer.extend_from_slice(data);
+    }
+}
+
+fn build_stream<T>(device: &cpal::Device, config: &cpal::StreamConfig,
+    buffer: Arc<Mutex<Vec<f32>>>, level: Arc<AtomicU32>, failure: Arc<Mutex<Option<String>>>,
+    max_samples: usize) -> anyhow::Result<Stream>
+where T: cpal::SizedSample, f32: cpal::FromSample<T> {
+    let mut resampler = InputResampler::new(config.sample_rate.0, config.channels as usize);
+    Ok(device.build_input_stream(config, move |data: &[T], _| {
+        let samples = resampler.convert(data);
+        if samples.is_empty() { return; }
+        let rms = AudioCapture::rms(&samples);
+        level.store(rms.to_bits(), Ordering::Relaxed);
+        append_bounded(&mut buffer.lock().unwrap_or_else(|p| p.into_inner()), &samples, max_samples);
+    }, move |error| {
+        tracing::error!(?error, "Microphone stream interrupted");
+        *failure.lock().unwrap_or_else(|p| p.into_inner()) = Some(format!(
+            "Microphone input was interrupted: {error}. Check the input device, stop any app using it exclusively, then Retry."));
+    }, None)?)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn native_stereo_48khz_is_downmixed_and_resampled_for_whisper() {
+        let input: Vec<f32> = (0..48000).flat_map(|_| [0.2, 0.6]).collect();
+        let mut converter = InputResampler::new(48000, 2);
+        let output = converter.convert(&input);
+        assert_eq!(output.len(), 16000);
+        assert!(output.iter().all(|v| (*v - 0.4).abs() < 0.0001));
+    }
+
+    #[test]
+    fn resampling_44100_keeps_time_across_callback_boundaries() {
+        let input: Vec<f32> = (0..44100).map(|n| (n as f32 * 0.01).sin()).collect();
+        let expected = InputResampler::new(44100, 1).convert(&input);
+        let mut converter = InputResampler::new(44100, 1);
+        let actual: Vec<f32> = input.chunks(257).flat_map(|chunk| converter.convert(chunk)).collect();
+        assert_eq!(actual.len(), 16000);
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn integer_microphone_samples_are_normalized() {
+        let output = InputResampler::new(16000, 1).convert(&[i16::MIN, 0, i16::MAX]);
+        assert_eq!(output[0], -1.0);
+        assert_eq!(output[1], 0.0);
+        assert!(output[2] > 0.99 && output[2] <= 1.0);
+    }
+
+    #[test]
+    fn oversized_callback_cannot_overflow_recording_ring() {
+        let mut buffer = vec![1.0, 2.0];
+        append_bounded(&mut buffer, &[3.0, 4.0, 5.0, 6.0], 3);
+        assert_eq!(buffer, vec![4.0, 5.0, 6.0]);
+        append_bounded(&mut buffer, &[7.0], 3);
+        assert_eq!(buffer, vec![5.0, 6.0, 7.0]);
+    }
 
     /// Serializes tests that mutate the process-wide ACTIVE_BUFFER/MAX_SAMPLES.
     static PREPEND_TEST_LOCK: Mutex<()> = Mutex::new(());

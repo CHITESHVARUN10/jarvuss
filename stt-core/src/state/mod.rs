@@ -49,6 +49,13 @@ pub struct AppStateMachine {
 }
 
 impl AppStateMachine {
+    /// Disk preparation and active sessions must never be changed by an idle job.
+    pub fn can_idle_unload(&self) -> bool {
+        self.model_state == ModelState::Ready
+            && matches!(self.phase, SessionPhase::Idle | SessionPhase::Ready
+                | SessionPhase::TranscriptReady | SessionPhase::Error)
+    }
+
     pub fn new(config: AppConfig) -> Self {
         Self {
             phase: SessionPhase::Idle,
@@ -152,6 +159,24 @@ pub mod session;
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn idle_unload_never_runs_during_setup_or_active_audio() {
+        let mut state = AppStateMachine::new(AppConfig::default());
+        for model in [ModelState::NotInstalled, ModelState::Downloading, ModelState::Verifying,
+            ModelState::Loading, ModelState::Inference, ModelState::Unloading, ModelState::Error] {
+            state.model_state = model;
+            state.phase = SessionPhase::Ready;
+            assert!(!state.can_idle_unload(), "{model:?}");
+        }
+        state.model_state = ModelState::Ready;
+        for phase in [SessionPhase::Preparing, SessionPhase::Recording, SessionPhase::Processing] {
+            state.phase = phase;
+            assert!(!state.can_idle_unload(), "{phase:?}");
+        }
+        state.phase = SessionPhase::Ready;
+        assert!(state.can_idle_unload());
+    }
 
     #[test]
     fn dismissal_clears_recording_state_and_cannot_accept_late_audio() {

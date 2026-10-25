@@ -36,6 +36,8 @@ thread_local! {
 }
 static SESSION_EPOCH: state::session::SessionEpoch = state::session::SessionEpoch::new();
 static INITIALIZED: AtomicBool = AtomicBool::new(false);
+static MODEL_SETUP_RUNNING: AtomicBool = AtomicBool::new(false);
+static MODEL_RESIDENT: AtomicBool = AtomicBool::new(false);
 
 // ── Inference worker ─────────────────────────────────────────
 // A dedicated long-lived thread owns the Whisper engine (WhisperContext is !Send).
@@ -144,6 +146,9 @@ mod ffi {
     extern "Rust" {
         fn verify_bridge() -> String;
         fn initialize_core() -> bool;
+        fn retry_model_setup() -> bool;
+        fn get_model_path() -> String;
+        fn fail_recording(message: String);
         fn is_initialized() -> bool;
         fn get_session_generation() -> u64;
         fn start_recording() -> bool;
@@ -288,14 +293,40 @@ fn initialize_core() -> bool {
     let idle_seconds = with_app(|app| app.config.model.idle_unload_seconds);
     thread::spawn(move || idle_watchdog(idle_seconds));
 
-    thread::spawn(|| {
-        let mut mgr = match ModelManager::new() {
+    retry_model_setup();
+    true
+}
+
+fn get_model_path() -> String {
+    MODEL_PATH.lock().unwrap_or_else(|p| p.into_inner())
+        .as_ref().map(|p| p.to_string_lossy().into_owned()).unwrap_or_default()
+}
+
+fn retry_model_setup() -> bool {
+    if !with_app(|app| matches!(app.phase, SessionPhase::Idle | SessionPhase::Preparing
+        | SessionPhase::Ready | SessionPhase::Error))
+        || MODEL_SETUP_RUNNING.swap(true, Ordering::SeqCst) { return false; }
+    with_app(|app| {
+        app.phase = SessionPhase::Preparing;
+        app.model_state = ModelState::Verifying;
+        app.error_message = None;
+    });
+    notify_state();
+    // Use the exact path captured at initialization for both download and inference.
+    let directory = std::path::PathBuf::from(get_model_path()).parent().map(|p| p.to_path_buf());
+    thread::spawn(move || {
+        struct SetupGuard;
+        impl Drop for SetupGuard {
+            fn drop(&mut self) { MODEL_SETUP_RUNNING.store(false, Ordering::SeqCst); }
+        }
+        let _guard = SetupGuard;
+        let mut mgr = match ModelManager::new_with_dir_override(directory) {
             Ok(m) => m,
             Err(e) => {
                 tracing::error!("Failed to create model manager: {}", e);
                 with_app(|app| {
                     app.model_state = ModelState::Error;
-                    app.phase = SessionPhase::Error;
+                    app.set_error(format!("Cannot open the speech model folder: {e}"));
                 });
                 notify_state();
                 return;
@@ -311,7 +342,9 @@ fn initialize_core() -> bool {
         let download_result = mgr.download_with_progress(|progress, speed, remaining| {
             with_app(|app| {
                 app.set_download_progress(progress, speed.to_string(), remaining.to_string());
+                if remaining == "verifying" { app.model_state = ModelState::Verifying; }
             });
+            if remaining == "verifying" { notify_state(); }
             ffi::on_download_progress(progress, speed.to_string(), remaining.to_string());
         });
 
@@ -319,11 +352,12 @@ fn initialize_core() -> bool {
             Ok(()) => {
                 app.model_state = ModelState::Ready;
                 app.phase = SessionPhase::Ready;
+                bump_activity();
             }
             Err(e) => {
                 tracing::error!("Model download failed: {}", e);
                 app.model_state = ModelState::Error;
-                app.phase = SessionPhase::Error;
+                app.set_error(format!("Speech model setup failed: {e}. Retry to resume, or choose a writable model folder."));
             }
         });
         notify_state();
@@ -387,10 +421,9 @@ fn inference_worker(rx: mpsc::Receiver<InferenceJob>) {
                     // Honest reload signal: after an idle-unload the context
                     // is gone, and load() blocks for seconds (mmap + warmup).
                     // Tell Swift BEFORE so the pill shows Loading/Preparing
-                    // instead of hanging on "Transcribing". is_model_loaded()
-                    // (mirrored model_state) is the cross-thread source of
-                    // truth — ENGINE itself is thread-local here.
-                    let needs_load = !is_model_loaded();
+                    // instead of hanging on "Transcribing". Disk readiness
+                    // does not mean the inference context is resident yet.
+                    let needs_load = !engine.is_loaded();
                     if needs_load {
                         with_app(|app| {
                             app.model_state = ModelState::Loading;
@@ -398,6 +431,7 @@ fn inference_worker(rx: mpsc::Receiver<InferenceJob>) {
                         notify_state();
                     }
                     engine.load()?;
+                    MODEL_RESIDENT.store(true, Ordering::SeqCst);
                     if needs_load {
                         with_app(|app| {
                             app.model_state = ModelState::Ready;
@@ -410,6 +444,7 @@ fn inference_worker(rx: mpsc::Receiver<InferenceJob>) {
                 tracing::info!(elapsed_ms = start.elapsed().as_millis(), "Chunk job done");
 
                 if !SESSION_EPOCH.is_current(session_id) { continue; }
+                let failure = result.as_ref().err().map(|e| format!("{e:#}"));
                 match result {
                     Ok(Some(new_text)) => {
                         // Stitch with dedupe: strip any duplicated tail/head.
@@ -453,7 +488,12 @@ fn inference_worker(rx: mpsc::Receiver<InferenceJob>) {
                         CHUNKS_SENT.store(0, Ordering::SeqCst);
                         CHUNK_FAILED.store(false, Ordering::SeqCst);
                         app.model_state = ModelState::Ready;
-                        if final_text.is_empty() {
+                        if let Some(detail) = failure {
+                            let message = format!("Speech processing failed: {detail}. Retry, or check the model in Setup.");
+                            app.model_state = ModelState::Error;
+                            app.set_error(message.clone());
+                            ffi::on_error(message, session_id);
+                        } else if final_text.is_empty() {
                             app.set_error("No speech detected".into());
                             ffi::on_error("No speech detected".into(), session_id);
                         } else {
@@ -470,18 +510,23 @@ fn inference_worker(rx: mpsc::Receiver<InferenceJob>) {
                 }
             }
             InferenceJob::Unload => {
+                // Recheck when the queued job actually runs: a download or
+                // recording may have started after the watchdog scheduled it.
+                if !with_app(|app| {
+                    if !app.can_idle_unload() { return false; }
+                    app.model_state = ModelState::Unloading;
+                    true
+                }) { continue; }
                 tracing::info!("Unload job received — freeing model RAM");
                 // Honest state first so Swift can show "Reloading…" instead
                 // of a stale Ready while RAM is actually free.
-                with_app(|app| {
-                    app.model_state = ModelState::Unloading;
-                });
                 notify_state();
                 ENGINE.with(|cell| {
                     if let Some(engine) = cell.borrow_mut().as_mut() {
                         engine.unload();
                     }
                 });
+                MODEL_RESIDENT.store(false, Ordering::SeqCst);
                 // Honest post-unload state: the model FILE is usually still
                 // on disk (is_installed) — only the RAM context is gone, and
                 // the next TranscribeChunk reloads transparently. Reporting
@@ -489,13 +534,10 @@ fn inference_worker(rx: mpsc::Receiver<InferenceJob>) {
                 // must download") and wedged start_recording. Report
                 // Ready-with-session-Idle when the file exists; NotInstalled
                 // only when it is truly gone.
-                let still_installed = ModelManager::new().map(|m| m.is_installed()).unwrap_or(false);
+                let still_installed = std::path::Path::new(&get_model_path()).is_file();
                 with_app(|app| {
                     if still_installed {
                         app.model_state = ModelState::Ready;
-                        if app.phase == SessionPhase::Processing {
-                            app.phase = SessionPhase::Ready;
-                        }
                     } else {
                         app.model_state = ModelState::NotInstalled;
                     }
@@ -921,7 +963,7 @@ fn idle_watchdog(idle_seconds: u64) {
         thread::sleep(Duration::from_secs(10));
 
         let idle_for = now_secs().saturating_sub(LAST_ACTIVITY.load(Ordering::SeqCst));
-        if idle_for > idle_seconds {
+        if idle_for > idle_seconds && with_app(|app| app.can_idle_unload()) {
             tracing::info!(idle_for, "Model idle — unloading");
             if let Some(tx) = INFERENCE_TX.get() {
                 let _ = tx.send(InferenceJob::Unload);
@@ -999,6 +1041,8 @@ fn start_recording() -> bool {
 }
 
 fn stop_recording() {
+    let failure = with_audio(|audio| audio.as_ref().and_then(|capture| capture.failure()));
+    if let Some(message) = failure { fail_recording(message); return; }
     let session_id = SESSION_EPOCH.current();
     // 1. Stop the chunker first — no more mid-recording jobs after this point.
     if let Some(stop_tx) = chunker_stop_tx_take() {
@@ -1022,13 +1066,11 @@ fn stop_recording() {
         if let Some(msg) = err {
             notify_error(&msg);
         } else {
-            // Empty stop (silence blip under VAD minimums): the previous
-            // session may have ended in Error after an earlier "No speech
-            // detected". Dismiss back to Ready so the NEXT utterance's
-            // start_recording() is not rejected by can_record().
-            with_app(|app| {
-                app.dismiss();
-            });
+            // A user stopped a stream that never delivered a buffer. Keep
+            // a visible error rather than silently removing the recording UI.
+            let message = "No microphone audio was received. Check your input device and retry.";
+            with_app(|app| app.set_error(message.into()));
+            notify_error(message);
         }
         notify_state();
         return;
@@ -1041,7 +1083,8 @@ fn stop_recording() {
         && inference::speech_filter::speech_window(&samples).is_none()
     {
         tracing::info!(samples = samples.len(), "Silence-gated stop — skipped inference");
-        with_app(|app| app.dismiss());
+        with_app(|app| app.set_error("No speech detected. Try again and check your microphone input level.".into()));
+        notify_error("No speech detected. Try again and check your microphone input level.");
         notify_state();
         return;
     }
@@ -1126,7 +1169,7 @@ fn cancel_recording() {
     //    mic stop never postpones the idle unload.
     with_app(|app| {
         app.dismiss();
-        if matches!(app.model_state, ModelState::NotInstalled | ModelState::Downloading) {
+        if matches!(app.model_state, ModelState::NotInstalled | ModelState::Downloading | ModelState::Verifying) {
             app.phase = SessionPhase::Preparing;
         }
     });
@@ -1150,15 +1193,7 @@ fn chunker_stop_tx_take() -> Option<mpsc::Sender<()>> {
 }
 
 fn is_model_loaded() -> bool {
-    // ENGINE is thread-local to the inference worker; probing from the
-    // calling thread always sees None. The worker mirrors residency into
-    // model_state on every load/unload instead (Loading→Ready, Unloading).
-    with_app(|app| {
-        matches!(
-            app.model_state,
-            ModelState::Ready | ModelState::Inference | ModelState::Loading
-        )
-    })
+    MODEL_RESIDENT.load(Ordering::SeqCst)
 }
 
 fn copy_to_clipboard() {
@@ -1268,7 +1303,16 @@ fn retry_recording() {
 }
 
 fn get_audio_level() -> f32 {
+    let failure = with_audio(|a| a.as_ref().and_then(|cap| cap.failure()));
+    if let Some(message) = failure { fail_recording(message); }
     with_audio(|a| a.as_ref().map(|cap| cap.current_level()).unwrap_or(0.0))
+}
+
+fn fail_recording(message: String) {
+    cancel_recording();
+    with_app(|app| app.set_error(message.clone()));
+    notify_error(&message);
+    notify_state();
 }
 
 fn get_app_phase() -> ffi::AppPhase {
@@ -1280,6 +1324,7 @@ fn get_model_phase() -> ffi::ModelPhase {
 }
 
 fn resolve_model_dir(raw: &str) -> String {
+    let raw = raw.trim();
     if raw.starts_with("~/") {
         if let Some(data_dir) = dirs::data_dir() {
             let suffix = &raw[2..];

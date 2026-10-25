@@ -129,6 +129,21 @@ final class BackendLifecycleTests: XCTestCase {
 /// Postgres provisioning SQL: quoting and idempotency are contract-critical.
 final class PostgresProvisionerTests: XCTestCase {
 
+    func testAdminAuthenticationErrorExplainsWhichPasswordIsRequired() {
+        let plan = PostgresProvisioner.Plan(database: "db", user: "jarvis", password: "app-password")
+        let detail = PostgresProvisioner.connectionFailure(detail: "fe_sendauth: no password supplied", plan: plan, verifyLogin: false)
+        XCTAssertTrue(detail.contains("administrator"))
+        XCTAssertTrue(detail.contains("application account"))
+        XCTAssertFalse(detail.contains("app-password"))
+    }
+
+    func testConnectionFailureNeverEchoesPasswords() {
+        let plan = PostgresProvisioner.Plan(database: "db", user: "jarvis", password: "private-app-value", administratorPassword: "private-admin-value")
+        let detail = PostgresProvisioner.connectionFailure(detail: "error: private-app-value private-admin-value", plan: plan, verifyLogin: true)
+        XCTAssertFalse(detail.contains("private-app-value"))
+        XCTAssertFalse(detail.contains("private-admin-value"))
+    }
+
     func testExistingRolesArePreservedAndValuesStayOutsideDollarQuotedBlocks() {
         let sql = PostgresProvisioner.createRoleSQL(user: "u\"1", password: "p'$$w")
         XCTAssertTrue(sql.contains("format('CREATE ROLE %I LOGIN PASSWORD %L'"))
