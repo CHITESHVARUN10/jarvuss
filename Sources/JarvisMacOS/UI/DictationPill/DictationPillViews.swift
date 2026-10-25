@@ -12,13 +12,19 @@ struct DictationHUDView: View {
 
     var body: some View {
         Group {
-            switch model.phase {
+            if model.shortcutPreparing {
+                DictationReloadingView(message: "Preparing microphone…")
+                    .frame(width: 300)
+            } else { switch model.phase {
             case .Recording:
                 DictationRecordingPillView(
                     audioLevel: model.audioLevel,
                     livePreview: model.partialTranscript,
                     livePreviewEnabled: model.livePreviewEnabled,
-                    isAction: isAction
+                    isAction: isAction,
+                    isStarting: model.captureStarting,
+                    recordedSeconds: model.recordedSeconds,
+                    limitMinutes: model.activeRecordingLimitMinutes
                 )
 
             case .Processing:
@@ -69,8 +75,8 @@ struct DictationHUDView: View {
             default:
                 EmptyView()
             }
+            }
         }
-        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: model.phase)
     }
 }
 
@@ -102,6 +108,9 @@ struct DictationRecordingPillView: View {
     var livePreview: String = ""
     var livePreviewEnabled: Bool = false
     var isAction: Bool = false
+    var isStarting = false
+    var recordedSeconds: Double = 0
+    var limitMinutes: Int = 5
 
     var body: some View {
         DictationCard {
@@ -113,16 +122,16 @@ struct DictationRecordingPillView: View {
                         .font(.system(size: 10, weight: .medium))
                         .tracking(0.5)
                     Spacer(minLength: 8)
-                    Text("LIVE")
+                    Text(isStarting ? "STARTING" : "\(Int(recordedSeconds) / 60):\(String(format: "%02d", Int(recordedSeconds) % 60)) / \(limitMinutes):00")
                         .font(.system(size: 9, design: .monospaced))
                         .foregroundStyle(DictationCardPalette.muted)
                 }
                 .foregroundStyle(DictationCardPalette.accent)
 
-                NoirWaveform(level: audioLevel, active: true)
+                NoirWaveform(level: audioLevel, active: !isStarting)
 
                 HStack(spacing: 8) {
-                    Text(isAction ? "Listening for your command…" : "Listening… audio stays on this Mac.")
+                    Text(isStarting ? "Opening microphone…" : (isAction ? "Listening for your command…" : "Listening… audio stays on this Mac."))
                         .font(.system(size: 11))
                         .foregroundStyle(DictationCardPalette.muted)
                     Spacer(minLength: 8)
@@ -412,13 +421,14 @@ struct DictationReadyView: View {
 }
 
 struct DictationReloadingView: View {
+    var message = "Reloading model…"
     var body: some View {
         HStack(spacing: 10) {
             ProgressView()
                 .controlSize(.small)
                 .tint(DictationCardPalette.accent)
                 .padding(.leading, 16)
-            Text("Reloading model…")
+            Text(message)
                 .font(.system(size: 12))
                 .foregroundStyle(DictationCardPalette.secondary)
             Spacer(minLength: 8)

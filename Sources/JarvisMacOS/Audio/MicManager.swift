@@ -105,38 +105,21 @@ final class MicManager: @unchecked Sendable {
         recentAudioQueue.sync { recentSamples.removeAll(keepingCapacity: true) }
         self.onLevelUpdate = onLevelUpdate
         self.onAudioBuffer = onAudioBuffer
-        var startupError: Error?
-        do {
-            try Self.performAudioOperation {
-                let inputNode = self.audioEngine.inputNode
-                let format = inputNode.outputFormat(forBus: 0)
-                guard Self.isUsableInputFormat(sampleRate: format.sampleRate, channels: format.channelCount) else {
-                    startupError = MicManagerError.inputUnavailable
-                    return
-                }
-                if !self.isTapInstalled {
-                    inputNode.installTap(onBus: 0, bufferSize: 2048, format: format) { [weak self] buffer, _ in
-                        guard let self else { return }
-                        let dbLevel = Self.rmsToDecibels(from: buffer)
-                        onLevelUpdate(dbLevel)
-                        onAudioBuffer?(buffer)
-                        self.captureRecentSamples(from: buffer, sampleRate: format.sampleRate)
-                    }
-                    self.isTapInstalled = true
-                }
-                self.audioEngine.prepare()
-                do { try self.audioEngine.start() }
-                catch { startupError = error }
-            }
-            if let startupError { throw startupError }
-        } catch {
-            stopListening()
-            // An Objective-C startup exception can leave a graph only partly
-            // configured. A fresh graph makes Retry independent of that state.
+        if let reason = JarvisStartAudioEngine(audioEngine, { [weak self] buffer, _ in
+            guard let self else { return }
+            onLevelUpdate(Self.rmsToDecibels(from: buffer))
+            onAudioBuffer?(buffer)
+            self.captureRecentSamples(from: buffer, sampleRate: buffer.format.sampleRate)
+        }) {
+            // The ObjC wrapper has already removed any partial tap. No
+            // exception unwinds through Swift or leaves its actor context stale.
+            self.onAudioBuffer = nil
+            self.onLevelUpdate = nil
             audioEngine = AVAudioEngine()
             observeConfiguration()
-            throw error
+            throw MicManagerError.inputFailure(reason as String)
         }
+        isTapInstalled = true
         isListening = true
         recentAudioQueue.sync { lastBufferAt = Date() }
         let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
@@ -161,12 +144,7 @@ final class MicManager: @unchecked Sendable {
         guard isListening || isTapInstalled else { return }
         isListening = false
         let removeTap = isTapInstalled
-        if let reason = JarvisCatchAudioException({
-            self.audioEngine.stop()
-            if removeTap { self.audioEngine.inputNode.removeTap(onBus: 0) }
-        }) {
-            NSLog("[Jarvis][Mic] Audio teardown exception: %@", reason as String)
-        }
+        JarvisStopAudioEngine(audioEngine, removeTap)
         isTapInstalled = false
 
         onAudioBuffer = nil
@@ -203,12 +181,6 @@ final class MicManager: @unchecked Sendable {
         return now.timeIntervalSince(lastBufferAt) > 3
     }
 
-    static func performAudioOperation(_ operation: @escaping () -> Void) throws {
-        if let reason = JarvisCatchAudioException(operation) {
-            throw MicManagerError.inputFailure(reason as String)
-        }
-    }
-
     func isVoiceLikelyPresent(decibelLevel: Float) -> Bool {
         decibelLevel > voiceDetectionThresholdDB
     }
@@ -236,7 +208,7 @@ final class MicManager: @unchecked Sendable {
         let tempURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("jarvis-voice-sample-\(UUID().uuidString).wav")
 
-        try writeWav(samples: outSamples, sampleRate: outRate, to: tempURL)
+        try Self.writeWav(samples: outSamples, sampleRate: outRate, to: tempURL)
         return tempURL
     }
 
@@ -297,17 +269,12 @@ final class MicManager: @unchecked Sendable {
         // resources until main tears them down, without retaining this object.
         let engine = audioEngine
         let removeTap = isTapInstalled
-        let teardown = {
-            _ = JarvisCatchAudioException {
-                engine.stop()
-                if removeTap { engine.inputNode.removeTap(onBus: 0) }
-            }
-        }
+        let teardown = { JarvisStopAudioEngine(engine, removeTap) }
         if Thread.isMainThread { teardown() }
         else { DispatchQueue.main.async(execute: teardown) }
     }
 
-    private static func rmsToDecibels(from buffer: AVAudioPCMBuffer) -> Float {
+    nonisolated private static func rmsToDecibels(from buffer: AVAudioPCMBuffer) -> Float {
         guard let channels = buffer.floatChannelData else { return -160.0 }
         let channel = channels[0]
         let frames = Int(buffer.frameLength)
@@ -349,7 +316,7 @@ final class MicManager: @unchecked Sendable {
         }
     }
 
-    private func writeWav(samples: [Float], sampleRate: Double, to url: URL) throws {
+    static func writeWav(samples: [Float], sampleRate: Double, to url: URL) throws {
         guard let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 1) else {
             throw MicManagerError.insufficientAudio
         }

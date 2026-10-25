@@ -22,7 +22,7 @@ Full walkthrough with every command and exact phrasings: **[practice.md](practic
 ## What it can do today
 
 **Voice & dictation**
-- **Manual-start listening**: nothing is captured at launch. Tap the orb — or just press ⌘⇧D / ⌘⇧A; a hotkey press is itself the manual start — and only then does the mic pipeline (VAD, wake word, dictation) come up.
+- **Manual-start listening**: nothing is captured at launch. Tap the orb — or just press ⌘⇧D / ⌘⇧A; a hotkey press is itself the manual start. Shortcut recordings use their own native capture without starting the continuous VAD/wake-word engine.
 - **One-shot microphone lifecycle**: the second shortcut press ends recording and releases its microphone before transcription/polish completes. Pressing the shortcut on a result card closes it; during processing it cancels. Closing a pill cancels pending model/permission starts and discards late results. Live listening remains on only when explicitly started with the orb.
 - ⌘⇧D dictation with WISPR-style formatting: deterministic rules (fillers, stutters, self-corrections, punctuation, casing, `25%`, `3pm`) plus a small-model polish pass for messy or structured speech (lists get typeset).
 - **Insert at cursor**: the formatted text is pasted into whatever app you were in — your clipboard is preserved. The card offers **Copy** (formatted), **Copy original** (raw STT, toggleable), and **Undo** (⌘Z in the target app); how long it stays is user-settable — System → Dictation → *Card stays visible* (1–10 s, default 10). With no Accessibility grant it silently copies instead and tells you.
@@ -42,6 +42,7 @@ Full walkthrough with every command and exact phrasings: **[practice.md](practic
 
 **The rest**
 - **Setup pane (first run)**: a checklist that detects what's missing and fixes it in-app — microphone and Accessibility grants, the Whisper model plus a custom model-folder picker, Ollama (install via brew / start / pull `qwen2.5:1.5b-instruct` with download status), PostgreSQL (install, start, **create the jarvis database with an editable user + password**, configure itself, enable logging), and a Spotify API-app guide. Reopen it anytime from the rail.
+- **Recording duration**: System → Dictation → *Maximum recording time* accepts 1–60 minutes (default 5). It applies to the next ⌘⇧D or ⌘⇧A recording; the floating panel shows elapsed audio time and the active limit. Capture stops and transcribes automatically at that limit, preserving the beginning and end. Long dictations bypass the optional small-model polish pass and retain the full rules-formatted transcript.
 - **On-demand backend (default: Automatic)**: the Python helper that serves voice auth, Spotify and the learned intent router starts for verification, Spotify, or explicit connector/setup actions and idles out after 5 minutes. Learned routing uses it only when already running; otherwise rules/Qwen handle the command — `pgrep uvicorn` is empty on a fresh boot and torch loads only on the first voice request. Assistant → Behaviour → *Backend* offers Automatic / Always running / Off.
 - **Insights**: local stats on dictation, commands, success rates, LLM usage.
 - **Connections**: Spotify (OAuth via local backend) and PostgreSQL (schema-browsing status/credentials/test).

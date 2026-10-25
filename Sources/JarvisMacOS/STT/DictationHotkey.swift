@@ -12,10 +12,7 @@ import Carbon.HIToolbox
 private var gDictationHotKeyRef: EventHotKeyRef?
 private var gActionHotKeyRef: EventHotKeyRef?
 private var gDictationEventHandlerRef: EventHandlerRef?
-// The UPP closure below must be retained for the app's lifetime — Carbon
-// calls it on every hotkey press. Keeping only the EventHandlerRef (as before)
-// left the UPP on the stack: first press worked, second press jumped to
-// freed memory (EXC_BAD_ACCESS) and the frontend "vanished".
+// Keep the registered C callback and handler together until unregistration.
 private var gDictationEventHandlerUPP: EventHandlerUPP?
 private let gDictationHotKeySignature: OSType = OSType(0x4A565354) // "JVST"
 private let gActionHotKeySignature: OSType = OSType(0x4A565341) // "JVSA"
@@ -86,7 +83,7 @@ private func dictationHotkeyEventHandler(
     let kind = GetEventKind(event)
     let isPress = (kind == UInt32(kEventHotKeyPressed))
 
-    Task { @MainActor in
+    DispatchQueue.main.async {
         if isPress {
             // Toggle ON the first key-down only.
             // Suppress auto-repeat presses while the key is held.

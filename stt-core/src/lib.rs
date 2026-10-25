@@ -31,9 +31,6 @@ use model_manager::{ModelManager, ModelState};
 use state::{AppStateMachine, SessionPhase};
 
 static APP: Mutex<Option<AppStateMachine>> = Mutex::new(None);
-thread_local! {
-    static AUDIO: RefCell<Option<audio::AudioCapture>> = const { RefCell::new(None) };
-}
 static SESSION_EPOCH: state::session::SessionEpoch = state::session::SessionEpoch::new();
 static INITIALIZED: AtomicBool = AtomicBool::new(false);
 static MODEL_SETUP_RUNNING: AtomicBool = AtomicBool::new(false);
@@ -105,11 +102,160 @@ where
     f(app)
 }
 
-fn with_audio<F, R>(f: F) -> R
-where
-    F: FnOnce(&mut Option<audio::AudioCapture>) -> R,
-{
-    AUDIO.with(|cell| f(&mut cell.borrow_mut()))
+// A single native thread owns the !Send CoreAudio stream. Hardware startup
+// and teardown must never block SwiftUI or run inside a Swift concurrency task.
+enum CaptureJob {
+    Start { session_id: u64, seconds: u64 },
+    Stop { session_id: u64 },
+    Cancel,
+    Prime { session_id: u64, samples: Vec<f32> },
+}
+static CAPTURE_TX: OnceLock<mpsc::Sender<CaptureJob>> = OnceLock::new();
+static CAPTURE_READY: AtomicBool = AtomicBool::new(false);
+static CAPTURE_SAMPLES: AtomicU64 = AtomicU64::new(0);
+static CAPTURE_LEVEL: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+static VERIFICATION_AUDIO: Mutex<Vec<f32>> = Mutex::new(Vec::new());
+
+fn capture_sender() -> &'static mpsc::Sender<CaptureJob> {
+    CAPTURE_TX.get_or_init(|| {
+        let (tx, rx) = mpsc::channel();
+        thread::spawn(move || capture_worker(rx));
+        tx
+    })
+}
+
+fn stop_chunker() {
+    if let Some(tx) = chunker_stop_tx_take() { let _ = tx.send(()); }
+}
+
+fn capture_worker(rx: mpsc::Receiver<CaptureJob>) {
+    capture_worker_with(rx, audio::AudioCapture::start);
+}
+
+// Injectable device boundary exercises slow hardware/cancellation without
+// requesting microphone permission or depending on a particular Mac.
+trait CaptureSource {
+    fn stop(self) -> Vec<f32>;
+    fn failure(&self) -> Option<String>;
+    fn current_level(&self) -> f32;
+    fn sample_count(&self) -> usize;
+    fn at_limit(&self) -> bool;
+}
+impl CaptureSource for audio::AudioCapture {
+    fn stop(self) -> Vec<f32> { self.stop() }
+    fn failure(&self) -> Option<String> { self.failure() }
+    fn current_level(&self) -> f32 { self.current_level() }
+    fn sample_count(&self) -> usize { self.sample_count() }
+    fn at_limit(&self) -> bool { self.at_limit() }
+}
+
+fn capture_worker_with<C: CaptureSource>(rx: mpsc::Receiver<CaptureJob>,
+    open: impl Fn(u64) -> anyhow::Result<C>) {
+    let mut active: Option<(u64, C)> = None;
+    loop {
+        match rx.recv_timeout(Duration::from_millis(25)) {
+            Ok(CaptureJob::Start { session_id, seconds }) => {
+                if !SESSION_EPOCH.is_current(session_id) { continue; }
+                if let Some((_, capture)) = active.take() { drop(capture.stop()); }
+                match open(seconds) {
+                    Ok(capture) => {
+                        if !SESSION_EPOCH.is_current(session_id) {
+                            drop(capture.stop());
+                            continue;
+                        }
+                        CAPTURE_READY.store(true, Ordering::SeqCst);
+                        active = Some((session_id, capture));
+                        ffi::on_capture_started(session_id);
+                        let (stop_tx, stop_rx) = mpsc::channel();
+                        *CHUNKER_STOP_TX.lock().unwrap_or_else(|p| p.into_inner()) = Some(stop_tx);
+                        let (chunk, overlap) = with_app(|app| (app.config.audio.chunk_seconds as u64,
+                            app.config.audio.chunk_overlap_seconds as u64));
+                        thread::spawn(move || chunker_thread(stop_rx, chunk, overlap, session_id));
+                    }
+                    Err(error) => capture_failed(session_id, format!("Microphone could not start: {error}. Check the input device and Retry.")),
+                }
+            }
+            Ok(CaptureJob::Stop { session_id }) => {
+                if active.as_ref().map(|(id, _)| *id) == Some(session_id) {
+                    stop_chunker();
+                    let (_, capture) = active.take().unwrap();
+                    let failure = capture.failure();
+                    let samples = capture.stop();
+                    CAPTURE_READY.store(false, Ordering::SeqCst);
+                    if let Some(message) = failure { capture_failed(session_id, message); }
+                    else if SESSION_EPOCH.is_current(session_id) { finish_captured_audio(samples, session_id); }
+                }
+            }
+            Ok(CaptureJob::Cancel) => {
+                stop_chunker();
+                if let Some((_, capture)) = active.take() { drop(capture.stop()); }
+                CAPTURE_READY.store(false, Ordering::SeqCst);
+                CAPTURE_LEVEL.store(0, Ordering::Relaxed);
+            }
+            Ok(CaptureJob::Prime { session_id, samples }) => {
+                if active.as_ref().map(|(id, _)| *id) == Some(session_id)
+                    && SESSION_EPOCH.is_current(session_id) { audio::prepend_active(&samples); }
+            }
+            Err(mpsc::RecvTimeoutError::Disconnected) => break,
+            Err(mpsc::RecvTimeoutError::Timeout) => {}
+        }
+        if let Some((session_id, capture)) = active.as_ref() {
+            let session_id = *session_id;
+            if !SESSION_EPOCH.is_current(session_id) {
+                stop_chunker();
+                let (_, capture) = active.take().unwrap();
+                drop(capture.stop());
+                CAPTURE_READY.store(false, Ordering::SeqCst);
+                continue;
+            }
+            CAPTURE_LEVEL.store(capture.current_level().to_bits(), Ordering::Relaxed);
+            CAPTURE_SAMPLES.store(capture.sample_count() as u64, Ordering::Relaxed);
+            let failure = capture.failure();
+            let auto_stop = capture.at_limit() && with_app(|app|
+                SESSION_EPOCH.is_current(session_id) && app.phase == SessionPhase::Recording);
+            if failure.is_some() || auto_stop {
+                let (_, capture) = active.take().unwrap();
+                stop_chunker();
+                let samples = capture.stop();
+                CAPTURE_READY.store(false, Ordering::SeqCst);
+                if let Some(message) = failure { capture_failed(session_id, message); }
+                else {
+                    tracing::info!(session_id, samples = samples.len(), "Recording reached user duration limit");
+                    // A user Stop can enter Processing while CoreAudio is
+                    // being torn down here. Still publish this exact audio;
+                    // the queued Stop will see no active capture and do nothing.
+                    let processing = transition_to_processing(session_id) || with_app(|app|
+                        SESSION_EPOCH.is_current(session_id) && app.phase == SessionPhase::Processing);
+                    if processing { finish_captured_audio(samples, session_id); }
+                }
+            }
+        }
+    }
+}
+
+fn capture_failed(session_id: u64, message: String) {
+    let current = with_app(|app| {
+        if !SESSION_EPOCH.is_current(session_id) { return false; }
+        app.set_error(message.clone());
+        true
+    });
+    if current {
+        stop_chunker();
+        CAPTURE_READY.store(false, Ordering::SeqCst);
+        ffi::on_error(message, session_id);
+        notify_state();
+    }
+}
+
+fn transition_to_processing(session_id: u64) -> bool {
+    let changed = with_app(|app| {
+        if !SESSION_EPOCH.is_current(session_id) || app.phase != SessionPhase::Recording { return false; }
+        if app.finish_recording().is_err() { return false; }
+        app.model_state = ModelState::Inference;
+        true
+    });
+    if changed { notify_state(); }
+    changed
 }
 
 #[swift_bridge::bridge]
@@ -136,6 +282,7 @@ mod ffi {
     }
 
     extern "Swift" {
+        fn on_capture_started(session_id: u64);
         fn on_state_changed(phase: AppPhase, model: ModelPhase, session_id: u64);
         fn on_transcript_ready(text: String, session_id: u64);
         fn on_partial_transcript(text: String, session_id: u64);
@@ -152,6 +299,10 @@ mod ffi {
         fn is_initialized() -> bool;
         fn get_session_generation() -> u64;
         fn start_recording() -> bool;
+        fn set_recording_limit(seconds: u64);
+        fn is_capture_ready() -> bool;
+        fn get_recorded_seconds() -> f64;
+        fn take_verification_audio() -> Vec<f32>;
         fn stop_recording();
         fn cancel_recording();
         // True when the Whisper context is resident in RAM right now.
@@ -398,6 +549,21 @@ fn inference_worker(rx: mpsc::Receiver<InferenceJob>) {
             }
             InferenceJob::TranscribeChunk { samples, is_final, session_id } => {
                 if !SESSION_EPOCH.is_current(session_id) { continue; }
+                let samples = if is_final {
+                    let failed = CHUNK_FAILED.load(Ordering::SeqCst);
+                    let chunks = CHUNKS_SENT.load(Ordering::SeqCst);
+                    let overlap = with_app(|app| app.config.audio.chunk_overlap_seconds as usize * 16000);
+                    let start_at = final_chunk_start(samples.len(), failed, chunks,
+                        LAST_CHUNK_END.load(Ordering::SeqCst) as usize, overlap);
+                    if failed || chunks == 0 {
+                        session_text.clear();
+                        last_tail = None;
+                        ENGINE.with(|cell| {
+                            if let Some(engine) = cell.borrow_mut().as_mut() { engine.reset_decode_state(); }
+                        });
+                    }
+                    if start_at == 0 { samples } else { samples[start_at..].to_vec() }
+                } else { samples };
                 let start = Instant::now();
                 tracing::info!(samples = samples.len(), is_final, "Chunk job received");
 
@@ -548,6 +714,10 @@ fn inference_worker(rx: mpsc::Receiver<InferenceJob>) {
     }
 
     tracing::info!("Inference worker exiting");
+}
+
+fn final_chunk_start(length: usize, failed: bool, chunks: u64, last_end: usize, overlap: usize) -> usize {
+    if failed || chunks == 0 { 0 } else { last_end.saturating_sub(overlap).min(length) }
 }
 
 fn stitch(session: &mut String, addition: &str) {
@@ -735,6 +905,14 @@ mod tests {
     }
 
     #[test]
+    fn delayed_chunk_failure_retries_the_complete_audio_including_beginning() {
+        let length = 16000 * 900;
+        assert_eq!(final_chunk_start(length, false, 149, 16000 * 894, 16000), 16000 * 893);
+        assert_eq!(final_chunk_start(length, true, 149, 16000 * 894, 16000), 0);
+        assert_eq!(final_chunk_start(length, false, 0, 0, 16000), 0);
+    }
+
+    #[test]
     fn silence_gate_helpers_silence_is_zero() {
         let silence = vec![0.0f32; 16000];
         assert!(AudioCapture::rms(&silence) < SILENCE_RMS_FLOOR);
@@ -764,8 +942,6 @@ mod tests {
         }
         assert!(AudioCapture::voiced_fraction(&v, SILENCE_RMS_FLOOR) < SILENCE_VOICED_MIN);
     }
-
-    use super::*;
 
     #[test]
     fn dedupe_exact_prefix() {
@@ -1001,81 +1177,54 @@ fn start_recording() -> bool {
 
     let max_seconds = with_app(|app| app.config.audio.max_duration_seconds);
 
-    match audio::AudioCapture::start(max_seconds) {
-        Ok(capture) => {
-            with_audio(|a| *a = Some(capture));
-        }
-        Err(e) => {
-            tracing::error!("Failed to start audio: {}", e);
-            with_app(|app| {
-                app.set_error(format!("Audio error: {}", e));
-            });
-            notify_error(&format!("Audio error: {}", e));
-            return false;
-        }
-    }
-
-    // Fresh session for the inference worker (clear decode state + counters).
+    CAPTURE_READY.store(false, Ordering::SeqCst);
+    CAPTURE_SAMPLES.store(0, Ordering::SeqCst);
+    CAPTURE_LEVEL.store(0, Ordering::Relaxed);
+    VERIFICATION_AUDIO.lock().unwrap_or_else(|p| p.into_inner()).clear();
     if let Some(tx) = INFERENCE_TX.get() {
         let _ = tx.send(InferenceJob::ResetSession { session_id });
     }
     CHUNKS_SENT.store(0, Ordering::SeqCst);
     CHUNK_FAILED.store(false, Ordering::SeqCst);
     LAST_CHUNK_END.store(0, Ordering::SeqCst);
-
-    // Spawn the chunker for live transcription during this recording.
-    let (stop_tx, stop_rx) = mpsc::channel::<()>();
-    match CHUNKER_STOP_TX.lock() {
-        Ok(mut guard) => *guard = Some(stop_tx),
-        Err(poisoned) => {
-            tracing::error!("CHUNKER_STOP_TX mutex poisoned on store — recovering");
-            *poisoned.into_inner() = Some(stop_tx);
-        }
+    if capture_sender().send(CaptureJob::Start { session_id, seconds: max_seconds }).is_err() {
+        capture_failed(session_id, "Audio capture worker is unavailable. Restart Jarvis.".into());
+        return false;
     }
-    let (chunk_seconds, overlap_seconds) = with_app(|app| {
-        (app.config.audio.chunk_seconds as u64, app.config.audio.chunk_overlap_seconds as u64)
-    });
-    thread::spawn(move || chunker_thread(stop_rx, chunk_seconds, overlap_seconds, session_id));
-
     true
 }
 
+fn set_recording_limit(seconds: u64) {
+    with_app(|app| app.config.audio.max_duration_seconds = config::clamp_recording_seconds(seconds));
+}
+fn is_capture_ready() -> bool { CAPTURE_READY.load(Ordering::SeqCst) }
+fn get_recorded_seconds() -> f64 { CAPTURE_SAMPLES.load(Ordering::Relaxed) as f64 / 16000.0 }
+fn take_verification_audio() -> Vec<f32> {
+    std::mem::take(&mut *VERIFICATION_AUDIO.lock().unwrap_or_else(|p| p.into_inner()))
+}
+
 fn stop_recording() {
-    let failure = with_audio(|audio| audio.as_ref().and_then(|capture| capture.failure()));
-    if let Some(message) = failure { fail_recording(message); return; }
     let session_id = SESSION_EPOCH.current();
-    // 1. Stop the chunker first — no more mid-recording jobs after this point.
-    if let Some(stop_tx) = chunker_stop_tx_take() {
-        let _ = stop_tx.send(());
+    if !transition_to_processing(session_id) { return; }
+    stop_chunker();
+    if capture_sender().send(CaptureJob::Stop { session_id }).is_err() {
+        capture_failed(session_id, "Audio capture worker is unavailable. Restart Jarvis.".into());
     }
+}
 
-    // 2. Capture audio on the calling (main) thread — thread_local AUDIO lives here
-    let samples = with_audio(|audio_opt| audio_opt.take().map(|a| a.stop()).unwrap_or_default());
-
-    let needs_inference = with_app(|app| match app.finish_recording() {
-        Ok(_) => !samples.is_empty(),
-        Err(e) => {
-            app.set_error(format!("Stop recording error: {}", e));
-            false
-        }
-    });
-
-    if !needs_inference {
-        // NOTE: each with_app takes the APP mutex — never nest them.
-        let err = with_app(|app| app.error_message.clone());
-        if let Some(msg) = err {
-            notify_error(&msg);
-        } else {
-            // A user stopped a stream that never delivered a buffer. Keep
-            // a visible error rather than silently removing the recording UI.
-            let message = "No microphone audio was received. Check your input device and retry.";
-            with_app(|app| app.set_error(message.into()));
-            notify_error(message);
-        }
-        notify_state();
+fn finish_captured_audio(samples: Vec<f32>, session_id: u64) {
+    if !with_app(|app| {
+        if !SESSION_EPOCH.is_current(session_id) { return false; }
+        CAPTURE_SAMPLES.store(samples.len() as u64, Ordering::Relaxed);
+        app.recording_duration_ms = samples.len() as u64 * 1000 / 16000;
+        *VERIFICATION_AUDIO.lock().unwrap_or_else(|p| p.into_inner()) =
+            samples[samples.len().saturating_sub(56000)..].to_vec();
+        true
+    }) { return; }
+    if samples.is_empty() {
+        capture_failed(session_id, "No microphone audio was received. Check your input device and Retry.".into());
         return;
     }
-
     // Use the same acoustic evidence for short recordings and every chunk.
     // A long quiet tail must neither generate an outro nor reject real
     // speech solely because it occupies a small fraction of the recording.
@@ -1083,51 +1232,23 @@ fn stop_recording() {
         && inference::speech_filter::speech_window(&samples).is_none()
     {
         tracing::info!(samples = samples.len(), "Silence-gated stop — skipped inference");
-        with_app(|app| app.set_error("No speech detected. Try again and check your microphone input level.".into()));
-        notify_error("No speech detected. Try again and check your microphone input level.");
-        notify_state();
+        capture_failed(session_id, "No speech detected. Try again and check your microphone input level.".into());
         return;
     }
 
-    // 3. Transition to Processing — Swift renders the Transcribing pill immediately
-    with_app(|app| {
-        app.model_state = ModelState::Inference;
-    });
     notify_state();
     bump_activity();
 
-    // 4. Decide the final job:
-    //    - Any chunk failed → reset decode state and re-transcribe the WHOLE
-    //      buffer (no data loss; state must not carry stale chunks).
-    //    - Chunks were sent → send only the tail AFTER the last chunk's end.
-    //    - No chunks (recording < chunk_seconds) → whole buffer, as before.
-    let chunks_sent = CHUNKS_SENT.load(Ordering::SeqCst);
-    let chunk_failed = CHUNK_FAILED.load(Ordering::SeqCst);
-
-    let (final_samples, need_reset) = if chunk_failed || chunks_sent == 0 {
-        tracing::info!(chunk_failed, chunks_sent, "Whole-buffer final (fallback)");
-        (samples, true)
-    } else {
-        let overlap_seconds = with_app(|app| app.config.audio.chunk_overlap_seconds as u64);
-        let overlap_samples =
-            (overlap_seconds as usize) * (SAMPLE_RATE.load(Ordering::SeqCst) as usize);
-        let raw_start = LAST_CHUNK_END.load(Ordering::SeqCst) as usize;
-        let start_at = raw_start.saturating_sub(overlap_samples);
-        tracing::info!(
-            chunks_sent,
-            raw_start,
-            start_at,
-            overlap_samples,
-            "Tail final with overlap"
-        );
-        (samples[start_at.min(samples.len())..].to_vec(), false)
-    };
-
+    // Keep the full recording until the inference worker reaches this final
+    // job. Earlier queued chunks can still fail AFTER the user presses Stop.
+    // Only that worker can safely choose a tail or a full-buffer retry.
     if let Some(tx) = INFERENCE_TX.get() {
-        if need_reset {
-            let _ = tx.send(InferenceJob::ResetSession { session_id });
-        }
-        let _ = tx.send(InferenceJob::TranscribeChunk { samples: final_samples, is_final: true, session_id });
+        let publish = with_app(|_| {
+            if !SESSION_EPOCH.is_current(session_id) { return false; }
+            let _ = tx.send(InferenceJob::TranscribeChunk { samples, is_final: true, session_id });
+            true
+        });
+        if !publish { tracing::debug!(session_id, "Dropped cancelled final audio"); }
     } else {
         tracing::error!("Inference worker not initialized");
         with_app(|app| {
@@ -1147,12 +1268,10 @@ fn cancel_recording() {
         let _ = stop_tx.send(());
     }
 
-    // 2. Drop the captured audio on the calling (main) thread.
-    with_audio(|audio_opt| {
-        if let Some(capture) = audio_opt.take() {
-            drop(capture.stop());
-        }
-    });
+    let _ = capture_sender().send(CaptureJob::Cancel);
+    CAPTURE_READY.store(false, Ordering::SeqCst);
+    CAPTURE_LEVEL.store(0, Ordering::Relaxed);
+    VERIFICATION_AUDIO.lock().unwrap_or_else(|p| p.into_inner()).clear();
 
     // 3. Fresh session for the inference worker so already-queued chunks
     //    from the abandoned utterance can't stitch into the next one.
@@ -1284,11 +1403,11 @@ fn prime_recording(samples: *const f32, len: usize) -> u32 {
         return 0;
     }
     let slice = unsafe { std::slice::from_raw_parts(samples, len) };
-    let injected = audio::prepend_active(slice);
-    if injected == 0 {
-        tracing::debug!(offered = len, "Pre-roll rejected (no active recording)");
-    }
-    injected as u32
+    if !with_app(|app| app.phase == SessionPhase::Recording) { return 0; }
+    let _ = capture_sender().send(CaptureJob::Prime {
+        session_id: SESSION_EPOCH.current(), samples: slice.to_vec(),
+    });
+    slice.len() as u32
 }
 
 fn dismiss_transcript() {
@@ -1303,9 +1422,7 @@ fn retry_recording() {
 }
 
 fn get_audio_level() -> f32 {
-    let failure = with_audio(|a| a.as_ref().and_then(|cap| cap.failure()));
-    if let Some(message) = failure { fail_recording(message); }
-    with_audio(|a| a.as_ref().map(|cap| cap.current_level()).unwrap_or(0.0))
+    f32::from_bits(CAPTURE_LEVEL.load(Ordering::Relaxed))
 }
 
 fn fail_recording(message: String) {
@@ -1364,4 +1481,111 @@ fn get_live_preview_enabled() -> bool {
 fn set_live_preview_enabled(enabled: bool) {
     LIVE_PREVIEW.store(enabled, Ordering::SeqCst);
     tracing::info!(enabled, "Live preview toggled");
+}
+
+#[cfg(test)]
+mod capture_lifecycle_tests {
+    use super::*;
+    use std::sync::mpsc::{channel, Sender};
+
+    struct FakeInput {
+        samples: Vec<f32>,
+        limit: bool,
+        stopped: Sender<()>,
+    }
+    impl CaptureSource for FakeInput {
+        fn stop(self) -> Vec<f32> { self.stopped.send(()).unwrap(); self.samples }
+        fn failure(&self) -> Option<String> { None }
+        fn current_level(&self) -> f32 { 0.2 }
+        fn sample_count(&self) -> usize { self.samples.len() }
+        fn at_limit(&self) -> bool { self.limit }
+    }
+    fn begin() -> u64 {
+        with_app(|app| {
+            app.dismiss();
+            app.begin_recording().unwrap();
+            SESSION_EPOCH.advance()
+        })
+    }
+    fn expect_final(rx: &mpsc::Receiver<InferenceJob>, id: u64) {
+        match rx.recv_timeout(Duration::from_secs(2)).unwrap() {
+            InferenceJob::TranscribeChunk { samples, is_final, session_id } => {
+                assert_eq!(session_id, id);
+                assert!(is_final);
+                assert_eq!(samples.len(), 16000 * 60);
+                assert_eq!(samples[0], 0.03);
+                assert_eq!(samples.last(), Some(&-0.03));
+            }
+            _ => panic!("expected a final transcription job"),
+        }
+    }
+
+    #[test]
+    fn slow_device_start_cancel_rapid_stop_and_auto_limit_are_ordered() {
+        // One test owns the process-wide FFI state; all other non-ignored
+        // tests exercise local state machines, audio transforms, and files.
+        let mut cfg = config::AppConfig::default();
+        cfg.audio.chunk_seconds = 0;
+        *APP.lock().unwrap() = Some(AppStateMachine::new(cfg));
+        let (inference_tx, inference_rx) = channel();
+        assert!(INFERENCE_TX.set(inference_tx).is_ok());
+        let (jobs_tx, jobs_rx) = channel();
+        let (opened_tx, opened_rx) = channel();
+        let (responses_tx, responses_rx) = channel::<anyhow::Result<FakeInput>>();
+        let (stopped_tx, stopped_rx) = channel();
+        let worker = thread::spawn(move || capture_worker_with(jobs_rx, |seconds| {
+            opened_tx.send(seconds).unwrap();
+            responses_rx.recv().unwrap()
+        }));
+        let input = || FakeInput {
+            samples: (0..16000 * 60).map(|i| if i % 2 == 0 { 0.03 } else { -0.03 }).collect(),
+            limit: true,
+            stopped: stopped_tx.clone(),
+        };
+
+        // A request is asynchronous even if hardware never finishes opening.
+        let first = begin();
+        jobs_tx.send(CaptureJob::Start { session_id: first, seconds: 60 }).unwrap();
+        assert_eq!(opened_rx.recv_timeout(Duration::from_secs(2)).unwrap(), 60);
+        SESSION_EPOCH.advance();
+        with_app(|app| app.dismiss());
+        jobs_tx.send(CaptureJob::Cancel).unwrap();
+        responses_tx.send(Ok(input())).unwrap();
+        stopped_rx.recv_timeout(Duration::from_secs(2)).unwrap();
+        assert_eq!(with_app(|app| app.phase), SessionPhase::Ready);
+        assert!(!CAPTURE_READY.load(Ordering::SeqCst));
+        assert!(inference_rx.try_recv().is_err(), "cancelled startup cannot transcribe");
+
+        // Finish pressed during startup: the sample cap must not swallow a
+        // queued manual Stop after Swift already entered Processing.
+        let second = begin();
+        jobs_tx.send(CaptureJob::Start { session_id: second, seconds: 900 }).unwrap();
+        assert_eq!(opened_rx.recv_timeout(Duration::from_secs(2)).unwrap(), 900);
+        assert!(transition_to_processing(second));
+        jobs_tx.send(CaptureJob::Stop { session_id: second }).unwrap();
+        responses_tx.send(Ok(input())).unwrap();
+        expect_final(&inference_rx, second);
+        assert_eq!(get_recorded_seconds(), 60.0);
+        assert_eq!(take_verification_audio().len(), 56000);
+
+        // No Swift timer or meter poll is needed to finish at the sample cap.
+        let third = begin();
+        jobs_tx.send(CaptureJob::Start { session_id: third, seconds: 60 }).unwrap();
+        opened_rx.recv_timeout(Duration::from_secs(2)).unwrap();
+        responses_tx.send(Ok(input())).unwrap();
+        expect_final(&inference_rx, third);
+        assert_eq!(with_app(|app| app.phase), SessionPhase::Processing);
+        assert!(!CAPTURE_READY.load(Ordering::SeqCst));
+
+        // A device error returned AFTER cancellation cannot clobber Ready.
+        let fourth = begin();
+        jobs_tx.send(CaptureJob::Start { session_id: fourth, seconds: 60 }).unwrap();
+        opened_rx.recv_timeout(Duration::from_secs(2)).unwrap();
+        SESSION_EPOCH.advance();
+        with_app(|app| app.dismiss());
+        responses_tx.send(Err(anyhow::anyhow!("device disconnected"))).unwrap();
+        drop(jobs_tx);
+        worker.join().unwrap();
+        assert_eq!(with_app(|app| app.phase), SessionPhase::Ready);
+    }
 }

@@ -10,6 +10,7 @@ private final class DeferredMicrophone: AudioCapturing {
     func setInterruptionHandler(_ handler: @escaping (String) -> Void) { interruption = handler }
     var starts = 0
     var stops = 0
+    var exports = 0
 
     @MainActor
     func startListeningWithPermission(onLevelUpdate: @escaping (Float) -> Void,
@@ -24,6 +25,7 @@ private final class DeferredMicrophone: AudioCapturing {
     }
     func stopListening() { stops += 1; capturing = false }
     func exportRecentAudioSample(durationSeconds: Double, targetSampleRate: Double?) throws -> URL {
+        exports += 1
         throw MicManagerError.insufficientAudio
     }
 }
@@ -64,15 +66,6 @@ final class MicrophoneLifecycleTests: XCTestCase {
         XCTAssertFalse(MicManager.inputHasStalled(lastBufferAt: now.addingTimeInterval(-2), now: now))
         XCTAssertTrue(MicManager.inputHasStalled(lastBufferAt: now.addingTimeInterval(-4), now: now))
         XCTAssertTrue(MicManager.inputHasStalled(lastBufferAt: nil, now: now))
-    }
-
-    func testAudioDeviceExceptionIsConvertedToARetryableError() {
-        XCTAssertThrowsError(try MicManager.performAudioOperation {
-            NSException(name: .invalidArgumentException, reason: "Input device changed during tap installation").raise()
-        }) { error in
-            XCTAssertTrue(error.localizedDescription.contains("Input device changed"))
-            XCTAssertTrue(error.localizedDescription.contains("Retry"))
-        }
     }
 
     func testInputDeviceChangeStopsTheVisibleMicrophoneSession() async {
@@ -124,4 +117,17 @@ final class MicrophoneLifecycleTests: XCTestCase {
         XCTAssertFalse(app.micTransientAutoStart)
         XCTAssertFalse(microphone.capturing)
     }
+    func testSuppliedCommandAudioIsUsedWithoutOpeningOrExportingAnotherMicrophone() async throws {
+        let url = directory.appendingPathComponent("captured-command.wav")
+        try MicManager.writeWav(samples: [Float](repeating: 0, count: 16000), sampleRate: 16000, to: url)
+        do {
+            _ = try await app.attemptVerification(capturedAudio: url)
+            XCTFail("Silence must be rejected locally before contacting any service")
+        } catch {
+            XCTAssertEqual(microphone.exports, 0)
+            XCTAssertEqual(microphone.starts, 0)
+            XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
+        }
+    }
+
 }

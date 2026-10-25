@@ -34,3 +34,6 @@ pub extern "C" fn test_on_download_progress(
     _remaining: *mut std::ffi::c_void,
 ) {
 }
+
+#[export_name = "__swift_bridge__$on_capture_started"]
+pub extern "C" fn test_on_capture_started(_session_id: u64) {}

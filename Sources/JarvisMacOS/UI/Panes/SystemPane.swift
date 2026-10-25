@@ -89,6 +89,12 @@ struct SystemPane: View {
                      sub: "Offer the raw transcript on the ⌘⇧D card") {
                     JSwitch(binding: $dictation.copyOriginalEnabled)
                 }
+                JRow(title: "Maximum recording time",
+                     sub: "1–60 minutes; applies to the next shortcut recording") {
+                    Stepper("\(dictation.recordingLimitMinutes) min",
+                            value: $dictation.recordingLimitMinutes, in: 1...60)
+                        .frame(width: 126)
+                }
                 JRow(title: "Card stays visible",
                      sub: "Seconds the ⌘⇧D card lingers before closing") {
                     Picker("", selection: $dictation.cardDismissSeconds) {

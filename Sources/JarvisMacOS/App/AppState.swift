@@ -748,8 +748,26 @@ final class AppState: ObservableObject {
         appendLog("[Action] Received: '\(command)' (verify: \(actionPillRequiresVerify ? "on" : "off"))")
         let priority = CommandPriority.classify(command)
         if actionPillRequiresVerify {
+            // Snapshot before queuing or dismissing: a later recording must
+            // never replace the audio used to authorize this command.
+            let samples = take_verification_audio()
+            guard samples.len() > 0 else {
+                appendLog("[Action] No audio from this recording; verification rejected.")
+                voiceVerificationStatus = "No command audio available"
+                return
+            }
+            let audio = Array(UnsafeBufferPointer(start: samples.as_ptr(), count: samples.len()))
             commandQueue.enqueue(text: command, priority: priority) { [weak self] in
-                await self?.verifyThenRunCommand(command)
+                guard let self else { return }
+                let sampleURL = FileManager.default.temporaryDirectory
+                    .appendingPathComponent("jarvis-action-\(UUID().uuidString).wav")
+                defer { try? FileManager.default.removeItem(at: sampleURL) }
+                do {
+                    try MicManager.writeWav(samples: audio, sampleRate: Self.voiceSampleRate, to: sampleURL)
+                    await self.verifyThenRunCommand(command, capturedAudio: sampleURL)
+                } catch {
+                    self.appendLog("[Action] Could not prepare verification audio: \(error.localizedDescription)")
+                }
             }
         } else {
             commandQueue.enqueue(text: command, priority: priority) { [weak self] in

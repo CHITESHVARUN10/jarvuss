@@ -14,6 +14,9 @@
 
 use serde::{Deserialize, Serialize};
 
+/// User preference: 1 minute through 1 hour; default 5 minutes.
+pub fn clamp_recording_seconds(seconds: u64) -> u64 { seconds.clamp(60, 3600) }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppConfig {
     pub model: ModelSection,

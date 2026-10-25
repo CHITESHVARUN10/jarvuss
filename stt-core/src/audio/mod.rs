@@ -1,7 +1,7 @@
 //! Audio capture via cpal (macOS CoreAudio only).
 //!
-//! cpal::Stream is not Send, so it lives in thread_local storage.
-//! All FFI calls to start/stop recording come from the main thread.
+//! A dedicated native thread owns the !Send stream and its lifecycle.
+//! Swift FFI calls enqueue requests without blocking the UI.
 //! Samples are accumulated in a shared Vec behind Arc<Mutex>.
 //! Amplitude is stored as RMS bits in an AtomicU32.
 
@@ -131,6 +131,8 @@ pub struct AudioCapture {
     buffer: Arc<Mutex<Vec<f32>>>,
     level: Arc<AtomicU32>,
     failure: Arc<Mutex<Option<String>>>,
+    max_samples: usize,
+    last_buffer: Arc<Mutex<std::time::Instant>>,
 }
 
 impl AudioCapture {
@@ -149,13 +151,14 @@ impl AudioCapture {
         let sample_format = supported.sample_format();
         let config: cpal::StreamConfig = supported.into();
         anyhow::ensure!(config.channels > 0 && config.sample_rate.0 > 0, "Microphone has no usable input format");
-        let max_samples = 16000 * max_seconds.clamp(1, 300) as usize;
+        let max_samples = 16000 * crate::config::clamp_recording_seconds(max_seconds) as usize;
         MAX_SAMPLES.store(max_samples, Ordering::Relaxed);
-        let buffer = Arc::new(Mutex::new(Vec::with_capacity(max_samples)));
+        let buffer = Arc::new(Mutex::new(Vec::with_capacity(max_samples.min(16000 * 30))));
         let level = Arc::new(AtomicU32::new(0));
         let failure = Arc::new(Mutex::new(None));
+        let last_buffer = Arc::new(Mutex::new(std::time::Instant::now()));
         macro_rules! build {
-            ($ty:ty) => { build_stream::<$ty>(&device, &config, buffer.clone(), level.clone(), failure.clone(), max_samples)? };
+            ($ty:ty) => { build_stream::<$ty>(&device, &config, buffer.clone(), level.clone(), failure.clone(), last_buffer.clone(), max_samples)? };
         }
         let stream = match sample_format {
             cpal::SampleFormat::F32 => build!(f32),
@@ -173,11 +176,19 @@ impl AudioCapture {
         stream.play()?;
         register_buffer(buffer.clone());
         tracing::info!(max_seconds, rate = config.sample_rate.0, channels = config.channels, "Audio capture started");
-        Ok(Self { stream, buffer, level, failure })
+        Ok(Self { stream, buffer, level, failure, max_samples, last_buffer })
     }
 
+    pub fn sample_count(&self) -> usize {
+        self.buffer.lock().unwrap_or_else(|p| p.into_inner()).len()
+    }
+    pub fn at_limit(&self) -> bool { self.sample_count() >= self.max_samples }
     pub fn failure(&self) -> Option<String> {
-        self.failure.lock().unwrap_or_else(|p| p.into_inner()).clone()
+        let error = self.failure.lock().unwrap_or_else(|p| p.into_inner()).clone();
+        if error.is_none() && self.last_buffer.lock().unwrap_or_else(|p| p.into_inner()).elapsed().as_secs() > 3 {
+            return Some("Microphone input did not deliver audio. Check the input device and Retry.".into());
+        }
+        error
     }
 
     pub fn drain_samples(&self) -> Vec<f32> {
@@ -247,9 +258,12 @@ impl AudioCapture {
     }
 
     pub fn stop(self) -> Vec<f32> {
+        // Quiesce callbacks before draining; otherwise the last buffer can
+        // arrive after the drain and disappear from the final transcript.
+        let Self { stream, buffer, .. } = self;
+        drop(stream);
         unregister_buffer();
-        let samples = self.drain_samples();
-        drop(self.stream);
+        let samples = std::mem::take(&mut *buffer.lock().unwrap_or_else(|p| p.into_inner()));
         tracing::info!(samples = samples.len(), "Audio capture stopped");
         samples
     }
@@ -292,24 +306,21 @@ impl InputResampler {
 }
 
 fn append_bounded(buffer: &mut Vec<f32>, data: &[f32], max: usize) {
-    if data.len() >= max {
-        buffer.clear();
-        buffer.extend_from_slice(&data[data.len() - max..]);
-    } else {
-        let excess = (buffer.len() + data.len()).saturating_sub(max);
-        buffer.drain(..excess);
-        buffer.extend_from_slice(data);
-    }
+    // Keep the beginning. The owner stops at the sample limit; rolling the
+    // ring invalidates the chunker's absolute offsets and silently loses text.
+    let remaining = max.saturating_sub(buffer.len());
+    buffer.extend_from_slice(&data[..data.len().min(remaining)]);
 }
 
 fn build_stream<T>(device: &cpal::Device, config: &cpal::StreamConfig,
     buffer: Arc<Mutex<Vec<f32>>>, level: Arc<AtomicU32>, failure: Arc<Mutex<Option<String>>>,
-    max_samples: usize) -> anyhow::Result<Stream>
+    last_buffer: Arc<Mutex<std::time::Instant>>, max_samples: usize) -> anyhow::Result<Stream>
 where T: cpal::SizedSample, f32: cpal::FromSample<T> {
     let mut resampler = InputResampler::new(config.sample_rate.0, config.channels as usize);
     Ok(device.build_input_stream(config, move |data: &[T], _| {
         let samples = resampler.convert(data);
         if samples.is_empty() { return; }
+        *last_buffer.lock().unwrap_or_else(|p| p.into_inner()) = std::time::Instant::now();
         let rms = AudioCapture::rms(&samples);
         level.store(rms.to_bits(), Ordering::Relaxed);
         append_bounded(&mut buffer.lock().unwrap_or_else(|p| p.into_inner()), &samples, max_samples);
@@ -355,9 +366,29 @@ mod tests {
     fn oversized_callback_cannot_overflow_recording_ring() {
         let mut buffer = vec![1.0, 2.0];
         append_bounded(&mut buffer, &[3.0, 4.0, 5.0, 6.0], 3);
-        assert_eq!(buffer, vec![4.0, 5.0, 6.0]);
+        assert_eq!(buffer, vec![1.0, 2.0, 3.0]);
         append_bounded(&mut buffer, &[7.0], 3);
-        assert_eq!(buffer, vec![5.0, 6.0, 7.0]);
+        assert_eq!(buffer, vec![1.0, 2.0, 3.0]);
+    }
+
+    #[test]
+    fn user_limits_above_five_minutes_are_not_clamped_to_the_old_cap() {
+        for (requested, expected) in [(0, 60), (60, 60), (300, 300), (900, 900), (3600, 3600), (9999, 3600)] {
+            assert_eq!(crate::config::clamp_recording_seconds(requested), expected);
+        }
+    }
+
+    #[test]
+    fn recording_buffer_keeps_every_sample_past_five_minutes_and_preserves_start_at_limit() {
+        let limit = 16000 * 6 * 60;
+        let mut buffer = Vec::new();
+        for second in 0..(6 * 60 + 2) {
+            append_bounded(&mut buffer, &vec![second as f32; 16000], limit);
+        }
+        assert_eq!(buffer.len(), limit);
+        assert_eq!(buffer[0], 0.0);
+        assert_eq!(buffer[16000 * 300], 300.0);
+        assert_eq!(buffer.last(), Some(&359.0));
     }
 
     /// Serializes tests that mutate the process-wide ACTIVE_BUFFER/MAX_SAMPLES.

@@ -288,7 +288,7 @@ struct AssistantWorkspace: View {
                 Spacer(minLength: 8)
 
                 NoirIconButton(icon: "mic", help: "Start dictation") {
-                    DictationController.shared.toggleDictation()
+                    PillShortcutCoordinator.shared.press(.dictate)
                 }
 
                 Button(action: submitTyped) {

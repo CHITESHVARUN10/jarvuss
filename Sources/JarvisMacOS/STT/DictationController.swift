@@ -24,10 +24,15 @@ struct DictationCapture {
     var cancel: () -> Void
     var fail: (String) -> Void = { _ in }
     var error: () -> String = { "" }
+    var ready: () -> Bool = { true }
+    var seconds: () -> Double = { 0 }
+    var configureLimit: (UInt64) -> Void = { _ in }
 
     static let native = DictationCapture(phase: { get_app_phase() }, start: { start_recording() },
         stop: { stop_recording() }, cancel: { cancel_recording() },
-        fail: { fail_recording($0) }, error: { get_error_message().toString() })
+        fail: { fail_recording($0) }, error: { get_error_message().toString() },
+        ready: { is_capture_ready() }, seconds: { get_recorded_seconds() },
+        configureLimit: { set_recording_limit($0) })
 }
 
 @MainActor
@@ -52,6 +57,20 @@ final class DictationController: ObservableObject {
     @Published var formattingInProgress: Bool = false
     @Published var insertedAtCursor: Bool = false
     @Published var insertNotice: String = ""
+
+    @Published private(set) var shortcutPreparing = false
+    @Published private(set) var captureStarting = false
+    @Published private(set) var recordedSeconds: Double = 0
+    @Published private(set) var activeRecordingLimitMinutes = 5
+    @Published var recordingLimitMinutes: Int {
+        didSet {
+            let bounded = min(60, max(1, recordingLimitMinutes))
+            if recordingLimitMinutes != bounded { recordingLimitMinutes = bounded }
+            settingsDefaults.set(bounded, forKey: Self.recordingLimitDefaultsKey)
+        }
+    }
+    static let recordingLimitDefaultsKey = "jarvis.dictation.recordingLimitMinutes"
+    private let settingsDefaults: UserDefaults
 
     /// Raw STT text before any formatting — the "Copy original" source.
     @Published var originalTranscript: String = ""
@@ -133,6 +152,7 @@ final class DictationController: ObservableObject {
     private(set) var transcriptIsFormatted = false
 
     private var panel: NSPanel?
+    private var panelVisible = false
     private var panelHost: NSHostingView<DictationHUDView>?
     private var recordingStartedAt: Date?
     private(set) var pendingStartOnReady = false
@@ -151,13 +171,15 @@ final class DictationController: ObservableObject {
     private var recordingAnchor: NSPoint?
 
     private var levelTimer: Timer?
-    private var watchdogTimer: Timer?
     var pendingSpeechSecs: Double = 0
 
     init(defaults: UserDefaults = .standard, capture: DictationCapture = .native,
          presentsUI: Bool = true, releaseTransientMic: (() -> Void)? = nil,
          requestRestart: ((PillMode) -> Void)? = nil, now: @escaping () -> Date = Date.init) {
         self.capture = capture
+        self.settingsDefaults = defaults
+        recordingLimitMinutes = min(60, max(1,
+            defaults.object(forKey: Self.recordingLimitDefaultsKey) as? Int ?? 5))
         self.now = now
         self.presentsUI = presentsUI
         self.requestRestart = requestRestart ?? { mode in
@@ -206,9 +228,37 @@ final class DictationController: ObservableObject {
         }
     }
 
+    func showShortcutPreparation(_ mode: PillMode) {
+        self.mode = mode
+        shortcutPreparing = true
+        showPanel()
+    }
+
+    func cancelShortcutPreparation() {
+        shortcutPreparing = false
+        if !STTRouter.shared.isModalOwner && !pendingStartOnReady { hidePanel() }
+    }
+
+    /// Native auto-stop and manual stop share this cleanup. The duration
+    /// reflects received samples, excluding permission and hardware startup.
+    func captureFinished() {
+        if recordingStartedAt != nil {
+            pendingSpeechSecs = capture.seconds()
+            NSLog("[Jarvis][STT] Captured %.2f seconds (limit %d minutes)", pendingSpeechSecs, activeRecordingLimitMinutes)
+            recordingStartedAt = nil
+            stopRequestedAt = Date()
+            stopActivityTimers()
+            releaseTransientMic()
+        }
+        captureStarting = false
+        shortcutPreparing = false
+    }
+
     /// Preparation can fail before an owner or a panel exists. Retain modal
     /// ownership so the visible Retry button can prepare a fresh microphone.
     func presentCaptureFailure(_ message: String, mode: PillMode? = nil) {
+        shortcutPreparing = false
+        captureStarting = false
         if let mode { self.mode = mode }
         pendingStartExpiry?.cancel()
         pendingStartOnReady = false
@@ -221,6 +271,8 @@ final class DictationController: ObservableObject {
     }
 
     func receiveCaptureError(_ message: String) {
+        shortcutPreparing = false
+        captureStarting = false
         stopActivityTimers()
         invalidateFormatting()
         recordingStartedAt = nil
@@ -242,6 +294,8 @@ final class DictationController: ObservableObject {
                 guard let self else { return }
                 guard self.phase == .Recording, STTRouter.shared.isModalOwner else { return }
                 self.audioLevel = get_audio_level()
+                self.captureStarting = !self.capture.ready()
+                self.recordedSeconds = self.capture.seconds()
             }
         }
     }
@@ -251,35 +305,10 @@ final class DictationController: ObservableObject {
         levelTimer = nil
     }
 
-    private func startWatchdog() {
-        stopWatchdog()
-        // Max recording duration watchdog — auto-stops at the 300 s ring cap.
-        // Pill-owned only: command utterances have their own 30 s failsafe
-        // (WhisperCommandListener) and must never be stopped from here.
-        watchdogTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated {
-                guard let self,
-                      self.phase == .Recording,
-                      STTRouter.shared.isModalOwner else { return }
-                let elapsed = self.recordingStartedAt.map { Date().timeIntervalSince($0) } ?? 0
-                if elapsed > 300 {
-                    NSLog("[Jarvis][STT] Recording timeout — auto stop")
-                    self.stopDictation()
-                }
-            }
-        }
-    }
-
-    private func stopWatchdog() {
-        watchdogTimer?.invalidate()
-        watchdogTimer = nil
-    }
-
-    /// Stops both activity timers. Called whenever a pill recording ends
+    /// Stops activity polling. Called whenever a pill recording ends
     /// (stop sent, transcript dismissed/retried) so nothing polls at idle.
     private func stopActivityTimers() {
         stopLevelPolling()
-        stopWatchdog()
     }
 
     // ── SINGLE dictation entry point ─────────────────────────
@@ -287,6 +316,7 @@ final class DictationController: ObservableObject {
     // Behavior is driven entirely by the current phase.
 
     func toggleDictation() {
+        shortcutPreparing = false
         if STTRouter.shared.isModalOwner,
            phase == .Processing || phase == .TranscriptReady || phase == .Error {
             dismissTranscript()
@@ -362,6 +392,7 @@ final class DictationController: ObservableObject {
     // a command (no wake word) instead of landing on a Copy/Close card.
 
     func toggleAction() {
+        shortcutPreparing = false
         if STTRouter.shared.isModalOwner,
            phase == .Processing || phase == .TranscriptReady || phase == .Error {
             dismissTranscript()
@@ -436,6 +467,11 @@ final class DictationController: ObservableObject {
     }
 
     private func startDictation() {
+        shortcutPreparing = false
+        captureStarting = true
+        recordedSeconds = 0
+        activeRecordingLimitMinutes = recordingLimitMinutes
+        capture.configureLimit(UInt64(activeRecordingLimitMinutes * 60))
         invalidateFormatting()
         // Clear the card's state BEFORE the panel exists: showPanel() renders
         // whatever the last phase/transcript was, so a fresh run that skipped
@@ -460,6 +496,7 @@ final class DictationController: ObservableObject {
         NSLog("[Jarvis][STT] start_recording returned: \(ok)")
         if ok {
             recordingStartedAt = Date()
+            captureStarting = !capture.ready()
             // Warm the small instruct model for the polish pass so the first
             // messy dictation of a session wins its race. Utility priority;
             // keep-alive unloads it again after 60 s if the dictation ends up
@@ -472,7 +509,6 @@ final class DictationController: ObservableObject {
             resizePanelForCurrentState()
             // Activity timers live exactly as long as this recording.
             startLevelPolling()
-            startWatchdog()
             // Mute command-mode VAD claims while the pill owns the core —
             // otherwise every voiced tick re-claims for command mode and the
             // next toggle loses the race. Level meter keeps running.
@@ -488,6 +524,7 @@ final class DictationController: ObservableObject {
     }
 
     private func queuePendingStart(_ mode: PillMode) {
+        shortcutPreparing = false
         pendingStartExpiry?.cancel()
         pendingStartID = UUID()
         let token = pendingStartID
@@ -532,12 +569,24 @@ final class DictationController: ObservableObject {
 
     private func stopDictation() {
         NSLog("[Jarvis][STT] Recording stopped — starting inference")
-        let speechSecs = recordingStartedAt.map { Date().timeIntervalSince($0) } ?? 0
+        let speechSecs = capture.seconds()
         pendingSpeechSecs = speechSecs
         recordingStartedAt = nil
         stopActivityTimers()
         let rustPhase = capture.phase()
         guard rustPhase == .Recording else {
+            // The native sample cap can win the race with this keypress.
+            // Keep ownership for the queued final instead of dropping it.
+            if rustPhase == .Processing || rustPhase == .TranscriptReady {
+                phase = .Processing
+                releaseTransientMic()
+                showPanel()
+                return
+            }
+            if rustPhase == .Error {
+                receiveCaptureError(capture.error())
+                return
+            }
             // Stale mirror (e.g. a command result just routed and freed
             // the core) — nothing to stop; release so we can't wedge.
             // Also unmute VAD: with owner .none and the mute still set,
@@ -878,6 +927,8 @@ final class DictationController: ObservableObject {
     }
 
     func dismissTranscript() {
+        shortcutPreparing = false
+        captureStarting = false
         PillShortcutCoordinator.shared.cancel()
         let ownedCapture = hasModalSession
         pendingStartExpiry?.cancel()
@@ -908,8 +959,7 @@ final class DictationController: ObservableObject {
         guard STTRouter.shared.isModalOwner else { return }
         let retryMode = mode
         dismissTranscript()
-        // Preparation is required again: the previous one-shot microphone
-        // was released at stop, and action verification needs fresh audio.
+        // Recheck permission and open a fresh native capture.
         requestRestart(retryMode)
     }
 
@@ -933,6 +983,7 @@ final class DictationController: ObservableObject {
         }
         positionPanelForCurrentState()
         panel?.orderFrontRegardless()
+        panelVisible = true
     }
 
     private func createPanel() {
@@ -974,7 +1025,8 @@ final class DictationController: ObservableObject {
         // Reload states (model Loading/Unloading after an idle-unload) reuse
         // the Preparing card — DictationHUDView renders Preparing for any
         // non-Ready model phase while Recording hasn't started.
-        if modelPhase == .Loading || modelPhase == .Unloading {
+        if shortcutPreparing { return CGSize(width: 300, height: 120) }
+        if (phase == .Idle || phase == .Ready), modelPhase == .Loading || modelPhase == .Unloading {
             return CGSize(width: 300, height: 120)
         }
         switch phase {
@@ -1049,14 +1101,15 @@ final class DictationController: ObservableObject {
     }
 
     private func hidePanel() {
+        panelVisible = false
         panel?.orderOut(nil)
-        panel = nil
-        panelHost = nil
+        // Reuse the hosting graph. Destroying it on every shortcut/close
+        // churns SwiftUI's hover tracking during AppKit event dispatch.
     }
 
     /// Called from Rust callbacks when phase changes while panel may exist.
     func showPanelIfNeeded() {
-        if panel != nil {
+        if panelVisible, panel != nil {
             // Same crash guard as showPanel: never setFrame redundantly.
             if let panel, panel.frame.size != panelSizeForCurrentState() {
                 resizePanelForCurrentState()

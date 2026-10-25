@@ -80,7 +80,7 @@ struct NoirSystemPage: View {
                 title: "Dictation",
                 trailing: AnyView(
                     Button {
-                        DictationController.shared.toggleDictation()
+                        PillShortcutCoordinator.shared.press(.dictate)
                         toasts.show("Dictation is opening.")
                     } label: {
                         Label("Try dictation", systemImage: "mic")
@@ -103,6 +103,18 @@ struct NoirSystemPage: View {
                         sub: "Offer the unformatted transcript alongside the polished result."
                     ) {
                         NoirSwitch(isOn: $dictation.copyOriginalEnabled)
+                    }
+                    NoirDivider()
+                    NoirSettingRow(
+                        title: "Maximum recording time",
+                        sub: "1–60 minutes for dictation and shortcut commands. Applies to the next recording."
+                    ) {
+                        Stepper(value: $dictation.recordingLimitMinutes, in: 1...60) {
+                            Text("\(dictation.recordingLimitMinutes) min")
+                                .font(.system(size: 12, design: .monospaced))
+                        }
+                        .frame(width: 126)
+                        .accessibilityLabel("Maximum recording time in minutes")
                     }
                     NoirDivider()
                     NoirSettingRow(

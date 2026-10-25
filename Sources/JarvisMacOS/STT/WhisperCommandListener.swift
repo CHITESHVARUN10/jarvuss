@@ -16,6 +16,7 @@ final class WhisperCommandListener {
     static let shared = WhisperCommandListener()
 
     private var utteranceActive = false
+    private var preRollPending = false
     /// When the current utterance began (failsafe cap below).
     private var utteranceStartedAt: Date?
     /// True while a Rust recording is live — read by the AppState VAD tick to
@@ -23,7 +24,8 @@ final class WhisperCommandListener {
     var isUtteranceActive: Bool { utteranceActive }
     /// Max seconds a command utterance may hold the core before it is
     /// force-finalized (prevents an abandoned claim wedging the pill).
-    /// 30 s > longest legit enrollment phrase, < Rust 300 s ring cap.
+    /// Continuous listening has a separate utterance failsafe; shortcut
+    /// recordings use the user-selected duration instead.
     private let maxUtteranceSeconds: TimeInterval = 30
 
     private init() {}
@@ -82,16 +84,13 @@ final class WhisperCommandListener {
             STTRouter.shared.releaseFromCommand()
             return
         }
-        let startBegan = Date()
         let started = start_recording()
-        // Measured around the call: the tail of the pre-roll that the Rust
-        // stream already captured — dropping exactly this span is what makes
-        // the splice gap-free AND duplicate-free.
-        let startLatency = Date().timeIntervalSince(startBegan)
         utteranceActive = started
         utteranceStartedAt = utteranceActive ? Date() : nil
+        preRollPending = started
         if utteranceActive {
-            primeWithPreRoll(startLatency: startLatency)
+            // The native capture-start callback primes once hardware is
+            // ready, including words spoken during asynchronous startup.
         } else {
             STTRouter.shared.logCommandDrop(reason: "start_recording refused (phase: \(get_app_phase()))")
             STTRouter.shared.releaseFromCommand()
@@ -109,23 +108,32 @@ final class WhisperCommandListener {
     /// the smoothed level crosses the threshold, so the audio before that
     /// moment exists only in MicManager's ring. Without this splice the "Jar-"
     /// of "Jarvis" is gone and the transcript reads "vis open chrome".
-    private func primeWithPreRoll(startLatency: TimeInterval) {
-        let preRoll = MicManager.shared.snapshotRecentSamples(
-            durationSeconds: Self.preRollSeconds,
-            targetSampleRate: Self.sttSampleRate)
-        guard !preRoll.isEmpty else {
-            NSLog("[Voice] pre-roll: empty snapshot (mic ring not warm?) — proceeding unprimed")
-            return
-        }
+    func captureDidStart() {
+        guard utteranceActive, STTRouter.shared.owner == .command,
+              get_app_phase() == .Recording else { return }
+        primeWithPreRollIfNeeded()
+    }
 
-        // Drop the last `startLatency` seconds of the snapshot: the Rust
-        // stream already has that span (it started when start_recording()
-        // returned), so [pre-roll minus tail] ++ [stream] is contiguous.
-        let duplicateCount = min(preRoll.count, Int(startLatency * Self.sttSampleRate))
+    static func preRollWindow(elapsed: Double, captured: Double) -> (duration: Double, duplicateSamples: Int) {
+        (min(8, preRollSeconds + max(0, elapsed)), max(0, Int(captured * sttSampleRate)))
+    }
+
+    private func primeWithPreRollIfNeeded() {
+        guard preRollPending, let startedAt = utteranceStartedAt else { return }
+        preRollPending = false
+        let elapsed = Date().timeIntervalSince(startedAt)
+        let window = Self.preRollWindow(elapsed: elapsed, captured: get_recorded_seconds())
+        let preRoll = MicManager.shared.snapshotRecentSamples(
+            durationSeconds: window.duration,
+            targetSampleRate: Self.sttSampleRate)
+        guard !preRoll.isEmpty else { return }
+        // Native samples overlap the tail of Swift's continuously captured
+        // ring. Only prepend audio preceding the native stream's start.
+        let duplicateCount = min(preRoll.count, window.duplicateSamples)
         let splice = duplicateCount > 0 ? Array(preRoll.dropLast(duplicateCount)) : preRoll
         guard !splice.isEmpty else {
             NSLog("[Voice] pre-roll: fully overlapped by stream (latency %.0f ms) — nothing to inject",
-                  startLatency * 1000)
+                  elapsed * 1000)
             return
         }
 
@@ -134,13 +142,16 @@ final class WhisperCommandListener {
             return prime_recording(base, UInt(buffer.count))
         }
         NSLog("[Voice] pre-roll: injected %d/%d samples (start latency %.0f ms, %.0f ms of audio)",
-              Int(injected), preRoll.count, startLatency * 1000, Double(injected) / (Self.sttSampleRate / 1000))
+              Int(injected), preRoll.count, elapsed * 1000, Double(injected) / (Self.sttSampleRate / 1000))
     }
 
     /// Silence detected. Finishes the utterance; the transcript arrives
     /// asynchronously through BridgeCallbacks → STTRouter.
     func endUtterance() {
         guard utteranceActive else { return }
+        // If Stop arrived while hardware was opening, queue pre-roll before
+        // Stop so a short command retains speech from that startup interval.
+        primeWithPreRollIfNeeded()
         utteranceActive = false
         utteranceStartedAt = nil
         stop_recording()
@@ -157,6 +168,7 @@ final class WhisperCommandListener {
     /// existed. The router calls cancel_recording() itself to finish the
     /// Rust-side audio and release the claim so the pill can start now.
     func cancelUtterance() {
+        preRollPending = false
         utteranceActive = false
         utteranceStartedAt = nil
     }
@@ -165,6 +177,7 @@ final class WhisperCommandListener {
     /// inference and NO callback, then releases the claim. Use when the
     /// utterance must never produce a transcript (mic off, app exit).
     func reset() {
+        preRollPending = false
         if utteranceActive || STTRouter.shared.owner == .command {
             utteranceActive = false
             utteranceStartedAt = nil

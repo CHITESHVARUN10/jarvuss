@@ -271,4 +271,16 @@ final class DictationPolisherTests: XCTestCase {
             output, referenceText: reference, maxDrift: allowance)
         XCTAssertNotNil(text, reasons.description)
     }
+    func testLongDictationKeepsAllWordsAndFinalSentenceWithoutModelRequest() async {
+        let raw = (1...1200).map { "item\($0)" }.joined(separator: " ")
+            + " This is the final sentence that must survive."
+        let rules = TranscriptFormatter.format(raw)
+        let result = await DictationPolisher.polish(rulesOutput: rules, directive: nil)
+        XCTAssertEqual(result.outcome, .tooLong)
+        XCTAssertEqual(result.text, rules.text)
+        XCTAssertEqual(result.text.split(whereSeparator: \.isWhitespace).count, 1208)
+        XCTAssertTrue(result.text.contains("item1200"))
+        XCTAssertTrue(result.text.hasSuffix("This is the final sentence that must survive."))
+    }
+
 }

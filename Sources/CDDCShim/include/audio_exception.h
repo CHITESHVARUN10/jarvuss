@@ -1,6 +1,9 @@
 #pragma once
+#import <AVFAudio/AVFAudio.h>
 #include <CoreFoundation/CoreFoundation.h>
 
-// Swift do/catch cannot intercept AVAudioEngine's Objective-C exceptions.
-// Translate device-change races into a recoverable diagnostic.
-CFStringRef _Nullable JarvisCatchAudioException(void (^ _Nonnull operation)(void)) CF_RETURNS_RETAINED;
+// All potentially throwing Objective-C calls stay inside this implementation.
+// Never execute a Swift operation inside an Objective-C exception catcher.
+CFStringRef _Nullable JarvisStartAudioEngine(AVAudioEngine * _Nonnull engine,
+    AVAudioNodeTapBlock _Nonnull tap) CF_RETURNS_RETAINED;
+void JarvisStopAudioEngine(AVAudioEngine * _Nonnull engine, bool removeTap);

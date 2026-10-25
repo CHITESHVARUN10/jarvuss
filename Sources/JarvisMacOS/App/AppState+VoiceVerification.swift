@@ -2,7 +2,8 @@ import AppKit
 import Foundation
 
 extension AppState {
-    func verifyThenRunCommand(_ command: String) async {
+    func verifyThenRunCommand(_ command: String, capturedAudio: URL? = nil) async {
+        defer { if let capturedAudio { try? FileManager.default.removeItem(at: capturedAudio) } }
         guard voiceProfileReady else {
             voiceVerificationStatus = "Voice Profile Incomplete ⚠️"
             if presentsUI {
@@ -23,7 +24,7 @@ extension AppState {
         }
 
         do {
-            let result = try await attemptVerification()
+            let result = try await attemptVerification(capturedAudio: capturedAudio)
             try Task.checkCancellation()
 
             let wakeWordDetected = TranscriptSanitizer.containsWakeWord(lastRecognizedSpeech)
@@ -159,8 +160,8 @@ extension AppState {
     /// audio window at 16 kHz and calls backend. Silence clips (RMS below
     /// verifyMinClipRMS) are rejected locally: the backend would 400 them
     /// and Resemblyzer would embed noise, so never POST them.
-    func attemptVerification() async throws -> VoiceVerificationResult {
-        let sampleURL = try micManager.exportRecentAudioSample(
+    func attemptVerification(capturedAudio: URL? = nil) async throws -> VoiceVerificationResult {
+        let sampleURL = try capturedAudio ?? micManager.exportRecentAudioSample(
             durationSeconds: Self.verifyAudioSeconds,
             targetSampleRate: Self.voiceSampleRate
         )

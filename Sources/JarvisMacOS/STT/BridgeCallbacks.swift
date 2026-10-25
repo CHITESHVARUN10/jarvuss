@@ -19,6 +19,7 @@ func on_state_changed(phase: AppPhase, model: ModelPhase, session_id: UInt64) {
         // and the command path all depend on a live phase. (A previous
         // version only mirrored for the pill owner, which wedged the
         // controller at Idle forever when callbacks arrived unowned.)
+        if phase == .Processing || phase == .TranscriptReady { controller.captureFinished() }
         controller.phase = phase
         controller.modelPhase = model
         if phase == .Error { controller.errorMessage = get_error_message().toString() }
@@ -81,7 +82,7 @@ func on_transcript_ready(text: RustString, session_id: UInt64) {
             // staleness was the ⌘⇧D-executes-commands bug).
             let actionMode = STTRouter.shared.owner == .action
             NSLog("[Jarvis][STT] transcript route=\(actionMode ? "action" : "pill") chars=\(pillText.count)")
-            let speechSecs = controller.pendingSpeechSecs
+            let speechSecs = get_recorded_seconds()
             StatsRecorder.shared.recordDictation(speechSecs: speechSecs, chars: pillText.count)
             controller.pendingSpeechSecs = 0
             if actionMode {
@@ -150,5 +151,12 @@ func on_download_progress(progress: Float, speed: RustString, remaining: RustStr
         controller.downloadProgress = progress
         controller.downloadSpeed = speed.toString()
         controller.downloadRemaining = remaining.toString()
+    }
+}
+
+func on_capture_started(session_id: UInt64) {
+    DispatchQueue.main.async {
+        guard session_id == get_session_generation() else { return }
+        WhisperCommandListener.shared.captureDidStart()
     }
 }
