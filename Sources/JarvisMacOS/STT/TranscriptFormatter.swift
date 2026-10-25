@@ -26,6 +26,7 @@ enum TranscriptFormatter {
         let inputWords = raw.split(separator: " ").count
 
         var text = normalizeWhitespace(raw)
+        text = TranscriptSanitizer.collapseRepeatedPhrases(text)
 
         let duplicates = collapseDuplicateRuns(text)
         text = duplicates.text

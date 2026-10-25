@@ -8,6 +8,7 @@ enum PlannedAction: Equatable, CustomStringConvertible {
     case closeApp(String)
     case systemInfo(SystemInfoAction)
     case openURL(String)
+    case openURLInBrowser(url: String, browser: String)
     case searchWeb(engine: String, query: String)
     case openFolder(String)
     case openLatestFile(inFolder: String)
@@ -26,6 +27,7 @@ enum PlannedAction: Equatable, CustomStringConvertible {
         case .closeApp(let n):             return "Close '\(n)'"
         case .systemInfo(let i):           return "Info: \(i)"
         case .openURL(let u):              return "Open URL: \(u)"
+        case .openURLInBrowser(let u, let b): return "Open URL in \(b): \(u)"
         case .searchWeb(let e, let q):     return "Search \(e) for '\(q)'"
         case .openFolder(let p):           return "Open folder '\(p)'"
         case .openLatestFile(let f):       return "Open latest file in '\(f)'"

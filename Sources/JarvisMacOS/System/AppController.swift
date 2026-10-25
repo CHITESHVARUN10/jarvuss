@@ -124,6 +124,8 @@ enum AppAliasResolver {
         "Photos": ["photos", "apple photos", "photo", "fotos"],
         "Brave Browser": ["brave", "brave browser", "browser", "web browser"],
         "Firefox": ["firefox", "mozilla firefox", "fox"],
+        "Microsoft Edge": ["edge", "microsoft edge", "ms edge"],
+        "Arc": ["arc", "arc browser"],
         "Mail": ["mail", "apple mail", "email"],
         "Messages": ["messages", "imessage", "message"],
         "Calendar": ["calendar", "apple calendar"],

@@ -31,6 +31,8 @@ enum SafetyGuard {
             return .allowed
         case .openURL(let url):
             return checkURL(url)
+        case .openURLInBrowser(let url, _):
+            return checkURL(url)
         case .searchWeb(let engine, let query):
             _ = engine
             return checkText(query)

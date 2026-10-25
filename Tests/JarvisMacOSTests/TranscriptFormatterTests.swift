@@ -17,6 +17,12 @@ final class TranscriptFormatterTests: XCTestCase {
         XCTAssertEqual(out.text, "Do it. Do it again.")
     }
 
+    func testRepeatedPhraseLoopCollapses() {
+        let out = TranscriptFormatter.format(
+            "a little bit of a little bit of a little bit of a little bit of")
+        XCTAssertEqual(out.text, "A little bit of.")
+    }
+
     // MARK: - Pass D: fillers
 
     /// THE hostile case from the plan: "like" as a verb must survive.

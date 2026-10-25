@@ -11,14 +11,24 @@ and is executed by `ActionExecutor.swift` today.
   Terminal, Finder, System Settings, GitHub Desktop…)
 - **close app** — `closeApp(name)` via AppleScript quit
 - Known websites open in the browser instead of an app: YouTube, Google,
-  Netflix, GitHub, Twitter/X, Reddit, Instagram, LinkedIn, Gmail, Maps
+  Netflix, GitHub, Twitter/X, Reddit, Instagram, LinkedIn, Gmail, Maps,
+  ChatGPT, Vercel, Claude, Claude Code, Command Code.
 
 ## 2. Web
 - **search** — `searchWeb(engine:query)` — engines: YouTube, Google.
   Phrasings: "search youtube for X", "search X on/in youtube",
   "search on the internet for X", "google X", "search X in brave/chrome"
   (browser name is stripped from the query; opens in default browser).
-- **open URL** — `openURL(url)`
+- **open URL** — `openURL(url)` (system default browser).
+- **open URL in browser** — `openURLInBrowser(url:browser:)` via
+  `open -a <browser> <url>`. The first training pass covers **Brave Browser
+  and Google Chrome only**; the executor also accepts Safari, Firefox,
+  Microsoft Edge, and Arc, but those are not in shards 063–065.
+  Phrasings: "open chatgpt in brave", "open vercel using chrome".
+- **local development** — "open react app" opens `http://localhost:5173`;
+  "open localhost" opens `http://localhost:3000`; a spoken port overrides
+  ("open react app on port 5174", "open localhost:8080"). Local dev opens in
+  Brave Browser unless Chrome is named. Backed by `url.open_in`.
 
 ## 3. Display (DDC / built-in brightness)
 - `setBrightness(0-100)`, `increaseBrightness(by:)`, `decreaseBrightness(by:)`
@@ -81,6 +91,9 @@ and is executed by `ActionExecutor.swift` today.
   already opens YouTube with the query in the URL).
 - The learned model is the primary compound parser: it emits the full ordered
   intent list in one shot. The rule splitter is the fallback.
+- A browser named once carries across following web targets: "open chatgpt in
+  brave and claude code" opens both in Brave. Each emitted `url.open_in`
+  carries the effective browser explicitly.
 - **Nothing is dropped silently.** If neither the model nor the rules parse an
   utterance, it escalates to Qwen, and Qwen's own failure mode is a spoken
   `ai.query` answer — the chain always terminates in a response.

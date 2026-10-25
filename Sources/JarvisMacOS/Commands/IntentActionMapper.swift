@@ -30,6 +30,10 @@ enum IntentActionMapper {
         case "url.open":
             guard let v = stringArg(args, "url") else { return nil }
             return .openURL(v)
+        case "url.open_in":
+            guard let url = stringArg(args, "url"),
+                  let browser = stringArg(args, "browser") else { return nil }
+            return .openURLInBrowser(url: url, browser: browser)
         case "web.search":
             guard let engine = stringArg(args, "engine"), let query = stringArg(args, "query") else { return nil }
             return .searchWeb(engine: engine, query: query)

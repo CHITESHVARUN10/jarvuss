@@ -77,11 +77,84 @@ enum TranscriptSanitizer {
         return output.joined(separator: " ")
     }
 
+    /// Collapses a phrase repeated three or more times in a row. Whisper's
+    /// greedy decoder occasionally gets stuck on silence or low-confidence
+    /// audio ("a little bit of a little bit of …"); the existing word-level
+    /// collapse cannot see multi-word loops. Requiring three full repetitions
+    /// keeps deliberate repetition ("very good very good") intact.
+    ///
+    /// Comparison ignores case and surrounding punctuation; the first
+    /// occurrence's original tokens are kept.
+    static func collapseRepeatedPhrases(
+        _ text: String,
+        maxPhraseWords: Int = 10,
+        minRepeats: Int = 3
+    ) -> String {
+        let tokens = text.split(separator: " ").map(String.init)
+        guard tokens.count >= minRepeats * 2 else { return text }
+
+        func core(_ token: String) -> String {
+            token.lowercased().trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        }
+
+        func phraseMatches(at start: Int, and other: Int, length: Int) -> Bool {
+            guard start >= 0, other >= 0,
+                  start + length <= tokens.count,
+                  other + length <= tokens.count else { return false }
+            for offset in 0..<length {
+                let a = core(tokens[start + offset])
+                let b = core(tokens[other + offset])
+                // Punctuation-only tokens never establish a loop.
+                guard !a.isEmpty, !b.isEmpty, a == b else { return false }
+            }
+            return true
+        }
+
+        var output: [String] = []
+        var index = 0
+
+        while index < tokens.count {
+            var collapsed = false
+            let maxLength = min(maxPhraseWords, (tokens.count - index) / minRepeats)
+
+            if maxLength >= 2 {
+                for length in stride(from: maxLength, through: 2, by: -1) {
+                    var repeats = 1
+                    while index + (repeats + 1) * length <= tokens.count,
+                          phraseMatches(at: index, and: index + repeats * length, length: length) {
+                        repeats += 1
+                    }
+                    if repeats >= minRepeats {
+                        output.append(contentsOf: tokens[index..<(index + length)])
+                        index += repeats * length
+                        collapsed = true
+                        break
+                    }
+                }
+            }
+
+            if !collapsed {
+                output.append(tokens[index])
+                index += 1
+            }
+        }
+
+        return output.joined(separator: " ")
+    }
+
+    /// Used by the polish guard: a repetition that survived the rules pass and
+    /// appeared in model output means the model introduced it, so the rules
+    /// text should win.
+    static func hasRepeatedPhraseLoop(_ text: String) -> Bool {
+        collapseRepeatedPhrases(text) != text
+    }
+
     /// One wake-word-split segment → validated command, or nil to drop.
     static func cleanVoiceSegment(_ segment: String, onLog: ((String) -> Void)? = nil) -> String? {
         var cleaned = sanitizeSpokenCommand(segment)
         cleaned = removeTrailingWakeWordFragment(from: cleaned)
         cleaned = collapseRepeatedWords(cleaned)
+        cleaned = collapseRepeatedPhrases(cleaned)
         cleaned = normalizeMisheardTargets(in: cleaned)
 
         // Strip filler words

@@ -25,6 +25,29 @@ final class TranscriptSanitizerTests: XCTestCase {
         XCTAssertEqual(TranscriptSanitizer.collapseRepeatedWords("open chrome"), "open chrome")
     }
 
+    func testCollapseRepeatedPhraseLoop() {
+        let loop = "a little bit of a little bit of a little bit of a little bit of"
+        XCTAssertEqual(TranscriptSanitizer.collapseRepeatedPhrases(loop), "a little bit of")
+        XCTAssertEqual(
+            TranscriptSanitizer.collapseRepeatedPhrases("please send it please send it please send it"),
+            "please send it"
+        )
+    }
+
+    func testTwoDeliberatePhraseRepeatsAreKept() {
+        XCTAssertEqual(
+            TranscriptSanitizer.collapseRepeatedPhrases("very good very good"),
+            "very good very good"
+        )
+    }
+
+    func testPhraseLoopComparisonIgnoresCase() {
+        XCTAssertEqual(
+            TranscriptSanitizer.collapseRepeatedPhrases("Little bit of little bit of LITTLE BIT OF"),
+            "Little bit of"
+        )
+    }
+
     func testRemoveTrailingWakeWordFragment() {
         XCTAssertEqual(TranscriptSanitizer.removeTrailingWakeWordFragment(from: "open spotify jarv"), "open spotify")
         XCTAssertEqual(TranscriptSanitizer.removeTrailingWakeWordFragment(from: "open spotify"), "open spotify")

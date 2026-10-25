@@ -96,6 +96,15 @@ final class DictationPolisherTests: XCTestCase {
         XCTAssertTrue(reasons.first?.hasPrefix("meta:") ?? false)
     }
 
+    func testModelIntroducedPhraseLoopRejected() {
+        let loop = String(repeating: "a little bit of ", count: 6)
+            .trimmingCharacters(in: .whitespaces)
+        let (text, reasons) = DictationPolisher.sanitize(
+            loop, referenceText: "a little bit of")
+        XCTAssertNil(text)
+        XCTAssertTrue(reasons.contains("repetition-loop"))
+    }
+
     func testLengthDriftRejected() {
         // 2.4x shorter than the reference — the contract is cleanup, not
         // summary; this catches silent summarisation.

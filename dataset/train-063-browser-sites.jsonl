@@ -1,0 +1,99 @@
+{"text": "open claude ai", "intents": [{"name": "url.open", "args": {"url": "https://claude.com"}}]}
+{"text": "please open chat gpt in brave", "intents": [{"name": "url.open_in", "args": {"url": "https://chatgpt.com", "browser": "Brave Browser"}}]}
+{"text": "open up command code", "intents": [{"name": "url.open", "args": {"url": "https://commandcode.ai"}}]}
+{"text": "open youtube using chrome", "intents": [{"name": "url.open_in", "args": {"url": "https://www.youtube.com", "browser": "Google Chrome"}}]}
+{"text": "open vercel dot com with brave", "intents": [{"name": "url.open_in", "args": {"url": "https://vercel.com", "browser": "Brave Browser"}}]}
+{"text": "open you tube using google chrome", "intents": [{"name": "url.open_in", "args": {"url": "https://www.youtube.com", "browser": "Google Chrome"}}]}
+{"text": "open claude code in brave", "intents": [{"name": "url.open_in", "args": {"url": "https://code.claude.com", "browser": "Brave Browser"}}]}
+{"text": "open command code dot com in the chrome browser", "intents": [{"name": "url.open_in", "args": {"url": "https://commandcode.ai", "browser": "Google Chrome"}}]}
+{"text": "open claude code", "intents": [{"name": "url.open", "args": {"url": "https://code.claude.com"}}]}
+{"text": "open versel dot com", "intents": [{"name": "url.open", "args": {"url": "https://vercel.com"}}]}
+{"text": "jarvis open github", "intents": [{"name": "url.open", "args": {"url": "https://github.com"}}]}
+{"text": "open clawed code", "intents": [{"name": "url.open", "args": {"url": "https://code.claude.com"}}]}
+{"text": "open vercel", "intents": [{"name": "url.open", "args": {"url": "https://vercel.com"}}]}
+{"text": "open vercel using google chrome", "intents": [{"name": "url.open_in", "args": {"url": "https://vercel.com", "browser": "Google Chrome"}}]}
+{"text": "please open vercel", "intents": [{"name": "url.open", "args": {"url": "https://vercel.com"}}]}
+{"text": "open chat gpt in chrome", "intents": [{"name": "url.open_in", "args": {"url": "https://chatgpt.com", "browser": "Google Chrome"}}]}
+{"text": "open claude ai with brave browser", "intents": [{"name": "url.open_in", "args": {"url": "https://claude.com", "browser": "Brave Browser"}}]}
+{"text": "please open command code", "intents": [{"name": "url.open", "args": {"url": "https://commandcode.ai"}}]}
+{"text": "open clawed code using google chrome", "intents": [{"name": "url.open_in", "args": {"url": "https://code.claude.com", "browser": "Google Chrome"}}]}
+{"text": "open claude.com", "intents": [{"name": "url.open", "args": {"url": "https://claude.com"}}]}
+{"text": "open claude ai in google chrome", "intents": [{"name": "url.open_in", "args": {"url": "https://claude.com", "browser": "Google Chrome"}}]}
+{"text": "hey jarvis open git hub in brave", "intents": [{"name": "url.open_in", "args": {"url": "https://github.com", "browser": "Brave Browser"}}]}
+{"text": "open you tube", "intents": [{"name": "url.open", "args": {"url": "https://www.youtube.com"}}]}
+{"text": "jarvis open command code dot ai in brave", "intents": [{"name": "url.open_in", "args": {"url": "https://commandcode.ai", "browser": "Brave Browser"}}]}
+{"text": "jarvis open claude code", "intents": [{"name": "url.open", "args": {"url": "https://code.claude.com"}}]}
+{"text": "jarvis open youtube", "intents": [{"name": "url.open", "args": {"url": "https://www.youtube.com"}}]}
+{"text": "open code claude in chrome", "intents": [{"name": "url.open_in", "args": {"url": "https://code.claude.com", "browser": "Google Chrome"}}]}
+{"text": "open commend code", "intents": [{"name": "url.open", "args": {"url": "https://commandcode.ai"}}]}
+{"text": "open github", "intents": [{"name": "url.open", "args": {"url": "https://github.com"}}]}
+{"text": "jarvis open chatgpt", "intents": [{"name": "url.open", "args": {"url": "https://chatgpt.com"}}]}
+{"text": "open claude", "intents": [{"name": "url.open", "args": {"url": "https://claude.com"}}]}
+{"text": "open chat gpt in brave", "intents": [{"name": "url.open_in", "args": {"url": "https://chatgpt.com", "browser": "Brave Browser"}}]}
+{"text": "open claude dot ai", "intents": [{"name": "url.open", "args": {"url": "https://claude.com"}}]}
+{"text": "open git hub in chrome for me", "intents": [{"name": "url.open_in", "args": {"url": "https://github.com", "browser": "Google Chrome"}}]}
+{"text": "open varcel", "intents": [{"name": "url.open", "args": {"url": "https://vercel.com"}}]}
+{"text": "open versel in brave browser", "intents": [{"name": "url.open_in", "args": {"url": "https://vercel.com", "browser": "Brave Browser"}}]}
+{"text": "open github in brave", "intents": [{"name": "url.open_in", "args": {"url": "https://github.com", "browser": "Brave Browser"}}]}
+{"text": "please open chatgpt", "intents": [{"name": "url.open", "args": {"url": "https://chatgpt.com"}}]}
+{"text": "open chat gpt dot com on brave browser", "intents": [{"name": "url.open_in", "args": {"url": "https://chatgpt.com", "browser": "Brave Browser"}}]}
+{"text": "open cloud code", "intents": [{"name": "url.open", "args": {"url": "https://code.claude.com"}}]}
+{"text": "open cloud code in chrome", "intents": [{"name": "url.open_in", "args": {"url": "https://code.claude.com", "browser": "Google Chrome"}}]}
+{"text": "open chat gpt ai", "intents": [{"name": "url.open", "args": {"url": "https://chatgpt.com"}}]}
+{"text": "open command code using google chrome", "intents": [{"name": "url.open_in", "args": {"url": "https://commandcode.ai", "browser": "Google Chrome"}}]}
+{"text": "jarvis open command code", "intents": [{"name": "url.open", "args": {"url": "https://commandcode.ai"}}]}
+{"text": "open git hub", "intents": [{"name": "url.open", "args": {"url": "https://github.com"}}]}
+{"text": "open up github", "intents": [{"name": "url.open", "args": {"url": "https://github.com"}}]}
+{"text": "open claude code with brave browser", "intents": [{"name": "url.open_in", "args": {"url": "https://code.claude.com", "browser": "Brave Browser"}}]}
+{"text": "open command code in brave", "intents": [{"name": "url.open_in", "args": {"url": "https://commandcode.ai", "browser": "Brave Browser"}}]}
+{"text": "open youtube", "intents": [{"name": "url.open", "args": {"url": "https://www.youtube.com"}}]}
+{"text": "open youtube with brave browser", "intents": [{"name": "url.open_in", "args": {"url": "https://www.youtube.com", "browser": "Brave Browser"}}]}
+{"text": "open chat gpt dot com using chrome", "intents": [{"name": "url.open_in", "args": {"url": "https://chatgpt.com", "browser": "Google Chrome"}}]}
+{"text": "please open claude in chrome", "intents": [{"name": "url.open_in", "args": {"url": "https://claude.com", "browser": "Google Chrome"}}]}
+{"text": "open up vercel", "intents": [{"name": "url.open", "args": {"url": "https://vercel.com"}}]}
+{"text": "open vercel dot com in chrome for me", "intents": [{"name": "url.open_in", "args": {"url": "https://vercel.com", "browser": "Google Chrome"}}]}
+{"text": "open claude ai on chrome", "intents": [{"name": "url.open_in", "args": {"url": "https://claude.com", "browser": "Google Chrome"}}]}
+{"text": "jarvis open claude", "intents": [{"name": "url.open", "args": {"url": "https://claude.com"}}]}
+{"text": "open code claude", "intents": [{"name": "url.open", "args": {"url": "https://code.claude.com"}}]}
+{"text": "please open claude code", "intents": [{"name": "url.open", "args": {"url": "https://code.claude.com"}}]}
+{"text": "open up chatgpt", "intents": [{"name": "url.open", "args": {"url": "https://chatgpt.com"}}]}
+{"text": "open up claude", "intents": [{"name": "url.open", "args": {"url": "https://claude.com"}}]}
+{"text": "open up youtube", "intents": [{"name": "url.open", "args": {"url": "https://www.youtube.com"}}]}
+{"text": "open vercel dot com on chrome", "intents": [{"name": "url.open_in", "args": {"url": "https://vercel.com", "browser": "Google Chrome"}}]}
+{"text": "open claude ai in brave for me", "intents": [{"name": "url.open_in", "args": {"url": "https://claude.com", "browser": "Brave Browser"}}]}
+{"text": "open github on chrome", "intents": [{"name": "url.open_in", "args": {"url": "https://github.com", "browser": "Google Chrome"}}]}
+{"text": "open github in brave browser", "intents": [{"name": "url.open_in", "args": {"url": "https://github.com", "browser": "Brave Browser"}}]}
+{"text": "open chat gpt ai using google chrome", "intents": [{"name": "url.open_in", "args": {"url": "https://chatgpt.com", "browser": "Google Chrome"}}]}
+{"text": "open command code on brave browser", "intents": [{"name": "url.open_in", "args": {"url": "https://commandcode.ai", "browser": "Brave Browser"}}]}
+{"text": "open code dot claude dot com", "intents": [{"name": "url.open", "args": {"url": "https://code.claude.com"}}]}
+{"text": "open git hub using brave", "intents": [{"name": "url.open_in", "args": {"url": "https://github.com", "browser": "Brave Browser"}}]}
+{"text": "open youtube in chrome", "intents": [{"name": "url.open_in", "args": {"url": "https://www.youtube.com", "browser": "Google Chrome"}}]}
+{"text": "please open youtube", "intents": [{"name": "url.open", "args": {"url": "https://www.youtube.com"}}]}
+{"text": "open versel", "intents": [{"name": "url.open", "args": {"url": "https://vercel.com"}}]}
+{"text": "open command code dot ai", "intents": [{"name": "url.open", "args": {"url": "https://commandcode.ai"}}]}
+{"text": "open claude in brave", "intents": [{"name": "url.open_in", "args": {"url": "https://claude.com", "browser": "Brave Browser"}}]}
+{"text": "hey jarvis open you tube in brave", "intents": [{"name": "url.open_in", "args": {"url": "https://www.youtube.com", "browser": "Brave Browser"}}]}
+{"text": "open commandcode", "intents": [{"name": "url.open", "args": {"url": "https://commandcode.ai"}}]}
+{"text": "open command code using brave", "intents": [{"name": "url.open_in", "args": {"url": "https://commandcode.ai", "browser": "Brave Browser"}}]}
+{"text": "open cloud code using brave", "intents": [{"name": "url.open_in", "args": {"url": "https://code.claude.com", "browser": "Brave Browser"}}]}
+{"text": "open chatgpt", "intents": [{"name": "url.open", "args": {"url": "https://chatgpt.com"}}]}
+{"text": "please open claude", "intents": [{"name": "url.open", "args": {"url": "https://claude.com"}}]}
+{"text": "open chat gpt dot com", "intents": [{"name": "url.open", "args": {"url": "https://chatgpt.com"}}]}
+{"text": "open command code in chrome", "intents": [{"name": "url.open_in", "args": {"url": "https://commandcode.ai", "browser": "Google Chrome"}}]}
+{"text": "open chatgpt dot com", "intents": [{"name": "url.open", "args": {"url": "https://chatgpt.com"}}]}
+{"text": "open chat gpt", "intents": [{"name": "url.open", "args": {"url": "https://chatgpt.com"}}]}
+{"text": "please open youtube in chrome", "intents": [{"name": "url.open_in", "args": {"url": "https://www.youtube.com", "browser": "Google Chrome"}}]}
+{"text": "open up claude code", "intents": [{"name": "url.open", "args": {"url": "https://code.claude.com"}}]}
+{"text": "please open chatgpt in chrome", "intents": [{"name": "url.open_in", "args": {"url": "https://chatgpt.com", "browser": "Google Chrome"}}]}
+{"text": "can you open versel in brave", "intents": [{"name": "url.open_in", "args": {"url": "https://vercel.com", "browser": "Brave Browser"}}]}
+{"text": "hey jarvis open code claude in brave", "intents": [{"name": "url.open_in", "args": {"url": "https://code.claude.com", "browser": "Brave Browser"}}]}
+{"text": "jarvis open clawed code in chrome", "intents": [{"name": "url.open_in", "args": {"url": "https://code.claude.com", "browser": "Google Chrome"}}]}
+{"text": "open command code", "intents": [{"name": "url.open", "args": {"url": "https://commandcode.ai"}}]}
+{"text": "please open github", "intents": [{"name": "url.open", "args": {"url": "https://github.com"}}]}
+{"text": "open command code dot com", "intents": [{"name": "url.open", "args": {"url": "https://commandcode.ai"}}]}
+{"text": "open versel in brave", "intents": [{"name": "url.open_in", "args": {"url": "https://vercel.com", "browser": "Brave Browser"}}]}
+{"text": "open youtube in brave", "intents": [{"name": "url.open_in", "args": {"url": "https://www.youtube.com", "browser": "Brave Browser"}}]}
+{"text": "jarvis open vercel", "intents": [{"name": "url.open", "args": {"url": "https://vercel.com"}}]}
+{"text": "open vercel dot com", "intents": [{"name": "url.open", "args": {"url": "https://vercel.com"}}]}
+{"text": "open github on google chrome", "intents": [{"name": "url.open_in", "args": {"url": "https://github.com", "browser": "Google Chrome"}}]}
+{"text": "open chat gpt on brave", "intents": [{"name": "url.open_in", "args": {"url": "https://chatgpt.com", "browser": "Brave Browser"}}]}

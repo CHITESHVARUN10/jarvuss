@@ -116,6 +116,9 @@ final class ActionExecutor {
         case .openURL(let url):
             return openURL(url)
 
+        case .openURLInBrowser(let url, let browser):
+            return openURL(url, browser: browser)
+
         case .searchWeb(let engine, let query):
             return executeSearchWeb(engine: engine, query: query, action: action)
 
@@ -287,7 +290,7 @@ final class ActionExecutor {
 
     // MARK: - URL opener
 
-    private func openURL(_ url: String) -> ActionResult {
+    private func openURL(_ url: String, browser: String? = nil) -> ActionResult {
         let normalized = url.hasPrefix("http") ? url : "https://\(url)"
         guard let urlObj = URL(string: normalized) else {
             return ActionResult(
@@ -295,20 +298,32 @@ final class ActionExecutor {
                 message: "Invalid URL: \(url)"
             )
         }
+
+        let resolvedBrowser = browser.map { AppAliasResolver.resolveSpoken($0) }
+        let action: PlannedAction = resolvedBrowser.map {
+            .openURLInBrowser(url: normalized, browser: $0)
+        } ?? .openURL(url)
+
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
-        process.arguments = [urlObj.absoluteString]
+        if let resolvedBrowser {
+            process.arguments = ["-a", resolvedBrowser, urlObj.absoluteString]
+        } else {
+            process.arguments = [urlObj.absoluteString]
+        }
+
         do {
             try process.run()
             guard process.waitUntilExit(timeout: 10) else {
-                return ActionResult(action: .openURL(url), success: false,
+                return ActionResult(action: action, success: false,
                                     message: "Failed to open URL: \(url) — timed out.")
             }
             let ok = process.terminationStatus == 0
-            return ActionResult(action: .openURL(url), success: ok,
-                                message: ok ? "Opened: \(normalized)" : "Failed to open URL: \(url)")
+            let target = resolvedBrowser.map { "\(normalized) in \($0)" } ?? normalized
+            return ActionResult(action: action, success: ok,
+                                message: ok ? "Opened: \(target)" : "Failed to open URL: \(url)")
         } catch {
-            return ActionResult(action: .openURL(url), success: false,
+            return ActionResult(action: action, success: false,
                                 message: "URL open error: \(error.localizedDescription)")
         }
     }

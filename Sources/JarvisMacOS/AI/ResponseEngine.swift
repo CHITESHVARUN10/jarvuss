@@ -65,6 +65,11 @@ final class ResponseEngine: ObservableObject {
                 return "Opening \(host)"
             }
             return "Opening website"
+        case .openURLInBrowser(let url, let browser):
+            if let host = URL(string: url)?.host {
+                return "Opening \(host) in \(browser)"
+            }
+            return "Opening website in \(browser)"
         case .searchWeb(_, let query):  return "Searching for \(query)"
         case .openFolder(let name):     return "Opening \(name) folder"
         case .openLatestFile(let f):    return "Opening latest file in \(f)"

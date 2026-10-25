@@ -112,7 +112,7 @@ struct NoirSystemPage: View {
                         NoirSelect(
                             options: (1...10).map { ($0, "\($0) s") },
                             selection: $dictation.cardDismissSeconds,
-                            width: 76
+                            width: 90
                         )
                     }
                 }

@@ -1,0 +1,219 @@
+{"text": "open react app on port 3000 in chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Google Chrome"}}]}
+{"text": "open vite app in google chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Google Chrome"}}]}
+{"text": "open localhost", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Brave Browser"}}]}
+{"text": "open my local server on port 3001", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3001", "browser": "Brave Browser"}}]}
+{"text": "open port 8080", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8080", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 3001 in google chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3001", "browser": "Google Chrome"}}]}
+{"text": "open react app in port 3000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Brave Browser"}}]}
+{"text": "open my react application in brave browser", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open localhost 8080", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8080", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 3000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 8080 in brave", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8080", "browser": "Brave Browser"}}]}
+{"text": "open the react application", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open react app at localhost 8080", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8080", "browser": "Brave Browser"}}]}
+{"text": "open vite app on port 8080", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8080", "browser": "Brave Browser"}}]}
+{"text": "open localhost port 4173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4173", "browser": "Brave Browser"}}]}
+{"text": "open my react app on port 3000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Brave Browser"}}]}
+{"text": "open localhost port 5174", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5174", "browser": "Brave Browser"}}]}
+{"text": "open localhost:4200", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4200", "browser": "Brave Browser"}}]}
+{"text": "open localhost 5173 using brave browser", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open the react app in google chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Google Chrome"}}]}
+{"text": "open the frontend dev server in google chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Google Chrome"}}]}
+{"text": "open localhost port 8000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8000", "browser": "Brave Browser"}}]}
+{"text": "open react app on 3001", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3001", "browser": "Brave Browser"}}]}
+{"text": "open local host on port 5174", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5174", "browser": "Brave Browser"}}]}
+{"text": "open react app on localhost:3001", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3001", "browser": "Brave Browser"}}]}
+{"text": "open my local server on port 5174", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5174", "browser": "Brave Browser"}}]}
+{"text": "open my react app on port 3001", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3001", "browser": "Brave Browser"}}]}
+{"text": "open vite app on port 8000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8000", "browser": "Brave Browser"}}]}
+{"text": "open the react application in chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Google Chrome"}}]}
+{"text": "open my local server on port 8080", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8080", "browser": "Brave Browser"}}]}
+{"text": "open my local server on port 4173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4173", "browser": "Brave Browser"}}]}
+{"text": "open localhost in port 3001", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3001", "browser": "Brave Browser"}}]}
+{"text": "open localhost 4200 using brave", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4200", "browser": "Brave Browser"}}]}
+{"text": "open my localhost", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Brave Browser"}}]}
+{"text": "open port 3001", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3001", "browser": "Brave Browser"}}]}
+{"text": "open my react app", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open localhost in brave browser", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 3001", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3001", "browser": "Brave Browser"}}]}
+{"text": "open my vite app in chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Google Chrome"}}]}
+{"text": "open localhost 5174", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5174", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 5174 in brave", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5174", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 5173 in chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Google Chrome"}}]}
+{"text": "open react app on port 3000 in brave", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Brave Browser"}}]}
+{"text": "open react app in port 8080", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8080", "browser": "Brave Browser"}}]}
+{"text": "open react app at localhost 4200", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4200", "browser": "Brave Browser"}}]}
+{"text": "open localhost in port 8080", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8080", "browser": "Brave Browser"}}]}
+{"text": "open localhost in port 5174 in chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5174", "browser": "Google Chrome"}}]}
+{"text": "open localhost:8000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8000", "browser": "Brave Browser"}}]}
+{"text": "open react app at port 5174", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5174", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 4173 in brave browser", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4173", "browser": "Brave Browser"}}]}
+{"text": "open react app on localhost:8000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8000", "browser": "Brave Browser"}}]}
+{"text": "open localhost:5173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 4200", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4200", "browser": "Brave Browser"}}]}
+{"text": "open localhost in port 4200", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4200", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 8080 in google chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8080", "browser": "Google Chrome"}}]}
+{"text": "open react app on port 8000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8000", "browser": "Brave Browser"}}]}
+{"text": "open local host on port 3000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Brave Browser"}}]}
+{"text": "open localhost 8000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8000", "browser": "Brave Browser"}}]}
+{"text": "open react app at localhost 8000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8000", "browser": "Brave Browser"}}]}
+{"text": "open localhost port 4200", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4200", "browser": "Brave Browser"}}]}
+{"text": "jarvis open react app", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open my react app on port 8080", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8080", "browser": "Brave Browser"}}]}
+{"text": "open react app on 4200", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4200", "browser": "Brave Browser"}}]}
+{"text": "open localhost 4200 using chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4200", "browser": "Google Chrome"}}]}
+{"text": "open vite app on port 3000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Brave Browser"}}]}
+{"text": "open vite app on port 5173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 8000 in google chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8000", "browser": "Google Chrome"}}]}
+{"text": "open react app in port 4200", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4200", "browser": "Brave Browser"}}]}
+{"text": "open local host on port 5173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open localhost in port 8080 in google chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8080", "browser": "Google Chrome"}}]}
+{"text": "open localhost:3001", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3001", "browser": "Brave Browser"}}]}
+{"text": "open local host on port 8080", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8080", "browser": "Brave Browser"}}]}
+{"text": "open react app at port 8080", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8080", "browser": "Brave Browser"}}]}
+{"text": "open localhost port 3001", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3001", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 4173 in brave", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4173", "browser": "Brave Browser"}}]}
+{"text": "open vite app", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open react app at localhost 3000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Brave Browser"}}]}
+{"text": "open my local server on port 5173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open localhost:5174 with google chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5174", "browser": "Google Chrome"}}]}
+{"text": "open react application", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open local host in brave", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Brave Browser"}}]}
+{"text": "open react app at localhost 4173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4173", "browser": "Brave Browser"}}]}
+{"text": "open localhost 5173 using google chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Google Chrome"}}]}
+{"text": "open local host on port 8000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8000", "browser": "Brave Browser"}}]}
+{"text": "open localhost 4173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4173", "browser": "Brave Browser"}}]}
+{"text": "open localhost 3000 in chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Google Chrome"}}]}
+{"text": "open react app", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open localhost in port 5174", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5174", "browser": "Brave Browser"}}]}
+{"text": "open port 4173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4173", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 5173 in google chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Google Chrome"}}]}
+{"text": "open react app on port 4200 in google chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4200", "browser": "Google Chrome"}}]}
+{"text": "open react app on port 5173 in brave", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open localhost 5173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open vite app on port 5174", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5174", "browser": "Brave Browser"}}]}
+{"text": "open localhost 5173 using chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Google Chrome"}}]}
+{"text": "open localhost in port 4173 in brave", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4173", "browser": "Brave Browser"}}]}
+{"text": "open react app on localhost:3000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Brave Browser"}}]}
+{"text": "open my local server on port 3000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Brave Browser"}}]}
+{"text": "open localhost 8000 using google chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8000", "browser": "Google Chrome"}}]}
+{"text": "open react app on port 4173 in chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4173", "browser": "Google Chrome"}}]}
+{"text": "open port 8000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8000", "browser": "Brave Browser"}}]}
+{"text": "open react app in port 4173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4173", "browser": "Brave Browser"}}]}
+{"text": "open localhost 8080 using brave", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8080", "browser": "Brave Browser"}}]}
+{"text": "open react app on 4173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4173", "browser": "Brave Browser"}}]}
+{"text": "open local host", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Brave Browser"}}]}
+{"text": "open the vite dev server in brave", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open localhost 8000 using chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8000", "browser": "Google Chrome"}}]}
+{"text": "open react app on localhost:4200", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4200", "browser": "Brave Browser"}}]}
+{"text": "open localhost 5174 using brave", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5174", "browser": "Brave Browser"}}]}
+{"text": "open my react app on port 4200", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4200", "browser": "Brave Browser"}}]}
+{"text": "open localhost in port 3000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Brave Browser"}}]}
+{"text": "open localhost in port 3001 in chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3001", "browser": "Google Chrome"}}]}
+{"text": "open react app in brave browser", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open localhost in port 8080 in brave browser", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8080", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 8000 in chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8000", "browser": "Google Chrome"}}]}
+{"text": "open react app in port 8000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8000", "browser": "Brave Browser"}}]}
+{"text": "open react app at port 3000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Brave Browser"}}]}
+{"text": "open localhost 3001 using brave", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3001", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 3001 in brave browser", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3001", "browser": "Brave Browser"}}]}
+{"text": "open my local server", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Brave Browser"}}]}
+{"text": "open react app at localhost 5174", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5174", "browser": "Brave Browser"}}]}
+{"text": "open localhost in port 4200 in brave browser", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4200", "browser": "Brave Browser"}}]}
+{"text": "open vite app on port 3001", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3001", "browser": "Brave Browser"}}]}
+{"text": "open react app at localhost 5173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open my local server on port 4200", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4200", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 5173 in brave browser", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open react app on localhost:4173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4173", "browser": "Brave Browser"}}]}
+{"text": "open react app on 8000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8000", "browser": "Brave Browser"}}]}
+{"text": "open localhost in port 3001 in brave browser", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3001", "browser": "Brave Browser"}}]}
+{"text": "open localhost:4200 with google chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4200", "browser": "Google Chrome"}}]}
+{"text": "open react app at port 5173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 3000 in brave browser", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Brave Browser"}}]}
+{"text": "open react app on 8080", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8080", "browser": "Brave Browser"}}]}
+{"text": "open the vite dev server", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open my react app on port 4173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4173", "browser": "Brave Browser"}}]}
+{"text": "open localhost:3000 with chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Google Chrome"}}]}
+{"text": "open vite app on port 4173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4173", "browser": "Brave Browser"}}]}
+{"text": "open my react app on port 5173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open localhost:3001 with google chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3001", "browser": "Google Chrome"}}]}
+{"text": "open localhost:8080 with chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8080", "browser": "Google Chrome"}}]}
+{"text": "open localhost 5173 using brave", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open my react app in brave browser", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open localhost 5174 using brave browser", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5174", "browser": "Brave Browser"}}]}
+{"text": "open react app on localhost:8080", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8080", "browser": "Brave Browser"}}]}
+{"text": "open localhost:5174", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5174", "browser": "Brave Browser"}}]}
+{"text": "open my local server in brave", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Brave Browser"}}]}
+{"text": "open my vite app", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 5174", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5174", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 4173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4173", "browser": "Brave Browser"}}]}
+{"text": "open port 3000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 3001 in brave", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3001", "browser": "Brave Browser"}}]}
+{"text": "open local server", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Brave Browser"}}]}
+{"text": "open my localhost in chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Google Chrome"}}]}
+{"text": "open react app on localhost:5174", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5174", "browser": "Brave Browser"}}]}
+{"text": "open localhost 8000 using brave browser", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8000", "browser": "Brave Browser"}}]}
+{"text": "open localhost:4173 with brave browser", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4173", "browser": "Brave Browser"}}]}
+{"text": "open react app on localhost:5173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "please open the react app in google chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Google Chrome"}}]}
+{"text": "open react app on port 5173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open localhost 3000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Brave Browser"}}]}
+{"text": "open localhost in port 4173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4173", "browser": "Brave Browser"}}]}
+{"text": "open localhost 4173 using chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4173", "browser": "Google Chrome"}}]}
+{"text": "open localhost port 5173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open localhost in port 5173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open react app at port 4200", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4200", "browser": "Brave Browser"}}]}
+{"text": "open react app at port 8000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8000", "browser": "Brave Browser"}}]}
+{"text": "open my react app on port 5174", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5174", "browser": "Brave Browser"}}]}
+{"text": "open react app in port 3001", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3001", "browser": "Brave Browser"}}]}
+{"text": "open react app on 5173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open react app at port 4173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4173", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 8080 in brave browser", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8080", "browser": "Brave Browser"}}]}
+{"text": "open localhost:3000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 8080", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8080", "browser": "Brave Browser"}}]}
+{"text": "open my local server on port 8000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8000", "browser": "Brave Browser"}}]}
+{"text": "open react app at localhost 3001", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3001", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 5174 in google chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5174", "browser": "Google Chrome"}}]}
+{"text": "open localhost port 8080", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8080", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 5174 in chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5174", "browser": "Google Chrome"}}]}
+{"text": "please open the react app", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 3001 in chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3001", "browser": "Google Chrome"}}]}
+{"text": "open react app on port 3000 in google chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Google Chrome"}}]}
+{"text": "open vite app on port 4200", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4200", "browser": "Brave Browser"}}]}
+{"text": "open react app in port 5173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 4200 in chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4200", "browser": "Google Chrome"}}]}
+{"text": "open localhost:8080", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8080", "browser": "Brave Browser"}}]}
+{"text": "open react app at port 3001", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3001", "browser": "Brave Browser"}}]}
+{"text": "open localhost:4173 with google chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4173", "browser": "Google Chrome"}}]}
+{"text": "open react application in google chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Google Chrome"}}]}
+{"text": "open react app on 5174", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5174", "browser": "Brave Browser"}}]}
+{"text": "open react app in port 5174", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5174", "browser": "Brave Browser"}}]}
+{"text": "open my react application", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open localhost:4173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4173", "browser": "Brave Browser"}}]}
+{"text": "open the react app", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 4200 in brave browser", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4200", "browser": "Brave Browser"}}]}
+{"text": "open local server in google chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Google Chrome"}}]}
+{"text": "open the frontend dev server", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open localhost in port 8000 in brave", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8000", "browser": "Brave Browser"}}]}
+{"text": "open local host on port 3001", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3001", "browser": "Brave Browser"}}]}
+{"text": "open localhost 3001", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3001", "browser": "Brave Browser"}}]}
+{"text": "open localhost 3000 using brave", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Brave Browser"}}]}
+{"text": "open local host on port 4173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4173", "browser": "Brave Browser"}}]}
+{"text": "open local host on port 4200", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4200", "browser": "Brave Browser"}}]}
+{"text": "open localhost in port 3000 in google chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Google Chrome"}}]}
+{"text": "jarvis open react app in google chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Google Chrome"}}]}
+{"text": "open react app on port 4173 in google chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4173", "browser": "Google Chrome"}}]}
+{"text": "open my react app on port 8000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8000", "browser": "Brave Browser"}}]}
+{"text": "open port 5173", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5173", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 4200 in brave", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4200", "browser": "Brave Browser"}}]}
+{"text": "open localhost in port 8000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8000", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 8000 in brave", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8000", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 8000 in brave browser", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8000", "browser": "Brave Browser"}}]}
+{"text": "open react app on port 8080 in chrome", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:8080", "browser": "Google Chrome"}}]}
+{"text": "open react app on port 5174 in brave browser", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5174", "browser": "Brave Browser"}}]}
+{"text": "open localhost port 3000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Brave Browser"}}]}
+{"text": "open port 4200", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4200", "browser": "Brave Browser"}}]}
+{"text": "open react app on 3000", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Brave Browser"}}]}
+{"text": "open localhost 3000 using brave browser", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:3000", "browser": "Brave Browser"}}]}
+{"text": "open port 5174", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:5174", "browser": "Brave Browser"}}]}
+{"text": "open localhost 4200", "intents": [{"name": "url.open_in", "args": {"url": "http://localhost:4200", "browser": "Brave Browser"}}]}

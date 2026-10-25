@@ -5,6 +5,7 @@
     "app.open":              { "args": ["name"],    "types": { "name": "str" } },
     "app.close":             { "args": ["name"],    "types": { "name": "str" } },
     "url.open":              { "args": ["url"],     "types": { "url": "str" } },
+    "url.open_in":           { "args": ["url", "browser"], "types": { "url": "str", "browser": "str" } },
     "web.search":            { "args": ["engine", "query"], "types": { "engine": "str", "query": "str" } },
     "display.brightness_set":{ "args": ["level"],   "types": { "level": "int" } },
     "display.brightness_up": { "args": ["by"],      "types": { "by": "int" } },

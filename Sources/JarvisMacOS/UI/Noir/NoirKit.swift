@@ -107,7 +107,7 @@ struct NoirPage<Content: View>: View {
     @ViewBuilder var content: () -> Content
 
     var body: some View {
-        ScrollView(.vertical, showsIndicators: false) {
+        ScrollView(.vertical, showsIndicators: true) {
             VStack(alignment: .leading, spacing: 0) {
                 NoirPageHead(eyebrow: eyebrow, title: title, sub: sub, trailing: trailing)
                 content()
@@ -117,7 +117,172 @@ struct NoirPage<Content: View>: View {
             .padding(.bottom, 44)
             .frame(maxWidth: 1000, alignment: .leading)
             .frame(maxWidth: .infinity, alignment: .center)
+            .background(NoirScrollbarInstaller())
         }
+        .scrollIndicators(.visible)
+    }
+}
+
+/// SwiftUI's overlay scroller auto-hides on macOS, which leaves long settings
+/// pages with no visible thumb. This installs a persistent, draggable scroll
+/// indicator inside the page's NSScrollView.
+private struct NoirScrollbarInstaller: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView(frame: .zero)
+        scheduleInstall(from: view)
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        scheduleInstall(from: nsView)
+    }
+
+    private func scheduleInstall(from view: NSView) {
+        DispatchQueue.main.async { install(from: view) }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { install(from: view) }
+    }
+
+    private func install(from view: NSView) {
+        let windowScroll = view.window?.contentView.flatMap { findScrollView(in: $0) }
+        guard let scroll = nearestScrollView(from: view) ?? windowScroll else { return }
+        let identifier = NSUserInterfaceItemIdentifier("noir.scrollbar")
+        guard !scroll.subviews.contains(where: { $0.identifier == identifier }) else { return }
+
+        let overlay = NoirScrollOverlay(scrollView: scroll)
+        overlay.identifier = identifier
+        overlay.frame = NSRect(x: max(0, scroll.bounds.width - 10),
+                               y: 0,
+                               width: 10,
+                               height: scroll.bounds.height)
+        overlay.autoresizingMask = [NSView.AutoresizingMask.minXMargin, NSView.AutoresizingMask.height]
+        scroll.addSubview(overlay)
+        scroll.hasVerticalScroller = false
+        scroll.autohidesScrollers = true
+    }
+
+    private func nearestScrollView(from view: NSView) -> NSScrollView? {
+        var node = view.superview
+        while let current = node {
+            if let scroll = current as? NSScrollView { return scroll }
+            node = current.superview
+        }
+        return nil
+    }
+
+    private func findScrollView(in view: NSView) -> NSScrollView? {
+        if let scroll = view as? NSScrollView { return scroll }
+        for child in view.subviews {
+            if let found = findScrollView(in: child) { return found }
+        }
+        return nil
+    }
+}
+
+/// Always-visible 4pt track with a proportional thumb. Click the track to
+/// jump, drag the thumb to scroll. The thumbnail is intentionally quiet so
+/// the page still reads as a static settings surface.
+private final class NoirScrollOverlay: NSView {
+    private weak var scrollView: NSScrollView?
+    private var boundsObserver: NSObjectProtocol?
+    private var frameObserver: NSObjectProtocol?
+    private var dragOffset: CGFloat?
+
+    init(scrollView: NSScrollView) {
+        self.scrollView = scrollView
+        super.init(frame: .zero)
+        wantsLayer = true
+        layer?.backgroundColor = NSColor.clear.cgColor
+        scrollView.contentView.postsBoundsChangedNotifications = true
+        scrollView.postsFrameChangedNotifications = true
+        boundsObserver = NotificationCenter.default.addObserver(
+            forName: NSView.boundsDidChangeNotification,
+            object: scrollView.contentView,
+            queue: .main
+        ) { [weak self] _ in self?.needsDisplay = true }
+        frameObserver = NotificationCenter.default.addObserver(
+            forName: NSView.frameDidChangeNotification,
+            object: scrollView.contentView,
+            queue: .main
+        ) { [weak self] _ in self?.needsDisplay = true }
+    }
+
+    required init?(coder: NSCoder) { nil }
+
+    deinit {
+        if let boundsObserver { NotificationCenter.default.removeObserver(boundsObserver) }
+        if let frameObserver { NotificationCenter.default.removeObserver(frameObserver) }
+    }
+
+    override var isFlipped: Bool { true }
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+
+    private struct Metrics {
+        let track: NSRect
+        let thumb: NSRect
+        let maxScroll: CGFloat
+    }
+
+    private func metrics() -> Metrics? {
+        guard let scrollView,
+              let document = scrollView.documentView else { return nil }
+        let documentHeight = document.frame.height
+        let viewportHeight = scrollView.contentView.bounds.height
+        guard documentHeight > viewportHeight + 1, bounds.height > 24 else { return nil }
+
+        let track = NSRect(x: (bounds.width - 5) / 2, y: 6, width: 5, height: bounds.height - 12)
+        let thumbHeight = max(36, track.height * (viewportHeight / documentHeight))
+        let maxScroll = documentHeight - viewportHeight
+        let progress = min(max(scrollView.contentView.bounds.origin.y / maxScroll, 0), 1)
+        let thumbY = track.minY + (track.height - thumbHeight) * progress
+        let thumb = NSRect(x: track.minX, y: thumbY, width: track.width, height: thumbHeight)
+        return Metrics(track: track, thumb: thumb, maxScroll: maxScroll)
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        guard let metrics = metrics() else { return }
+
+        NSColor.white.withAlphaComponent(0.07).setFill()
+        NSBezierPath(roundedRect: metrics.track, xRadius: 2.5, yRadius: 2.5).fill()
+
+        NSColor.white.withAlphaComponent(0.30).setFill()
+        NSBezierPath(roundedRect: metrics.thumb, xRadius: 2.5, yRadius: 2.5).fill()
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        guard let metrics = metrics() else { return }
+        let point = convert(event.locationInWindow, from: nil)
+
+        if metrics.thumb.contains(point) {
+            dragOffset = point.y - metrics.thumb.minY
+        } else {
+            dragOffset = metrics.thumb.height / 2
+            scroll(toThumbY: point.y - dragOffset!, metrics: metrics)
+        }
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        guard let metrics = metrics(), let dragOffset else { return }
+        let point = convert(event.locationInWindow, from: nil)
+        scroll(toThumbY: point.y - dragOffset, metrics: metrics)
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        dragOffset = nil
+    }
+
+    private func scroll(toThumbY rawY: CGFloat, metrics: Metrics) {
+        guard let scrollView else { return }
+        let travel = max(1, metrics.track.height - metrics.thumb.height)
+        let y = min(max(rawY, metrics.track.minY), metrics.track.maxY - metrics.thumb.height)
+        let progress = (y - metrics.track.minY) / travel
+        let target = progress * metrics.maxScroll
+
+        scrollView.contentView.scroll(to: NSPoint(
+            x: scrollView.contentView.bounds.origin.x,
+            y: target
+        ))
+        scrollView.reflectScrolledClipView(scrollView.contentView)
+        needsDisplay = true
     }
 }
 

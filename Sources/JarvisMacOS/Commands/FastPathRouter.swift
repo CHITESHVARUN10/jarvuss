@@ -25,6 +25,15 @@ enum FastPathRouter {
             return .execute([.openApp(resolveApp(shortcut))])
         }
 
+        // Browser-targeted site and local dev URLs must run before the app
+        // resolver, or "open chatgpt in brave" is treated as an app name.
+        if let target = OpenTargetResolver.parseOpenInBrowser(lower) {
+            return .execute([.openURLInBrowser(url: target.url, browser: target.browser)])
+        }
+        if let target = OpenTargetResolver.parseLocalDev(lower) {
+            return .execute([.openURLInBrowser(url: target.url, browser: target.browser)])
+        }
+
         // open/launch/start/run/close/quit + target (one app, no conjunction)
         if !lower.contains(" and ") && !lower.contains(" then ") {
             if let action = singleAppCommand(lower) {
@@ -96,7 +105,9 @@ enum FastPathRouter {
             let target = String(lower.dropFirst(verb.prefix.count))
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             guard !target.isEmpty, target.split(separator: " ").count <= 4 else { return nil }
-            if let url = websiteURL(for: target) { return .openURL(url) }
+            if let url = websiteURL(for: target) ?? OpenTargetResolver.siteURL(for: target) {
+                return .openURL(url)
+            }
             let resolved = resolveApp(target)
             return verb.close ? .closeApp(resolved) : .openApp(resolved)
         }
@@ -111,7 +122,10 @@ enum FastPathRouter {
         for (name, url) in sites {
             if lower == "open \(name)" || lower == name { return url }
         }
-        return nil
+        if lower.hasPrefix("open ") {
+            return OpenTargetResolver.siteURL(for: String(lower.dropFirst("open ".count)))
+        }
+        return OpenTargetResolver.siteURL(for: lower)
     }
 
     private static func websiteURL(for target: String) -> String? {

@@ -20,7 +20,8 @@ from real usage patterns — **not** programmatically generated.
 | intent | args |
 |---|---|
 | `app.open` / `app.close` | `name` (canonical app name) |
-| `url.open` | `url` |
+| `url.open` | `url` (system default browser) |
+| `url.open_in` | `url`, `browser` (first training pass: Brave Browser, Google Chrome) |
 | `web.search` | `engine` (YouTube\|Google), `query` |
 | `display.brightness_set` | `level` 0–100 |
 | `display.brightness_up` / `display.brightness_down` | `by` |
@@ -54,6 +55,23 @@ from real usage patterns — **not** programmatically generated.
 7. "stop [the music]" → `media.pause`.
 8. Non-action / complex / general-knowledge input → `ai.query`.
 9. Wake words are noise: "jarvis open spotify" = "open spotify".
+10. A site opened without a browser uses `url.open` (system default). Any
+    explicitly named browser uses `url.open_in` with the canonical browser
+    name — never `app.open` followed by `url.open`, which would silently use
+    the default browser.
+11. The first training pass covers **Brave Browser and Google Chrome only**.
+    Edge, Arc, Safari, and Firefox are deliberately excluded from the shards;
+    the executor still understands them, but they are not model targets yet.
+12. "open chatgpt in brave" and "open chat gpt in chrome" carry the browser
+    target; aliases/typos (chat gpt, versel, cloud code, commandcode) still
+    resolve to the canonical site URL.
+13. Local development phrases use `url.open_in`:
+    "open react app" → `http://localhost:5173`, "open localhost" →
+    `http://localhost:3000`, and a spoken port overrides the default. Local
+    dev opens in Brave Browser unless Chrome is named.
+14. In compounds, a browser named once applies to the following site(s)
+    ("open chatgpt in brave and claude code" → both Brave). Every intent in
+    the label repeats the effective browser explicitly.
 
 ## Files
 
@@ -63,11 +81,17 @@ from real usage patterns — **not** programmatically generated.
 - `train-061-files.jsonl` — file exploration (`files.query`), 1176 rows
 - `train-062-compound.jsonl` — compound multi-intent commands (2-4 ordered
   intents), 704 rows
+- `train-063-browser-sites.jsonl` — browser-targeted website opens
+  (`url.open` / `url.open_in`), 99 rows
+- `train-064-localhost.jsonl` — React/Vite/localhost/port opens, 219 rows
+- `train-065-compound-browser.jsonl` — compound browser + local-dev + mixed
+  actions, 137 rows
 
-The two generated shards are rebuilt by `training/generate_datasets.py`.
-Before them, **every example in this dataset was single-intent** — which is
-why compound speech ("open spotify, open whatsapp and also open youtube and
-in spotify play a song") never produced a plan.
+`train-061` and `train-062` are rebuilt by `training/generate_datasets.py`.
+`train-063`–`train-065` add browser targeting, local development URLs, and
+their compound forms. Before 061, **every example in this dataset was
+single-intent** — which is why compound speech ("open spotify, open whatsapp
+and also open youtube and in spotify play a song") never produced a plan.
 
 ## Post-training / RL
 

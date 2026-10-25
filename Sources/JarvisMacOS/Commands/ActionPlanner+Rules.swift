@@ -110,6 +110,14 @@ extension ActionPlanner {
 
     func parseSinglePhrase(_ lower: String, originalRaw: String) -> [PlannedAction] {
 
+        // ── Browser-targeted and local dev URLs ─────────────────────
+        if let target = OpenTargetResolver.parseOpenInBrowser(lower) {
+            return [.openURLInBrowser(url: target.url, browser: target.browser)]
+        }
+        if let target = OpenTargetResolver.parseLocalDev(lower) {
+            return [.openURLInBrowser(url: target.url, browser: target.browser)]
+        }
+
         // ── Browser URL shortcuts (always use system default browser) ──
         if lower.hasPrefix("open youtube") || lower == "youtube" {
             return [.openURL("https://www.youtube.com")]
@@ -132,9 +140,10 @@ extension ActionPlanner {
         }
 
         // ── "open X in chrome/brave/firefox/safari" ─────────────────
-        // Only when the user EXPLICITLY names a browser
+        // Only when the user EXPLICITLY names a browser. Opens the URL in
+        // that browser directly (open -a), never in the default browser.
         if let (site, browser) = parseOpenInBrowser(lower) {
-            return [.openApp(resolveApp(browser)), .openURL(site)]
+            return [.openURLInBrowser(url: site, browser: AppAliasResolver.resolveSpoken(browser))]
         }
 
         // ── Open folder + latest file ───────────────────────────────
@@ -160,6 +169,10 @@ extension ActionPlanner {
         for prefix in ["launch ", "start ", "run ", "open "] {
             if lower.hasPrefix(prefix) {
                 let target = String(lower.dropFirst(prefix.count))
+                if let url = knownWebsiteURL(for: target) ?? OpenTargetResolver.siteURL(for: target) {
+                    NSLog("[Intent] detected: open_url(%@)", url)
+                    return [.openURL(url)]
+                }
                 let resolved = resolveApp(target)
                 NSLog("[Intent] detected: open_app(%@)", resolved)
                 NSLog("[Block] prevented AI fallback → open_app")
@@ -275,6 +288,7 @@ extension ActionPlanner {
     /// Maps common spoken website names to their canonical URLs.
     /// Add new sites here only — do NOT add native apps (Spotify, WhatsApp, etc.).
     func knownWebsiteURL(for target: String) -> String? {
+        if let url = OpenTargetResolver.siteURL(for: target) { return url }
         let t = target.lowercased().trimmingCharacters(in: .whitespaces)
         switch t {
         case "youtube", "you tube":       return "https://www.youtube.com"
@@ -644,22 +658,11 @@ extension ActionPlanner {
     }
 
     func parseOpenInBrowser(_ lower: String) -> (url: String, browser: String)? {
-        let pattern = #"open (.+) in (chrome|brave|firefox|safari|browser)"#
-        guard let regex = try? NSRegularExpression(pattern: pattern),
-              let match = regex.firstMatch(in: lower, range: NSRange(lower.startIndex..., in: lower)) else {
-            return nil
-        }
-        guard let siteRange   = Range(match.range(at: 1), in: lower),
-              let browserRange = Range(match.range(at: 2), in: lower) else {
-            return nil
-        }
-        let site    = String(lower[siteRange]).trimmingCharacters(in: .whitespaces)
-        let browser = String(lower[browserRange])
-        let url     = siteToURL(site)
-        return (url, browser)
+        OpenTargetResolver.parseOpenInBrowser(lower)
     }
 
     func siteToURL(_ site: String) -> String {
+        if let url = OpenTargetResolver.siteURL(for: site) { return url }
         let known: [String: String] = [
             "youtube":  "https://www.youtube.com",
             "google":   "https://www.google.com",
