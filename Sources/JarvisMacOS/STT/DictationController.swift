@@ -467,6 +467,7 @@ final class DictationController: ObservableObject {
     }
 
     private func startDictation() {
+        CrashDiagnostics.shared.record("capture_requested", fields: ["mode": String(describing: mode), "limit_minutes": String(recordingLimitMinutes)])
         shortcutPreparing = false
         captureStarting = true
         recordedSeconds = 0
@@ -568,6 +569,7 @@ final class DictationController: ObservableObject {
     }
 
     private func stopDictation() {
+        CrashDiagnostics.shared.record("capture_stop_requested")
         NSLog("[Jarvis][STT] Recording stopped — starting inference")
         let speechSecs = capture.seconds()
         pendingSpeechSecs = speechSecs
@@ -927,6 +929,7 @@ final class DictationController: ObservableObject {
     }
 
     func dismissTranscript() {
+        CrashDiagnostics.shared.record("pill_dismissed")
         shortcutPreparing = false
         captureStarting = false
         PillShortcutCoordinator.shared.cancel()

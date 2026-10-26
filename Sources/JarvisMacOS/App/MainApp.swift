@@ -7,6 +7,7 @@ struct MainApp: App {
     @NSApplicationDelegateAdaptor(DictationAppDelegate.self) private var dictationDelegate
 
     init() {
+        CrashDiagnostics.shared.start()
         // Policy must be set early so the dock icon is correct; raising the
         // window lives in applicationDidFinishLaunching, where the scenes
         // actually exist to be raised (this init call was too early and a

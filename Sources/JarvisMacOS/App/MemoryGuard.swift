@@ -97,6 +97,7 @@ final class MemoryGuard {
         terminating = true
         let message = "footprint \(Self.gbString(footprint)) GB exceeded the "
             + "\(Self.gbString(limit)) GB limit — terminating"
+        CrashDiagnostics.shared.markExit(reason: "memory_guard: \(message)")
         NSLog("[Memory] %@", message)
         Self.appendLog(message)
         DispatchQueue.main.async { NSApp.terminate(nil) }

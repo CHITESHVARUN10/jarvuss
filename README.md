@@ -217,6 +217,16 @@ and the backend bundled — prefer it):
 ./scripts/package_jarvis_app.zsh     # builds Rust cores + app, bundles backend, signs, opens
 ```
 
+After frontend changes, refresh an existing bundle without reinstalling backend dependencies or importing settings:
+
+```zsh
+./scripts/package_jarvis_app.zsh --refresh-app --install
+```
+
+`--install` quits the running app, updates `/Applications/Jarvis.app`, verifies its binary ID/signature, and opens that copy. Omit it to refresh only `.build/Jarvis.app`. `swift build` alone updates the development executable, leaving both app bundles unchanged. About shows the source revision and binary ID so you can verify which build is running.
+
+Crash diagnostics are enabled automatically. **About → Diagnostics** opens `~/Library/Application Support/Jarvis/logs/diagnostics` or copies a summary with the running binary ID and latest crash signature. Each session keeps `session.json`, durable `events.jsonl`, and `runtime.log` (Swift/Objective-C/Rust process output). On relaunch, Jarvis detects an unclean previous exit and copies available macOS `.ips` reports into `crashes/`; delayed reports are collected on subsequent checks. A forced kill can leave an unclean session without an Apple report. Recent sessions and reports are retained locally; runtime output rotates at 8 MB. Logs can include dictated text and commands, so review them before sharing.
+
 During development:
 
 ```zsh

@@ -8,6 +8,7 @@ import AppKit
 final class DictationAppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         setvbuf(stdout, nil, _IONBF, 0)
+        CrashDiagnostics.shared.record("application_did_finish_launching")
 
         // Raise the window NOW, not in MainApp.init(). The init call happens
         // before any window exists, and only a bundled launch gets a
@@ -23,6 +24,7 @@ final class DictationAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        CrashDiagnostics.shared.markExit()
         unregisterDictationHotkey()
     }
 
@@ -31,6 +33,7 @@ final class DictationAppDelegate: NSObject, NSApplicationDelegate {
     // nothing and the app looks "vanished". Reopen: activate + front any
     // existing window, or open a fresh main window.
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        CrashDiagnostics.shared.record("application_reopen", fields: ["visible_windows": String(flag)])
         NSLog("[Jarvis] Reopen — visible windows: \(flag)")
         NSApp.activate(ignoringOtherApps: true)
         if !flag {

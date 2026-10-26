@@ -14,6 +14,9 @@ func on_state_changed(phase: AppPhase, model: ModelPhase, session_id: UInt64) {
         guard phase == get_app_phase() else { return }
         let model = get_model_phase()
         let controller = DictationController.shared
+        CrashDiagnostics.shared.record("stt_state", fields: ["phase": String(describing: phase),
+            "model": String(describing: model), "generation": String(session_id),
+            "owner": String(describing: STTRouter.shared.owner)])
 
         // ALWAYS mirror Rust truth — the toggle state machine, the pill,
         // and the command path all depend on a live phase. (A previous
@@ -130,6 +133,7 @@ func on_partial_transcript(text: RustString, session_id: UInt64) {
 
 func on_error(message: RustString, session_id: UInt64) {
     let msg = message.toString()
+    CrashDiagnostics.shared.record("stt_error", fields: ["generation": String(session_id)])
     NSLog("[Jarvis][STT] Error: \(msg)")
     DispatchQueue.main.async {
         guard session_id == get_session_generation() else { return }
@@ -155,6 +159,7 @@ func on_download_progress(progress: Float, speed: RustString, remaining: RustStr
 }
 
 func on_capture_started(session_id: UInt64) {
+    CrashDiagnostics.shared.record("capture_started", fields: ["generation": String(session_id)])
     DispatchQueue.main.async {
         guard session_id == get_session_generation() else { return }
         WhisperCommandListener.shared.captureDidStart()

@@ -2,6 +2,18 @@
 set -euo pipefail
 export MACOSX_DEPLOYMENT_TARGET=26.0
 
+REFRESH_FRONTEND=0
+OPEN_APP=1
+INSTALL_APP=0
+for option in "$@"; do
+  case "$option" in
+    --refresh-app) REFRESH_FRONTEND=1 ;;
+    --no-open) OPEN_APP=0 ;;
+    --install) INSTALL_APP=1 ;;
+    *) echo "Usage: $0 [--refresh-app] [--install] [--no-open]" >&2; exit 2 ;;
+  esac
+done
+
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 BUILD_DIR="$ROOT_DIR/.build/debug"
 APP_BUNDLE="$ROOT_DIR/.build/Jarvis.app"
@@ -15,11 +27,23 @@ USE_PYINSTALLER="${JARVIS_USE_PYINSTALLER:-0}"
 
 cd "$ROOT_DIR"
 
+# A frontend refresh reuses the existing native cores/backend. It never
+# imports configuration, touches Keychain settings, or reinstalls dependencies.
+if (( REFRESH_FRONTEND )); then
+  if [[ ! -f "$APP_CONTENTS/Info.plist" || ! -d "$BACKEND_DEST" || ! -d "$ROOT_DIR/STTCore.xcframework" || ! -d "$ROOT_DIR/RustCore.xcframework" ]]; then
+    echo "No complete existing bundle/native cores. Run full packaging first." >&2
+    exit 1
+  fi
+fi
+source "$ROOT_DIR/scripts/macos_toolchain.zsh"
+
+if (( ! REFRESH_FRONTEND )); then
 # ── Rust STT core → STTCore.xcframework + Swift bridge (required by swift build) ──
 ./scripts/build_stt.sh --release
 
 # ── Rust command core → RustCore.xcframework + UniFFI bindings (linked into the app) ──
 ./scripts/build_rust_core.sh --release
+fi
 
 swift build
 
@@ -33,6 +57,7 @@ mkdir -p "$APP_MACOS" "$BACKEND_DEST"
 cp "$NEW_BIN" "$APP_MACOS/Jarvis"
 chmod +x "$APP_MACOS/Jarvis"
 
+if (( ! REFRESH_FRONTEND )); then
 cp "$ROOT_DIR/scripts/start_backend.sh" "$APP_MACOS/start_backend.sh"
 chmod +x "$APP_MACOS/start_backend.sh"
 
@@ -122,10 +147,29 @@ if [[ "$USE_PYINSTALLER" == "1" ]]; then
   popd >/dev/null
 fi
 
+fi # full backend packaging
+
 # Copy the source-of-truth Info.plist into the bundle (mic usage string
 # is what unlocks the macOS permission prompt — never `swift run`).
 # Source: Sources/JarvisMacOS/Resources/Info.plist
 cp "$ROOT_DIR/Sources/JarvisMacOS/Resources/Info.plist" "$APP_CONTENTS/Info.plist"
+
+# Stamp source identity and verify the bundle contains the binary just built.
+BUILD_REVISION="$(git rev-parse --short=12 HEAD)"
+if [[ -n "$(git status --porcelain --untracked-files=normal)" ]]; then
+  BUILD_REVISION="${BUILD_REVISION}+modified"
+fi
+BUILD_TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+EXECUTABLE_UUID="$(xcrun dwarfdump --uuid "$NEW_BIN" | awk '{print $2; exit}')"
+BUNDLE_UUID="$(xcrun dwarfdump --uuid "$APP_MACOS/Jarvis" | awk '{print $2; exit}')"
+if [[ -z "$EXECUTABLE_UUID" || "$EXECUTABLE_UUID" != "$BUNDLE_UUID" ]]; then
+  echo "Packaged executable does not match the new build." >&2
+  exit 1
+fi
+/usr/libexec/PlistBuddy -c "Add :JarvisBuildRevision string $BUILD_REVISION" "$APP_CONTENTS/Info.plist"
+/usr/libexec/PlistBuddy -c "Add :JarvisBuildTimestamp string $BUILD_TIMESTAMP" "$APP_CONTENTS/Info.plist"
+/usr/libexec/PlistBuddy -c "Add :JarvisExecutableUUID string $EXECUTABLE_UUID" "$APP_CONTENTS/Info.plist"
+echo "[Package] Source $BUILD_REVISION; binary $EXECUTABLE_UUID; built $BUILD_TIMESTAMP"
 
 if [[ -f "$ROOT_DIR/Sources/JarvisMacOS/Resources/AppIcon.icns" ]]; then
   cp "$ROOT_DIR/Sources/JarvisMacOS/Resources/AppIcon.icns" "$APP_RESOURCES/AppIcon.icns"
@@ -163,5 +207,30 @@ else
     || echo "[Package][WARN] codesign failed — app launch may be killed by Gatekeeper"
 fi
 
+codesign --verify --deep "$APP_BUNDLE"
+if (( INSTALL_APP )); then
+  # Never replace executable pages under a running process. Quit normally so
+  # state and the clean-exit marker are saved before copying the new bundle.
+  if pgrep -x Jarvis >/dev/null; then
+    osascript -e 'tell application id "local.jarvis.macos" to quit'
+    for attempt in {1..50}; do
+      if ! pgrep -x Jarvis >/dev/null; then break; fi
+      sleep 0.1
+    done
+    if pgrep -x Jarvis >/dev/null; then
+      echo "Jarvis is still running. Quit it before installing." >&2
+      exit 1
+    fi
+  fi
+  ditto "$APP_BUNDLE" /Applications/Jarvis.app
+  codesign --verify --deep /Applications/Jarvis.app
+  INSTALLED_UUID="$(xcrun dwarfdump --uuid /Applications/Jarvis.app/Contents/MacOS/Jarvis | awk '{print $2; exit}')"
+  if [[ "$INSTALLED_UUID" != "$EXECUTABLE_UUID" ]]; then
+    echo "Installed executable does not match the verified build." >&2
+    exit 1
+  fi
+  APP_BUNDLE=/Applications/Jarvis.app
+  echo "[Package] Installed and verified $INSTALLED_UUID in /Applications"
+fi
 echo "Packaged app bundle: $APP_BUNDLE"
-open "$APP_BUNDLE"
+if (( OPEN_APP )); then open "$APP_BUNDLE"; fi

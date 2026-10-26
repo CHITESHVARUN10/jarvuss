@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 // MARK: - About
 
@@ -19,6 +20,10 @@ struct NoirAboutPage: View {
                     NoirCard {
                         VStack(spacing: 0) {
                             fact("Version", versionText)
+                            NoirDivider()
+                            fact("Source build", DiagnosticBuild.current.revision)
+                            NoirDivider()
+                            fact("Binary ID", String(DiagnosticBuild.current.executableUUID.prefix(8)))
                             NoirDivider()
                             fact("Architecture", "arm64")
                             NoirDivider()
@@ -53,6 +58,24 @@ struct NoirAboutPage: View {
                 ) {
                     NoirSwitch(isOn: $appState.useRustPipeline)
                 }
+            }
+
+            NoirSectionHeading(title: "Diagnostics")
+            NoirCard(padded: true) {
+                Text("Session logs and macOS crash reports stay on this Mac. Runtime logs can include dictated text and commands.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(NoirPalette.secondary)
+                HStack(spacing: 12) {
+                    Button("Open diagnostic logs") {
+                        NSWorkspace.shared.open(CrashDiagnostics.shared.directory)
+                    }
+                    Button("Copy crash summary") {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(CrashDiagnostics.shared.summary, forType: .string)
+                    }
+                }
+                .buttonStyle(NoirButtonStyle(intent: .quiet, small: true))
+                .padding(.top, 12)
             }
 
             NoirSectionHeading(title: "Privacy")

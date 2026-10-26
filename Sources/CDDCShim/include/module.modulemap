@@ -1,0 +1,6 @@
+module CDDCShim {
+    header "cddc_shim.h"
+    header "audio_exception.h"
+    header "exception_diagnostics.h"
+    export *
+}

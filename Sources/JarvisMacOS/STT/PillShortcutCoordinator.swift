@@ -40,6 +40,7 @@ final class PillShortcutCoordinator {
     }
 
     func press(_ mode: PillMode) {
+        CrashDiagnostics.shared.record("shortcut_pressed", fields: ["mode": String(describing: mode)])
         if let pendingMode {
             cancel()
             if pendingMode == mode { return }
