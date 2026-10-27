@@ -300,6 +300,8 @@ final class BackendServiceManager {
         process.arguments = [scriptPath]
 
         do {
+            process.environment = ProcessInfo.processInfo.environment.merging(
+                try CredentialBroker.shared.environment(), uniquingKeysWith: { _, new in new })
             let result = try await process.runCapturingOutputAsync(timeout: 1800)
             let merged = [result.stdout, result.stderr].filter { !$0.isEmpty }.joined(separator: "\n")
             return (result.status == 0, merged.isEmpty ? "no output" : merged)
@@ -347,7 +349,8 @@ final class BackendServiceManager {
             let code = (response as? HTTPURLResponse)?.statusCode ?? 0
             guard (200..<300).contains(code) else { return .unhealthy(statusCode: code) }
             let health = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
-            return health?["api_version"] as? Int == 3 ? .healthy : .unhealthy(statusCode: 409)
+            return health?["api_version"] as? Int == 4 && health?["credential_owner_pid"] as? Int == Int(getpid())
+                ? .healthy : .unhealthy(statusCode: 409)
         } catch {
             return .noResponse(error: error.localizedDescription)
         }

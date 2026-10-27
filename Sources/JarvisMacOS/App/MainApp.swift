@@ -7,6 +7,16 @@ struct MainApp: App {
     @NSApplicationDelegateAdaptor(DictationAppDelegate.self) private var dictationDelegate
 
     init() {
+        if CommandLine.arguments.count == 3, CommandLine.arguments[1] == "--import-env" {
+            do {
+                let text = try String(contentsOfFile: CommandLine.arguments[2], encoding: .utf8)
+                try ConnectionSettingsStore.importLegacy(DotEnvLoader.parse(text))
+                exit(0)
+            } catch {
+                fputs("Jarvis could not import connection settings. Unlock Keychain and try again.\n", stderr)
+                exit(1)
+            }
+        }
         CrashDiagnostics.shared.start()
         // Policy must be set early so the dock icon is correct; raising the
         // window lives in applicationDidFinishLaunching, where the scenes

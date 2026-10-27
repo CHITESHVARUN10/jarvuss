@@ -8,6 +8,7 @@ from __future__ import annotations
 import ctypes
 import json
 import os
+import socket
 import fcntl
 import sys
 import threading
@@ -83,6 +84,8 @@ class Keychain:
         # ExitStack until the synchronous Security call has completed.
         query = own(self.cf.CFDictionaryCreateMutable(None, 0, None, None))
         self.cf.CFDictionarySetValue(query, self._constant("kSecClass"), self._constant("kSecClassGenericPassword"))
+        self.cf.CFDictionarySetValue(query, self._constant("kSecUseAuthenticationUI"),
+                                   self._constant("kSecUseAuthenticationUIFail"))
         for key, value in (("kSecAttrService", KEYCHAIN_SERVICE), ("kSecAttrAccount", account)):
             string = own(self.cf.CFStringCreateWithCString(None, value.encode("utf-8"), 0x08000100))
             self.cf.CFDictionarySetValue(query, self._constant(key), string)
@@ -119,6 +122,57 @@ class Keychain:
                 raise RuntimeError(f"Keychain write failed ({status})")
 
 
+class AppCredentialStore:
+    """Per-launch local IPC. Only the signed Jarvis process touches Keychain."""
+    def __init__(self, path: str, token: str):
+        if not path or not token:
+            raise RuntimeError("Start Jarvis to access saved credentials")
+        self.path, self.token = path, token
+
+    def _request(self, operation: str, **fields):
+        payload = json.dumps({"token": self.token, "operation": operation, **fields}).encode() + b"\n"
+        if len(payload) > 65536:
+            raise RuntimeError("Credential request is too large")
+        try:
+            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as connection:
+                connection.settimeout(90)
+                connection.connect(self.path)
+                connection.sendall(payload)
+                reply = bytearray()
+                while len(reply) <= 65536 and b"\n" not in reply:
+                    chunk = connection.recv(min(4096, 65537 - len(reply)))
+                    if not chunk:
+                        break
+                    reply.extend(chunk)
+            if len(reply) > 65536:
+                raise ValueError("response too large")
+            result = json.loads(reply)
+            if not isinstance(result, dict) or result.get("ok") is not True:
+                raise ValueError("credentials unavailable")
+            return result
+        except (OSError, ValueError):
+            raise RuntimeError("Saved credentials are unavailable. Open Jarvis and unlock your login Keychain or update Connections.") from None
+
+    def get_many(self, keys):
+        if not set(keys) <= SECRET_KEYS:
+            raise ValueError("Unsupported credential")
+        values = self._request("get", keys=list(keys)).get("values")
+        if not isinstance(values, dict) or any(v is not None and not isinstance(v, str) for v in values.values()):
+            raise RuntimeError("Invalid credential response")
+        return {key: values.get(key) for key in keys}
+
+    def get(self, key):
+        return self.get_many([key])[key]
+
+    def set_many(self, values):
+        if not set(values) <= SECRET_KEYS:
+            raise ValueError("Unsupported credential")
+        self._request("set", values=values)
+
+    def set(self, key, value):
+        self.set_many({key: value})
+
+
 class RuntimeConfig:
     def __init__(self, directory: Path | None = None, keychain=None) -> None:
         self.directory = directory or data_directory()
@@ -126,11 +180,14 @@ class RuntimeConfig:
         self._keychain = keychain
         self._lock = threading.RLock()
         self._secrets: dict[str, str | None] = {}
+        self._revision = None
 
     @property
     def keychain(self):
         if self._keychain is None:
-            self._keychain = Keychain()
+            path = os.environ.get("JARVIS_CREDENTIAL_SOCKET", "")
+            token = os.environ.get("JARVIS_CREDENTIAL_TOKEN", "")
+            self._keychain = AppCredentialStore(path, token) if path or token else Keychain()
         return self._keychain
 
     def _settings(self) -> dict[str, str]:
@@ -141,15 +198,33 @@ class RuntimeConfig:
             raise ValueError("Invalid Jarvis connection settings")
         return {k: v for k, v in values.items() if k not in SECRET_KEYS}
 
-    def load(self, defaults: dict[str, str]) -> dict[str, str]:
+    def _signature(self):
+        try:
+            stat = self.path.stat()
+            return stat.st_ino, stat.st_mtime_ns, stat.st_size
+        except FileNotFoundError:
+            return None
+
+    def _refresh_cache(self):
+        current = self._signature()
+        if current != self._revision:
+            self._secrets.clear()
+            self._revision = current
+
+    def load(self, defaults: dict[str, str], secret_keys=SECRET_KEYS) -> dict[str, str]:
+        if not set(secret_keys) <= SECRET_KEYS:
+            raise ValueError("Unsupported credential")
         with self._lock:
+            self._refresh_cache()
             values = {**defaults, **self._settings()}
-            for key in SECRET_KEYS:
-                # The Swift setup wizard also writes this Keychain service.
-                # Read current values so a running backend sees those edits.
-                secret = self._secrets[key] = self.keychain.get(key)
+            missing = [key for key in secret_keys if key not in self._secrets]
+            if missing:
+                fetched = self.keychain.get_many(missing) if hasattr(self.keychain, "get_many") else {
+                    key: self.keychain.get(key) for key in missing}
+                self._secrets.update(fetched)
+            for key in secret_keys:
+                secret = self._secrets.get(key)
                 if secret is None and values.get(key):
-                    # Migrate existing local setup without changing its .env.
                     self.keychain.set(key, values[key])
                     secret = self._secrets[key] = values[key]
                 if secret is not None:
@@ -169,10 +244,15 @@ class RuntimeConfig:
 
     def save(self, updates: dict[str, str]) -> None:
         with self._lock, self._write_lock():
+            self._refresh_cache()
             settings = self._settings()
+            secrets = {key: value for key, value in updates.items() if key in SECRET_KEYS}
+            if secrets and hasattr(self.keychain, "set_many"):
+                self.keychain.set_many(secrets)
             for key, value in updates.items():
                 if key in SECRET_KEYS:
-                    self.keychain.set(key, value)
+                    if not hasattr(self.keychain, "set_many"):
+                        self.keychain.set(key, value)
                     self._secrets[key] = value
                 else:
                     settings[key] = value
@@ -186,6 +266,7 @@ class RuntimeConfig:
                     handle.flush()
                     os.fsync(handle.fileno())
                 os.replace(temp_path, self.path)
+                self._revision = self._signature()
             finally:
                 if temp_path is not None:
                     temp_path.unlink(missing_ok=True)

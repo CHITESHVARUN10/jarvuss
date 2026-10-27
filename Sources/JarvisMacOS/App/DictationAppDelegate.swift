@@ -25,6 +25,7 @@ final class DictationAppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         CrashDiagnostics.shared.markExit()
+        CredentialBroker.shared.stop()
         unregisterDictationHotkey()
     }
 

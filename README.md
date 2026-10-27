@@ -225,6 +225,8 @@ After frontend changes, refresh an existing bundle without reinstalling backend 
 
 `--install` quits the running app, updates `/Applications/Jarvis.app`, verifies its binary ID/signature, and opens that copy. Omit it to refresh only `.build/Jarvis.app`. `swift build` alone updates the development executable, leaving both app bundles unchanged. About shows the source revision and binary ID so you can verify which build is running.
 
+Saved connection credentials stay encrypted in macOS Keychain. The signed Jarvis app handles Keychain access; its Python helper uses a private, authenticated local connection and cached values. Spotify requests do not read PostgreSQL credentials, and saved Setup edits invalidate the cache. Existing entries may ask you to authorize **Jarvis** during the first migration; choose **Always Allow** for a build you trust. Locked Keychains or a changed signing identity can still require authorization. Refreshing an app updates the Swift and Python code without reinstalling backend dependencies.
+
 Crash diagnostics are enabled automatically. **About → Diagnostics** opens `~/Library/Application Support/Jarvis/logs/diagnostics` or copies a summary with the running binary ID and latest crash signature. Each session keeps `session.json`, durable `events.jsonl`, and `runtime.log` (Swift/Objective-C/Rust process output). On relaunch, Jarvis detects an unclean previous exit and copies available macOS `.ips` reports into `crashes/`; delayed reports are collected on subsequent checks. A forced kill can leave an unclean session without an Apple report. Recent sessions and reports are retained locally; runtime output rotates at 8 MB. Logs can include dictated text and commands, so review them before sharing.
 
 During development:

@@ -193,9 +193,9 @@ def _save_embeddings(embeddings: np.ndarray) -> None:
                 temporary.unlink(missing_ok=True)
 
 
-def _load_env_values() -> dict[str, str]:
+def _load_env_values(secret_keys=None) -> dict[str, str]:
     defaults = {**read_env(BASE_DIR / ".env"), **read_env(_repo_env_file()), **os.environ}
-    return _runtime_config.load(defaults)
+    return _runtime_config.load(defaults) if secret_keys is None else _runtime_config.load(defaults, secret_keys=secret_keys)
 
 
 def _persist_env_updates(updates: dict[str, str]) -> None:
@@ -207,7 +207,7 @@ def _persist_env_updates(updates: dict[str, str]) -> None:
 
 
 def _spotify_config() -> dict[str, str]:
-    env = _load_env_values()
+    env = _load_env_values({"SPOTIFY_CLIENT_SECRET"})
     client_id = env.get("SPOTIFY_CLIENT_ID", "")
     client_secret = env.get("SPOTIFY_CLIENT_SECRET", "")
     redirect_uri = env.get("SPOTIFY_REDIRECT_URI", "http://127.0.0.1:8000/spotify/callback")
@@ -281,7 +281,7 @@ def _refresh_spotify_token() -> str:
     config = _spotify_config()
     client_id = config["client_id"]
     client_secret = config["client_secret"]
-    env_values = _load_env_values()
+    env_values = _load_env_values({"SPOTIFY_CLIENT_SECRET", "SPOTIFY_ACCESS_TOKEN", "SPOTIFY_REFRESH_TOKEN"})
 
     refresh_token = (
         str(spotify_tokens.get("refresh_token") or "")
@@ -336,7 +336,7 @@ def _refresh_spotify_token() -> str:
 
 @_token_serialized
 def _get_valid_spotify_access_token() -> str:
-    env_values = _load_env_values()
+    env_values = _load_env_values({"SPOTIFY_CLIENT_SECRET", "SPOTIFY_ACCESS_TOKEN", "SPOTIFY_REFRESH_TOKEN"})
     now = int(time.time())
 
     access_token = (
@@ -760,7 +760,8 @@ def _compute_weighted_score(similarities: list[float]) -> dict:
 
 @app.get("/health")
 def health() -> dict[str, Any]:
-    return {"status": "ok", "api_version": 3}
+    return {"status": "ok", "api_version": 4,
+            "credential_owner_pid": int(os.environ.get("JARVIS_CREDENTIAL_OWNER_PID", "0"))}
 
 
 @app.get("/spotify/login")
@@ -830,7 +831,7 @@ def spotify_callback_alias(
 @app.get("/spotify/status")
 @_token_serialized
 def spotify_status() -> Dict[str, Any]:
-    env_values = _load_env_values()
+    env_values = _load_env_values({"SPOTIFY_CLIENT_SECRET", "SPOTIFY_ACCESS_TOKEN", "SPOTIFY_REFRESH_TOKEN"})
     client_id = env_values.get("SPOTIFY_CLIENT_ID", "")
     has_secret = bool(env_values.get("SPOTIFY_CLIENT_SECRET", ""))
     access_present = bool(
@@ -925,7 +926,7 @@ _PG_ALL_KEYS = ["PGHOST", "PGPORT", "PGDATABASE", "PGUSER", "PGPASSWORD"]
 
 
 def _postgres_values() -> dict[str, str]:
-    env = _load_env_values()
+    env = _load_env_values({"PGPASSWORD"})
     return {key: (str(env.get(key, "") or "") if key == "PGPASSWORD"
                   else str(env.get(key, "") or "").strip()) for key in _PG_ALL_KEYS}
 

@@ -30,6 +30,11 @@ enum RuntimeConfiguration {
     }
 
     static func keychainValue(_ account: String) -> String? {
+        do { return try readKeychainValue(account) }
+        catch { NSLog("[Config] Keychain read unavailable (%d)", (error as NSError).code); return nil }
+    }
+
+    static func readKeychainValue(_ account: String) throws -> String? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: keychainService,
@@ -39,9 +44,9 @@ enum RuntimeConfiguration {
         ]
         var result: CFTypeRef?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
+        if status == errSecItemNotFound { return nil }
         guard status == errSecSuccess, let data = result as? Data else {
-            if status != errSecItemNotFound { NSLog("[Config] Keychain read failed (%d)", status) }
-            return nil
+            throw NSError(domain: NSOSStatusErrorDomain, code: Int(status))
         }
         return String(data: data, encoding: .utf8)
     }

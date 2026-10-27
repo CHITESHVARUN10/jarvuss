@@ -52,6 +52,22 @@ enum ConnectionSettingsStore {
         try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: settingsURL.path)
     }
 
+    /// Import through the signed app, never the generic Python interpreter.
+    /// Existing persisted settings/credentials take precedence over a .env.
+    static func importLegacy(_ values: [String: String]) throws {
+        let allowed = secretKeys.union(["PGHOST", "PGPORT", "PGDATABASE", "PGUSER", "SPOTIFY_CLIENT_ID",
+                                        "SPOTIFY_REDIRECT_URI", "SPOTIFY_ACCESS_TOKEN_EXPIRES_AT"])
+        let existing: [String: String] = FileManager.default.fileExists(atPath: settingsURL.path)
+            ? try JSONDecoder().decode([String: String].self, from: Data(contentsOf: settingsURL)) : [:]
+        var updates: [String: String] = [:]
+        for (key, value) in values where allowed.contains(key) {
+            if secretKeys.contains(key) {
+                if try RuntimeConfiguration.readKeychainValue(key) == nil { updates[key] = value }
+            } else if existing[key] == nil { updates[key] = value }
+        }
+        if !updates.isEmpty { try save(updates) }
+    }
+
     // MARK: - Keychain upsert
 
     static func keychainSet(account: String, value: String) throws {

@@ -118,8 +118,32 @@ class ConfigurationTests(unittest.TestCase):
             store = RuntimeConfig(Path(directory), keychain)
             store.save({"PGPASSWORD": "old"})
             self.assertEqual(store.load({})["PGPASSWORD"], "old")
-            keychain.set("PGPASSWORD", "updated-by-setup")
+            # Swift saves Keychain and atomically replaces the shared settings
+            # file. A second store reproduces that cross-process edit.
+            RuntimeConfig(Path(directory), keychain).save({"PGPASSWORD": "updated-by-setup"})
             self.assertEqual(store.load({})["PGPASSWORD"], "updated-by-setup")
+
+    def test_repeated_loads_cache_only_the_requested_credentials(self):
+        with tempfile.TemporaryDirectory() as directory:
+            keychain = MemoryKeychain()
+            keychain.get = Mock(wraps=keychain.get)
+            store = RuntimeConfig(Path(directory), keychain)
+            for _ in range(8):
+                store.load({}, secret_keys={"SPOTIFY_CLIENT_SECRET", "SPOTIFY_ACCESS_TOKEN", "SPOTIFY_REFRESH_TOKEN"})
+            self.assertEqual(keychain.get.call_count, 3)
+            self.assertNotIn(unittest.mock.call("PGPASSWORD"), keychain.get.call_args_list)
+
+    def test_token_updates_are_cached_and_never_written_to_json(self):
+        with tempfile.TemporaryDirectory() as directory:
+            keychain = MemoryKeychain()
+            keychain.get = Mock(wraps=keychain.get)
+            store = RuntimeConfig(Path(directory), keychain)
+            store.load({})
+            before = keychain.get.call_count
+            store.save({"SPOTIFY_ACCESS_TOKEN": "fresh", "SPOTIFY_ACCESS_TOKEN_EXPIRES_AT": "123"})
+            self.assertEqual(store.load({})["SPOTIFY_ACCESS_TOKEN"], "fresh")
+            self.assertEqual(keychain.get.call_count, before)
+            self.assertEqual(json.loads(store.path.read_text()), {"SPOTIFY_ACCESS_TOKEN_EXPIRES_AT": "123"})
 
     def test_env_is_read_as_literal_data(self):
         with tempfile.TemporaryDirectory() as directory:

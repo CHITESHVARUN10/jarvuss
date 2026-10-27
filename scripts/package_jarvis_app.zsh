@@ -27,7 +27,7 @@ USE_PYINSTALLER="${JARVIS_USE_PYINSTALLER:-0}"
 
 cd "$ROOT_DIR"
 
-# A frontend refresh reuses the existing native cores/backend. It never
+# A refresh reuses native cores/backend dependencies and updates both code paths. It never
 # imports configuration, touches Keychain settings, or reinstalls dependencies.
 if (( REFRESH_FRONTEND )); then
   if [[ ! -f "$APP_CONTENTS/Info.plist" || ! -d "$BACKEND_DEST" || ! -d "$ROOT_DIR/STTCore.xcframework" || ! -d "$ROOT_DIR/RustCore.xcframework" ]]; then
@@ -57,19 +57,14 @@ mkdir -p "$APP_MACOS" "$BACKEND_DEST"
 cp "$NEW_BIN" "$APP_MACOS/Jarvis"
 chmod +x "$APP_MACOS/Jarvis"
 
-if (( ! REFRESH_FRONTEND )); then
 cp "$ROOT_DIR/scripts/start_backend.sh" "$APP_MACOS/start_backend.sh"
 chmod +x "$APP_MACOS/start_backend.sh"
 
 cp "$BACKEND_SRC"/*.py "$BACKEND_DEST/"
 cp "$BACKEND_SRC/requirements.txt" "$BACKEND_DEST/requirements.txt"
-# Migrate local development configuration without embedding credentials or
-# biometrics in the signed application. Existing runtime settings win.
-for ENV_SOURCE in "$BACKEND_DEST/.env" "$ROOT_DIR/.env"; do
-  if [[ -f "$ENV_SOURCE" ]]; then
-    /usr/bin/python3 "$BACKEND_SRC/runtime_config.py" --import-env "$ENV_SOURCE"
-  fi
-done
+if (( ! REFRESH_FRONTEND )); then
+# Native configuration import runs after signing, below. Python never reads
+# Keychain during packaging. Keep legacy bundle files until import succeeds.
 RUNTIME_DATA_DIR="${JARVIS_DATA_DIR:-$HOME/Library/Application Support/Jarvis}"
 case "$RUNTIME_DATA_DIR" in "~/"*) RUNTIME_DATA_DIR="$HOME/${RUNTIME_DATA_DIR:2}" ;; esac
 mkdir -p "$RUNTIME_DATA_DIR"
@@ -81,7 +76,7 @@ if [[ ! -f "$RUNTIME_DATA_DIR/embeddings.npy" ]]; then
   fi
 fi
 # Remove legacy generated bundle copies after migration.
-rm -f "$BACKEND_DEST/.env" "$BACKEND_DEST/embeddings.npy"
+# Legacy files are removed after the signed app imports them below.
 
 # ── Learned intent model (fine-tuned t5-small, int8 ONNX, ~196 MB) ────────
 # Served by voice_auth_service's /parse_intent; the backend resolves it
@@ -199,12 +194,28 @@ SIGN_IDENTITY="$(
     | awk -F'"' '/"/ { print $2; exit }'
 )"
 
+sign_app() {
 if [[ -n "${SIGN_IDENTITY:-}" ]] && codesign --force --deep --sign "$SIGN_IDENTITY" "$APP_BUNDLE" >/dev/null 2>&1; then
   echo "[Package] Signed $APP_BUNDLE with '$SIGN_IDENTITY' (stable — AX grant survives rebuilds)"
 else
   codesign --force --deep --sign - "$APP_BUNDLE" >/dev/null 2>&1 \
     && echo "[Package][WARN] Signed ad-hoc — the Accessibility grant will NOT survive rebuilds (re-add Jarvis in Privacy & Security → Accessibility after each package)" \
     || echo "[Package][WARN] codesign failed — app launch may be killed by Gatekeeper"
+fi
+
+}
+sign_app
+
+if (( ! REFRESH_FRONTEND )); then
+  for ENV_SOURCE in "$BACKEND_DEST/.env" "$ROOT_DIR/.env"; do
+    if [[ -f "$ENV_SOURCE" ]]; then
+      "$APP_MACOS/Jarvis" --import-env "$ENV_SOURCE"
+    fi
+  done
+  if [[ -f "$BACKEND_DEST/.env" || -f "$BACKEND_DEST/embeddings.npy" ]]; then
+    rm -f "$BACKEND_DEST/.env" "$BACKEND_DEST/embeddings.npy"
+    sign_app
+  fi
 fi
 
 codesign --verify --deep "$APP_BUNDLE"
