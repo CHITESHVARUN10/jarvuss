@@ -18,7 +18,7 @@ sys.path.insert(0, str(ROOT / "backend"))
 from intent_router_model import _OnnxIntentEngine
 
 
-def evaluate(model: Path) -> dict:
+def evaluate(model: Path, include_shuffle: bool = False) -> dict:
     engine = _OnnxIntentEngine(model)
     files = {
         "native_search": ROOT / "training/eval_native_search.jsonl",
@@ -26,6 +26,8 @@ def evaluate(model: Path) -> dict:
         "test": ROOT / "dataset/test.jsonl",
         "novel": ROOT / "training/eval_novel.jsonl",
     }
+    if include_shuffle:
+        files["shuffle"] = ROOT / "training/eval_spotify_shuffle.jsonl"
     report = {}
     for name, path in files.items():
         rows = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
@@ -61,14 +63,17 @@ def main() -> int:
     parser.add_argument("--candidate", type=Path, default=ROOT / "training/out/native-search-onnx")
     parser.add_argument("--baseline", type=Path, default=ROOT / "backend/models/intent-t5-small")
     parser.add_argument("--output", type=Path, default=ROOT / "training/out/native-search/evaluation.json")
+    parser.add_argument("--shuffle", action="store_true", help="include the independent shuffle evaluation set")
     args = parser.parse_args()
-    report = {"candidate": evaluate(args.candidate), "baseline": evaluate(args.baseline)}
+    report = {"candidate": evaluate(args.candidate, args.shuffle), "baseline": evaluate(args.baseline, args.shuffle)}
     # Require a strong new-feature result and no aggregate regression on the
     # unchanged independent general-language sets before promoting weights.
     native = report["candidate"]["native_search"]
     candidate_general = sum(report["candidate"][name]["exact"] for name in ("valid", "test", "novel"))
     baseline_general = sum(report["baseline"][name]["exact"] for name in ("valid", "test", "novel"))
     report["promotion_passed"] = native["exact_match"] >= 0.9 and candidate_general >= baseline_general
+    if args.shuffle:
+        report["promotion_passed"] = report["promotion_passed"] and report["candidate"]["shuffle"]["exact_match"] >= 0.9
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + "\n")
     print(f"Promotion gate: {report['promotion_passed']} (general {candidate_general} vs baseline {baseline_general})")

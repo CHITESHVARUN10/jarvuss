@@ -20,6 +20,7 @@ enum FastPathRouter {
         let lower = cleaned.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
         guard !lower.isEmpty else { return .execute([]) }
         if let native = LocalSearchParser.route(cleaned) { return .execute([native]) }
+        if let shuffle = SpotifyShuffleParser.parse(cleaned) { return .execute([.mediaControl(shuffle)]) }
 
         // Single known app shortcut: "chrome", "spotify", "whatsapp"
         if let shortcut = singleAppShortcut(lower) {

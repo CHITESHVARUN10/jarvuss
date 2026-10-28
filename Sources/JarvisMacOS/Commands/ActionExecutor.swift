@@ -503,6 +503,14 @@ final class ActionExecutor {
             backendResult = await callBackendSpotify(path: "/spotify/play-playlist", query: [
                 URLQueryItem(name: "name", value: name)
             ])
+        case .setShuffle(let on):
+            backendResult = await callBackendSpotify(path: "/spotify/shuffle", query: [URLQueryItem(name: "enabled", value: String(on))])
+        case .playLikedWithShuffle(let on):
+            backendResult = await callBackendSpotify(path: "/spotify/play-liked", query: [URLQueryItem(name: "shuffle", value: String(on))])
+        case .playPlaylistWithShuffle(let name, let on):
+            backendResult = await callBackendSpotify(path: "/spotify/play-playlist", query: [
+                URLQueryItem(name: "name", value: name), URLQueryItem(name: "shuffle", value: String(on))
+            ])
         }
 
         switch backendResult {

@@ -84,6 +84,9 @@ final class ResponseEngine: ObservableObject {
             case .previousTrack:        return "Previous track"
             case .playLikedSongs:       return "Playing liked songs"
             case .playPlaylist(let n):  return "Playing \(n)"
+            case .setShuffle(let on): return on ? "Shuffle is on" : "Shuffle is off"
+            case .playLikedWithShuffle(let on): return on ? "Shuffling liked songs" : "Playing liked songs in order"
+            case .playPlaylistWithShuffle(let name, let on): return on ? "Shuffling \(name)" : "Playing \(name) in order"
             }
         case .volumeControl(let a):     return a.responseText
         case .displayControl(let a):    return a.responseText

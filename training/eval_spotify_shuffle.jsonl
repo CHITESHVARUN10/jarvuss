@@ -1,0 +1,12 @@
+{"text": "please put shuffle on", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "current", "name": "", "enabled": true}}
+{"text": "set shuffle mode off", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "current", "name": "", "enabled": false}}
+{"text": "shuffle my saved tracks", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "liked", "name": "", "enabled": true}}
+{"text": "play songs from my liked songs with shuffle", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "liked", "name": "", "enabled": true}}
+{"text": "play my favorites on shuffle", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "liked", "name": "", "enabled": true}}
+{"text": "play liked songs sequentially", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "liked", "name": "", "enabled": false}}
+{"text": "shuffle the Evening Walk playlist", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "Evening Walk", "enabled": true}}
+{"text": "play playlist named Study Session on shuffle", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "Study Session", "enabled": true}}
+{"text": "play my Running Mix playlist and shuffle them", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "Running Mix", "enabled": true}}
+{"text": "play playlist called Calm Piano without shuffle", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "Calm Piano", "enabled": false}}
+{"text": "can you shuffle playlist Weekend", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "Weekend", "enabled": true}}
+{"text": "play songs from my light songs and shuffle it", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "liked", "name": "", "enabled": true}}

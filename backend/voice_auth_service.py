@@ -5,6 +5,8 @@ import json
 import os
 import time
 import threading
+import random
+import re
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 import asyncio
@@ -498,6 +500,9 @@ def _spotify_playback_state(token: str) -> dict:
         "device_id": device.get("id", ""),
         "current_track": item.get("name", "unknown"),
         "item": item.get("name", "unknown"),
+        "track_uri": item.get("uri", ""),
+        "context_uri": (payload.get("context") or {}).get("uri", ""),
+        "shuffle_state": payload.get("shuffle_state"),
     }
     logger.info(f"[Spotify] Playback state {state}")
     return state
@@ -535,10 +540,11 @@ def _spotify_play(token: str, body: dict, action_label: str) -> dict:
 
 
 def _spotify_transport_action(token: str, method: str, path: str, action_label: str,
-                              body: dict | None = None) -> dict:
+                              body: dict | None = None, query: dict[str, str] | None = None,
+                              target_device: str | None = None) -> dict:
     endpoint = f"{method} {path}"
     for attempt in range(2):
-        device_id = _ensure_spotify_active_device(token)
+        device_id = target_device or _ensure_spotify_active_device(token)
         if not device_id:
             if attempt == 0:
                 # A newly launched Spotify process may not have registered
@@ -547,7 +553,7 @@ def _spotify_transport_action(token: str, method: str, path: str, action_label: 
                 continue
             raise HTTPException(status_code=400, detail="No active Spotify device")
         status, _, raw = _spotify_api_request(
-            method, path, token, query={"device_id": device_id}, body=body or {},
+            method, path, token, query={**(query or {}), "device_id": device_id}, body=body,
         )
         reason = "accepted" if 200 <= status < 300 else _spotify_error_reason(status, raw, f"Spotify {action_label} failed")
         _log_spotify_action_attempt(endpoint, status, raw, reason)
@@ -562,6 +568,56 @@ def _spotify_transport_action(token: str, method: str, path: str, action_label: 
             continue
         raise HTTPException(status_code=400, detail=f"Spotify {action_label} failed: {reason}")
     raise HTTPException(status_code=400, detail=f"Spotify {action_label} failed after retry")
+
+
+def _spotify_set_shuffle(token: str, enabled: bool, target_device: str | None = None,
+                         expected_context: str | None = None, expected_tracks: set[str] | None = None) -> dict:
+    result = _spotify_transport_action(token, "PUT", "/v1/me/player/shuffle", "shuffle",
+        query={"state": str(enabled).lower()}, target_device=target_device)
+    # Spotify acknowledges player writes before the client necessarily applies
+    # them. Confirm the mode AND the requested context on the same device.
+    for attempt in range(3):
+        if attempt: time.sleep(0.15 * attempt)
+        state = _spotify_playback_state(token)
+        matches_context = (not expected_context or state.get("context_uri") == expected_context)
+        matches_track = (not expected_tracks or state.get("track_uri") in expected_tracks)
+        if (state.get("shuffle_state") is enabled and state.get("device_id") == result["device_id"]
+                and matches_context and matches_track
+                and (not (expected_context or expected_tracks) or state.get("is_playing") is True)):
+            result.update(shuffle_enabled=enabled, playback_state=state,
+                          message=f"Shuffle {'on' if enabled else 'off'} confirmed")
+            return result
+    raise HTTPException(status_code=409, detail="Spotify did not confirm the requested shuffle mode on the target device. Try again.")
+
+
+def _spotify_play_with_shuffle(token: str, body: dict, enabled: bool, label: str) -> dict:
+    played = _spotify_play(token, body, label)
+    try:
+        confirmed = _spotify_set_shuffle(token, enabled, target_device=played["device_id"],
+            expected_context=body.get("context_uri"), expected_tracks=set(body.get("uris", [])))
+    except HTTPException as error:
+        raise HTTPException(status_code=error.status_code,
+            detail=f"Playback started, but shuffle could not be confirmed: {error.detail}") from error
+    played.update(shuffle_enabled=enabled, playback_state=confirmed["playback_state"],
+                  message=f"{label} with shuffle {'on' if enabled else 'off'} confirmed")
+    return played
+
+
+def _spotify_random_playlist_offset(token: str, uri: str) -> int:
+    playlist_id = uri.rsplit(":", 1)[-1]
+    if not re.fullmatch(r"[a-zA-Z0-9]+", playlist_id):
+        raise HTTPException(status_code=400, detail="Invalid Spotify playlist identifier")
+    # /items is the current API; older Spotify deployments expose /tracks.
+    for suffix in ("items", "tracks"):
+        status, payload, raw = _spotify_api_request("GET", f"/v1/playlists/{playlist_id}/{suffix}", token, query={"limit": "1"})
+        if status == 404 and suffix == "items": continue
+        if not 200 <= status < 300 or not isinstance(payload, dict):
+            raise HTTPException(status_code=400, detail="Spotify could not read this playlist to choose a random starting track.")
+        total = payload.get("total")
+        if type(total) is not int or total <= 0:
+            raise HTTPException(status_code=404, detail="No playable items found in this playlist")
+        return random.SystemRandom().randrange(total)
+    raise HTTPException(status_code=404, detail="Playlist items are unavailable")
 
 
 def _spotify_search_track_uri(token: str, query_text: str) -> str | None:
@@ -656,6 +712,42 @@ def _spotify_liked_track_uris(token: str) -> list[str]:
 # ──────────────────────────────────────────────────────────────────────
 # Audio processing helpers
 # ──────────────────────────────────────────────────────────────────────
+
+def _spotify_shuffled_liked_track_uris(token: str) -> list[str]:
+    # Sample up to five library pages after one count read; build a 50-track queue.
+    # Pages are sampled across the full library, not always the newest saves.
+    def page(offset: int) -> dict:
+        status, payload, _ = _spotify_api_request("GET", "/v1/me/tracks", token,
+            query={"limit": "50", "offset": str(offset)})
+        if not 200 <= status < 300 or not isinstance(payload, dict):
+            raise HTTPException(status_code=400, detail="Spotify could not load saved tracks for shuffle.")
+        return payload
+
+    first = page(0)
+    first_items = first.get("items", [])
+    if not isinstance(first_items, list):
+        raise HTTPException(status_code=502, detail="Spotify returned invalid saved-track data")
+    total = first.get("total", len(first_items))
+    if type(total) is not int or total < 0:
+        raise HTTPException(status_code=400, detail="Spotify returned an invalid saved-track count")
+    if total == 0: return []
+    rng = random.SystemRandom()
+    pages = (total + 49) // 50
+    selected = rng.sample(range(pages), min(5, pages))
+    unique: dict[str, None] = {}
+    for number in selected:
+        payload = first if number == 0 else page(number * 50)
+        items = payload.get("items", [])
+        if not isinstance(items, list):
+            raise HTTPException(status_code=502, detail="Spotify returned invalid saved-track data")
+        for entry in items:
+            track = entry.get("track") if isinstance(entry, dict) else None
+            if not isinstance(track, dict) or track.get("is_local") or track.get("is_playable") is False: continue
+            uri = track.get("uri")
+            if isinstance(uri, str) and uri.startswith("spotify:track:"): unique[uri] = None
+    uris = list(unique)
+    rng.shuffle(uris)
+    return uris[:50]
 
 def _trim_silence(wav: np.ndarray, threshold_db: float = -40.0, frame_len: int = 1024) -> np.ndarray:
     """Trim leading/trailing silence from a waveform."""
@@ -1028,26 +1120,43 @@ def spotify_play_song(name: str = Query(..., min_length=1)) -> dict:
 
 
 @app.post("/spotify/play-playlist")
-def spotify_play_playlist(name: str = Query(..., min_length=1)) -> dict:
+def spotify_play_playlist(name: str = Query(..., min_length=1), shuffle: bool | None = None) -> dict:
     token = _get_valid_spotify_access_token()
     logger.info(f"[Spotify] /spotify/play-playlist name='{name}' token_present={bool(token)}")
     match = _spotify_find_playlist_uri(token, name)
     if not match:
         raise HTTPException(status_code=404, detail=f"Playlist not found: {name}")
     matched_name, uri = match
-    result = _spotify_play(token=token, body={"context_uri": uri}, action_label="play-playlist")
+    body: dict[str, Any] = {"context_uri": uri}
+    if shuffle is True:
+        body["offset"] = {"position": _spotify_random_playlist_offset(token, uri)}
+    result = (_spotify_play(token=token, body=body, action_label="play-playlist") if shuffle is None
+              else _spotify_play_with_shuffle(token, body, shuffle, "play-playlist"))
     result["matched_playlist_name"] = matched_name
     return result
 
 
 @app.post("/spotify/play-liked")
-def spotify_play_liked() -> dict:
+def spotify_play_liked(shuffle: bool | None = None) -> dict:
     token = _get_valid_spotify_access_token()
     logger.info(f"[Spotify] /spotify/play-liked token_present={bool(token)}")
-    uris = _spotify_liked_track_uris(token)
+    uris = _spotify_shuffled_liked_track_uris(token) if shuffle is True else _spotify_liked_track_uris(token)
     if not uris:
-        raise HTTPException(status_code=404, detail="No liked songs found")
-    return _spotify_play(token=token, body={"uris": uris}, action_label="play-liked")
+        detail = "No playable liked tracks were returned in the sampled pages. Try again." if shuffle is True else "No liked songs found"
+        raise HTTPException(status_code=404, detail=detail)
+    return (_spotify_play(token=token, body={"uris": uris}, action_label="play-liked") if shuffle is None
+            else _spotify_play_with_shuffle(token, {"uris": uris}, shuffle, "play-liked"))
+
+
+@app.post("/spotify/shuffle")
+def spotify_shuffle(enabled: bool = Query(...)) -> dict:
+    token = _get_valid_spotify_access_token()
+    # A standalone mode change must not transfer a device with play=True.
+    device = next((entry.get("id") for entry in _spotify_devices(token)
+                   if entry.get("is_active") and entry.get("id")), None)
+    if not device:
+        raise HTTPException(status_code=400, detail="No active Spotify device. Select a device in Spotify before changing shuffle mode.")
+    return _spotify_set_shuffle(token, enabled, target_device=str(device))
 
 
 @app.post("/spotify/pause")

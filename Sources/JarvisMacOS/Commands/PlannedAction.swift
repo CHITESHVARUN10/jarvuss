@@ -125,6 +125,9 @@ enum MediaAction: Equatable, CustomStringConvertible {
     case previousTrack
     case playLikedSongs
     case playPlaylist(String)
+    case setShuffle(Bool)
+    case playLikedWithShuffle(Bool)
+    case playPlaylistWithShuffle(name: String, enabled: Bool)
 
     /// Tool-prompt media spec
     /// ("play|pause|next|prev|liked_songs|play_song:X|play_playlist:X").
@@ -155,6 +158,9 @@ enum MediaAction: Equatable, CustomStringConvertible {
         case .previousTrack:         return "previous track"
         case .playLikedSongs:        return "play liked songs"
         case .playPlaylist(let n):   return "play playlist '\(n)'"
+        case .setShuffle(let on): return "shuffle \(on ? "on" : "off")"
+        case .playLikedWithShuffle(let on): return "shuffle liked songs \(on ? "on" : "off")"
+        case .playPlaylistWithShuffle(let name, let on): return "shuffle playlist '\(name)' \(on ? "on" : "off")"
         }
     }
 }

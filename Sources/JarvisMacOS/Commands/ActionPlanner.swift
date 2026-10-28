@@ -92,6 +92,12 @@ final class ActionPlanner {
             break
         }
 
+        if let shuffle = SpotifyShuffleParser.parse(cleaned) {
+            let actions = [PlannedAction.mediaControl(shuffle)]
+            logPlanEvent(branch: "rule", text: cleaned, requestID: requestID, actions: actions)
+            return actions
+        }
+
         // 2. File-exploration questions ("how many folders do I have") are
         // answered from the filesystem by pure Swift rules. They must never
         // reach the LLM, and the Rust core has no fileQuery action yet — so

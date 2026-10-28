@@ -36,6 +36,16 @@ Full walkthrough with every command and exact phrasings: **[practice.md](practic
 - Apps: open/close with fuzzy matching and aliases ("get her desktop" → GitHub Desktop).
 - Files & folders: create files/folders in `~/Documents/Jarvis`, move, and **explore** — "how many files are in my downloads folder", "what is the latest ppt I have", "open the most recent pdf in downloads", "how much space do my pdfs take" (count, folders, list, largest, oldest, newest, total size, open newest/oldest).
 - Media & system: Spotify playback (play/pause/next/previous, by song, playlist, liked), volume, mute, display brightness (DDC + software), display modes.
+- Spotify shuffle: “shuffle my liked songs”, “play my Gym playlist on shuffle”,
+  “play a song from my light songs, shuffle it”, “shuffle it”, and “turn shuffle
+  off”. Explicit “play … in order” disables shuffle for that collection.
+  Named playlists start at a random position and retain their full Spotify
+  context. Liked Songs uses a randomized queue of up to 50 playable tracks,
+  sampled from up to five pages across the saved library (plus one count read),
+  so it is not restricted to the newest 50 saves. Shuffle is confirmed on the
+  target device/context before success is reported; failures after playback
+  starts are reported as partial failures. Standalone shuffle mode changes do
+  not start an inactive device. Uses [Spotify’s shuffle API](https://developer.spotify.com/documentation/web-api/reference/toggle-shuffle-for-users-playback).
 - Web: search and open URLs.
 - Chained commands: "open spotify, open whatsapp and also open youtube, in spotify play a song" — split and executed in order.
 - **Routines**: reusable multi-action workflows, persisted.

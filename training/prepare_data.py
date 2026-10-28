@@ -26,6 +26,7 @@ SCHEMA_PATH = os.path.join(ROOT, "training", "intent_schema.json")
 OUT_DIR = os.path.join(ROOT, "training", "data")
 NOVEL_PATH = os.path.join(ROOT, "training", "eval_novel.jsonl")
 NATIVE_EVAL_PATH = os.path.join(ROOT, "training", "eval_native_search.jsonl")
+SHUFFLE_EVAL_PATH = os.path.join(ROOT, "training", "eval_spotify_shuffle.jsonl")
 
 INPUT_PREFIX = "parse: "
 DEV_FRACTION = 0.05
@@ -158,6 +159,8 @@ def main() -> int:
 
     native_eval, nerrs = process_file(NATIVE_EVAL_PATH, schema) if os.path.exists(NATIVE_EVAL_PATH) else ([], 0)
     total_errors += nerrs
+    shuffle_eval, serrs = process_file(SHUFFLE_EVAL_PATH, schema) if os.path.exists(SHUFFLE_EVAL_PATH) else ([], 0)
+    total_errors += serrs
 
     print(f"train shards : {len(shards)} files, {len(all_pairs)} examples")
     print(f"valid        : {len(valid)} examples")
@@ -173,7 +176,7 @@ def main() -> int:
     for pair in all_pairs:
         key = pair["input_text"].strip().casefold()
         grouped[key][pair["target_text"]] = pair
-    heldout = {row["input_text"].strip().casefold() for row in valid + test + novel + native_eval}
+    heldout = {row["input_text"].strip().casefold() for row in valid + test + novel + native_eval + shuffle_eval}
     conflicts = sum(len(values) > 1 for values in grouped.values())
     all_pairs = [next(iter(values.values())) for key, values in grouped.items()
                  if len(values) == 1 and key not in heldout]
@@ -197,6 +200,8 @@ def main() -> int:
         write_jsonl(os.path.join(OUT_DIR, "novel.jsonl"), novel)
     if native_eval:
         write_jsonl(os.path.join(OUT_DIR, "native_search_eval.jsonl"), native_eval)
+    if shuffle_eval:
+        write_jsonl(os.path.join(OUT_DIR, "spotify_shuffle_eval.jsonl"), shuffle_eval)
 
     def digest(path):
         with open(path, "rb") as handle:
@@ -205,7 +210,7 @@ def main() -> int:
         "schema_sha256": digest(SCHEMA_PATH),
         "shards": [{"file": os.path.relpath(path, ROOT), "sha256": digest(path)} for path in shards],
         "prepared": {"train": len(train), "dev": len(dev), "excluded_conflicts": conflicts},
-        "eval_only": [os.path.relpath(path, ROOT) for path in (NOVEL_PATH, NATIVE_EVAL_PATH) if os.path.exists(path)],
+        "eval_only": [os.path.relpath(path, ROOT) for path in (NOVEL_PATH, NATIVE_EVAL_PATH, SHUFFLE_EVAL_PATH) if os.path.exists(path)],
     }
     with open(os.path.join(OUT_DIR, "dataset_manifest.json"), "w", encoding="utf-8") as handle:
         json.dump(manifest, handle, indent=2)

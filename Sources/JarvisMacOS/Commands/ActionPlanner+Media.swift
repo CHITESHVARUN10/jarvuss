@@ -2,6 +2,7 @@ import Foundation
 
 extension ActionPlanner {
     func parseMediaCommand(_ lower: String) -> PlannedAction? {
+        if let shuffle = SpotifyShuffleParser.parse(lower) { return .mediaControl(shuffle) }
         let compact = lower.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !compact.isEmpty else { return nil }
 
@@ -193,6 +194,9 @@ extension ActionPlanner {
         MEDIA:
         - play song <name>
         - play liked songs
+        - shuffle my liked songs
+        - play my gym playlist on shuffle
+        - turn shuffle off
         - play <playlist>
         - next track
         - previous track

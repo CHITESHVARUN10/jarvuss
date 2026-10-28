@@ -14,6 +14,12 @@ enum IntentActionMapper {
         for intent in intents {
             guard let name = intent["name"] as? String else { return nil }
             let args = (intent["args"] as? [String: Any]) ?? [:]
+            if name == "media.shuffle" {
+                guard args.isEmpty, intents.count == 1, let sourceText,
+                      let shuffle = SpotifyShuffleParser.parse(sourceText) else { return nil }
+                actions.append(.mediaControl(shuffle))
+                continue
+            }
             if sourceText != nil, ["files.search", "files.result", "settings.open"].contains(name), !args.isEmpty {
                 return nil // The learned filter cannot supply or override native fields.
             }

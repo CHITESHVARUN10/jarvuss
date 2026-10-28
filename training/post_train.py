@@ -176,6 +176,8 @@ def description_to_intent(desc: str) -> dict | None:
         return {"name": "files.result", "args": {}} if match else None
     if desc.startswith("Settings: "):
         return {"name": "settings.open", "args": {}}
+    if re.fullmatch(r"Media: shuffle(?: liked songs| playlist '.+')? (?:on|off)", desc):
+        return {"name": "media.shuffle", "args": {}}
 
     for pattern, name in DESC_PATTERNS:
         match = pattern.match(desc)
@@ -328,7 +330,7 @@ def is_consistent(text: str, intents) -> bool:
                 return False
         elif name == "ai.query":
             return False
-        elif name in ("files.search", "files.result", "settings.open"):
+        elif name in ("files.search", "files.result", "settings.open", "media.shuffle"):
             # A successful API call is not proof of a correct interpretation.
             # Harvest these context-sensitive operations only when the label
             # matches a human-authored correction for the same utterance.
@@ -339,7 +341,7 @@ def is_consistent(text: str, intents) -> bool:
 
 def matches_native_correction(text: str, intent: dict) -> bool:
     key = text.strip().casefold()
-    for filename in ("train-066-native-search.jsonl", "train-067-settings-panes.jsonl", "train-068-result-selection.jsonl", "train-069-native-navigation.jsonl"):
+    for filename in ("train-066-native-search.jsonl", "train-067-settings-panes.jsonl", "train-068-result-selection.jsonl", "train-069-native-navigation.jsonl", "train-070-spotify-shuffle.jsonl"):
         path = os.path.join(ROOT, "dataset", filename)
         if not os.path.exists(path):
             continue
@@ -485,10 +487,12 @@ def train(args, schema: dict) -> int:
         "dev": os.path.join(DATA_DIR, "dev.jsonl"),
     }
     ds = load_dataset("json", data_files=data_files)
+    if args.dev_limit > 0:
+        ds["dev"] = ds["dev"].select(range(min(args.dev_limit, len(ds["dev"]))))
 
     if args.focus_repeat > 1 or args.rehearsal_limit > 0:
         from datasets import concatenate_datasets
-        native_names = {"files.search", "files.result", "settings.open"}
+        native_names = set(args.focus_intents.split(","))
         def is_native(row):
             return any(item["name"] in native_names for item in json.loads(row["target_text"]))
         focus = ds["train"].filter(is_native)
@@ -715,7 +719,9 @@ def main() -> int:
     ap.add_argument("--rl-repeat", type=int, default=3,
                     help="how often to repeat harvested real-usage pairs")
     ap.add_argument("--focus-repeat", type=int, default=1, help="oversample native search/settings/selection examples")
+    ap.add_argument("--focus-intents", default="files.search,files.result,settings.open", help="comma-separated intent families to oversample")
     ap.add_argument("--rehearsal-limit", type=int, default=0, help="optional deterministic sample of older commands; zero keeps all")
+    ap.add_argument("--dev-limit", type=int, default=0, help="optional smaller development split for a short targeted run")
     ap.add_argument("--limit", type=int, default=200, help="eval sample size")
     ap.add_argument("--device", choices=["auto", "mps", "cpu"], default="auto",
                     help="compute device; cpu avoids the MPS allocator blow-up")

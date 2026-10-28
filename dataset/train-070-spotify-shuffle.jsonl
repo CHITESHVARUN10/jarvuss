@@ -1,0 +1,70 @@
+{"text": "shuffle", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "current", "name": "", "enabled": true}}
+{"text": "shuffle it", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "current", "name": "", "enabled": true}}
+{"text": "shuffle on", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "current", "name": "", "enabled": true}}
+{"text": "turn shuffle on", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "current", "name": "", "enabled": true}}
+{"text": "enable shuffle", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "current", "name": "", "enabled": true}}
+{"text": "turn on shuffle", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "current", "name": "", "enabled": true}}
+{"text": "switch shuffle mode on", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "current", "name": "", "enabled": true}}
+{"text": "shuffle this playlist", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "current", "name": "", "enabled": true}}
+{"text": "shuffle the music", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "current", "name": "", "enabled": true}}
+{"text": "shuffle the playlist", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "current", "name": "", "enabled": true}}
+{"text": "shuffle off", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "current", "name": "", "enabled": false}}
+{"text": "turn shuffle off", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "current", "name": "", "enabled": false}}
+{"text": "turn off shuffle", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "current", "name": "", "enabled": false}}
+{"text": "disable shuffle", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "current", "name": "", "enabled": false}}
+{"text": "stop shuffling", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "current", "name": "", "enabled": false}}
+{"text": "switch shuffle mode off", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "current", "name": "", "enabled": false}}
+{"text": "set shuffle off", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "current", "name": "", "enabled": false}}
+{"text": "don't shuffle", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "current", "name": "", "enabled": false}}
+{"text": "shuffle my liked songs", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "liked", "name": "", "enabled": true}}
+{"text": "shuffle liked songs", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "liked", "name": "", "enabled": true}}
+{"text": "play my liked songs on shuffle", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "liked", "name": "", "enabled": true}}
+{"text": "play songs from my liked songs and shuffle it", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "liked", "name": "", "enabled": true}}
+{"text": "play a song from my light songs shuffle it", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "liked", "name": "", "enabled": true}}
+{"text": "play music from liked songs in random order", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "liked", "name": "", "enabled": true}}
+{"text": "play liked songs shuffled", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "liked", "name": "", "enabled": true}}
+{"text": "play shuffled liked songs", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "liked", "name": "", "enabled": true}}
+{"text": "shuffle saved songs", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "liked", "name": "", "enabled": true}}
+{"text": "shuffle my favorites", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "liked", "name": "", "enabled": true}}
+{"text": "play my favourites with shuffle", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "liked", "name": "", "enabled": true}}
+{"text": "play songs from my saved songs then shuffle them", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "liked", "name": "", "enabled": true}}
+{"text": "shuffle my favorite tracks", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "liked", "name": "", "enabled": true}}
+{"text": "please shuffle my liked songs", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "liked", "name": "", "enabled": true}}
+{"text": "Jarvis, play liked songs on shuffle", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "liked", "name": "", "enabled": true}}
+{"text": "can you shuffle my liked songs", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "liked", "name": "", "enabled": true}}
+{"text": "play liked songs without shuffle", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "liked", "name": "", "enabled": false}}
+{"text": "play my liked songs in order", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "liked", "name": "", "enabled": false}}
+{"text": "play saved songs sequentially", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "liked", "name": "", "enabled": false}}
+{"text": "play liked songs with shuffle off", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "liked", "name": "", "enabled": false}}
+{"text": "shuffle my gym playlist", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "gym", "enabled": true}}
+{"text": "shuffle the playlist called Deep Focus", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "Deep Focus", "enabled": true}}
+{"text": "shuffle playlist Morning Drive", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "Morning Drive", "enabled": true}}
+{"text": "play my gym playlist on shuffle", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "gym", "enabled": true}}
+{"text": "play the playlist Chill Vibes and shuffle it", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "Chill Vibes", "enabled": true}}
+{"text": "play songs from my workout playlist in random order", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "workout", "enabled": true}}
+{"text": "play shuffled playlist coding", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "coding", "enabled": true}}
+{"text": "play playlist called My Daily Mix on shuffle", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "My Daily Mix", "enabled": true}}
+{"text": "shuffle the Road Trip playlist", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "Road Trip", "enabled": true}}
+{"text": "shuffle playlist Rock and Roll", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "Rock and Roll", "enabled": true}}
+{"text": "play my sleep playlist shuffled", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "sleep", "enabled": true}}
+{"text": "play playlist named Acoustic Sessions with shuffle", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "Acoustic Sessions", "enabled": true}}
+{"text": "shuffle my gym playlist on Spotify", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "gym", "enabled": true}}
+{"text": "play playlist Focus on shuffle in Spotify", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "Focus", "enabled": true}}
+{"text": "please shuffle playlist named Jazz Night", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "Jazz Night", "enabled": true}}
+{"text": "can you play my work playlist and shuffle it", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "work", "enabled": true}}
+{"text": "play the Road Trip playlist with shuffle off", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "Road Trip", "enabled": false}}
+{"text": "play playlist called Deep Focus in order", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "Deep Focus", "enabled": false}}
+{"text": "play my gym playlist without shuffle", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "gym", "enabled": false}}
+{"text": "play playlist Quiet Evening sequentially", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "Quiet Evening", "enabled": false}}
+{"text": "play playlist Chill Vibes on shuffle", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "Chill Vibes", "enabled": true}}
+{"text": "shuffle playlist My Favourite Songs", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "My Favourite Songs", "enabled": true}}
+{"text": "play my study playlist then shuffle it", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "study", "enabled": true}}
+{"text": "play a song from my liked songs, shuffle it", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "liked", "name": "", "enabled": true}}
+{"text": "could you turn shuffle on", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "current", "name": "", "enabled": true}}
+{"text": "please disable shuffle", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "current", "name": "", "enabled": false}}
+{"text": "Jarvis shuffle it", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "current", "name": "", "enabled": true}}
+{"text": "please play songs from my light songs on shuffle", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "liked", "name": "", "enabled": true}}
+{"text": "shuffle the playlist named Workout", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "Workout", "enabled": true}}
+{"text": "play tracks from my gym playlist shuffled", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "gym", "enabled": true}}
+{"text": "play playlist Late Night on shuffle", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "playlist", "name": "Late Night", "enabled": true}}
+{"text": "play my liked songs in a random order", "intents": [{"name": "media.shuffle", "args": {}}], "resolved_args": {"target": "liked", "name": "", "enabled": true}}

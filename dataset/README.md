@@ -34,6 +34,7 @@ from real usage patterns — **not** programmatically generated.
 | `media.play_song` | `title` |
 | `media.play_playlist` | `name` |
 | `media.play_liked` | — |
+| `media.shuffle` | none; Swift resolves collection, exact playlist name, and explicit on/off state from the utterance |
 | `info.time` / `info.date` / `info.brightness` / `info.contrast` / `info.volume` / `info.battery` / `info.wifi` / `info.bluetooth` | — |
 | `file.create` / `folder.create` | `name` |
 | `folder.open` | `name` |
@@ -96,6 +97,23 @@ from real usage patterns — **not** programmatically generated.
   replies; only meaningful against the current results session
 - `train-069-native-navigation.jsonl` — 60 additional Settings-navigation
   phrasings, including “go to”, privacy/security conjunctions, and pane names
+- `train-070-spotify-shuffle.jsonl` — 70 shuffle commands for current playback,
+  Liked Songs (including “light songs” speech recognition), and named playlists;
+  separate `resolved_args` record the intended collection/name/on-off state
+
+`training/eval_spotify_shuffle.jsonl` holds 12 separate shuffle evaluation
+phrases and is excluded from training. `media.shuffle` is a classifier-only
+intent, like native file search: the model cannot rewrite a playlist name or
+override the requested mode. Small updates can use `post_train.py` with
+`--focus-intents media.shuffle`, an older-command rehearsal sample, and a
+separate output directory. Export and evaluate with `evaluate_native_search.py
+--shuffle` before replacing the accepted model.
+
+The small shuffle candidates were trained and evaluated but were not promoted:
+they did not meet the combined shuffle/general-command regression gate. The
+previous accepted checkpoint remains in use. Shuffle commands are implemented
+in the native router and do not depend on a learned-model update. Candidate
+reports are under `training/out/spotify-shuffle*/evaluation.json` locally.
 
 `training/eval_native_search.jsonl` holds 16 separate evaluation utterances.
 Native intents classify the command family and use `args: {}`. They do not

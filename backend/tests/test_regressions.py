@@ -371,4 +371,82 @@ class SpotifyEfficiencyTests(unittest.TestCase):
             self.assertEqual(request.call_count, 1)
 
 
+class SpotifyShuffleTests(unittest.TestCase):
+    def test_standalone_shuffle_does_not_start_or_transfer_an_inactive_device(self):
+        with patch.object(service, "_get_valid_spotify_access_token", return_value="token"), \
+             patch.object(service, "_spotify_devices", return_value=[{"id": "device", "is_active": False}]), \
+             patch.object(service, "_spotify_transport_action") as transport:
+            with self.assertRaises(service.HTTPException): service.spotify_shuffle(False)
+            transport.assert_not_called()
+
+    def test_shuffle_is_an_explicit_idempotent_mode_on_the_target_device(self):
+        for enabled in (True, False):
+            with patch.object(service, "_ensure_spotify_active_device", return_value="device"), \
+                 patch.object(service, "_spotify_api_request", return_value=(204, None, "")) as request, \
+                 patch.object(service, "_spotify_playback_state", return_value={"device_id": "device", "shuffle_state": enabled}):
+                result = service._spotify_set_shuffle("token", enabled)
+                self.assertTrue(result["action_confirmed"])
+                self.assertIs(result["shuffle_enabled"], enabled)
+                self.assertEqual(request.call_args.kwargs["query"], {"state": str(enabled).lower(), "device_id": "device"})
+
+    def test_unconfirmed_shuffle_does_not_report_success_or_restart_playback(self):
+        with patch.object(service, "_spotify_transport_action", return_value={"device_id": "device"}), \
+             patch.object(service, "_spotify_playback_state", return_value={"device_id": "device", "shuffle_state": False}) as state, \
+             patch.object(service.time, "sleep"), patch.object(service, "_spotify_play") as play:
+            with self.assertRaises(service.HTTPException) as error:
+                service._spotify_set_shuffle("token", True)
+            self.assertEqual(error.exception.status_code, 409)
+            self.assertEqual(state.call_count, 3)
+            play.assert_not_called()
+
+    def test_playlist_shuffle_chooses_random_start_and_does_not_pollute_the_name(self):
+        with patch.object(service, "_get_valid_spotify_access_token", return_value="token"), \
+             patch.object(service, "_spotify_find_playlist_uri", return_value=("Gym", "spotify:playlist:abc")) as find, \
+             patch.object(service, "_spotify_random_playlist_offset", return_value=17), \
+             patch.object(service, "_spotify_play_with_shuffle", return_value={"status": "ok"}) as play:
+            service.spotify_play_playlist(name="Gym", shuffle=True)
+            find.assert_called_once_with("token", "Gym")
+            play.assert_called_once_with("token", {"context_uri": "spotify:playlist:abc", "offset": {"position": 17}}, True, "play-playlist")
+
+    def test_plain_playlist_play_preserves_existing_behavior(self):
+        with patch.object(service, "_get_valid_spotify_access_token", return_value="token"), \
+             patch.object(service, "_spotify_find_playlist_uri", return_value=("Gym", "spotify:playlist:abc")), \
+             patch.object(service, "_spotify_play", return_value={"status": "ok"}) as play, \
+             patch.object(service, "_spotify_set_shuffle") as shuffle:
+            service.spotify_play_playlist(name="Gym")
+            play.assert_called_once_with(token="token", body={"context_uri": "spotify:playlist:abc"}, action_label="play-playlist")
+            shuffle.assert_not_called()
+
+    def test_playlist_total_uses_current_endpoint_and_handles_empty(self):
+        with patch.object(service, "_spotify_api_request", return_value=(200, {"total": 20}, "")) as request, \
+             patch.object(service.random, "SystemRandom") as random:
+            random.return_value.randrange.return_value = 7
+            self.assertEqual(service._spotify_random_playlist_offset("token", "spotify:playlist:abc"), 7)
+            self.assertEqual(request.call_args.args[1], "/v1/playlists/abc/items")
+        with patch.object(service, "_spotify_api_request", return_value=(200, {"total": 0}, "")):
+            with self.assertRaises(service.HTTPException): service._spotify_random_playlist_offset("token", "spotify:playlist:abc")
+
+    def test_liked_shuffle_samples_beyond_the_newest_page_and_bounds_the_queue(self):
+        offsets = []
+        def request(method, path, token, query=None, body=None):
+            offset = int(query["offset"]); offsets.append(offset)
+            return 200, {"total": 2000, "items": [{"track": {"uri": f"spotify:track:{offset+i}"}} for i in range(50)]}, ""
+        with patch.object(service, "_spotify_api_request", side_effect=request), \
+             patch.object(service.random, "SystemRandom") as random:
+            random.return_value.sample.return_value = [39, 20, 10, 5, 1]
+            random.return_value.shuffle.side_effect = lambda values: values.reverse()
+            uris = service._spotify_shuffled_liked_track_uris("token")
+            self.assertEqual(len(uris), 50)
+            self.assertEqual(offsets, [0, 1950, 1000, 500, 250, 50])
+            self.assertEqual(uris[0], "spotify:track:99")
+
+    def test_collection_confirmation_uses_matching_context_and_handles_partial_failure(self):
+        with patch.object(service, "_spotify_play", return_value={"device_id": "device"}), \
+             patch.object(service, "_spotify_set_shuffle", side_effect=service.HTTPException(status_code=403, detail="restriction")) as shuffle:
+            with self.assertRaises(service.HTTPException) as error:
+                service._spotify_play_with_shuffle("token", {"context_uri": "spotify:playlist:abc"}, True, "play-playlist")
+            self.assertIn("Playback started", error.exception.detail)
+            self.assertEqual(shuffle.call_args.kwargs["expected_context"], "spotify:playlist:abc")
+
+
 if __name__ == "__main__": unittest.main()
