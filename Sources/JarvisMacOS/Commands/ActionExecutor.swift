@@ -172,6 +172,15 @@ final class ActionExecutor {
 
         case .fileQuery(let query):
             return executeFileQuery(query, action: action)
+        case .searchFiles(let request):
+            let result = await FileSearchController.shared.search(request)
+            return ActionResult(action: action, success: result.success, message: result.message)
+        case .fileResult(let selection):
+            let result = await FileSearchController.shared.act(selection)
+            return ActionResult(action: action, success: result.success, message: result.message)
+        case .openSettings(let pane):
+            let result = await pane.open()
+            return ActionResult(action: action, success: result.success, message: result.message)
         }
     }
 

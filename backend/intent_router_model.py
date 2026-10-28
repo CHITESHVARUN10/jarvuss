@@ -33,8 +33,8 @@ BASE_DIR = Path(__file__).resolve().parent
 MODEL_DIR = Path(os.environ.get("JARVIS_INTENT_MODEL_DIR", str(BASE_DIR / "models" / "intent-t5-small")))
 
 INPUT_PREFIX = "parse: "
-MAX_SOURCE_LEN = 96
-MAX_TARGET_LEN = 256
+MAX_SOURCE_LEN = 128
+MAX_TARGET_LEN = 448
 ENCODER_FILE = "encoder_model_quantized.onnx"
 DECODER_FILE = "decoder_model_merged_quantized.onnx"
 EOS_ID = 1

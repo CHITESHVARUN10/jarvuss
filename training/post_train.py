@@ -31,6 +31,9 @@ import json
 import os
 import re
 import sys
+import shutil
+import hashlib
+from datetime import datetime, timezone
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(ROOT, "training", "data")
@@ -162,6 +165,17 @@ FILES_RE = re.compile(r"^([a-zA-Z]+) in '(.+)'(?: \[(\w+)\])?$")
 def description_to_intent(desc: str) -> dict | None:
     """Reverse of `PlannedAction.description`. None when unmappable."""
     desc = desc.strip()
+    if desc.startswith("File search: "):
+        try:
+            args = json.loads(desc[len("File search: "):])
+            return {"name": "files.search", "args": {}} if isinstance(args, dict) else None
+        except (ValueError, TypeError):
+            return None
+    if desc.startswith("File result: "):
+        match = re.fullmatch(r"File result: (open|preview|reveal) (\d{1,3})", desc)
+        return {"name": "files.result", "args": {}} if match else None
+    if desc.startswith("Settings: "):
+        return {"name": "settings.open", "args": {}}
 
     for pattern, name in DESC_PATTERNS:
         match = pattern.match(desc)
@@ -314,7 +328,27 @@ def is_consistent(text: str, intents) -> bool:
                 return False
         elif name == "ai.query":
             return False
+        elif name in ("files.search", "files.result", "settings.open"):
+            # A successful API call is not proof of a correct interpretation.
+            # Harvest these context-sensitive operations only when the label
+            # matches a human-authored correction for the same utterance.
+            if not matches_native_correction(text, item):
+                return False
     return True
+
+
+def matches_native_correction(text: str, intent: dict) -> bool:
+    key = text.strip().casefold()
+    for filename in ("train-066-native-search.jsonl", "train-067-settings-panes.jsonl", "train-068-result-selection.jsonl", "train-069-native-navigation.jsonl"):
+        path = os.path.join(ROOT, "dataset", filename)
+        if not os.path.exists(path):
+            continue
+        with open(path, encoding="utf-8") as handle:
+            for line in handle:
+                row = json.loads(line)
+                if row["text"].strip().casefold() == key and row["intents"] == [intent]:
+                    return True
+    return False
 
 
 def harvest(log_path: str, schema: dict) -> tuple[list[dict], dict]:
@@ -417,7 +451,7 @@ def harvest(log_path: str, schema: dict) -> tuple[list[dict], dict]:
             continue
         if "e2e-" in text.lower():
             continue          # synthetic system-test traffic, not real usage
-        if not verified(request_id, intents):
+        if not verified(request_id, intents) or schema_score(intents, schema) == 0:
             continue          # it did not work; not a gold target
         if not target_is_clean(intents) or not is_consistent(text, intents):
             stats["rejected"] = stats.get("rejected", 0) + 1
@@ -451,6 +485,18 @@ def train(args, schema: dict) -> int:
         "dev": os.path.join(DATA_DIR, "dev.jsonl"),
     }
     ds = load_dataset("json", data_files=data_files)
+
+    if args.focus_repeat > 1 or args.rehearsal_limit > 0:
+        from datasets import concatenate_datasets
+        native_names = {"files.search", "files.result", "settings.open"}
+        def is_native(row):
+            return any(item["name"] in native_names for item in json.loads(row["target_text"]))
+        focus = ds["train"].filter(is_native)
+        rehearsal = ds["train"].filter(lambda row: not is_native(row)).shuffle(seed=13)
+        if args.rehearsal_limit:
+            rehearsal = rehearsal.select(range(min(args.rehearsal_limit, len(rehearsal))))
+        ds["train"] = concatenate_datasets([rehearsal] + [focus] * max(1, args.focus_repeat)).shuffle(seed=13)
+        print(f"native focus: {len(focus)} ×{args.focus_repeat}; rehearsal: {len(rehearsal)}")
 
     if os.path.exists(RL_PAIRS):
         rl = load_dataset("json", data_files={"train": RL_PAIRS})["train"]
@@ -508,7 +554,7 @@ def train(args, schema: dict) -> int:
         decoded_preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
         decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
 
-        scored = []
+        scored, native_scored = [], []
         for pred, gold in zip(decoded_preds, decoded_labels):
             try:
                 pred_intents = json.loads(pred)
@@ -518,8 +564,14 @@ def train(args, schema: dict) -> int:
                 gold_intents = json.loads(gold)
             except Exception:
                 gold_intents = None
-            scored.append(reward(pred_intents, gold_intents, schema))
-        return {"reward": float(sum(scored) / max(1, len(scored)))}
+            score = reward(pred_intents, gold_intents, schema)
+            scored.append(score)
+            if isinstance(gold_intents, list) and any(item.get("name") in {"files.search", "files.result", "settings.open"} for item in gold_intents):
+                native_scored.append(score)
+        overall = float(sum(scored) / max(1, len(scored)))
+        native = float(sum(native_scored) / max(1, len(native_scored)))
+        return {"reward": overall, "native_reward": native,
+                "balanced_reward": (overall + native) / 2 if native_scored else overall}
 
     use_cpu = args.device == "cpu"
     if args.device == "mps":
@@ -532,7 +584,7 @@ def train(args, schema: dict) -> int:
             pass
 
     training_args = Seq2SeqTrainingArguments(
-        output_dir=POST_DIR,
+        output_dir=args.output_dir,
         overwrite_output_dir=True,
         seed=13,
         use_cpu=use_cpu,
@@ -553,7 +605,7 @@ def train(args, schema: dict) -> int:
         # generation matrix stays resident on the GPU and OOMs on a full run.
         eval_accumulation_steps=8,
         load_best_model_at_end=True,
-        metric_for_best_model="reward",
+        metric_for_best_model="balanced_reward" if args.focus_repeat > 1 else "reward",
         greater_is_better=True,
         save_total_limit=2,
         fp16=False,
@@ -570,11 +622,37 @@ def train(args, schema: dict) -> int:
         compute_metrics=compute_metrics,
     )
 
+    def fingerprint(path):
+        if not os.path.isfile(path):
+            return None
+        digest = hashlib.sha256()
+        with open(path, "rb") as handle:
+            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(chunk)
+        return digest.hexdigest()
+    provenance = {
+        "started_utc": datetime.now(timezone.utc).isoformat(),
+        "arguments": vars(args), "seed": 13,
+        "train_examples": len(tokenized["train"]), "dev_examples": len(tokenized["dev"]),
+        "initial_weights_sha256": fingerprint(os.path.join(args.init_from, "model.safetensors")),
+        "dataset_manifest_sha256": fingerprint(os.path.join(DATA_DIR, "dataset_manifest.json")),
+        "reward_pairs_sha256": fingerprint(RL_PAIRS),
+    }
+    os.makedirs(args.output_dir, exist_ok=True)
+    with open(os.path.join(args.output_dir, "training_run.json"), "w", encoding="utf-8") as handle:
+        json.dump(provenance, handle, indent=2)
+
     trainer.train()
-    trainer.save_model(POST_DIR)
-    tokenizer.save_pretrained(POST_DIR)
-    print(f"saved post-trained model to {POST_DIR} (same architecture, no size growth)")
-    print(f"metrics: {trainer.evaluate()}")
+    trainer.save_model(args.output_dir)
+    tokenizer.save_pretrained(args.output_dir)
+    manifest = os.path.join(DATA_DIR, "dataset_manifest.json")
+    if os.path.exists(manifest):
+        shutil.copy2(manifest, os.path.join(args.output_dir, "dataset_manifest.json"))
+    metrics = trainer.evaluate()
+    with open(os.path.join(args.output_dir, "training_metrics.json"), "w", encoding="utf-8") as handle:
+        json.dump(metrics, handle, indent=2)
+    print(f"saved post-trained model to {args.output_dir} (same architecture, no size growth)")
+    print(f"metrics: {metrics}")
     return 0
 
 
@@ -630,11 +708,14 @@ def main() -> int:
     ap.add_argument("--init-from", default=os.path.join(OUT_DIR, "best"),
                     help="checkpoint to continue from (keeps the model size)")
     ap.add_argument("--epochs", type=int, default=3)
+    ap.add_argument("--output-dir", default=POST_DIR, help="separate checkpoint directory; preserves the existing checkpoint")
     ap.add_argument("--batch", type=int, default=8)
     ap.add_argument("--accum", type=int, default=4)
     ap.add_argument("--lr", type=float, default=3e-4, help="lower than a fresh run")
     ap.add_argument("--rl-repeat", type=int, default=3,
                     help="how often to repeat harvested real-usage pairs")
+    ap.add_argument("--focus-repeat", type=int, default=1, help="oversample native search/settings/selection examples")
+    ap.add_argument("--rehearsal-limit", type=int, default=0, help="optional deterministic sample of older commands; zero keeps all")
     ap.add_argument("--limit", type=int, default=200, help="eval sample size")
     ap.add_argument("--device", choices=["auto", "mps", "cpu"], default="auto",
                     help="compute device; cpu avoids the MPS allocator blow-up")

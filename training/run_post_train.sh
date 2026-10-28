@@ -10,43 +10,42 @@ set -u
 
 cd "$(dirname "$0")" || exit 1
 
-PY=".venv/bin/python"
+PY="${JARVIS_TRAINING_PYTHON:-.venv/bin/python}"
 EPOCHS="${EPOCHS:-3}"
 BATCH="${BATCH:-4}"     # halved from 8 to cut peak activation memory
 ACCUM="${ACCUM:-8}"     # keeping the effective batch at 32
+
+"$PY" prepare_data.py || exit $?
 
 run_attempt() {
     local device="$1"
     echo "=== attempt: device=$device batch=$BATCH accum=$ACCUM epochs=$EPOCHS ==="
     if [[ "$device" == "mps" ]]; then
-        PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0 \
-        PYTORCH_MPS_LOW_WATERMARK_RATIO=0.0 \
-            $PY post_train.py --train --device mps \
+        $PY post_train.py --train --device mps \
                 --epochs "$EPOCHS" --batch "$BATCH" --accum "$ACCUM" \
-                --init-from out/best
+                --init-from "${INIT_FROM:-out/post}" --output-dir "${OUTPUT_DIR:-out/native-search}"
     else
         $PY post_train.py --train --device cpu \
             --epochs "$EPOCHS" --batch "$BATCH" --accum "$ACCUM" \
-            --init-from out/best
+                --init-from "${INIT_FROM:-out/post}" --output-dir "${OUTPUT_DIR:-out/native-search}"
     fi
 }
 
 run_attempt mps
-status=$?
+attempt_exit=$?
 
-if [[ $status -eq 0 ]]; then
+if [[ $attempt_exit -eq 0 ]]; then
     echo "=== done (mps) ==="
     exit 0
 fi
 
-echo "=== MPS attempt failed (exit $status) — falling back to CPU ==="
-rm -rf out/post
+echo "=== MPS attempt failed (exit $attempt_exit) — falling back to CPU ==="
 run_attempt cpu
-status=$?
+attempt_exit=$?
 
-if [[ $status -eq 0 ]]; then
+if [[ $attempt_exit -eq 0 ]]; then
     echo "=== done (cpu) ==="
 else
-    echo "=== both attempts failed (exit $status) ==="
+    echo "=== both attempts failed (exit $attempt_exit) ==="
 fi
-exit $status
+exit $attempt_exit

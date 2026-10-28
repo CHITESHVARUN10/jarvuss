@@ -39,6 +39,9 @@ from real usage patterns — **not** programmatically generated.
 | `folder.open` | `name` |
 | `file.open_latest` | `folder` |
 | `files.query` | `op` (count\|countFolders\|list\|listFolders\|largest\|oldest\|newest\|totalSize\|openNewest\|openOldest), `folder`, `ext` (`""` = any) |
+| `files.search` | none; Swift resolves name/content, folders, types, dates, and byte bounds from the utterance |
+| `files.result` | none; Swift resolves open/preview/reveal and the ordinal against the visible results |
+| `settings.open` | none; Swift resolves the supported Settings pane from the utterance |
 | `install.preview` | `package`, `source` |
 | `ai.query` | `text` |
 
@@ -86,6 +89,32 @@ from real usage patterns — **not** programmatically generated.
 - `train-064-localhost.jsonl` — React/Vite/localhost/port opens, 219 rows
 - `train-065-compound-browser.jsonl` — compound browser + local-dev + mixed
   actions, 137 rows
+- `train-066-native-search.jsonl` — 100 authored name/content/type/date/size
+  searches, including multiple folder scopes and custom drives
+- `train-067-settings-panes.jsonl` — 40 authored System Settings pane requests
+- `train-068-result-selection.jsonl` — 50 authored ordinal/open/preview/reveal
+  replies; only meaningful against the current results session
+- `train-069-native-navigation.jsonl` — 60 additional Settings-navigation
+  phrasings, including “go to”, privacy/security conjunctions, and pane names
+
+`training/eval_native_search.jsonl` holds 16 separate evaluation utterances.
+Native intents classify the command family and use `args: {}`. They do not
+ask a language model to rewrite a filename, calculate bytes, or invent a file
+selection. `resolved_args` is a separate, human-authored end-to-end test oracle;
+it is not supplied as a training target. The Swift mapper requires the source
+utterance and a matching native parser result before accepting these intents.
+
+The search oracle contains `query`, `mode` (`name`/`content`), `kind`, `scope`,
+`date`, `min_bytes`, and `max_bytes`. Empty `query` means type/filter
+search; empty `scope` means all indexed local locations, otherwise scopes are
+joined by `|` (e.g. `downloads|documents|d drive`). Byte bounds are inclusive;
+zero means no bound. `date` is `any`, `today`, `yesterday`, `this_week`,
+`last_week`, `this_month`, `last_month`, `last_7_days`, or `last_30_days`, and
+filters last modification time. Content search returns only indexed items;
+it does not promise access to private Notes or Mail databases. Native search
+and fixed settings links remain available when model inference is unavailable.
+Result oracles have `action` (`open`/`preview`/`reveal`) and `index` (1–100,
+or 0 for the selected row). Settings oracles have a fixed `pane` identifier.
 
 `train-061` and `train-062` are rebuilt by `training/generate_datasets.py`.
 `train-063`–`train-065` add browser targeting, local development URLs, and

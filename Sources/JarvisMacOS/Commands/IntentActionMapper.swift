@@ -1,4 +1,5 @@
 import Foundation
+import CoreFoundation
 
 /// Maps the learned intent model's JSON output (`dataset/` schema:
 /// `{"name": "...", "args": {...}}`) onto `PlannedAction`.
@@ -8,11 +9,27 @@ import Foundation
 /// as a miss and fall back to the rule router.
 enum IntentActionMapper {
 
-    static func map(_ intents: [[String: Any]]) -> [PlannedAction]? {
+    static func map(_ intents: [[String: Any]], sourceText: String? = nil) -> [PlannedAction]? {
         var actions: [PlannedAction] = []
         for intent in intents {
             guard let name = intent["name"] as? String else { return nil }
             let args = (intent["args"] as? [String: Any]) ?? [:]
+            if sourceText != nil, ["files.search", "files.result", "settings.open"].contains(name), !args.isEmpty {
+                return nil // The learned filter cannot supply or override native fields.
+            }
+            if args.isEmpty, ["files.search", "files.result", "settings.open"].contains(name) {
+                // The learned filter identifies a family. Exact query text,
+                // byte arithmetic, dates, and ordinals have a deterministic
+                // owner; never let a model rewrite them or invent a selection.
+                guard intents.count == 1, let sourceText,
+                      let native = LocalSearchParser.route(sourceText) else { return nil }
+                switch (name, native) {
+                case ("files.search", .searchFiles), ("files.result", .fileResult), ("settings.open", .openSettings):
+                    actions.append(native)
+                default: return nil
+                }
+                continue
+            }
             guard let action = mapSingle(name: name, args: args) else { return nil }
             actions.append(action)
         }
@@ -21,6 +38,19 @@ enum IntentActionMapper {
 
     private static func mapSingle(name: String, args: [String: Any]) -> PlannedAction? {
         switch name {
+        case "files.search":
+            guard let request = LocalSearchRequest(arguments: args) else { return nil }
+            return .searchFiles(request)
+        case "files.result":
+            guard let operation = FileResultOperation(rawValue: stringArg(args, "action") ?? ""),
+                  let number = args["index"] as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID(),
+                  number.doubleValue.isFinite, number.doubleValue.rounded() == number.doubleValue,
+                  (0...100).contains(number.doubleValue) else { return nil }
+            let index = number.intValue
+            return .fileResult(FileResultSelection(operation: operation, index: index))
+        case "settings.open":
+            guard let pane = SystemSettingsPane(rawValue: stringArg(args, "pane") ?? "") else { return nil }
+            return .openSettings(pane)
         case "app.open":
             guard let v = stringArg(args, "name") else { return nil }
             return .openApp(v)

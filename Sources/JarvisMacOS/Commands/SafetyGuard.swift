@@ -40,6 +40,10 @@ enum SafetyGuard {
             return checkPath(path)
         case .openLatestFile(let folder):
             return checkPath(folder)
+        case .searchFiles, .fileResult, .openSettings:
+            // Read-only metadata predicates, result-bound document actions,
+            // and allowlisted settings links; no shell or arbitrary URLs.
+            return .allowed
         case .fileQuery:
             // Folder names resolve through a fixed whitelist (Downloads,
             // Documents, Desktop, Pictures, Movies, Music) and the executor

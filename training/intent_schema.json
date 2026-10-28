@@ -1,44 +1,272 @@
 {
-  "version": 1,
-  "notes": "Source of truth for intent names + canonical arg order. prepare_data.py canonicalizes targets with this order so exact-match training is deterministic. Orders must match the dataset (dataset/*.jsonl) and the mapper in Sources/JarvisMacOS/Commands/IntentActionMapper.swift.",
+  "version": 3,
+  "notes": "Source of truth for intent names + canonical arg order. prepare_data.py canonicalizes targets with this order so exact-match training is deterministic. Orders must match the dataset (dataset/*.jsonl) and the mapper in Sources/JarvisMacOS/Commands/IntentActionMapper.swift. Native search/settings/result intents classify the command family only. Swift deterministically resolves exact fields from the source utterance; dataset resolved_args retain expected end-to-end semantics for tests.",
   "intents": {
-    "app.open":              { "args": ["name"],    "types": { "name": "str" } },
-    "app.close":             { "args": ["name"],    "types": { "name": "str" } },
-    "url.open":              { "args": ["url"],     "types": { "url": "str" } },
-    "url.open_in":           { "args": ["url", "browser"], "types": { "url": "str", "browser": "str" } },
-    "web.search":            { "args": ["engine", "query"], "types": { "engine": "str", "query": "str" } },
-    "display.brightness_set":{ "args": ["level"],   "types": { "level": "int" } },
-    "display.brightness_up": { "args": ["by"],      "types": { "by": "int" } },
-    "display.brightness_down":{ "args": ["by"],     "types": { "by": "int" } },
-    "display.contrast_set":  { "args": ["level"],   "types": { "level": "int" } },
-    "display.contrast_up":   { "args": ["by"],      "types": { "by": "int" } },
-    "display.contrast_down": { "args": ["by"],      "types": { "by": "int" } },
-    "volume.set":            { "args": ["level"],   "types": { "level": "int" } },
-    "volume.up":             { "args": ["by"],      "types": { "by": "int" } },
-    "volume.down":           { "args": ["by"],      "types": { "by": "int" } },
-    "volume.mute":           { "args": [],          "types": {} },
-    "volume.unmute":         { "args": [],          "types": {} },
-    "media.play":            { "args": [],          "types": {} },
-    "media.pause":           { "args": [],          "types": {} },
-    "media.next":            { "args": [],          "types": {} },
-    "media.previous":        { "args": [],          "types": {} },
-    "media.play_song":       { "args": ["title"],   "types": { "title": "str" } },
-    "media.play_playlist":   { "args": ["name"],    "types": { "name": "str" } },
-    "media.play_liked":      { "args": [],          "types": {} },
-    "info.time":             { "args": [],          "types": {} },
-    "info.date":             { "args": [],          "types": {} },
-    "info.brightness":       { "args": [],          "types": {} },
-    "info.contrast":         { "args": [],          "types": {} },
-    "info.volume":           { "args": [],          "types": {} },
-    "info.battery":          { "args": [],          "types": {} },
-    "info.wifi":             { "args": [],          "types": {} },
-    "info.bluetooth":        { "args": [],          "types": {} },
-    "file.create":           { "args": ["name"],    "types": { "name": "str" } },
-    "folder.create":         { "args": ["name"],    "types": { "name": "str" } },
-    "folder.open":           { "args": ["name"],    "types": { "name": "str" } },
-    "file.open_latest":      { "args": ["folder"],  "types": { "folder": "str" } },
-    "files.query":           { "args": ["op", "folder", "ext"], "types": { "op": "str", "folder": "str", "ext": "str" } },
-    "install.preview":       { "args": ["package", "source"], "types": { "package": "str", "source": "str" } },
-    "ai.query":              { "args": ["text"],    "types": { "text": "str" } }
+    "app.open": {
+      "args": [
+        "name"
+      ],
+      "types": {
+        "name": "str"
+      }
+    },
+    "app.close": {
+      "args": [
+        "name"
+      ],
+      "types": {
+        "name": "str"
+      }
+    },
+    "url.open": {
+      "args": [
+        "url"
+      ],
+      "types": {
+        "url": "str"
+      }
+    },
+    "url.open_in": {
+      "args": [
+        "url",
+        "browser"
+      ],
+      "types": {
+        "url": "str",
+        "browser": "str"
+      }
+    },
+    "web.search": {
+      "args": [
+        "engine",
+        "query"
+      ],
+      "types": {
+        "engine": "str",
+        "query": "str"
+      }
+    },
+    "display.brightness_set": {
+      "args": [
+        "level"
+      ],
+      "types": {
+        "level": "int"
+      }
+    },
+    "display.brightness_up": {
+      "args": [
+        "by"
+      ],
+      "types": {
+        "by": "int"
+      }
+    },
+    "display.brightness_down": {
+      "args": [
+        "by"
+      ],
+      "types": {
+        "by": "int"
+      }
+    },
+    "display.contrast_set": {
+      "args": [
+        "level"
+      ],
+      "types": {
+        "level": "int"
+      }
+    },
+    "display.contrast_up": {
+      "args": [
+        "by"
+      ],
+      "types": {
+        "by": "int"
+      }
+    },
+    "display.contrast_down": {
+      "args": [
+        "by"
+      ],
+      "types": {
+        "by": "int"
+      }
+    },
+    "volume.set": {
+      "args": [
+        "level"
+      ],
+      "types": {
+        "level": "int"
+      }
+    },
+    "volume.up": {
+      "args": [
+        "by"
+      ],
+      "types": {
+        "by": "int"
+      }
+    },
+    "volume.down": {
+      "args": [
+        "by"
+      ],
+      "types": {
+        "by": "int"
+      }
+    },
+    "volume.mute": {
+      "args": [],
+      "types": {}
+    },
+    "volume.unmute": {
+      "args": [],
+      "types": {}
+    },
+    "media.play": {
+      "args": [],
+      "types": {}
+    },
+    "media.pause": {
+      "args": [],
+      "types": {}
+    },
+    "media.next": {
+      "args": [],
+      "types": {}
+    },
+    "media.previous": {
+      "args": [],
+      "types": {}
+    },
+    "media.play_song": {
+      "args": [
+        "title"
+      ],
+      "types": {
+        "title": "str"
+      }
+    },
+    "media.play_playlist": {
+      "args": [
+        "name"
+      ],
+      "types": {
+        "name": "str"
+      }
+    },
+    "media.play_liked": {
+      "args": [],
+      "types": {}
+    },
+    "info.time": {
+      "args": [],
+      "types": {}
+    },
+    "info.date": {
+      "args": [],
+      "types": {}
+    },
+    "info.brightness": {
+      "args": [],
+      "types": {}
+    },
+    "info.contrast": {
+      "args": [],
+      "types": {}
+    },
+    "info.volume": {
+      "args": [],
+      "types": {}
+    },
+    "info.battery": {
+      "args": [],
+      "types": {}
+    },
+    "info.wifi": {
+      "args": [],
+      "types": {}
+    },
+    "info.bluetooth": {
+      "args": [],
+      "types": {}
+    },
+    "file.create": {
+      "args": [
+        "name"
+      ],
+      "types": {
+        "name": "str"
+      }
+    },
+    "folder.create": {
+      "args": [
+        "name"
+      ],
+      "types": {
+        "name": "str"
+      }
+    },
+    "folder.open": {
+      "args": [
+        "name"
+      ],
+      "types": {
+        "name": "str"
+      }
+    },
+    "file.open_latest": {
+      "args": [
+        "folder"
+      ],
+      "types": {
+        "folder": "str"
+      }
+    },
+    "files.query": {
+      "args": [
+        "op",
+        "folder",
+        "ext"
+      ],
+      "types": {
+        "op": "str",
+        "folder": "str",
+        "ext": "str"
+      }
+    },
+    "install.preview": {
+      "args": [
+        "package",
+        "source"
+      ],
+      "types": {
+        "package": "str",
+        "source": "str"
+      }
+    },
+    "ai.query": {
+      "args": [
+        "text"
+      ],
+      "types": {
+        "text": "str"
+      }
+    },
+    "files.search": {
+      "args": [],
+      "types": {}
+    },
+    "files.result": {
+      "args": [],
+      "types": {}
+    },
+    "settings.open": {
+      "args": [],
+      "types": {}
+    }
   }
 }

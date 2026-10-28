@@ -54,6 +54,15 @@ final class ActionPlanner {
 
         NSLog("[Plan] Input cleaned: '%@'", cleaned)
 
+        // Native file search and fixed settings panes must precede generic
+        // app/“Bluetooth status” rules, including when Rust routing is enabled.
+        if let action = LocalSearchParser.route(cleaned) {
+            if case .allowed = SafetyGuard.validate(rawCommand: cleaned) {
+                logPlanEvent(branch: "native_search", text: cleaned, requestID: requestID, actions: [action])
+                return [action]
+            }
+        }
+
         // 1b. Local state reads — "what is the current brightness/volume
         // level" is answered from hardware, NEVER sent to Ollama (the
         // code-dump bug: Qwen answered a hardware question with Java).

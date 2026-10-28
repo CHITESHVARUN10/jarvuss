@@ -17,12 +17,15 @@ import json
 import os
 import random
 import sys
+import hashlib
+from collections import defaultdict
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATASET_DIR = os.path.join(ROOT, "dataset")
 SCHEMA_PATH = os.path.join(ROOT, "training", "intent_schema.json")
 OUT_DIR = os.path.join(ROOT, "training", "data")
 NOVEL_PATH = os.path.join(ROOT, "training", "eval_novel.jsonl")
+NATIVE_EVAL_PATH = os.path.join(ROOT, "training", "eval_native_search.jsonl")
 
 INPUT_PREFIX = "parse: "
 DEV_FRACTION = 0.05
@@ -153,6 +156,9 @@ def main() -> int:
         novel, nerrs = process_file(NOVEL_PATH, schema)
         total_errors += nerrs
 
+    native_eval, nerrs = process_file(NATIVE_EVAL_PATH, schema) if os.path.exists(NATIVE_EVAL_PATH) else ([], 0)
+    total_errors += nerrs
+
     print(f"train shards : {len(shards)} files, {len(all_pairs)} examples")
     print(f"valid        : {len(valid)} examples")
     print(f"test         : {len(test)} examples")
@@ -160,6 +166,18 @@ def main() -> int:
     if total_errors:
         print(f"VALIDATION ERRORS: {total_errors}")
         return 1
+
+    # Group identical utterances before splitting. Conflicting labels (notably
+    # old generated extension filters) are not trustworthy training targets.
+    grouped = defaultdict(dict)
+    for pair in all_pairs:
+        key = pair["input_text"].strip().casefold()
+        grouped[key][pair["target_text"]] = pair
+    heldout = {row["input_text"].strip().casefold() for row in valid + test + novel + native_eval}
+    conflicts = sum(len(values) > 1 for values in grouped.values())
+    all_pairs = [next(iter(values.values())) for key, values in grouped.items()
+                 if len(values) == 1 and key not in heldout]
+    print(f"deduplicated : {len(all_pairs)} unambiguous examples; excluded {conflicts} conflicting utterances")
 
     if args.check:
         print("check passed")
@@ -177,6 +195,20 @@ def main() -> int:
     write_jsonl(os.path.join(OUT_DIR, "test.jsonl"), test)
     if novel:
         write_jsonl(os.path.join(OUT_DIR, "novel.jsonl"), novel)
+    if native_eval:
+        write_jsonl(os.path.join(OUT_DIR, "native_search_eval.jsonl"), native_eval)
+
+    def digest(path):
+        with open(path, "rb") as handle:
+            return hashlib.sha256(handle.read()).hexdigest()
+    manifest = {
+        "schema_sha256": digest(SCHEMA_PATH),
+        "shards": [{"file": os.path.relpath(path, ROOT), "sha256": digest(path)} for path in shards],
+        "prepared": {"train": len(train), "dev": len(dev), "excluded_conflicts": conflicts},
+        "eval_only": [os.path.relpath(path, ROOT) for path in (NOVEL_PATH, NATIVE_EVAL_PATH) if os.path.exists(path)],
+    }
+    with open(os.path.join(OUT_DIR, "dataset_manifest.json"), "w", encoding="utf-8") as handle:
+        json.dump(manifest, handle, indent=2)
 
     print(f"wrote {OUT_DIR}: train={len(train)} dev={len(dev)} "
           f"valid={len(valid)} test={len(test)} novel={len(novel)}")

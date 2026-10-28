@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import AVFoundation
 
 extension AppState {
     func verifyThenRunCommand(_ command: String, capturedAudio: URL? = nil) async {
@@ -192,19 +193,25 @@ extension AppState {
                             matched: false, metadata: ["reason": "verification_required"])
     }
 
-    /// RMS of a WAV file's samples (float32 mono written by MicManager).
-    /// Returns 0 when the file can't be read — treated as silence upstream.
+    /// Decode the samples rather than assuming a 44-byte WAV header. AVAudioFile
+    /// can emit additional chunks; reading those as floats makes silence look loud.
+    /// Unreadable/nonfinite audio fails closed without contacting verification.
     static func clipRMS(ofWavAt url: URL) -> Float {
-        guard let data = try? Data(contentsOf: url), data.count > 44 else { return 0 }
-        let samples = data.dropFirst(44)
-        let count = samples.count / MemoryLayout<Float>.size
-        guard count > 0 else { return 0 }
-        var squareSum: Float = 0
-        samples.withUnsafeBytes { raw in
-            let ptr = raw.bindMemory(to: Float.self)
-            for i in 0..<count { squareSum += ptr[i] * ptr[i] }
+        guard let file = try? AVAudioFile(forReading: url, commonFormat: .pcmFormatFloat32, interleaved: false),
+              let buffer = AVAudioPCMBuffer(pcmFormat: file.processingFormat, frameCapacity: 4096) else { return 0 }
+        var sum: Double = 0, count = 0
+        while file.framePosition < file.length {
+            do { try file.read(into: buffer) } catch { return 0 }
+            guard buffer.frameLength > 0, let channels = buffer.floatChannelData else { break }
+            for channel in 0..<Int(buffer.format.channelCount) {
+                for index in 0..<Int(buffer.frameLength) {
+                    let sample = Double(channels[channel][index])
+                    guard sample.isFinite else { return 0 }
+                    sum += sample * sample; count += 1
+                }
+            }
         }
-        return sqrt(squareSum / Float(count))
+        return count > 0 ? Float(sqrt(sum / Double(count))) : 0
     }
 
     func fmtScore(_ value: Double) -> String {

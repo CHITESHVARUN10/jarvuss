@@ -1,0 +1,40 @@
+{"text": "open Bluetooth settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "bluetooth"}}
+{"text": "show the Bluetooth preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "bluetooth"}}
+{"text": "Jarvis open bluetooth settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "bluetooth"}}
+{"text": "open Wi-Fi settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "wifi"}}
+{"text": "show wifi preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "wifi"}}
+{"text": "go to the network settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "network"}}
+{"text": "open sound settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "sound"}}
+{"text": "open audio settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "sound"}}
+{"text": "show the volume preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "sound"}}
+{"text": "open display settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "displays"}}
+{"text": "show displays settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "displays"}}
+{"text": "open brightness settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "displays"}}
+{"text": "open keyboard settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "keyboard"}}
+{"text": "show keyboard preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "keyboard"}}
+{"text": "open mouse settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "mouse"}}
+{"text": "open trackpad settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "trackpad"}}
+{"text": "open accessibility settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "accessibility"}}
+{"text": "show accessibility preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "accessibility"}}
+{"text": "open privacy settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "privacy"}}
+{"text": "open privacy and security settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "privacy"}}
+{"text": "show security preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "privacy"}}
+{"text": "open microphone settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "microphone"}}
+{"text": "open battery settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "battery"}}
+{"text": "show battery preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "battery"}}
+{"text": "open notifications settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "notifications"}}
+{"text": "open storage settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "storage"}}
+{"text": "open software update settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "software_update"}}
+{"text": "show updates settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "software_update"}}
+{"text": "open spotlight settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "spotlight"}}
+{"text": "show general settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "general"}}
+{"text": "please open the bluetooth settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "bluetooth"}}
+{"text": "can you show wifi settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "wifi"}}
+{"text": "take me to privacy settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "privacy"}}
+{"text": "go to sound settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "sound"}}
+{"text": "show the trackpad pane", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "trackpad"}}
+{"text": "open the network pane", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "network"}}
+{"text": "please open microphone preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "microphone"}}
+{"text": "Jarvis, open software update settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "software_update"}}
+{"text": "could you open storage settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "storage"}}
+{"text": "open the spotlight preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "spotlight"}}

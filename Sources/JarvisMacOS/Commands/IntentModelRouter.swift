@@ -44,7 +44,7 @@ final class IntentModelRouter {
                         raw: response.raw, confidence: response.confidence, elapsedMs: elapsedMs)
                 return nil
             }
-            guard let actions = IntentActionMapper.map(response.actions) else {
+            guard let actions = IntentActionMapper.map(response.actions, sourceText: text) else {
                 logMiss(text: text, requestID: requestID, reason: "unmappable",
                         raw: response.raw, confidence: response.confidence, elapsedMs: elapsedMs)
                 return nil

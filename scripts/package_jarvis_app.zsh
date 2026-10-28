@@ -62,6 +62,15 @@ chmod +x "$APP_MACOS/start_backend.sh"
 
 cp "$BACKEND_SRC"/*.py "$BACKEND_DEST/"
 cp "$BACKEND_SRC/requirements.txt" "$BACKEND_DEST/requirements.txt"
+
+# Refresh builds must ship updated weights as well as updated Swift/Python.
+# Keep this outside dependency installation and configuration migration.
+if [[ -d "$BACKEND_SRC/models" ]]; then
+  mkdir -p "$BACKEND_DEST/models"
+  echo "[Package] Syncing intent model ($(du -sh "$BACKEND_SRC/models" | awk '{print $1}'))..."
+  rsync -a --delete "$BACKEND_SRC/models/" "$BACKEND_DEST/models/"
+fi
+
 if (( ! REFRESH_FRONTEND )); then
 # Native configuration import runs after signing, below. Python never reads
 # Keychain during packaging. Keep legacy bundle files until import succeeds.
@@ -77,15 +86,6 @@ if [[ ! -f "$RUNTIME_DATA_DIR/embeddings.npy" ]]; then
 fi
 # Remove legacy generated bundle copies after migration.
 # Legacy files are removed after the signed app imports them below.
-
-# ── Learned intent model (fine-tuned t5-small, int8 ONNX, ~196 MB) ────────
-# Served by voice_auth_service's /parse_intent; the backend resolves it
-# relative to its own directory (JARVIS_INTENT_MODEL_DIR overrides).
-if [[ -d "$BACKEND_SRC/models" ]]; then
-  mkdir -p "$BACKEND_DEST/models"
-  echo "[Package] Syncing intent model ($(du -sh "$BACKEND_SRC/models" | awk '{print $1}'))..."
-  rsync -a --delete "$BACKEND_SRC/models/" "$BACKEND_DEST/models/"
-fi
 
 # ── Python venv: create once, reinstall only if requirements changed ──────
 REQ_HASH_FILE="$BACKEND_DEST/venv/.req_hash"

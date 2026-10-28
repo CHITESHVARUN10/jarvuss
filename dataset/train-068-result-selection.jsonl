@@ -1,0 +1,50 @@
+{"text": "open the first one", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "open", "index": 1}}
+{"text": "the first one", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "open", "index": 1}}
+{"text": "first one", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "open", "index": 1}}
+{"text": "open the second one", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "open", "index": 2}}
+{"text": "the second one", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "open", "index": 2}}
+{"text": "second one", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "open", "index": 2}}
+{"text": "open the third result", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "open", "index": 3}}
+{"text": "third one", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "open", "index": 3}}
+{"text": "open the fourth file", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "open", "index": 4}}
+{"text": "fourth one", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "open", "index": 4}}
+{"text": "open result 5", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "open", "index": 5}}
+{"text": "open number 6", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "open", "index": 6}}
+{"text": "open the seventh one", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "open", "index": 7}}
+{"text": "the eighth one", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "open", "index": 8}}
+{"text": "open the ninth result", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "open", "index": 9}}
+{"text": "open the tenth one", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "open", "index": 10}}
+{"text": "open 12", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "open", "index": 12}}
+{"text": "open the 21st result", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "open", "index": 21}}
+{"text": "preview", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "preview", "index": 0}}
+{"text": "just preview", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "preview", "index": 0}}
+{"text": "preview it", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "preview", "index": 0}}
+{"text": "preview that", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "preview", "index": 0}}
+{"text": "quick look", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "preview", "index": 0}}
+{"text": "quick look it", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "preview", "index": 0}}
+{"text": "preview the selected file", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "preview", "index": 0}}
+{"text": "preview the first one", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "preview", "index": 1}}
+{"text": "preview the second result", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "preview", "index": 2}}
+{"text": "preview the third file", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "preview", "index": 3}}
+{"text": "quick look the fourth one", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "preview", "index": 4}}
+{"text": "preview result 5", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "preview", "index": 5}}
+{"text": "preview the sixth one", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "preview", "index": 6}}
+{"text": "preview number 9", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "preview", "index": 9}}
+{"text": "preview 10", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "preview", "index": 10}}
+{"text": "open it", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "open", "index": 0}}
+{"text": "open the selected result", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "open", "index": 0}}
+{"text": "open that", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "open", "index": 0}}
+{"text": "reveal it", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "reveal", "index": 0}}
+{"text": "show in finder", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "reveal", "index": 0}}
+{"text": "show in finder the first one", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "reveal", "index": 1}}
+{"text": "reveal the second one", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "reveal", "index": 2}}
+{"text": "reveal result 3", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "reveal", "index": 3}}
+{"text": "show in finder number 4", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "reveal", "index": 4}}
+{"text": "reveal the fifth file", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "reveal", "index": 5}}
+{"text": "Jarvis open the second one", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "open", "index": 2}}
+{"text": "please preview the first result", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "preview", "index": 1}}
+{"text": "can you open the third one", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "open", "index": 3}}
+{"text": "could you preview it", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "preview", "index": 0}}
+{"text": "1", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "open", "index": 1}}
+{"text": "2", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "open", "index": 2}}
+{"text": "preview the 12th result", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "preview", "index": 12}}

@@ -102,6 +102,18 @@ def main() -> int:
             print(f"removed fp32 {fname}")
 
     meta = {"base_model": "t5-small", "task": "intent-parse", "quantized": True}
+    with open(os.path.join(ROOT, "training", "intent_schema.json"), encoding="utf-8") as handle:
+        meta["schema_version"] = json.load(handle)["version"]
+    manifest = os.path.join(args.model, "dataset_manifest.json")
+    if os.path.exists(manifest):
+        with open(manifest, encoding="utf-8") as handle:
+            meta["training_dataset"] = json.load(handle)
+    run_manifest = os.path.join(args.model, "training_run.json")
+    if os.path.exists(run_manifest):
+        with open(run_manifest, encoding="utf-8") as handle:
+            meta["training_run"] = json.load(handle)
+    meta["max_source_len"] = 128
+    meta["max_target_len"] = 448
     with open(os.path.join(args.dest, "model_meta.json"), "w", encoding="utf-8") as f:
         json.dump(meta, f, indent=2)
 

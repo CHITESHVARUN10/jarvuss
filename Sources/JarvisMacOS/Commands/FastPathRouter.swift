@@ -19,6 +19,7 @@ enum FastPathRouter {
     static func route(_ cleaned: String) -> Verdict {
         let lower = cleaned.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
         guard !lower.isEmpty else { return .execute([]) }
+        if let native = LocalSearchParser.route(cleaned) { return .execute([native]) }
 
         // Single known app shortcut: "chrome", "spotify", "whatsapp"
         if let shortcut = singleAppShortcut(lower) {

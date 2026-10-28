@@ -54,6 +54,41 @@ Full walkthrough with every command and exact phrasings: **[practice.md](practic
 
 ---
 
+## Local file search and System Settings
+
+Jarvis also searches local files through `NSMetadataQuery` (Spotlight’s index),
+with a native results window. Try:
+
+- “Open Bluetooth settings” (also Wi-Fi, sound, displays, keyboard, privacy,
+  accessibility, microphone, storage, updates, and other supported panes).
+- “Find the SLA stage 2 document” or “find the research folder.”
+- “Find PDFs from last week in Downloads or Documents.”
+- “Find presentations bigger than 20 MB inside D drive.”
+- “Find the file that mentions elliptic curves.”
+- With results visible: **⌘⇧A**, say **“open the second one”**, then **⌘⇧A**
+  again. “Preview it”, “preview the third result”, and “reveal the first one”
+  use the same list. These commands retain the normal voice-verification policy.
+
+Results show numbered filenames, locations, sizes, and modification dates.
+Select a row and press **Space** for Quick Look or **Return** to open it;
+double-click also opens it. The list has a fixed order until the next search.
+Closing it invalidates voice selection, and selections expire after 10 minutes.
+Searches can be cancelled; requests stop gathering after eight seconds and
+report partial results honestly. At most 100 numbered results are shown.
+
+Dates mean **last modified**; “last week” uses the previous calendar week.
+Type filters include PDF, legacy/current PowerPoint, Keynote, Word, spreadsheets,
+images, audio, video, folders, and indexed mail/text notes. Add custom folders
+or drives and their spoken aliases under **System → File search**. Standard
+home folders and unambiguous home-folder/volume names resolve automatically;
+unknown or ambiguous names require choosing a location instead of guessing.
+
+Search works without the learned model or Ollama, in either routing mode.
+It only sees metadata and content that macOS indexes and permits access to;
+Spotlight exclusions, disconnected drives, unindexed content, and private
+Mail/Apple Notes stores can prevent matches. It does not crawl those databases
+or send document contents to an LLM. See [Apple’s indexing overview](https://support.apple.com/102321).
+
 ## The intent model, and the loop that keeps training it
 
 Commands are routed by a **compact learned router: t5-small, ~60M parameters**
@@ -76,22 +111,42 @@ independent evaluations and human corrections.
 
 ```zsh
 cd training
+python prepare_data.py                      # include ALL current shards, validate, deduplicate, split
 python post_train.py --harvest              # log → reward-scored training pairs
-python post_train.py --train --epochs 3     # continue-train the SAME checkpoint
+python post_train.py --train --epochs 3 --init-from out/post --output-dir out/native-search
 python post_train.py --eval                 # score a checkpoint
 ./run_post_train.sh                         # MPS run with CPU fallback (logs to post_train.log)
-python export_onnx.py                       # re-export int8 ONNX → backend/models
+python export_onnx.py --model out/native-search --dest out/native-search-onnx # stage int8 export for evaluation
+python evaluate_native_search.py --candidate out/native-search-onnx
 ```
 
 - The model **never grows** — same t5-small, same vocab. The loop sharpens it.
+- Shards 063–065 cover browser targeting and localhost. Shards 066–069 add
+  250 native search, Settings, and result-selection examples. Preparation
+  includes all shards, excludes conflicting utterances, and keeps identical
+  utterances out of both training and evaluation. Checkpoint/export metadata
+  records source-shard SHA-256 hashes so later runs can establish coverage.
+- For native commands the model classifies the command family; Swift extracts
+  exact filenames, scopes, dates, sizes, and result numbers from the original
+  utterance. The dataset keeps separate `resolved_args` oracles for end-to-end
+  tests. This avoids delegating exact file choice and size arithmetic to a
+  generative model.
+- `training/eval_native_search.jsonl` is an independent evaluation set and is
+  never included in training. Evaluate staged exports before replacing the
+  model in `backend/models/intent-t5-small` and rebuilding the app.
+- The “RL” script performs continued supervised training on reward-filtered
+  execution pairs. New native search/selection labels must also match an
+  authored correction; successful file opening alone is not proof of intent.
 - Reward: +0.5 valid JSON plan of known intents, +0.4 matches the recorded gold
   plan, +0.1 arg-level exactness. `model_miss` → Qwen fallback cases are the
   training signal for the next round.
-- Failure harvests are also added as corrected pairs — e.g. a 4-clause chain the
-  model truncated, or an extension the FileExplorer did not recognize — so each
-  round fixes what the last round exposed. Run it after busy weeks and repeat.
-- Latest run: 3 epochs on ~8.3k examples (MPS), eval reward 0.9952, and 33/35
-  exact match on a held-out set of unseen phrasings.
+- Misses identify candidates for authored corrections. Failed execution is
+  never automatically relabeled as a successful training example.
+- Latest accepted int8 export: **16/16** native-command evaluation phrases
+  correct, and **125/135** unchanged general-command evaluation phrases
+  correct (previous export: **123/135**). Swift separately verifies all
+  **266** authored native examples and their exact resolved fields. Model
+  metadata records all 69 source shards and the training/evaluation provenance.
 
 The general-purpose planner behind it is local Ollama
 (`qwen2.5:1.5b-instruct`). Why instruct and not a base model? Every caller —

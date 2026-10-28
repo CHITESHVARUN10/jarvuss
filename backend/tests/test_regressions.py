@@ -199,8 +199,8 @@ class IntentEncodingTests(unittest.TestCase):
 
     def test_eos_slot_is_reserved_and_overflow_is_explicit(self):
         engine = self.engine()
-        self.assertEqual(len(engine.encode("word " * 95)), 96)
-        with self.assertRaises(intent.InputTooLong): engine.encode("word " * 96)
+        self.assertEqual(len(engine.encode("word " * (intent.MAX_SOURCE_LEN - 1))), intent.MAX_SOURCE_LEN)
+        with self.assertRaises(intent.InputTooLong): engine.encode("word " * intent.MAX_SOURCE_LEN)
 
     def test_overflow_endpoint_returns_miss_instead_of_partial_plan(self):
         engine = Mock()
@@ -233,6 +233,26 @@ class TrainingLabelTests(unittest.TestCase):
         pairs = self.harvest(self.events())
         self.assertEqual(len(pairs), 1)
         self.assertEqual(pairs[0]["source"], "model_hit")
+
+    def test_native_descriptions_round_trip_and_only_authored_corrections_are_rewarded(self):
+        row = json.loads((ROOT / "dataset/train-066-native-search.jsonl").read_text().splitlines()[0])
+        action = row["intents"][0]
+        description = "File search: " + json.dumps(row["resolved_args"])
+        self.assertEqual(training.description_to_intent(description), action)
+        self.assertEqual(training.description_to_intent("File result: preview 2"),
+                         {"name": "files.result", "args": {}})
+        self.assertEqual(training.description_to_intent("Settings: bluetooth"),
+                         {"name": "settings.open", "args": {}})
+        self.assertTrue(training.is_consistent(row["text"], [action]))
+        self.assertFalse(training.is_consistent("find the unrelated secret spreadsheet", [action]))
+        events = [
+            {"event": "plan", "request_id": "search", "text": row["text"], "actions": [description]},
+            {"event": "execute_step", "request_id": "search", "success": True},
+            {"event": "execute_command", "request_id": "search", "success": True, "outcome": "success"},
+        ]
+        self.assertEqual(len(self.harvest(events)), 1)
+        events[0]["text"] = "find the unrelated secret spreadsheet"
+        self.assertEqual(self.harvest(events), [])
 
     def test_failed_model_hit_is_never_rewarded(self):
         rows = self.events()

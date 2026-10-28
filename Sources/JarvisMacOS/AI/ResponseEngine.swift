@@ -74,6 +74,7 @@ final class ResponseEngine: ObservableObject {
         case .openFolder(let name):     return "Opening \(name) folder"
         case .openLatestFile(let f):    return "Opening latest file in \(f)"
         case .fileQuery:                return result.message
+        case .searchFiles, .fileResult, .openSettings: return result.message
         case .mediaControl(let a):
             switch a {
             case .play:                 return "Playing music"

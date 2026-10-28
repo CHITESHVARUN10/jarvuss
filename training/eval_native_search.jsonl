@@ -1,0 +1,16 @@
+{"text": "locate the compliance checklist PDF in documents", "intents": [{"name": "files.search", "args": {}}], "resolved_args": {"query": "compliance checklist", "mode": "name", "kind": "pdf", "scope": "documents", "date": "any", "min_bytes": 0, "max_bytes": 0}}
+{"text": "find presentations mentioning orbital mechanics in downloads or d drive", "intents": [{"name": "files.search", "args": {}}], "resolved_args": {"query": "orbital mechanics", "mode": "content", "kind": "presentation", "scope": "downloads|d drive", "date": "any", "min_bytes": 0, "max_bytes": 0}}
+{"text": "PDFs from last month under 12 MB", "intents": [{"name": "files.search", "args": {}}], "resolved_args": {"query": "", "mode": "name", "kind": "pdf", "scope": "", "date": "last_month", "min_bytes": 0, "max_bytes": 12000000}}
+{"text": "find Word documents containing hiring forecast in documents", "intents": [{"name": "files.search", "args": {}}], "resolved_args": {"query": "hiring forecast", "mode": "content", "kind": "document", "scope": "documents", "date": "any", "min_bytes": 0, "max_bytes": 0}}
+{"text": "find files called revised estimate in desktop or documents", "intents": [{"name": "files.search", "args": {}}], "resolved_args": {"query": "revised estimate", "mode": "name", "kind": "any", "scope": "desktop|documents", "date": "any", "min_bytes": 0, "max_bytes": 0}}
+{"text": "find presentations bigger than 35 MB from this week", "intents": [{"name": "files.search", "args": {}}], "resolved_args": {"query": "", "mode": "name", "kind": "presentation", "scope": "", "date": "this_week", "min_bytes": 35000000, "max_bytes": 0}}
+{"text": "find notes containing supplier negotiation from yesterday", "intents": [{"name": "files.search", "args": {}}], "resolved_args": {"query": "supplier negotiation", "mode": "content", "kind": "note", "scope": "", "date": "yesterday", "min_bytes": 0, "max_bytes": 0}}
+{"text": "find the archive folder inside d drive", "intents": [{"name": "files.search", "args": {}}], "resolved_args": {"query": "archive", "mode": "name", "kind": "folder", "scope": "d drive", "date": "any", "min_bytes": 0, "max_bytes": 0}}
+{"text": "show me Bluetooth settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "bluetooth"}}
+{"text": "take me to keyboard preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "keyboard"}}
+{"text": "please show the privacy and security settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "privacy"}}
+{"text": "go to the wifi pane", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "wifi"}}
+{"text": "preview the eighth result", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "preview", "index": 8}}
+{"text": "please open result 14", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "open", "index": 14}}
+{"text": "reveal the seventh one", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "reveal", "index": 7}}
+{"text": "quick look the selected file", "intents": [{"name": "files.result", "args": {}}], "resolved_args": {"action": "preview", "index": 0}}

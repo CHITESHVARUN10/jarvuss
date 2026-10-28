@@ -121,6 +121,12 @@ final class AppCommandOutcomeTests: XCTestCase {
         XCTAssertEqual(app.currentCommand, "")
     }
 
+    func testNativeFileContentSearchDoesNotTriggerARoutineKeyword() async {
+        app.automations = [VoiceAutomation(keyword: "elliptic", actions: [])]
+        await app.runCommand("find the file that mentions elliptic curves")
+        XCTAssertEqual(executor.calls, 1, "The planner/executor path must win over a keyword found inside document content")
+    }
+
     func testBlockedCommandRecordsExactlyOneFailureWithoutExecution() async throws {
         await app.runCommand("sudo open test")
         XCTAssertEqual(executor.calls, 0)

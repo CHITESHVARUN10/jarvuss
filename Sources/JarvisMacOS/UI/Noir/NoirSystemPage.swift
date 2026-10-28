@@ -77,6 +77,8 @@ struct NoirSystemPage: View {
                 }
             }
 
+            NoirFileSearchPreferences()
+
             NoirSectionHeading(title: "Display safety")
             NoirCard(padded: true) {
                 Text("Jarvis keeps brightness at 10% or higher, contrast at 20% or higher, and software dimming above zero.")

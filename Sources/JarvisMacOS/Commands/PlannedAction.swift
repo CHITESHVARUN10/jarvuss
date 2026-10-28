@@ -20,6 +20,9 @@ enum PlannedAction: Equatable, CustomStringConvertible {
     case installPreview(package: String, source: String)
     case displayControl(DisplayAction)
     case fileQuery(FileQuery)
+    case searchFiles(LocalSearchRequest)
+    case fileResult(FileResultSelection)
+    case openSettings(SystemSettingsPane)
 
     var description: String {
         switch self {
@@ -39,6 +42,9 @@ enum PlannedAction: Equatable, CustomStringConvertible {
         case .installPreview(let p, _):    return "Install preview: '\(p)'"
         case .displayControl(let a):       return "Display: \(a)"
         case .fileQuery(let q):            return "Files: \(q)"
+        case .searchFiles(let q):          return "File search: \(q)"
+        case .fileResult(let selection):   return "File result: \(selection.operation.rawValue) \(selection.index)"
+        case .openSettings(let pane):      return "Settings: \(pane.rawValue)"
         }
     }
 }

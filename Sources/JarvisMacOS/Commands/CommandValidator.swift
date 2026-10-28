@@ -46,6 +46,12 @@ enum CommandValidator {
     /// Clean and validate a raw command string.
     /// - Returns: Cleaned string if valid, nil if the command should be rejected.
     static func validate(_ raw: String) -> String? {
+        // Scoped searches are legitimately longer than a simple app command;
+        // ordinal-only replies also need to survive validation in both modes.
+        // Existing voice verification and execution safety checks still apply.
+        let local = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        if local.count <= 4096, local.split(whereSeparator: \.isWhitespace).count <= 50,
+           LocalSearchParser.route(local) != nil { return local }
         // Migration cut-over: the Rust core runs the same cleaning rules.
         if JarvisFlags.useRustPipeline {
             let cleaned = coreValidateCommandString(raw: raw)

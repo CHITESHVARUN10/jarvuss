@@ -718,6 +718,11 @@ final class DictationController: ObservableObject {
     /// the formatted text is copied so the user still has it, and the card
     /// carries the permission notice with a one-tap grant.
     private func insertFormattedText() {
+        defer {
+            // Polishing can change the measured height, including in copy-only mode.
+            resizePanelForCurrentState()
+            positionPanelForCurrentState()
+        }
         let elapsed = insertLatencyStart.map { Date().timeIntervalSince($0) } ?? 0
 
         guard insertAtCursorEnabled else {
@@ -746,9 +751,6 @@ final class DictationController: ObservableObject {
                 requestEventPostingAccessIfStale()
             }
         }
-
-        resizePanelForCurrentState()
-        positionPanelForCurrentState()
     }
 
     /// One JSONL diagnostics line when the mode is on — the raw input, the
@@ -900,6 +902,7 @@ final class DictationController: ObservableObject {
             // from the document, not from the card.
             insertedAtCursor = false
         }
+        showPanelIfNeeded()
     }
 
     func openAccessibilityPane() {
@@ -1034,19 +1037,12 @@ final class DictationController: ObservableObject {
         }
         switch phase {
         case .Recording:
-            return CGSize(width: 370, height: 150)
+            return DictationHUDLayout.recordingSize
         case .Processing:
-            return CGSize(width: 370, height: 105)
+            return DictationHUDLayout.processingSize
         case .TranscriptReady:
-            // Keep in sync with DictationTranscriptOverlayView
-            // (baseHeight / noticeHeight / cardWidth). The noir card keeps
-            // three actions on one row inside 370pt.
-            if !insertNotice.isEmpty {
-                return CGSize(width: DictationTranscriptOverlayView.cardWidth,
-                              height: DictationTranscriptOverlayView.noticeHeight)
-            }
-            return CGSize(width: DictationTranscriptOverlayView.cardWidth,
-                          height: DictationTranscriptOverlayView.baseHeight)
+            return DictationHUDLayout.transcriptSize(transcript: transcript, original: originalTranscript,
+                showsOriginal: copyOriginalEnabled && !originalTranscript.isEmpty, notice: insertNotice)
         case .Error:
             return CGSize(width: DictationErrorView.cardWidth,
                           height: max(120, DictationErrorView.messageHeight(errorMessage) + 80))
@@ -1060,6 +1056,7 @@ final class DictationController: ObservableObject {
     private func resizePanelForCurrentState() {
         guard let panel else { return }
         let size = panelSizeForCurrentState()
+        guard panel.frame.size != size else { return }
         let frame = NSRect(origin: panel.frame.origin, size: size)
         panel.setFrame(frame, display: true, animate: false)
         panelHost?.frame = NSRect(origin: .zero, size: size)

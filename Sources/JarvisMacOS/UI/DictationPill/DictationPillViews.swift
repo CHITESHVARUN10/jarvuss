@@ -45,7 +45,7 @@ struct DictationHUDView: View {
                     onGrantAccessibility: { model.openAccessibilityPane() },
                     onClose: { model.closeTranscript() }
                 )
-                .frame(width: DictationTranscriptOverlayView.cardWidth)
+                .frame(width: DictationHUDLayout.transcriptWidth)
 
             case .Error:
                 DictationErrorView(
@@ -87,7 +87,7 @@ private struct DictationCard<Content: View>: View {
 
     var body: some View {
         content()
-            .padding(18)
+            .padding(DictationHUDLayout.inset)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .background(
                 RoundedRectangle(cornerRadius: 13, style: .continuous)
@@ -119,34 +119,45 @@ struct DictationRecordingPillView: View {
                     Image(systemName: isAction ? "bolt" : "mic")
                         .font(.system(size: 11))
                     Text(isAction ? "COMMAND · LISTENING" : "DICTATION · RECORDING")
-                        .font(.system(size: 10, weight: .medium))
+                        .font(.system(size: 10, weight: .semibold))
                         .tracking(0.5)
                     Spacer(minLength: 8)
                     Text(isStarting ? "STARTING" : "\(Int(recordedSeconds) / 60):\(String(format: "%02d", Int(recordedSeconds) % 60)) / \(limitMinutes):00")
-                        .font(.system(size: 9, design: .monospaced))
-                        .foregroundStyle(DictationCardPalette.muted)
+                        .font(.system(size: 10, design: .monospaced))
+                        .monospacedDigit()
+                        .foregroundStyle(DictationCardPalette.secondary)
                 }
                 .foregroundStyle(DictationCardPalette.accent)
+                .frame(height: 18)
 
                 NoirWaveform(level: audioLevel, active: !isStarting)
 
                 HStack(spacing: 8) {
-                    Text(isStarting ? "Opening microphone…" : (isAction ? "Listening for your command…" : "Listening… audio stays on this Mac."))
-                        .font(.system(size: 11))
-                        .foregroundStyle(DictationCardPalette.muted)
+                    HStack(spacing: 5) {
+                        Image(systemName: isStarting ? "mic" : (isAction ? "bolt" : "lock"))
+                            .font(.system(size: 9))
+                        Text(isStarting ? "Opening microphone…" : (isAction ? "Say your command" : "Audio stays on this Mac"))
+                            .font(.system(size: 10.5))
+                    }
+                    .foregroundStyle(DictationCardPalette.secondary)
                     Spacer(minLength: 8)
-                    Button("Finish") {
+                    Text(isAction ? "⌘⇧A" : "⌘⇧D")
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundStyle(DictationCardPalette.muted)
+                        .accessibilityLabel("Press the shortcut again to finish")
+                    Button(isStarting ? "Cancel" : "Finish") {
                         if isAction {
                             DictationController.shared.toggleAction()
                         } else {
                             DictationController.shared.toggleDictation()
                         }
                     }
-                    .buttonStyle(NoirButtonStyle(intent: .quiet, small: true))
+                    .buttonStyle(DictationControlStyle())
+                    .help(isAction ? "Finish command (⌘⇧A)" : "Finish dictation (⌘⇧D)")
                 }
             }
         }
-        .frame(width: 370, height: 150)
+        .frame(width: DictationHUDLayout.recordingSize.width, height: DictationHUDLayout.recordingSize.height)
     }
 }
 
@@ -179,7 +190,7 @@ struct DictationTranscribingPillView: View {
                 }
             }
         }
-        .frame(width: 370, height: 105)
+        .frame(width: DictationHUDLayout.processingSize.width, height: DictationHUDLayout.processingSize.height)
     }
 }
 
@@ -199,60 +210,43 @@ struct DictationTranscriptOverlayView: View {
     var onGrantAccessibility: () -> Void = {}
     let onClose: () -> Void
 
-    /// Keep in sync with DictationController.panelSizeForCurrentState.
-    static let baseHeight: CGFloat = 300
-    static let noticeHeight: CGFloat = 350
-    static let cardWidth: CGFloat = 370
-
     @State private var showRaw = false
-    @State private var undone = false
+    @State private var undoRequested = false
     @State private var copiedFlash = false
 
     private var canToggleOriginal: Bool { showCopyOriginal && !original.isEmpty }
-
-    private var displayText: String {
-        if undone { return "Dictation removed from the app." }
-        return showRaw ? original : transcript
-    }
-
-    private var wordCount: Int {
-        displayText.split(whereSeparator: \.isWhitespace).count
-    }
-
-    private var tagText: String {
-        if undone { return "UNDONE · DICTATION" }
-        return showRaw ? "ORIGINAL · DICTATION" : "READY · DICTATION"
-    }
-
-    private var metaText: String {
-        if formatting { return "polishing…" }
-        let words = "\(wordCount) word\(wordCount == 1 ? "" : "s")"
-        if inserted { return "\(words) · pasted" }
-        if copied { return "\(words) · copied" }
-        return words
-    }
-
-    private var cardHeight: CGFloat {
-        insertNotice.isEmpty ? Self.baseHeight : Self.noticeHeight
+    private var displayText: String { showRaw ? original : transcript }
+    private var wordCount: Int { displayText.split(whereSeparator: \.isWhitespace).count }
+    private var cardSize: CGSize {
+        DictationHUDLayout.transcriptSize(transcript: transcript, original: original,
+            showsOriginal: canToggleOriginal, notice: insertNotice)
     }
 
     var body: some View {
         DictationCard {
             VStack(alignment: .leading, spacing: 0) {
                 header
+                    .padding(.bottom, 12)
 
-                ScrollView(.vertical, showsIndicators: false) {
+                ScrollView(.vertical, showsIndicators: true) {
                     Text(displayText)
                         .font(.system(size: 13))
-                        .lineSpacing(6)
-                        .foregroundStyle(undone ? DictationCardPalette.muted : DictationCardPalette.text)
+                        .lineSpacing(5)
+                        .foregroundStyle(DictationCardPalette.text)
                         .fixedSize(horizontal: false, vertical: true)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .textSelection(.enabled)
                 }
-                .frame(maxHeight: 120)
+                .frame(height: DictationHUDLayout.textHeight(transcript: transcript, original: original,
+                    showsOriginal: canToggleOriginal))
 
-                HStack(spacing: 6) {
+                Rectangle()
+                    .fill(Color.white.opacity(0.08))
+                    .frame(height: 1)
+                    .padding(.top, 14)
+                    .padding(.bottom, 12)
+
+                HStack(spacing: 8) {
                     Button {
                         if showRaw { onCopyOriginal() } else { onCopy() }
                         copiedFlash = true
@@ -260,109 +254,131 @@ struct DictationTranscriptOverlayView: View {
                             copiedFlash = false
                         }
                     } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: copiedFlash ? "checkmark" : "doc.on.doc")
-                                .font(.system(size: 11, weight: .medium))
-                            Text(copiedFlash ? "Copied" : "Copy text")
-                        }
+                        Label(copiedFlash ? "Copied" : "Copy text", systemImage: copiedFlash ? "checkmark" : "doc.on.doc")
                     }
-                    .buttonStyle(NoirButtonStyle(intent: .primary, small: true))
-                    .disabled(undone)
+                    .buttonStyle(DictationControlStyle(primary: true))
 
                     if canToggleOriginal {
-                        Button {
-                            withAnimation(.easeInOut(duration: 0.15)) { showRaw.toggle() }
-                        } label: {
-                            HStack(spacing: 6) {
-                                Image(systemName: "clock.arrow.circlepath")
-                                    .font(.system(size: 11))
-                                Text(showRaw ? "Polished" : "Original")
-                            }
+                        Button { showRaw.toggle() } label: {
+                            Label(showRaw ? "Polished" : "Original", systemImage: "clock.arrow.circlepath")
                         }
-                        .buttonStyle(NoirButtonStyle(intent: .quiet, small: true))
-                        .disabled(undone)
+                        .buttonStyle(DictationControlStyle())
+                        .help(showRaw ? "Show the polished text" : "Show the original transcript")
                     }
-
-                    Button {
-                        undone = true
-                        onUndo()
-                    } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: "arrow.uturn.backward")
-                                .font(.system(size: 11))
-                            Text("Undo")
-                        }
-                    }
-                    .buttonStyle(NoirButtonStyle(intent: .quiet, small: true))
-                    .disabled(undone)
 
                     Spacer(minLength: 0)
-                }
-                .padding(.top, 14)
 
-                footer
+                    if inserted {
+                        Button {
+                            undoRequested = true
+                            onUndo()
+                        } label: {
+                            Label("Undo paste", systemImage: "arrow.uturn.backward")
+                        }
+                        .buttonStyle(DictationControlStyle())
+                        .help("Undo the paste in the destination app; keep this transcript")
+                    }
+                }
+                .frame(height: 32)
+
+                HStack(spacing: 5) {
+                    Image(systemName: statusIcon)
+                        .font(.system(size: 9))
+                    Text(statusText)
+                        .font(.system(size: 10))
+                }
+                .foregroundStyle(DictationCardPalette.secondary)
+                .frame(height: 14, alignment: .leading)
+                .padding(.top, 10)
+
+                if !insertNotice.isEmpty {
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "info.circle")
+                            .font(.system(size: 10))
+                            .padding(.top, 2)
+                        Text(insertNotice)
+                            .font(.system(size: 10.5))
+                            .lineSpacing(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Button("Grant", action: onGrantAccessibility)
+                            .buttonStyle(.plain)
+                            .font(.system(size: 10.5, weight: .medium))
+                            .foregroundStyle(DictationCardPalette.accent)
+                            .help("Open macOS Accessibility settings")
+                    }
+                    .foregroundStyle(DictationCardPalette.secondary)
+                    .frame(height: DictationHUDLayout.noticeHeight(insertNotice), alignment: .topLeading)
+                    .padding(.top, 10)
+                }
             }
         }
-        .frame(width: Self.cardWidth, height: cardHeight, alignment: .topLeading)
+        .frame(width: cardSize.width, height: cardSize.height, alignment: .topLeading)
     }
 
     private var header: some View {
         HStack(spacing: 7) {
             Circle()
-                .fill(undone ? DictationCardPalette.muted : DictationCardPalette.accent)
-                .frame(width: 6, height: 6)
-
-            Text(tagText)
-                .font(.system(size: 10, weight: .medium))
-                .tracking(0.6)
-                .foregroundStyle(undone ? DictationCardPalette.muted : DictationCardPalette.accent)
-
+                .fill(DictationCardPalette.accent)
+                .frame(width: 5, height: 5)
+            Text(showRaw ? "ORIGINAL · DICTATION" : "READY · DICTATION")
+                .font(.system(size: 10, weight: .semibold))
+                .tracking(0.5)
+                .foregroundStyle(DictationCardPalette.accent)
             Spacer(minLength: 8)
-
-            Text(metaText)
-                .font(.system(size: 9.5, design: .monospaced))
-                .foregroundStyle(DictationCardPalette.muted)
-
+            Text("\(wordCount) word\(wordCount == 1 ? "" : "s")")
+                .font(.system(size: 10, design: .monospaced))
+                .foregroundStyle(DictationCardPalette.secondary)
             Button(action: onClose) {
                 Image(systemName: "xmark")
                     .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(DictationCardPalette.muted)
+                    .foregroundStyle(DictationCardPalette.secondary)
                     .frame(width: 22, height: 22)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Close dictation result")
+            .help("Close")
         }
-        .padding(.bottom, 12)
+        .frame(height: 22)
     }
 
-    private var footer: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            if !insertNotice.isEmpty {
-                HStack(spacing: 6) {
-                    Image(systemName: "lock.open")
-                        .font(.system(size: 9, weight: .medium))
-                    Text(insertNotice)
-                        .font(.system(size: 10.5))
-                        .fixedSize(horizontal: false, vertical: true)
-                    Button("Grant", action: onGrantAccessibility)
-                        .buttonStyle(.plain)
-                        .font(.system(size: 10.5, weight: .medium))
-                        .foregroundStyle(DictationCardPalette.accent)
-                }
-                .foregroundStyle(DictationCardPalette.muted)
-            }
-
-            Text(footerText)
-                .font(.system(size: 10))
-                .foregroundStyle(DictationCardPalette.muted)
-        }
-        .padding(.top, 12)
+    private var statusIcon: String {
+        if formatting { return "ellipsis" }
+        if undoRequested && !inserted { return "arrow.uturn.backward" }
+        if copiedFlash || copied { return "doc.on.clipboard" }
+        return inserted ? "checkmark" : "text.cursor"
     }
 
-    private var footerText: String {
-        if inserted { return "Pasted at your cursor." }
+    private var statusText: String {
+        if formatting { return "Polishing your transcript…" }
+        if undoRequested && !inserted { return "Paste undone. Text is still available here." }
         if copiedFlash { return "Copied to the clipboard." }
-        return "Copy the text, then paste where you need it."
+        if inserted { return "Pasted at your cursor." }
+        if copied { return "Copied to the clipboard. Ready to paste." }
+        return "Ready to copy and paste where you need it."
+    }
+}
+
+// MARK: - Compact HUD controls
+
+private struct DictationControlStyle: ButtonStyle {
+    var primary = false
+    @Environment(\.isEnabled) private var isEnabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 11, weight: .medium))
+            .foregroundStyle(primary ? Color(hex: 0x22212E) : DictationCardPalette.secondary)
+            .padding(.horizontal, 10)
+            .frame(height: 32)
+            .background(RoundedRectangle(cornerRadius: 7, style: .continuous)
+                .fill(primary ? DictationCardPalette.accent.opacity(configuration.isPressed ? 0.85 : 1)
+                      : Color.white.opacity(configuration.isPressed ? 0.08 : 0.025)))
+            .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous)
+                .strokeBorder(primary ? .clear : Color.white.opacity(0.09), lineWidth: 1))
+            .contentShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+            .opacity(isEnabled ? 1 : 0.45)
     }
 }
 
@@ -372,24 +388,29 @@ struct NoirWaveform: View {
     var level: Float = 0.2
     var active: Bool = true
     var color: Color = DictationCardPalette.accent
-    private let barCount = 36
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private let barCount = 64
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 0.06)) { context in
-            let t = context.date.timeIntervalSinceReferenceDate
-            HStack(alignment: .center, spacing: 3) {
-                ForEach(0..<barCount, id: \.self) { index in
-                    let wave = abs(sin(t * 2.1 + Double(index) * 0.52))
-                    let levelBump = Double(level) * 20 * abs(sin(t * 1.5 + Double(index) * 0.27))
-                    RoundedRectangle(cornerRadius: 3, style: .continuous)
-                        .fill(color)
-                        .frame(width: 2, height: max(4, min(38, 9 + wave * 16 + levelBump)))
+        TimelineView(.animation(minimumInterval: 1.0 / 24, paused: !active || reduceMotion)) { context in
+            let time = reduceMotion ? 0 : context.date.timeIntervalSinceReferenceDate
+            Canvas { context, size in
+                let gain = active && level.isFinite ? sqrt(Double(min(1, max(0, level)))) : 0
+                let barWidth: CGFloat = 2
+                for index in 0..<barCount {
+                    let position = Double(index) / Double(barCount - 1)
+                    let envelope = 0.45 + 0.55 * sin(position * .pi)
+                    let wave = 0.3 + 0.7 * abs(sin(time * 2.1 + Double(index) * 0.52))
+                    let height = 3 + (size.height - 3) * gain * envelope * wave
+                    let rect = CGRect(x: (size.width - barWidth) * position,
+                                      y: (size.height - height) / 2, width: barWidth, height: height)
+                    context.fill(Path(roundedRect: rect, cornerRadius: 1), with: .color(color.opacity(active ? 0.9 : 0.35)))
                 }
             }
-            .frame(height: 42)
-            .opacity(active ? 1 : 0.35)
         }
+        .frame(maxWidth: .infinity)
         .frame(height: 42)
+        .accessibilityHidden(true)
     }
 }
 

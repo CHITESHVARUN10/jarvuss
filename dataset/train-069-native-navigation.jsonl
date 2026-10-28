@@ -1,0 +1,60 @@
+{"text": "go to bluetooth settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "bluetooth"}}
+{"text": "go to the Bluetooth pane", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "bluetooth"}}
+{"text": "take me to Bluetooth preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "bluetooth"}}
+{"text": "show me the bluetooth preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "bluetooth"}}
+{"text": "please go to Wi-Fi preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "wifi"}}
+{"text": "take me to the Wi-Fi pane", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "wifi"}}
+{"text": "go to wifi preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "wifi"}}
+{"text": "show me the Wi-Fi settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "wifi"}}
+{"text": "please go to the network pane", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "network"}}
+{"text": "take me to network preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "network"}}
+{"text": "show me network settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "network"}}
+{"text": "go to the sound pane", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "sound"}}
+{"text": "take me to sound preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "sound"}}
+{"text": "show me audio settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "sound"}}
+{"text": "go to the displays pane", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "displays"}}
+{"text": "take me to display preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "displays"}}
+{"text": "show me brightness settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "displays"}}
+{"text": "go to keyboard settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "keyboard"}}
+{"text": "please show keyboard settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "keyboard"}}
+{"text": "take me to the keyboard pane", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "keyboard"}}
+{"text": "go to mouse preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "mouse"}}
+{"text": "show me the mouse pane", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "mouse"}}
+{"text": "take me to trackpad preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "trackpad"}}
+{"text": "please go to trackpad settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "trackpad"}}
+{"text": "go to accessibility preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "accessibility"}}
+{"text": "show me accessibility settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "accessibility"}}
+{"text": "take me to accessibility settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "accessibility"}}
+{"text": "show privacy and security settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "privacy"}}
+{"text": "go to privacy and security settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "privacy"}}
+{"text": "take me to privacy and security settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "privacy"}}
+{"text": "show the privacy and security pane", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "privacy"}}
+{"text": "open the privacy and security preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "privacy"}}
+{"text": "please go to privacy and security preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "privacy"}}
+{"text": "can you open privacy and security settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "privacy"}}
+{"text": "could you show privacy and security preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "privacy"}}
+{"text": "Jarvis, go to the privacy and security pane", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "privacy"}}
+{"text": "show privacy & security settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "privacy"}}
+{"text": "go to the privacy & security pane", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "privacy"}}
+{"text": "please open privacy & security preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "privacy"}}
+{"text": "take me to the security pane", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "privacy"}}
+{"text": "show me privacy preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "privacy"}}
+{"text": "please go to privacy settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "privacy"}}
+{"text": "go to microphone preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "microphone"}}
+{"text": "show me the microphone pane", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "microphone"}}
+{"text": "take me to battery settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "battery"}}
+{"text": "go to battery preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "battery"}}
+{"text": "show me notification settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "notifications"}}
+{"text": "go to notifications preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "notifications"}}
+{"text": "take me to storage settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "storage"}}
+{"text": "show me the storage pane", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "storage"}}
+{"text": "go to software update preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "software_update"}}
+{"text": "show me software update settings", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "software_update"}}
+{"text": "take me to the updates pane", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "software_update"}}
+{"text": "go to spotlight preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "spotlight"}}
+{"text": "show me the spotlight pane", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "spotlight"}}
+{"text": "take me to general preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "general"}}
+{"text": "go to the general pane", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "general"}}
+{"text": "can you show me the Bluetooth pane", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "bluetooth"}}
+{"text": "could you take me to the network pane", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "network"}}
+{"text": "please show me privacy and security preferences", "intents": [{"name": "settings.open", "args": {}}], "resolved_args": {"pane": "privacy"}}

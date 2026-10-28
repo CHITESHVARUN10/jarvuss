@@ -130,4 +130,14 @@ final class MicrophoneLifecycleTests: XCTestCase {
         }
     }
 
+    func testVerificationMeasuresDecodedAudioRatherThanContainerHeaders() throws {
+        let url = directory.appendingPathComponent("level.wav")
+        try MicManager.writeWav(samples: [Float](repeating: 0, count: 16000), sampleRate: 16000, to: url)
+        XCTAssertEqual(AppState.clipRMS(ofWavAt: url), 0)
+        try MicManager.writeWav(samples: [Float](repeating: 0.125, count: 16000), sampleRate: 16000, to: url)
+        XCTAssertEqual(AppState.clipRMS(ofWavAt: url), 0.125, accuracy: 0.0001)
+        try Data("not audio".utf8).write(to: url)
+        XCTAssertEqual(AppState.clipRMS(ofWavAt: url), 0)
+    }
+
 }
