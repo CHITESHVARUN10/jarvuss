@@ -58,7 +58,7 @@ enum SafetyGuard {
         case .installPreview(let pkg, let source):
             return .installPreview(command: "install \(pkg)", source: source)
         case .displayControl:
-            // Display brightness/contrast/resolution carry no safety risk.
+            // Brightness/contrast floors are enforced in the shared display controllers.
             return .allowed
         }
     }

@@ -112,7 +112,7 @@ final class BuiltInBrightnessController {
     /// Returns true if any method successfully applied the change.
     @discardableResult
     func setBrightness(_ level: Float) -> Bool {
-        let clamped = min(max(level, 0.0), 1.0)
+        let clamped = DisplaySafety.hardwareBrightness(level)
         guard let displayID = builtInDisplayID() else {
             emit("[Brightness] No built-in display found")
             return false

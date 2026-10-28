@@ -6,6 +6,7 @@ import AppKit
 struct NoirSystemPage: View {
     @ObservedObject var appState: AppState
     @ObservedObject private var dictation = DictationController.shared
+    @ObservedObject private var recovery = DisplayRecovery.shared
     @EnvironmentObject private var toasts: ToastCenter
 
     @State private var brightness: Double = 65
@@ -73,6 +74,34 @@ struct NoirSystemPage: View {
                             }
                         }
                     }
+                }
+            }
+
+            NoirSectionHeading(title: "Display safety")
+            NoirCard(padded: true) {
+                Text("Jarvis keeps brightness at 10% or higher, contrast at 20% or higher, and software dimming above zero.")
+                    .font(.system(size: 12))
+                    .foregroundStyle(NoirPalette.secondary)
+                Text("If the screen becomes unreadable, press ⌘⇧R. Or press ⌘⇧A, say ‘Restore my display’, then press ⌘⇧A again to finish. Recovery bypasses verification only for this exact, safe action.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(NoirPalette.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 8)
+                Text("Requests 60% brightness, 50% external contrast and normal software brightness using macOS and supported display controls. BetterDisplay is optional. If you use it, keep its notification integration enabled to release its dimming; software image adjustments are suspended until you re-enable them in BetterDisplay. Jarvis must be running.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(NoirPalette.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 8)
+                Button(recovery.isRestoring ? "Restoring…" : "Restore display visibility") { recovery.restore() }
+                    .buttonStyle(NoirButtonStyle(intent: .quiet, small: true))
+                    .disabled(recovery.isRestoring)
+                    .padding(.top, 12)
+                if !recovery.shortcutRegistered {
+                    Text("⌘⇧R is unavailable. Another app may already use it; the button and voice phrase still work.")
+                        .font(.system(size: 11)).foregroundStyle(NoirPalette.orange).padding(.top, 8)
+                }
+                if !recovery.status.isEmpty {
+                    Text(recovery.status).font(.system(size: 11)).foregroundStyle(NoirPalette.secondary).padding(.top, 8)
                 }
             }
 

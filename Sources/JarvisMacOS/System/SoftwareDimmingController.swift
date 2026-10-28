@@ -4,7 +4,7 @@ import CoreGraphics
 /// Controls display brightness at the GPU software level by scaling the display's
 /// RGB color lookup tables (Gamma table) using CoreGraphics (`CGSetDisplayTransferByTable`).
 ///
-/// This allows dimming the screen all the way to 100% pitch black (0 lux emission),
+/// A nonzero software floor prevents an accidental completely black transfer table,
 /// overcoming the physical hardware minimum backlight limit of external LCD monitors.
 final class SoftwareDimmingController {
 
@@ -17,6 +17,12 @@ final class SoftwareDimmingController {
         let tableSize: Int
     }
 
+    static func usableBaseline(_ channels: [[Float]]) -> Bool {
+        let values = channels.flatMap { $0 }
+        return !values.isEmpty && values.allSatisfy { $0.isFinite && $0 >= 0 }
+            && values.contains { $0 > 0.01 }
+    }
+
     /// Cache of baseline hardware gamma tables per displayID
     private var originalTables: [CGDirectDisplayID: OriginalGammaTable] = [:]
 
@@ -26,11 +32,11 @@ final class SoftwareDimmingController {
 
     // MARK: - Public API
 
-    /// Applies a software dimming factor from 0.0 (pitch black) to 1.0 (normal color).
+    /// Applies a software dimming factor, bounded to 0.2–1.0 for visibility.
     /// Returns true on success.
     @discardableResult
     func setDimmingFactor(_ factor: Float, for displayID: CGDirectDisplayID) -> Bool {
-        let clampedFactor = CGGammaValue(min(max(factor, 0.0), 1.0))
+        let clampedFactor = CGGammaValue(DisplaySafety.softwareFactor(factor))
 
         // Ensure we have captured baseline gamma table for this display
         guard let baseTable = getOrCaptureOriginalTable(for: displayID) else {
@@ -130,6 +136,10 @@ final class SoftwareDimmingController {
                 blue: Array(blue.prefix(count)),
                 tableSize: count
             )
+            guard Self.usableBaseline([table.red, table.green, table.blue]) else {
+                emit("[SoftwareDimming] Refusing an already-black or invalid baseline; use display recovery first")
+                return nil
+            }
             originalTables[displayID] = table
             return table
         }

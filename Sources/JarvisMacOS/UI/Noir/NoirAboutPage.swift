@@ -42,6 +42,8 @@ struct NoirAboutPage: View {
                             NoirDivider()
                             shortcut("Run a voice command", keys: "⌘ ⇧ A")
                             NoirDivider()
+                            shortcut("Restore display visibility", keys: "⌘ ⇧ R")
+                            NoirDivider()
                             shortcut("Toggle verification", keys: "⌘ O")
                             NoirDivider()
                             shortcut("Submit typed command", keys: "Return")

@@ -11,6 +11,7 @@ import Carbon.HIToolbox
 
 private var gDictationHotKeyRef: EventHotKeyRef?
 private var gActionHotKeyRef: EventHotKeyRef?
+private var gRecoveryHotKeyRef: EventHotKeyRef?
 private var gDictationEventHandlerRef: EventHandlerRef?
 // Keep the registered C callback and handler together until unregistration.
 private var gDictationEventHandlerUPP: EventHandlerUPP?
@@ -36,6 +37,7 @@ struct HotkeyLatch {
 
 private var gDictationLatch = HotkeyLatch()
 private var gActionLatch = HotkeyLatch()
+private var gRecoveryLatch = HotkeyLatch()
 private var gHotkeyReleaseTimer: Timer?
 
 /// System permission dialogs can consume a Carbon key-up. Poll only while
@@ -47,7 +49,8 @@ private func watchHotkeyRelease() {
         MainActor.assumeIsolated {
             gDictationLatch.recover(physicalKeyDown: CGEventSource.keyState(.combinedSessionState, key: CGKeyCode(kVK_ANSI_D)))
             gActionLatch.recover(physicalKeyDown: CGEventSource.keyState(.combinedSessionState, key: CGKeyCode(kVK_ANSI_A)))
-            if !gDictationLatch.held && !gActionLatch.held {
+            gRecoveryLatch.recover(physicalKeyDown: CGEventSource.keyState(.combinedSessionState, key: CGKeyCode(kVK_ANSI_R)))
+            if !gDictationLatch.held && !gActionLatch.held && !gRecoveryLatch.held {
                 gHotkeyReleaseTimer?.invalidate()
                 gHotkeyReleaseTimer = nil
             }
@@ -78,12 +81,21 @@ private func dictationHotkeyEventHandler(
 
     guard err == noErr else { return noErr }
     guard hkID.signature == gDictationHotKeySignature || hkID.signature == gActionHotKeySignature else { return noErr }
+    let isRecovery = hkID.id == 3
     let isAction = hkID.signature == gActionHotKeySignature
 
     let kind = GetEventKind(event)
     let isPress = (kind == UInt32(kEventHotKeyPressed))
 
     DispatchQueue.main.async {
+        if isRecovery {
+            if isPress {
+                guard gRecoveryLatch.press() else { return }
+                watchHotkeyRelease()
+                DisplayRecovery.shared.restore()
+            } else { gRecoveryLatch.release() }
+            return
+        }
         if isPress {
             // Toggle ON the first key-down only.
             // Suppress auto-repeat presses while the key is held.
@@ -111,6 +123,7 @@ private func dictationHotkeyEventHandler(
     return noErr
 }
 
+@MainActor
 func registerDictationHotkey() {
     // Idempotent: re-registering without unregister leaks an EventHotKeyRef
     // per call (app relaunch paths, tests). Tear down first.
@@ -151,6 +164,11 @@ func registerDictationHotkey() {
         NSLog("[Jarvis][Hotkey] Action registration failed: \(actionStatus)")
     }
 
+    let recoveryStatus = RegisterEventHotKey(UInt32(kVK_ANSI_R), UInt32(cmdKey | shiftKey),
+        EventHotKeyID(signature: gDictationHotKeySignature, id: 3), GetEventDispatcherTarget(), 0, &gRecoveryHotKeyRef)
+    DisplayRecovery.shared.shortcutRegistered = recoveryStatus == noErr
+    NSLog("[Jarvis][Display recovery] ⌘⇧R registration: %d", recoveryStatus)
+
     var specs: [EventTypeSpec] = [
         EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed)),
         EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyReleased))
@@ -184,16 +202,21 @@ func registerDictationHotkey() {
     }
 }
 
+@MainActor
 func unregisterDictationHotkey() {
+    DisplayRecovery.shared.shortcutRegistered = false
     if let ref = gDictationHotKeyRef { UnregisterEventHotKey(ref) }
     gDictationHotKeyRef = nil
     if let ref = gActionHotKeyRef { UnregisterEventHotKey(ref) }
     gActionHotKeyRef = nil
+    if let ref = gRecoveryHotKeyRef { UnregisterEventHotKey(ref) }
+    gRecoveryHotKeyRef = nil
     if let handler = gDictationEventHandlerRef { RemoveEventHandler(handler) }
     gDictationEventHandlerRef = nil
     gDictationEventHandlerUPP = nil
     gDictationLatch.release()
     gActionLatch.release()
+    gRecoveryLatch.release()
     gHotkeyReleaseTimer?.invalidate()
     gHotkeyReleaseTimer = nil
 }

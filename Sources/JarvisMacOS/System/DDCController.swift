@@ -51,7 +51,7 @@ final class DDCController {
 
     func setBrightness(displayID: CGDirectDisplayID, percent: Int) -> Bool {
         write(displayID: displayID, vcpCode: VCPCode.brightness.rawValue,
-              value: UInt16(clamp(percent, 0, 100)))
+              value: UInt16(DisplaySafety.brightness(percent)))
     }
 
     func getBrightness(displayID: CGDirectDisplayID) -> (current: Int, max: Int)? {
@@ -61,7 +61,7 @@ final class DDCController {
 
     func setContrast(displayID: CGDirectDisplayID, percent: Int) -> Bool {
         write(displayID: displayID, vcpCode: VCPCode.contrast.rawValue,
-              value: UInt16(clamp(percent, 0, 100)))
+              value: UInt16(DisplaySafety.contrast(percent)))
     }
 
     func getContrast(displayID: CGDirectDisplayID) -> (current: Int, max: Int)? {
@@ -93,7 +93,8 @@ final class DDCController {
 
     /// Writes a VCP value to the display via DDC/CI.
     /// Returns true on success.
-    func write(displayID: CGDirectDisplayID, vcpCode: UInt8, value: UInt16) -> Bool {
+    func write(displayID: CGDirectDisplayID, vcpCode: UInt8, value requested: UInt16) -> Bool {
+        let value = DisplaySafety.safeVCPValue(vcpCode, requested)
         guard let service = resolvedService(for: displayID) else {
             emit("[DDC] No IOAVService found for displayID \(displayID)")
             return false

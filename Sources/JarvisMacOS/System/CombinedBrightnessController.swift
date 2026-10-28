@@ -3,12 +3,7 @@ import CoreGraphics
 
 /// Combines Hardware DDC Backlight (VCP 0x10), Hardware Contrast (VCP 0x12),
 /// and Software GPU Gamma Scaling (`SoftwareDimmingController`) into a seamless
-/// 0% - 100% combined brightness spectrum.
-///
-/// Scale:
-/// - 0%   = Pitch Black (Software Gamma 0.0, DDC Backlight 0, DDC Contrast 30)
-/// - 30%  = DDC Hardware Floor (Software Gamma 1.0, DDC Backlight 0, DDC Contrast 50)
-/// - 100% = Maximum Lumens (Software Gamma 1.0, DDC Backlight 100, DDC Contrast 100)
+/// combined brightness spectrum with shared hardware/software safety floors.
 final class CombinedBrightnessController {
 
     var onLog: ((String) -> Void)? {
@@ -27,10 +22,10 @@ final class CombinedBrightnessController {
 
     // MARK: - Public API
 
-    /// Sets combined brightness from 0 (pitch black) to 100 (max hardware backlight).
+    /// Sets combined brightness within the shared safe range.
     @discardableResult
     func setCombinedBrightness(_ percent: Int) -> String {
-        let level = min(max(percent, 0), 100)
+        let level = DisplaySafety.brightness(percent)
         currentCombinedLevel = level
 
         // 1. Try built-in panel (MacBook)
@@ -58,13 +53,13 @@ final class CombinedBrightnessController {
     /// Increase combined brightness by delta percent.
     @discardableResult
     func increase(by delta: Int) -> String {
-        setCombinedBrightness(currentCombinedLevel + delta)
+        setCombinedBrightness(DisplaySafety.adjustedBrightness(current: currentCombinedLevel, delta: delta, increasing: true))
     }
 
     /// Decrease combined brightness by delta percent.
     @discardableResult
     func decrease(by delta: Int) -> String {
-        setCombinedBrightness(currentCombinedLevel - delta)
+        setCombinedBrightness(DisplaySafety.adjustedBrightness(current: currentCombinedLevel, delta: delta, increasing: false))
     }
 
     // MARK: - Core Combining Logic
@@ -86,7 +81,7 @@ final class CombinedBrightnessController {
             _ = ddc.setBrightness(displayID: displayID, percent: ddcBacklight)
             _ = ddc.setContrast(displayID: displayID, percent: ddcContrast)
 
-            let desc = level == 0 ? "Pitch Black (0%)" : "Sub-Zero Software Dimming (\(level)%)"
+            let desc = "Software dimming (\(level)%, safety floors applied)"
             emit("[Combined] \(desc) on display \(displayID)")
             return "Combined brightness: \(desc)"
         } else {

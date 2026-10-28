@@ -195,6 +195,7 @@ final class AppState: ObservableObject {
     let statsRecorder: StatsRecorder
     let intentLog: IntentRouterLog
     let presentsUI: Bool
+    private let emergencyDisplayRecovery: @MainActor () -> Void
     private let backendServiceManager = BackendServiceManager.shared
     private let displayController = DisplayController()
     let commandQueue = CommandQueueManager()
@@ -285,7 +286,8 @@ final class AppState: ObservableObject {
         voiceAuthClient: SpeakerVerifying = VoiceAuthClient(),
         statsRecorder: StatsRecorder = .shared,
         intentLog: IntentRouterLog = .shared,
-        activateServices: Bool = true
+        activateServices: Bool = true,
+        emergencyDisplayRecovery: (@MainActor () -> Void)? = nil
     ) {
         self.micManager = micManager
         self.logger = logger
@@ -296,6 +298,7 @@ final class AppState: ObservableObject {
         self.statsRecorder = statsRecorder
         self.intentLog = intentLog
         self.presentsUI = activateServices
+        self.emergencyDisplayRecovery = emergencyDisplayRecovery ?? { DisplayRecovery.shared.restore() }
         micManager.setInterruptionHandler { [weak self] message in
             MainActor.assumeIsolated {
                 guard let self else { return }
@@ -735,7 +738,17 @@ final class AppState: ObservableObject {
     /// validate → classify → enqueue. No wake word (the keypress is the
     /// intent). Verification is per `actionPillRequiresVerify`, changeable
     /// in Settings without touching code.
+    @discardableResult
+    func recoverDisplayIfRequested(_ text: String) -> Bool {
+        guard DisplaySafety.isRecoveryRequest(text) else { return false }
+        commandQueue.cancelAll()
+        appendLog("[Display recovery] Exact recovery phrase accepted; no verification or AI required.")
+        emergencyDisplayRecovery()
+        return true
+    }
+
     func handleActionPillCommand(_ raw: String) {
+        if recoverDisplayIfRequested(raw) { return }
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
             appendLog("[Action] dropped: empty transcript.")
@@ -779,6 +792,7 @@ final class AppState: ObservableObject {
     func executeTypedCommand() {
         let raw = commandInput.trimmingCharacters(in: .whitespacesAndNewlines)
         commandInput = ""
+        if recoverDisplayIfRequested(raw) { return }
         guard !raw.isEmpty else { return }
 
         guard let command = CommandValidator.validate(raw) else {
@@ -861,6 +875,7 @@ final class AppState: ObservableObject {
         // asked for visible speech→text while talking). Command execution
         // still waits for the final below.
         guard isFinal else { return }
+        if !enrollmentActive && recoverDisplayIfRequested(transcript) { return }
 
         if voiceModeEnabled && TranscriptSanitizer.containsWakeWord(transcript) {
             pendingWakeWordDetected = true

@@ -35,10 +35,10 @@ enum DisplayAction: Equatable, CustomStringConvertible {
     /// Human-readable spoken response for ResponseEngine.
     var responseText: String {
         switch self {
-        case .setBrightness(let v):           return "Brightness set to \(v) percent"
+        case .setBrightness(let v):           return "Brightness set to \(DisplaySafety.brightness(v)) percent"
         case .increaseBrightness(let d):      return "Brightness increased by \(d) percent"
         case .decreaseBrightness(let d):      return "Brightness decreased by \(d) percent"
-        case .setContrast(let v):             return "Contrast set to \(v) percent"
+        case .setContrast(let v):             return "Contrast set to \(DisplaySafety.contrast(v)) percent"
         case .increaseContrast(let d):        return "Contrast increased by \(d) percent"
         case .decreaseContrast(let d):        return "Contrast decreased by \(d) percent"
         case .setResolution(let w, let h, _): return "Resolution changed to \(w) by \(h)"
@@ -147,7 +147,7 @@ final class DisplayController {
     private var cachedContrastPct: Int = 50
 
     private func setBrightness(_ percent: Int) -> ControllerResult {
-        let safePct = clamp(percent, 0, 100)
+        let safePct = DisplaySafety.brightness(percent)
         let level = Float(safePct) / 100.0
 
         // Try built-in first.
@@ -174,10 +174,11 @@ final class DisplayController {
 
     private enum Direction { case up, down }
 
-    private func adjustBrightness(delta: Float, direction: Direction) -> ControllerResult {
+    private func adjustBrightness(delta requested: Float, direction: Direction) -> ControllerResult {
+        let delta = min(1, max(0, requested))
         if builtIn.canChangeBrightness() {
             let current = builtIn.getBrightness() ?? Float(cachedBrightnessPct) / 100.0
-            let newLevel = direction == .up ? current + delta : current - delta
+            let newLevel = DisplaySafety.hardwareBrightness(direction == .up ? current + delta : current - delta)
             let ok = builtIn.setBrightness(newLevel)
             if ok {
                 let pct = Int(min(max(newLevel, 0), 1) * 100)
@@ -191,7 +192,7 @@ final class DisplayController {
             ddc.onLog = onLog
             let step = Int(delta * 100)
             let currentPct = ddc.getBrightness(displayID: displayID)?.current ?? clamp(cachedBrightnessPct, 0, 100)
-            let newPct = clamp(direction == .up ? currentPct + step : currentPct - step, 0, 100)
+            let newPct = DisplaySafety.adjustedBrightness(current: currentPct, delta: step, increasing: direction == .up)
             if ddc.setBrightness(displayID: displayID, percent: newPct) {
                 cachedBrightnessPct = newPct
                 return ControllerResult(message: "External display brightness \(direction == .up ? "increased" : "decreased") to \(newPct)%", success: true)
@@ -203,7 +204,8 @@ final class DisplayController {
 
     // MARK: - Contrast
 
-    private func setContrast(_ percent: Int) -> ControllerResult {
+    private func setContrast(_ requested: Int) -> ControllerResult {
+        let percent = DisplaySafety.contrast(requested)
         ddc.onLog = onLog
         for displayID in DDCController.externalDisplayIDs() {
             if ddc.setContrast(displayID: displayID, percent: percent) {
@@ -218,7 +220,7 @@ final class DisplayController {
         ddc.onLog = onLog
         for displayID in DDCController.externalDisplayIDs() {
             let currentPct = ddc.getContrast(displayID: displayID)?.current ?? cachedContrastPct
-            let newPct = clamp(direction == .up ? currentPct + delta : currentPct - delta, 0, 100)
+            let newPct = DisplaySafety.adjustedContrast(current: currentPct, delta: delta, increasing: direction == .up)
             if ddc.setContrast(displayID: displayID, percent: newPct) {
                 cachedContrastPct = newPct
                 return ControllerResult(message: "Contrast \(direction == .up ? "increased" : "decreased") to \(newPct)%", success: true)
