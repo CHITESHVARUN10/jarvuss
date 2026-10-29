@@ -1,71 +1,9 @@
 import Foundation
 
 extension ActionPlanner {
-    func parseVolumeCommand(_ lower: String) -> PlannedAction? {
-
-        // ── Mute ─────────────────────────────────────────────────────
-        let muteVariants = [
-            "mute", "mute the sound", "mute audio", "mute sound",
-            "sound off", "turn off sound", "silence", "go silent",
-            "shut up", "be quiet",
-        ]
-        if muteVariants.contains(lower) {
-            NSLog("[Intent] detected: mute")
-            return .volumeControl(.mute)
-        }
-
-        // ── Unmute ───────────────────────────────────────────────────
-        let unmuteVariants = [
-            "unmute", "sound on", "turn on sound", "unmute the sound",
-            "unmute audio", "unmute sound",
-        ]
-        if unmuteVariants.contains(lower) {
-            NSLog("[Intent] detected: unmute")
-            return .volumeControl(.unmute)
-        }
-
-        if lower.contains("set volume to ") || lower.contains("volume to ") {
-            if let pct = extractVolumeAmount(from: lower) {
-                NSLog("[Intent] detected: volume_set(%d%%)", pct)
-                return .volumeControl(.setLevel(pct))
-            }
-        }
-
-        // ── Increase: volume, sound, audio ───────────────────────────
-        let increasePatterns = [
-            "increase volume",  "increase the volume",
-            "increase sound",   "increase the sound",
-            "increase audio",   "increase the audio",
-            "volume up", "sound up", "audio up",
-            "turn up the volume", "turn up the sound", "turn up",
-            "raise volume", "raise the volume",
-            "louder", "make it louder", "volume louder",
-            "bump up the volume", "bump the volume"
-        ]
-        if increasePatterns.contains(where: { lower.contains($0) }) {
-            let amount = extractVolumeAmount(from: lower) ?? 10
-            NSLog("[Intent] detected: volume_up(%d%%)", amount)
-            return .volumeControl(.increase(by: amount))
-        }
-
-        // ── Decrease: volume, sound, audio ───────────────────────────
-        let decreasePatterns = [
-            "decrease volume",  "decrease the volume",
-            "decrease sound",   "decrease the sound",
-            "decrease audio",   "decrease the audio",
-            "volume down", "sound down", "audio down",
-            "turn down the volume", "turn down the sound", "turn down",
-            "lower volume", "lower the volume", "lower sound",
-            "quieter", "make it quieter",
-            "reduce volume", "reduce the volume"
-        ]
-        if decreasePatterns.contains(where: { lower.contains($0) }) {
-            let amount = extractVolumeAmount(from: lower) ?? 10
-            NSLog("[Intent] detected: volume_down(%d%%)", amount)
-            return .volumeControl(.decrease(by: amount))
-        }
-
-        return nil
+    func parseVolumeCommand(_ text: String) -> PlannedAction? {
+        guard let action = SystemVolumeParser.route(text), case .volumeControl = action else { return nil }
+        return action
     }
 
     // MARK: - Display command parser

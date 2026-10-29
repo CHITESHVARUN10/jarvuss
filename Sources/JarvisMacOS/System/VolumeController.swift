@@ -1,332 +1,218 @@
 import Foundation
-import CoreAudio
 
-enum AudioDeviceType: CustomStringConvertible {
-    case hdmi
-    case nonHDMI
-    case unknown
-
-    var description: String {
-        switch self {
-        case .hdmi: return "HDMI"
-        case .nonHDMI: return "Non-HDMI"
-        case .unknown: return "Unknown"
-        }
+/// One serialized transaction per command. The output ID and UID are pinned
+/// for its entire lifetime; later commands resolve the default output afresh.
+// The worker owns the injected HAL access and mute bookmarks. Only the log
+// callback crosses that boundary; its storage is protected by a separate lock.
+final class VolumeController: @unchecked Sendable {
+    private struct Value {
+        let property: SystemAudioProperty
+        let value: Float
     }
-}
 
-final class VolumeController {
-    private let coreAudio = CoreAudioVolumeController()
-    private let monitorVolume = MonitorVolumeController()
-    private let audioGain = AudioGainController()
-
+    private let logLock = NSLock()
+    private var logHandler: ((String) -> Void)?
     var onLog: ((String) -> Void)? {
-        didSet {
-            coreAudio.onLog = onLog
-            monitorVolume.onLog = onLog
-            audioGain.onLog = onLog
+        get { logLock.withLock { logHandler } }
+        set { logLock.withLock { logHandler = newValue } }
+    }
+    private let audio: SystemAudioAccess
+    private let waitForReadback: () -> Void
+    private let queue = DispatchQueue(label: "com.jarvis.system-volume", qos: .userInitiated)
+    // Only fallback mute needs a bookmark. Never restore another device's gain
+    // or invent a 50% volume on a fresh launch.
+    private var mutedVolumes: [String: [Value]] = [:]
+
+    init(audio: SystemAudioAccess = CoreAudioVolumeController(),
+         waitForReadback: @escaping () -> Void = { Thread.sleep(forTimeInterval: 0.025) }) {
+        self.audio = audio
+        self.waitForReadback = waitForReadback
+    }
+
+    /// nil is a read-only volume query. No HAL operations run on the UI thread.
+    func perform(_ action: VolumeAction?) async -> ControllerResult {
+        guard !Task.isCancelled else { return ControllerResult(message: "Volume command cancelled.", success: false) }
+        return await withCheckedContinuation { continuation in
+            queue.async { continuation.resume(returning: self.result(for: action)) }
         }
     }
 
-    private(set) var currentVolume: Float = 0.5
-    private var preMuteVolume: Float = 0.5
-    private var lastOperationSucceeded = false
+    /// Synchronous entry points also share the same serialization boundary.
+    func executeResult(_ action: VolumeAction) -> ControllerResult { queue.sync { result(for: action) } }
+    func readResult() -> ControllerResult { queue.sync { result(for: nil) } }
 
-    func increase(by percent: Float) {
-        let delta = clamp01(percent / 100.0)
-        let device = getCurrentOutputDevice()
-        emit("[Volume][Debug] Requested change: +\(percent)")
-        emit("[Volume][Debug] Previous volume: \(currentVolume)")
-        if device == .hdmi {
-            emit("[Volume][Debug] Using method: ddc")
-            let step = max(1, Int(round(Double(delta * 100.0))))
-            let before = currentVolume
-            let ok = monitorVolume.setVolumeResult(monitorVolume.currentPercent + step)
-            if ok {
-                currentVolume = Float(monitorVolume.currentPercent) / 100.0
-                lastOperationSucceeded = hasMeaningfulChange(before: before, after: currentVolume)
-                return
+    private func result(for action: VolumeAction?) -> ControllerResult {
+        var wrote = false
+        do {
+            let device = try audio.defaultOutput()
+            onLog?("[Volume] Active output: \(device.name) (\(device.id)); request: \(action?.description ?? "read")")
+            guard !device.isAggregate else {
+                throw SystemAudioError(message: "\(device.name) is an aggregate or multi-output device. Select a single output in Sound settings to control its volume.")
             }
-            emit("[Volume][Debug] DDC failed, falling back to audiogain")
-            let gainBefore = audioGain.currentVolumeFactor()
-            let gainApplied = audioGain.increase(by: step)
-            if gainApplied {
-                currentVolume = audioGain.currentVolumeFactor()
+            guard let action else {
+                let levels = try? volumeControls(device, writable: false)
+                let mute = try muteControls(device)
+                try requireSameOutput(device)
+                let muted = mute.contains { $0.value > 0 }
+                if let level = levels?.map(\.value).max() {
+                    return ControllerResult(message: "\(device.name): \(percent(level))%\(muted ? " (muted)" : "")", success: true)
+                }
+                if !mute.isEmpty {
+                    return ControllerResult(message: "\(device.name): \(muted ? "muted" : "not muted"); volume reading unavailable.", success: true)
+                }
+                throw unsupported(device)
             }
-            lastOperationSucceeded = gainApplied && hasMeaningfulChange(before: gainBefore, after: currentVolume)
-            return
-        }
 
-        emit("[Volume][Debug] Using method: coreaudio")
-        let before = coreAudio.getVolume().map { Float($0) }
-        coreAudio.increase(by: delta)
-        syncCurrentVolumeFromSystem()
-        let after = coreAudio.getVolume().map { Float($0) }
-        let changed = hasMeaningfulChange(before: before, after: after)
-        if changed {
-            lastOperationSucceeded = true
-            return
-        }
-        // CoreAudio failed (no BlackHole) — fall back to AudioGain software gain.
-        emit("[Volume][Debug] CoreAudio had no effect, falling back to AudioGain")
-        let gainApplied = audioGain.increase(by: Int(round(Double(percent))))
-        if gainApplied { currentVolume = audioGain.currentVolumeFactor() }
-        lastOperationSucceeded = gainApplied
-    }
+            switch action {
+            case .mute, .unmute:
+                let shouldMute = action == .mute
+                let hardware = try muteControls(device)
+                if !hardware.isEmpty {
+                    let changes = hardware.map { Value(property: $0.property, value: shouldMute ? 1 : 0) }
+                    try apply(changes, on: device, wrote: &wrote)
+                } else {
+                    let current = try volumeControls(device, writable: true)
+                    let level = current.map(\.value).max() ?? 0
+                    if shouldMute {
+                        // Repeated mute must not overwrite the original level with zero.
+                        if level > 0 { mutedVolumes[device.uid] = current }
+                        try apply(current.map { Value(property: $0.property, value: 0) }, on: device, wrote: &wrote)
+                    } else if level == 0 {
+                        guard let saved = mutedVolumes[device.uid], saved.contains(where: { $0.value > 0 }),
+                              saved.map(\.property) == current.map(\.property) else {
+                            throw SystemAudioError(message: "\(device.name) is at 0%. No saved mute level is available; say ‘set volume to 20 percent’ to choose a level.")
+                        }
+                        try apply(saved, on: device, wrote: &wrote)
+                        mutedVolumes.removeValue(forKey: device.uid)
+                    } else {
+                        mutedVolumes.removeValue(forKey: device.uid)
+                    }
+                }
+                try requireSameOutput(device)
+                return ControllerResult(message: "\(shouldMute ? "Muted" : "Unmuted") \(device.name).", success: true)
 
-    func decrease(by percent: Float) {
-        let delta = clamp01(percent / 100.0)
-        let device = getCurrentOutputDevice()
-        emit("[Volume][Debug] Requested change: +\(-percent)")
-        emit("[Volume][Debug] Previous volume: \(currentVolume)")
-        if device == .hdmi {
-            emit("[Volume][Debug] Using method: ddc")
-            let step = max(1, Int(round(Double(delta * 100.0))))
-            let before = currentVolume
-            let ok = monitorVolume.setVolumeResult(monitorVolume.currentPercent - step)
-            if ok {
-                currentVolume = Float(monitorVolume.currentPercent) / 100.0
-                lastOperationSucceeded = hasMeaningfulChange(before: before, after: currentVolume)
-                return
+            case .increase(let amount), .decrease(let amount), .setLevel(let amount):
+                guard (0...100).contains(amount) else {
+                    throw SystemAudioError(message: "Volume amounts must be between 0 and 100 percent.")
+                }
+                let current = try volumeControls(device, writable: true)
+                let before = current.map(\.value).max() ?? 0
+                let target: Float
+                switch action {
+                case .increase: target = min(1, before + Float(amount) / 100)
+                case .decrease: target = max(0, before - Float(amount) / 100)
+                default: target = Float(amount) / 100
+                }
+                let muted = try muteControls(device).filter { $0.value > 0 }
+                let shouldUnmute: Bool
+                if case .setLevel = action { shouldUnmute = target > 0 }
+                else { shouldUnmute = target > 0 && amount > 0 }
+                // Preflight unmute before changing gain, so read-only mute
+                // doesn't leave a silently changed volume behind.
+                if shouldUnmute, muted.contains(where: { !audio.isSettable($0.property, on: device) }) {
+                    throw SystemAudioError(message: "\(device.name) is muted and its mute control is read-only. Unmute it using its own controls first.")
+                }
+                let changes = current.map {
+                    Value(property: $0.property, value: before > 0 ? min(1, $0.value * target / before) : target)
+                }
+                try apply(changes, on: device, wrote: &wrote)
+                if shouldUnmute {
+                    try apply(muted.map { Value(property: $0.property, value: 0) }, on: device, wrote: &wrote)
+                    mutedVolumes.removeValue(forKey: device.uid)
+                }
+                let actual = try volumeControls(device, writable: true).map(\.value).max() ?? 0
+                try requireSameOutput(device)
+                return ControllerResult(message: "\(device.name): volume \(percent(actual))%.", success: true)
             }
-            emit("[Volume][Debug] DDC failed, falling back to audiogain")
-            let gainBefore = audioGain.currentVolumeFactor()
-            let gainApplied = audioGain.decrease(by: step)
-            if gainApplied {
-                currentVolume = audioGain.currentVolumeFactor()
+        } catch {
+            let partial = wrote ? " Some audio controls may have changed; check the output before retrying." : ""
+            let message = error.localizedDescription + partial
+            onLog?("[Volume] Failed: \(message)")
+            return ControllerResult(message: message, success: false)
+        }
+    }
+
+    /// Prefer the native virtual main control: macOS maintains channel balance.
+    /// Some drivers expose only scalar main or individual channel controls.
+    private func volumeControls(_ device: SystemAudioOutput, writable: Bool) throws -> [Value] {
+        for property in [SystemAudioProperty.virtualVolume, .volume(0)] {
+            if (!writable || audio.isSettable(property, on: device)), let value = try? read(property, on: device) {
+                return [Value(property: property, value: value)]
             }
-            lastOperationSucceeded = gainApplied && hasMeaningfulChange(before: gainBefore, after: currentVolume)
-            return
         }
-
-        emit("[Volume][Debug] Using method: coreaudio")
-        let before = coreAudio.getVolume().map { Float($0) }
-        coreAudio.decrease(by: delta)
-        syncCurrentVolumeFromSystem()
-        let after = coreAudio.getVolume().map { Float($0) }
-        let changed = hasMeaningfulChange(before: before, after: after)
-        if changed {
-            lastOperationSucceeded = true
-            return
-        }
-        // CoreAudio failed (no BlackHole) — fall back to AudioGain software gain.
-        emit("[Volume][Debug] CoreAudio had no effect, falling back to AudioGain")
-        let gainApplied = audioGain.decrease(by: Int(round(Double(percent))))
-        if gainApplied { currentVolume = audioGain.currentVolumeFactor() }
-        lastOperationSucceeded = gainApplied
+        let count = try audio.outputChannelCount(device)
+        guard (1...64).contains(count) else { throw unsupported(device) }
+        let channels = (1...count).map { SystemAudioProperty.volume(UInt32($0)) }
+        guard !writable || channels.allSatisfy({ audio.isSettable($0, on: device) }) else { throw unsupported(device) }
+        do { return try channels.map { Value(property: $0, value: try read($0, on: device)) } }
+        catch { throw unsupported(device) }
     }
 
-    func setVolume(_ percent: Float) {
-        let normalized = clamp01(percent / 100.0)
-        let device = getCurrentOutputDevice()
-        emit("[Volume][Debug] Requested change: +\(percent)")
-        emit("[Volume][Debug] Previous volume: \(currentVolume)")
-        if device == .hdmi {
-            emit("[Volume][Debug] Using method: ddc")
-            let target = Int(round(Double(normalized * 100.0)))
-            let before = currentVolume
-            let ok = monitorVolume.setVolumeResult(target)
-            if ok {
-                currentVolume = Float(monitorVolume.currentPercent) / 100.0
-                lastOperationSucceeded = hasMeaningfulChange(before: before, after: currentVolume)
-                return
+    private func muteControls(_ device: SystemAudioOutput) throws -> [Value] {
+        if let value = try? read(.mute(0), on: device) { return [Value(property: .mute(0), value: value)] }
+        guard let count = try? audio.outputChannelCount(device), (1...64).contains(count) else { return [] }
+        let values = (1...count).compactMap { channel -> Value? in
+            let property = SystemAudioProperty.mute(UInt32(channel))
+            return (try? read(property, on: device)).map { Value(property: property, value: $0) }
+        }
+        guard values.isEmpty || values.count == count else {
+            throw SystemAudioError(message: "\(device.name) exposes mute state for only some output channels. Use its own audio controls.")
+        }
+        return values
+    }
+
+    private func apply(_ changes: [Value], on device: SystemAudioOutput, wrote: inout Bool) throws {
+        // Validate every channel before writing any channel.
+        for change in changes {
+            guard audio.isSettable(change.property, on: device) else {
+                // A readable, already correct mute is an idempotent success.
+                if try read(change.property, on: device) == change.value { continue }
+                throw SystemAudioError(message: "\(device.name)'s requested audio control is read-only.")
             }
-            emit("[Volume][Debug] DDC failed, falling back to audiogain")
-            let gainBefore = audioGain.currentVolumeFactor()
-            let gainApplied = audioGain.setVolume(target)
-            if gainApplied {
-                currentVolume = audioGain.currentVolumeFactor()
+        }
+        for change in changes {
+            try requireSameOutput(device)
+            let before = try read(change.property, on: device)
+            if abs(before - change.value) < 0.0001 { continue }
+            try audio.write(change.value, to: change.property, on: device)
+            wrote = true
+            // Bluetooth and some USB drivers acknowledge before publishing
+            // their new value. Bound the wait on this worker, never the UI.
+            func confirmed(_ observed: Float) -> Bool {
+                abs(observed - change.value) <= 0.02 && (change.value - before) * (observed - before) > 0
             }
-            lastOperationSucceeded = gainApplied && hasMeaningfulChange(before: gainBefore, after: currentVolume)
-            return
-        }
-
-        emit("[Volume][Debug] Using method: coreaudio")
-        let before = coreAudio.getVolume().map { Float($0) }
-        _ = coreAudio.setVolume(normalized)
-        syncCurrentVolumeFromSystem()
-        let after = coreAudio.getVolume().map { Float($0) }
-        let changed = hasMeaningfulChange(before: before, after: after)
-        if changed {
-            lastOperationSucceeded = true
-            return
-        }
-        // CoreAudio failed (no BlackHole) — fall back to AudioGain software gain.
-        emit("[Volume][Debug] CoreAudio had no effect, falling back to AudioGain")
-        let target = Int(round(Double(normalized * 100.0)))
-        let gainApplied = audioGain.setVolume(target)
-        if gainApplied { currentVolume = audioGain.currentVolumeFactor() }
-        lastOperationSucceeded = gainApplied
-    }
-
-    func mute() {
-        preMuteVolume = currentVolume
-        setVolume(0)
-    }
-
-    func unmute() {
-        let restore = preMuteVolume > 0 ? preMuteVolume : 0.5
-        let device = getCurrentOutputDevice()
-        emit("[Volume][Debug] Requested change: +\(restore * 100.0)")
-        emit("[Volume][Debug] Previous volume: \(currentVolume)")
-        if device == .hdmi {
-            emit("[Volume][Debug] Using method: ddc")
-            let before = currentVolume
-            let ok = monitorVolume.setVolumeResult(Int(round(Double(restore * 100.0))))
-            if ok {
-                currentVolume = Float(monitorVolume.currentPercent) / 100.0
-                lastOperationSucceeded = hasMeaningfulChange(before: before, after: currentVolume)
-                return
+            var observed = try read(change.property, on: device)
+            for _ in 0..<4 where !confirmed(observed) {
+                waitForReadback()
+                try requireSameOutput(device)
+                observed = try read(change.property, on: device)
             }
-            emit("[Volume][Debug] DDC failed, falling back to audiogain")
-            let gainBefore = audioGain.currentVolumeFactor()
-            let gainApplied = audioGain.setVolume(Int(round(Double(restore * 100.0))))
-            if gainApplied {
-                currentVolume = audioGain.currentVolumeFactor()
+            guard confirmed(observed) else {
+                throw SystemAudioError(message: "\(device.name) did not confirm the requested audio change (requested \(percent(change.value))%, read \(percent(observed))%).")
             }
-            lastOperationSucceeded = gainApplied && hasMeaningfulChange(before: gainBefore, after: currentVolume)
-            return
+            onLog?("[Volume] Confirmed \(change.property): \(percent(observed))% on \(device.name)")
         }
-
-        emit("[Volume][Debug] Using method: coreaudio")
-        let before = coreAudio.getVolume().map { Float($0) }
-        _ = coreAudio.setVolume(restore)
-        syncCurrentVolumeFromSystem()
-        let after = coreAudio.getVolume().map { Float($0) }
-        lastOperationSucceeded = hasMeaningfulChange(before: before, after: after)
+        try requireSameOutput(device)
     }
 
-    func execute(_ action: VolumeAction) -> String { executeResult(action).message }
-
-    func executeResult(_ action: VolumeAction) -> ControllerResult {
-        emit("========== VOLUME DEBUG START ==========")
-
-        let device = getCurrentOutputDevice()
-        emit("[Volume][Debug] Detecting output device...")
-        emit("[Volume][Debug] Device detected: \(device)")
-
-        let beforeActual: Float?
-        if device == .hdmi {
-            beforeActual = currentVolume
-        } else {
-            beforeActual = coreAudio.getVolume().map { Float($0) }
+    private func read(_ property: SystemAudioProperty, on device: SystemAudioOutput) throws -> Float {
+        let value = try audio.read(property, on: device)
+        guard value.isFinite, (0...1).contains(value) else {
+            throw SystemAudioError(message: "\(device.name) returned an invalid audio level.")
         }
-        if let beforeActual {
-            currentVolume = beforeActual
-        }
-
-        let resultText: String
-        switch action {
-        case .increase(let by):
-            increase(by: Float(by))
-            resultText = "Volume increased by \(by)%"
-        case .decrease(let by):
-            decrease(by: Float(by))
-            resultText = "Volume decreased by \(by)%"
-        case .setLevel(let level):
-            setVolume(Float(level))
-            resultText = "Volume set to \(Int(currentVolume * 100))%"
-        case .mute:
-            mute()
-            resultText = "Muted"
-        case .unmute:
-            unmute()
-            resultText = "Unmuted"
-        }
-
-        let afterActual: Float?
-        if device == .hdmi {
-            afterActual = currentVolume
-        } else {
-            afterActual = coreAudio.getVolume().map { Float($0) }
-        }
-        if let afterActual {
-            currentVolume = afterActual
-        }
-
-        let changed = lastOperationSucceeded && hasMeaningfulChange(before: beforeActual, after: afterActual)
-        if !changed {
-            if device == .hdmi {
-                emit("[Volume][ERROR] Monitor does not support DDC volume and audio gain fallback is unavailable")
-            }
-            emit("[Volume][ERROR] Volume change had NO EFFECT")
-        }
-
-        emit("[Volume][Result] Final volume level: \(currentVolume)")
-        emit("========== VOLUME DEBUG END ==========")
-
-        if changed {
-            return ControllerResult(message: resultText, success: true)
-        }
-        return ControllerResult(message: "Volume command executed but no actual volume change was detected", success: false)
+        return value
     }
 
-    private func syncCurrentVolumeFromSystem() {
-        if let value = coreAudio.getVolume() {
-            currentVolume = Float(value)
+    private func requireSameOutput(_ device: SystemAudioOutput) throws {
+        let current = try audio.defaultOutput()
+        guard current.id == device.id, current.uid == device.uid, !current.isAggregate else {
+            throw SystemAudioError(message: "The active audio output changed. Please repeat the volume command for the newly selected output.")
         }
     }
 
-    private func clamp01(_ value: Float) -> Float {
-        min(max(value, 0.0), 1.0)
+    private func unsupported(_ device: SystemAudioOutput) -> SystemAudioError {
+        SystemAudioError(message: "\(device.name) does not expose usable native volume controls. Use its hardware controls or a separately configured monitor/software audio controller. Jarvis has not changed audio routing.")
     }
 
-    private func hasMeaningfulChange(before: Float?, after: Float?) -> Bool {
-        guard let before, let after else { return false }
-        return abs(before - after) > 0.001
-    }
-
-    private func emit(_ message: String) {
-        if let onLog {
-            onLog(message)
-        } else {
-            print(message)
-        }
-    }
-
-    private func getCurrentOutputDevice() -> AudioDeviceType {
-        var deviceID = AudioDeviceID(0)
-        var size = UInt32(MemoryLayout<AudioDeviceID>.size)
-        var address = AudioObjectPropertyAddress(
-            mSelector: kAudioHardwarePropertyDefaultOutputDevice,
-            mScope: kAudioObjectPropertyScopeGlobal,
-            mElement: kAudioObjectPropertyElementMain
-        )
-
-        let deviceStatus = AudioObjectGetPropertyData(
-            AudioObjectID(kAudioObjectSystemObject),
-            &address,
-            0,
-            nil,
-            &size,
-            &deviceID
-        )
-
-        guard deviceStatus == noErr else { return .unknown }
-
-        var transportType: UInt32 = 0
-        var transportSize = UInt32(MemoryLayout<UInt32>.size)
-        var transportAddress = AudioObjectPropertyAddress(
-            mSelector: kAudioDevicePropertyTransportType,
-            mScope: kAudioObjectPropertyScopeGlobal,
-            mElement: kAudioObjectPropertyElementMain
-        )
-
-        let typeStatus = AudioObjectGetPropertyData(
-            deviceID,
-            &transportAddress,
-            0,
-            nil,
-            &transportSize,
-            &transportType
-        )
-
-        guard typeStatus == noErr else { return .unknown }
-        switch transportType {
-        case kAudioDeviceTransportTypeHDMI, kAudioDeviceTransportTypeDisplayPort:
-            return .hdmi
-        default:
-            return .nonHDMI
-        }
-    }
+    private func percent(_ value: Float) -> Int { Int((value * 100).rounded()) }
 }

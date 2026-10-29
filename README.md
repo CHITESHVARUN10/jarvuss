@@ -46,6 +46,26 @@ Full walkthrough with every command and exact phrasings: **[practice.md](practic
   target device/context before success is reported; failures after playback
   starts are reported as partial failures. Standalone shuffle mode changes do
   not start an inactive device. Uses [Spotify’s shuffle API](https://developer.spotify.com/documentation/web-api/reference/toggle-shuffle-for-users-playback).
+- Active-output volume: “increase the sound by twenty-five percent”, “volume
+  down by 15”, “set volume to forty percent”, “mute”, “unmute”, and “what is
+  the current volume level”. Amounts are percentage points; “increase volume
+  to 40” is absolute. Native commands work without a model, backend,
+  BetterDisplay or BlackHole. Each command reads the current default media
+  output, checks writable Core Audio controls, preserves channel balance, and
+  confirms readback. The response names the output and its observed level.
+  Hardware mute preserves gain; devices without mute use a per-device,
+  in-memory volume bookmark. Repeated mute preserves that bookmark. Without
+  a bookmark, unmute never invents a louder level. Aggregate/multi-output
+  devices and outputs without usable native controls (including many HDMI,
+  DisplayPort and fixed-level DAC outputs) report a limitation. Jarvis does
+  not change audio routing, capture system audio, or fall back to an unrelated
+  monitor. If the output changes mid-command, the command stops and reports
+  any possible partial change. This pipeline does not add training data or
+  replace the accepted intent model. See Apple's [device volume guidance](https://developer.apple.com/library/archive/qa/qa1016/).
+  Software attenuation for fixed-level devices is a separate pipeline; Apple's
+  [Core Audio taps](https://developer.apple.com/documentation/coreaudio/capturing-system-audio-with-core-audio-taps)
+  require system-audio permission, as does BetterDisplay's
+  [software audio controller](https://betterdisplay.pro/guide/interface-reference/settings/displays/display/device-control/software-audio/).
 - Web: search and open URLs.
 - Chained commands: "open spotify, open whatsapp and also open youtube, in spotify play a song" — split and executed in order.
 - **Routines**: reusable multi-action workflows, persisted.

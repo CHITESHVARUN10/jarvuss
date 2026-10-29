@@ -51,7 +51,7 @@ enum CommandValidator {
         // Existing voice verification and execution safety checks still apply.
         let local = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         if local.count <= 4096, local.split(whereSeparator: \.isWhitespace).count <= 50,
-           (LocalSearchParser.route(local) != nil || SpotifyShuffleParser.parse(local) != nil) { return local }
+           (LocalSearchParser.route(local) != nil || SpotifyShuffleParser.parse(local) != nil || SystemVolumeParser.route(local) != nil) { return local }
         // Migration cut-over: the Rust core runs the same cleaning rules.
         if JarvisFlags.useRustPipeline {
             let cleaned = coreValidateCommandString(raw: raw)

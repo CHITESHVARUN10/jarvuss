@@ -20,6 +20,7 @@ enum FastPathRouter {
         let lower = cleaned.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
         guard !lower.isEmpty else { return .execute([]) }
         if let native = LocalSearchParser.route(cleaned) { return .execute([native]) }
+        if let volume = SystemVolumeParser.route(cleaned) { return .execute([volume]) }
         if let shuffle = SpotifyShuffleParser.parse(cleaned) { return .execute([.mediaControl(shuffle)]) }
 
         // Single known app shortcut: "chrome", "spotify", "whatsapp"
@@ -68,7 +69,6 @@ enum FastPathRouter {
         }
 
         // Volume / mute / media transport / display — pure regex, no model.
-        if let vol = singleVolume(lower) { return .execute([vol]) }
         if let media = singleMedia(lower) { return .execute([media]) }
         if let display = singleDisplay(lower) { return .execute([display]) }
 
@@ -185,18 +185,6 @@ enum FastPathRouter {
         if lower.contains("battery") { return .batteryStatus }
         if lower == "system volume" || lower == "current volume" || lower == "volume level" {
             return .systemVolume
-        }
-        return nil
-    }
-
-    private static func singleVolume(_ lower: String) -> PlannedAction? {
-        if lower == "mute" || lower == "mute the sound" || lower == "sound off" { return .volumeControl(.mute) }
-        if lower == "unmute" || lower == "sound on" { return .volumeControl(.unmute) }
-        if lower.contains("volume up") || lower.contains("sound up") || lower == "louder" {
-            return .volumeControl(.increase(by: 10))
-        }
-        if lower.contains("volume down") || lower.contains("sound down") || lower == "quieter" {
-            return .volumeControl(.decrease(by: 10))
         }
         return nil
     }

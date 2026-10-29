@@ -111,7 +111,7 @@ final class ActionExecutor {
                                 message: result.message)
 
         case .systemInfo(let infoAction):
-            return executeSystemInfo(infoAction)
+            return await executeSystemInfo(infoAction)
 
         case .openURL(let url):
             return openURL(url)
@@ -134,7 +134,7 @@ final class ActionExecutor {
             return await executeMediaAction(mediaAction)
 
         case .volumeControl(let volumeAction):
-            let result = volumeController.executeResult(volumeAction)
+            let result = await volumeController.perform(volumeAction)
             return ActionResult(action: action, success: result.success, message: result.message)
 
         case .createFile(let name):
@@ -213,7 +213,7 @@ final class ActionExecutor {
         return ActionResult(action: action, success: true, message: result.message)
     }
 
-    private func executeSystemInfo(_ action: SystemInfoAction) -> ActionResult {
+    private func executeSystemInfo(_ action: SystemInfoAction) async -> ActionResult {
         switch action {
         case .currentTime:
             let formatter = DateFormatter()
@@ -263,11 +263,8 @@ final class ActionExecutor {
             return ActionResult(action: .systemInfo(action), success: false, message: "Unable to read battery status")
 
         case .systemVolume:
-            let vol = runShell("osascript -e 'output volume of (get volume settings)'")
-            if vol.success, let output = vol.output, let level = Int(output) {
-                return ActionResult(action: .systemInfo(action), success: true, message: "System volume: \(level)%")
-            }
-            return ActionResult(action: .systemInfo(action), success: false, message: "Unable to read system volume")
+            let result = await volumeController.perform(nil)
+            return ActionResult(action: .systemInfo(action), success: result.success, message: result.message)
 
         case .displayBrightness:
             if let pct = displayController.getCurrentBrightness() {

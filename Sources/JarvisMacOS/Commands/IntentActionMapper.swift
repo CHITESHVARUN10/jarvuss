@@ -14,6 +14,13 @@ enum IntentActionMapper {
         for intent in intents {
             guard let name = intent["name"] as? String else { return nil }
             let args = (intent["args"] as? [String: Any]) ?? [:]
+            if intents.count == 1, ["volume.set", "volume.up", "volume.down", "volume.mute", "volume.unmute"].contains(name), let sourceText {
+                // Existing model labels remain compatible, but exact amounts
+                // and absolute/relative semantics come from the utterance.
+                guard let native = SystemVolumeParser.route(sourceText), case .volumeControl = native else { return nil }
+                actions.append(native)
+                continue
+            }
             if name == "media.shuffle" {
                 guard args.isEmpty, intents.count == 1, let sourceText,
                       let shuffle = SpotifyShuffleParser.parse(sourceText) else { return nil }
@@ -94,13 +101,13 @@ enum IntentActionMapper {
             return .displayControl(.decreaseContrast(by: by))
 
         case "volume.set":
-            guard let level = intArg(args, "level") else { return nil }
+            guard let level = volumeAmount(args, "level") else { return nil }
             return .volumeControl(.setLevel(level))
         case "volume.up":
-            guard let by = intArg(args, "by") else { return nil }
+            guard let by = volumeAmount(args, "by") else { return nil }
             return .volumeControl(.increase(by: by))
         case "volume.down":
-            guard let by = intArg(args, "by") else { return nil }
+            guard let by = volumeAmount(args, "by") else { return nil }
             return .volumeControl(.decrease(by: by))
         case "volume.mute":
             return .volumeControl(.mute)
@@ -184,6 +191,13 @@ enum IntentActionMapper {
     private static func stringArg(_ args: [String: Any], _ key: String) -> String? {
         guard let value = args[key] as? String, !value.isEmpty else { return nil }
         return value
+    }
+
+    private static func volumeAmount(_ args: [String: Any], _ key: String) -> Int? {
+        guard let number = args[key] as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID(),
+              number.doubleValue.isFinite, number.doubleValue.rounded() == number.doubleValue,
+              (0...100).contains(number.doubleValue) else { return nil }
+        return number.intValue
     }
 
     private static func intArg(_ args: [String: Any], _ key: String) -> Int? {

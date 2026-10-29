@@ -92,6 +92,11 @@ final class ActionPlanner {
             break
         }
 
+        if let volume = SystemVolumeParser.route(cleaned) {
+            logPlanEvent(branch: "rule", text: cleaned, requestID: requestID, actions: [volume])
+            return [volume]
+        }
+
         if let shuffle = SpotifyShuffleParser.parse(cleaned) {
             let actions = [PlannedAction.mediaControl(shuffle)]
             logPlanEvent(branch: "rule", text: cleaned, requestID: requestID, actions: actions)

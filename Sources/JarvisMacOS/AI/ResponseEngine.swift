@@ -88,7 +88,7 @@ final class ResponseEngine: ObservableObject {
             case .playLikedWithShuffle(let on): return on ? "Shuffling liked songs" : "Playing liked songs in order"
             case .playPlaylistWithShuffle(let name, let on): return on ? "Shuffling \(name)" : "Playing \(name) in order"
             }
-        case .volumeControl(let a):     return a.responseText
+        case .volumeControl:            return result.message
         case .displayControl(let a):    return a.responseText
         case .createFile(let n):        return "Created file \(n)"
         case .createFolder(let n):      return "Created folder \(n)"

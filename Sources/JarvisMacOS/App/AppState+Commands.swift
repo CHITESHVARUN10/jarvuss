@@ -192,6 +192,7 @@ extension AppState {
         // A document name/content phrase can contain a routine keyword.
         // Explicit native search/settings/result commands keep their meaning.
         if LocalSearchParser.route(command) == nil, SpotifyShuffleParser.parse(command) == nil,
+           SystemVolumeParser.route(command) == nil,
            let match = matchedAutomation(for: command) {
             let success = await executeAutomation(match.automation, isOffVariant: match.isOffVariant)
             outcome = success ? .success : .failure
