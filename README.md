@@ -133,6 +133,24 @@ as int8 ONNX (~196 MB) and served by the local backend at `/parse_intent`.
 The app handles unambiguous single commands locally first, then asks the model
 to resolve ambiguous or compound commands.
 
+Public releases are available on Hugging Face: [model and trainable checkpoint](https://huggingface.co/chitesh12545/jarvis-intent-t5-small)
+and [screened datasets](https://huggingface.co/datasets/chitesh12545/jarvis-intent-dataset),
+under Apache License 2.0. New versions use tags in the same repositories.
+The full-precision checkpoint supports further fine-tuning; the app downloads
+only the smaller ONNX runtime files and license notices.
+
+In **Setup → Intent command model**, use the refresh icon or **Check for updates**,
+then **Update intent model**. Downloads need no Hugging Face account. With no
+installed or bundled model, Jarvis starts the approximately 206 MB download on
+first launch. Each release is pinned to a commit and verified by SHA-256 before
+activation; a failed update preserves the working model. Managed releases live
+in `~/Library/Application Support/Jarvis/models/intent` and survive app updates.
+The local helper reloads an accepted release when it next handles an intent.
+Offline use keeps the installed or bundled model. This model is optional for
+dictation and native commands and is separate from Whisper and Ollama.
+Existing app installations need one rebuild to gain these update controls;
+subsequent compatible intent releases can be installed from Setup.
+
 It does not stay frozen. Every routing decision the app makes is appended to:
 
 ```
@@ -379,7 +397,8 @@ bundle.** Replace the app and the friend's setup carries over:
 | Settings (toggles, backend mode, follow-up window, setup state) | `~/Library/Preferences/local.jarvis.macos.plist` | Yes (same bundle id) |
 | Microphone + Accessibility grants | macOS TCC, keyed to the signing identity | Yes — **sign every build with the same certificate**; an ad-hoc or different-cert build breaks the grants |
 | Spotify tokens / PG password | Keychain (`local.jarvis.credentials`) | Yes (same signing identity) |
-| Learned intent model, STT core, app code | Inside the bundle | Replaced by the new build |
+| Downloaded intent model | `~/Library/Application Support/Jarvis/models/intent` | Yes; update independently in Setup |
+| Bundled intent fallback, STT core, app code | Inside the bundle | Replaced by the new build |
 
 The steps:
 

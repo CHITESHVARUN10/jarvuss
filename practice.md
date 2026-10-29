@@ -49,6 +49,13 @@ text; it does not run the words as a command.
    "play …" commands.
 7. **Start at login (optional)** — Assistant → Behaviour → Start at login, so
    Jarvis is already running when you log in.
+8. **Intent command model (optional)** — Setup → Intent command model. If no
+   model is installed or bundled, Jarvis downloads the public runtime release
+   automatically (approximately 206 MB). The refresh icon checks for newer
+   versions; **Update intent model** installs one after verification. This is
+   separate from Whisper and Ollama, needs no Hugging Face account, and keeps
+   the working model if an update fails. Native commands and dictation remain
+   available without it.
 
 **A note on verification:** with *Verify action commands* ON (Assistant
 preferences → Privacy, the default), commands from ⌘⇧A are checked against your

@@ -26,6 +26,9 @@ import time
 from pathlib import Path
 from typing import Any
 
+from runtime_config import data_directory
+import intent_model_store as model_store
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
@@ -47,6 +50,9 @@ _lock = threading.Lock()
 _inference_lock = threading.Lock()
 _engine = None
 _load_error: str | None = None
+_selection_key: str | None = None
+_active_release: dict[str, Any] = {"source": "not loaded"}
+_update_error: str | None = None
 
 
 class ParseIntentRequest(BaseModel):
@@ -65,6 +71,7 @@ class _OnnxIntentEngine:
         import onnxruntime as ort
         import sentencepiece as spm
 
+        ort.disable_telemetry_events()
         self.np = np
         cfg = json.loads((model_dir / "config.json").read_text(encoding="utf-8"))
         self.layers = int(cfg["num_decoder_layers"])
@@ -189,23 +196,62 @@ class _OnnxIntentEngine:
 
 
 def _load() -> None:
-    global _engine, _load_error
+    global _engine, _load_error, _selection_key, _active_release, _update_error
+    root = data_directory() / "models" / "intent"
+    override = os.environ.get("JARVIS_INTENT_MODEL_DIR")
+    desired = None if override else model_store.receipt(root)
+    # An install after an earlier missing-model error must be noticed without
+    # restarting the helper. No hashing or heavy imports on unchanged requests.
+    key = json.dumps(desired, sort_keys=True) if desired else "local:" + str(MODEL_DIR)
     with _lock:
-        if _engine is not None or _load_error is not None:
-            return
-        if not MODEL_DIR.is_dir():
-            _load_error = f"model directory not found: {MODEL_DIR}"
-            return
-        try:
-            _engine = _OnnxIntentEngine(MODEL_DIR)
-        except Exception as exc:  # pragma: no cover - environment dependent
-            _load_error = str(exc)
+        if _selection_key == key: return
+        _selection_key = key
+        _update_error = None
+        choices = []
+        if desired: choices.append((desired, "downloaded"))
+        if not override:
+            previous = model_store.receipt(root, "last-good.json")
+            if previous and previous != desired: choices.append((previous, "previous downloaded"))
+        choices.append((None, "configured" if override else "bundled"))
+        for selected, source in choices:
+            try:
+                # Keep an already loaded working engine if a requested update
+                # fails. Never fall back to unrelated model files mid-session.
+                if selected is None and _engine is not None: return
+                folder = model_store.verify(root, selected) if selected else MODEL_DIR
+                if not folder.is_dir(): raise ValueError("intent model is not installed")
+                with _inference_lock:
+                    candidate = _OnnxIntentEngine(folder)
+                    if selected:
+                        raw, _ = candidate.generate("pause")
+                        parsed = json.loads(raw)
+                        if not isinstance(parsed, list) or not parsed or not all(isinstance(item, dict) and isinstance(item.get("name"), str) for item in parsed):
+                            raise ValueError("downloaded model failed its warm-up check")
+                    _engine = candidate
+                    _load_error = None
+                    _active_release = {"source": source, "version": selected.get("version") if selected else None,
+                                       "commit": selected.get("commit") if selected else None}
+                if selected:
+                    try: model_store.remember_good(root, selected)
+                    except OSError: pass # A cache-write failure must not discard a loaded model.
+                return
+            except Exception as exc:
+                _load_error = "Intent model validation failed (" + type(exc).__name__ + ")."
+                if selected: _update_error = "The downloaded model failed validation; the previous model remains in use when available."
+                if _engine is not None: return
+
+
+@router.get("/intent_model/status")
+def intent_model_status() -> dict[str, Any]:
+    # Status queries never load a model or initialize ONNX Runtime.
+    return {"loaded": _engine is not None, **_active_release, "update_error": _update_error}
 
 
 @router.post("/parse_intent")
 def parse_intent(req: ParseIntentRequest) -> dict[str, Any]:
     _load()
-    if _engine is None:
+    engine = _engine
+    if engine is None:
         raise HTTPException(status_code=503, detail=f"intent model unavailable: {_load_error}")
 
     text = (req.text or "").strip()
@@ -216,7 +262,7 @@ def parse_intent(req: ParseIntentRequest) -> dict[str, Any]:
     if not _inference_lock.acquire(blocking=False):
         raise HTTPException(status_code=503, detail="Intent model busy")
     try:
-        raw, confidence = _engine.generate(text)
+        raw, confidence = engine.generate(text)
     except InputTooLong:
         # The caller can split or route the FULL request through its fallback.
         return {"actions": None, "parse_ok": False, "confidence": 0,

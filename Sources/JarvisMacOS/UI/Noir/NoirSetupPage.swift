@@ -8,6 +8,7 @@ enum NoirSetupKind: String, CaseIterable, Identifiable {
     case microphone
     case accessibility
     case whisper
+    case intentModel
     case ollama
     case postgres
     case backend
@@ -20,6 +21,7 @@ enum NoirSetupKind: String, CaseIterable, Identifiable {
         case .microphone:    return "Microphone"
         case .accessibility: return "Accessibility"
         case .whisper:       return "Whisper speech model"
+        case .intentModel:   return "Intent command model"
         case .ollama:        return "Ollama + AI model"
         case .postgres:      return "PostgreSQL"
         case .backend:       return "Python helper"
@@ -32,6 +34,7 @@ enum NoirSetupKind: String, CaseIterable, Identifiable {
         case .microphone:    return "For dictation and voice commands."
         case .accessibility: return "For inserting text at your cursor."
         case .whisper:       return "On-device transcription · approximately 1.5 GB."
+        case .intentModel:   return "On-device command understanding · approximately 206 MB."
         case .ollama:        return "For AI answers and command planning."
         case .postgres:      return "For activity history and usage insights."
         case .backend:       return "For voice authentication and integrations."
@@ -44,6 +47,7 @@ enum NoirSetupKind: String, CaseIterable, Identifiable {
         case .microphone:    return "mic"
         case .accessibility: return "accessibility"
         case .whisper:       return "waveform"
+        case .intentModel:   return "point.3.connected.trianglepath.dotted"
         case .ollama:        return "sparkle"
         case .postgres:      return "cylinder"
         case .backend:       return "slider.horizontal.3"
@@ -63,6 +67,7 @@ private struct SetupStatus {
 struct NoirSetupPage: View {
     @ObservedObject var appState: AppState
     @ObservedObject private var dictation = DictationController.shared
+    @ObservedObject private var intentModel = IntentModelSetup.shared
     @EnvironmentObject private var toasts: ToastCenter
 
     @State private var micAuthorized = AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
@@ -168,9 +173,12 @@ struct NoirSetupPage: View {
 
     // MARK: Rows
 
-    private func setupRow(_ kind: NoirSetupKind, first: Bool) -> some View {
+    @ViewBuilder private func setupRow(_ kind: NoirSetupKind, first: Bool) -> some View {
+        if kind == .intentModel {
+            NoirIntentModelRow(model: intentModel) { activeItem = kind }
+        } else {
         let status = status(for: kind)
-        return Button {
+        Button {
             activeItem = kind
         } label: {
             HStack(spacing: 15) {
@@ -211,6 +219,7 @@ struct NoirSetupPage: View {
             }
         }
         .buttonStyle(SetupRowButtonStyle())
+        }
     }
 
     private func status(for kind: NoirSetupKind) -> SetupStatus {
@@ -224,6 +233,8 @@ struct NoirSetupPage: View {
             return SetupStatus(text: granted ? "Ready" : "Grant",
                                kind: granted ? .green : .amber,
                                ready: granted)
+        case .intentModel:
+            return SetupStatus(text: intentModel.isInstalled ? "Installed" : "Optional", kind: intentModel.isInstalled ? .green : .neutral, ready: intentModel.isInstalled)
         case .whisper:
             let phase = dictation.modelPhase
             if case .Ready = phase { return SetupStatus(text: "Installed", kind: .green, ready: true) }
@@ -259,6 +270,7 @@ struct NoirSetupPage: View {
     }
 
     private func refreshProbes() async {
+        intentModel.checkForUpdates()
         micAuthorized = AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
         let probes = await Task.detached(priority: .utility) {
             (OllamaSetup.isInstalled(), PostgresProvisioner.serverReachable())
@@ -286,6 +298,7 @@ struct SetupDetailSheet: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var toasts: ToastCenter
     @ObservedObject private var dictation = DictationController.shared
+    @ObservedObject private var intentModel = IntentModelSetup.shared
 
     @State private var busy = false
     @State private var notice: String?
@@ -414,6 +427,9 @@ struct SetupDetailSheet: View {
                 notice = "Open Privacy & Security → Accessibility and enable Jarvis."
             }
             .buttonStyle(NoirButtonStyle(intent: .primary))
+
+        case .intentModel:
+            NoirIntentModelDetail(model: intentModel)
 
         case .whisper:
             Text("The current application uses Whisper large-v3-turbo for on-device speech recognition. The model is approximately 1.5 GB and downloads automatically.")

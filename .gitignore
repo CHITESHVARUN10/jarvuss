@@ -15,6 +15,9 @@ training/out/
 training/data/
 training/__pycache__/
 training/*.log
+
+# Owner-only release tooling, configuration, and artifacts.
+/pipeline/
 *.swp
 *.swo
 rust-core/target/

@@ -217,6 +217,10 @@ rewrite a query. Result actions require an existing results session.
 - Setup separates required speech/permission setup from optional Ollama,
   PostgreSQL and Spotify setup. Typed native commands do not need microphone
   enrollment; verification is a separate gate for voice commands.
+- Setup also offers independent intent-model downloads and update checks from
+  the public Hugging Face repository. Releases are pinned and checksum-verified;
+  failed downloads retain the installed model. The intent model is optional for
+  dictation and native commands and is separate from Whisper and Ollama.
 - Dictation supports auto-paste, copy/original/undo, 1–60-minute recording limits
   (default 5) and a 1–10-second result-card duration. Only the latest original
   and polished dictation pair is kept. Long transcripts skip optional LLM polish.
