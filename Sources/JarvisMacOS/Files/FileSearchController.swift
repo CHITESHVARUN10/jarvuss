@@ -15,7 +15,9 @@ final class FileSearchController: NSObject, ObservableObject, NSWindowDelegate {
     @Published private(set) var searching = false
     @Published private(set) var status = ""
     @Published var selectedID: String?
-    @Published var preview: FilePreviewTarget?
+    @Published var preview: FilePreviewTarget? {
+        didSet { updatePreviewWindow() }
+    }
     @Published private(set) var hasContext = false
     private let engine: FileSearching
     private let locations: FileSearchLocationStore
@@ -27,6 +29,7 @@ final class FileSearchController: NSObject, ObservableObject, NSWindowDelegate {
     private var generation = UUID()
     private var task: Task<FileSearchSnapshot, Error>?
     private var panel: NSPanel?
+    private var previewPanel: NSPanel?
 
     init(engine: FileSearching? = nil, locations: FileSearchLocationStore? = nil,
          presentsUI: Bool = true, openFile: ((URL) -> Bool)? = nil,
@@ -106,8 +109,8 @@ final class FileSearchController: NSObject, ObservableObject, NSWindowDelegate {
             close()
             status = "Opened \(target.name)."
         case .preview:
-            preview = FilePreviewTarget(url: target.url)
             present()
+            preview = FilePreviewTarget(url: target.url)
             status = "Previewing \(target.name)."
         case .reveal:
             revealFile(target.url)
@@ -126,7 +129,41 @@ final class FileSearchController: NSObject, ObservableObject, NSWindowDelegate {
         panel?.orderOut(nil)
     }
 
-    func windowWillClose(_ notification: Notification) { close() }
+    func dismissPreview() { preview = nil }
+
+    func windowWillClose(_ notification: Notification) {
+        if let window = notification.object as? NSWindow, window === previewPanel { dismissPreview() }
+        else { close() }
+    }
+
+    private func updatePreviewWindow() {
+        guard presentsUI else { return }
+        guard let preview else {
+            previewPanel?.orderOut(nil)
+            previewPanel?.contentView = nil
+            return
+        }
+        let preferred = previewPanel?.frame.size ?? NSSize(width: 860, height: 680)
+        if previewPanel == nil {
+            let window = NSPanel(contentRect: .zero, styleMask: [.titled, .closable, .resizable, .nonactivatingPanel],
+                                 backing: .buffered, defer: false)
+            window.isReleasedWhenClosed = false
+            window.hidesOnDeactivate = false
+            window.becomesKeyOnlyIfNeeded = false
+            window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+            window.delegate = self
+            previewPanel = window
+        }
+        guard let window = previewPanel, let screen = panel?.screen ?? NSScreen.main ?? NSScreen.screens.first else { return }
+        window.title = "Jarvis · Preview"
+        let frame = FileSearchWindowLayout.centeredPreview(in: screen.visibleFrame, preferred: preferred)
+        window.contentMinSize = NSSize(width: min(480, frame.width), height: min(360, frame.height))
+        window.contentView = NSHostingView(rootView: FileSearchPreviewView(target: preview, onClose: { [weak self] in
+            self?.dismissPreview()
+        }).preferredColorScheme(.dark))
+        window.setFrame(frame, display: true)
+        window.makeKeyAndOrderFront(nil)
+    }
 
     private func fail(_ message: String) -> ControllerResult {
         status = message
@@ -136,7 +173,7 @@ final class FileSearchController: NSObject, ObservableObject, NSWindowDelegate {
     private func present() {
         guard presentsUI else { return }
         if panel == nil {
-            let window = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 760, height: 520),
+            let window = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 800, height: 560),
                 styleMask: [.titled, .closable, .resizable, .nonactivatingPanel], backing: .buffered, defer: false)
             window.title = "Jarvis · File search"
             window.contentMinSize = NSSize(width: 660, height: 420)
