@@ -39,7 +39,8 @@ cargo build --locked $CARGO_PROFILE_FLAG --manifest-path "$CORE_DIR/Cargo.toml"
 
 LIB="$CORE_DIR/target/$PROFILE/libjarvis_core.a"
 DYLIB="$CORE_DIR/target/$PROFILE/libjarvis_core.dylib"
-for f in "$LIB" "$DYLIB"; do
+BINDGEN="$CORE_DIR/target/$PROFILE/uniffi-bindgen"
+for f in "$LIB" "$DYLIB" "$BINDGEN"; do
   if [[ ! -f "$f" ]]; then
     echo "[Core][ERROR] expected artifact missing: $f" >&2
     exit 1
@@ -49,12 +50,17 @@ done
 echo "[Core] Generating UniFFI Swift bindings..."
 rm -rf "$GEN_DIR"
 mkdir -p "$GEN_DIR"
-# uniffi-bindgen shells out to `cargo metadata`, so it must run with the crate
-# as the working directory.
+# All exported UniFFI types belong to jarvis_core. Dependency metadata would
+# resolve unrelated platform crates and can fail on a clean CI runner after
+# a successful build. Use the CLI we just built (same profile) and only local
+# metadata, without another network/dependency resolution or debug build.
 (
   cd "$CORE_DIR"
-  cargo run --locked --quiet --bin uniffi-bindgen -- \
-    generate --library "$DYLIB" --language swift --out-dir "$GEN_DIR" --no-format
+  # Print Cargo's underlying diagnostic if manifest metadata is unavailable;
+  # UniFFI 0.28 otherwise only prints "error running cargo metadata".
+  CARGO_NET_OFFLINE=true cargo metadata --locked --no-deps --format-version 1 >/dev/null
+  CARGO_NET_OFFLINE=true "$BINDGEN" \
+    generate --library "$DYLIB" --language swift --out-dir "$GEN_DIR" --no-format --metadata-no-deps
 )
 
 GEN_SWIFT="$GEN_DIR/jarvis_core.swift"
