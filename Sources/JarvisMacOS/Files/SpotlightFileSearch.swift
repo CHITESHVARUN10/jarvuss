@@ -1,4 +1,5 @@
 import Foundation
+import CDDCShim
 
 struct FileSearchResult: Identifiable, Equatable {
     var id: String { url.path }
@@ -28,51 +29,71 @@ struct SpotlightFileSearch: FileSearching {
             try Task.checkCancellation()
             return try await session.run()
         } onCancel: {
-            Task { @MainActor in session.cancel() }
+            session.cancel()
         }
     }
 }
 
 /// One finite, cancellable gather. Stop before publishing a frozen ordering so
 /// a voice reference to “the second one” cannot change under the user.
-@MainActor
-final class SpotlightSearchSession {
+final class SpotlightSearchSession: @unchecked Sendable {
     private let request: LocalSearchRequest
     private let roots: [URL]
-    private let query = NSMetadataQuery()
+    // Confine Foundation query work and mutable state to one serial queue.
+    // Startup exceptions are caught in Objective-C, before they can unwind
+    // through a Swift task and leave the UI in a broken executor context.
+    private let worker: OperationQueue = {
+        let queue = OperationQueue()
+        queue.name = "Jarvis.SpotlightSearch"
+        queue.maxConcurrentOperationCount = 1
+        queue.qualityOfService = .userInitiated
+        return queue
+    }()
+    private var query: NSMetadataQuery?
     private var continuation: CheckedContinuation<FileSearchSnapshot, Error>?
     private var observer: NSObjectProtocol?
-    private var timeout: Task<Void, Never>?
+    private var timeout: DispatchWorkItem?
     private var cancelled = false
 
     init(request: LocalSearchRequest, roots: [URL]) { self.request = request; self.roots = roots }
 
     func run() async throws -> FileSearchSnapshot {
-        if cancelled { throw CancellationError() }
         return try await withCheckedThrowingContinuation { continuation in
-            self.continuation = continuation
-            query.predicate = request.predicate()
-            query.searchScopes = roots.isEmpty ? [NSMetadataQueryLocalComputerScope] : roots.map(\.path)
-            query.sortDescriptors = [NSSortDescriptor(key: "kMDItemFSContentChangeDate", ascending: false)]
-            observer = NotificationCenter.default.addObserver(forName: .NSMetadataQueryDidFinishGathering, object: query, queue: .main) { [weak self] _ in
-                Task { @MainActor in self?.finish(timedOut: false) }
-            }
-            timeout = Task { [weak self] in
-                try? await Task.sleep(for: .seconds(8))
-                guard !Task.isCancelled else { return }
-                self?.finish(timedOut: true)
-            }
-            if !query.start() { complete(.failure(SearchError.unavailable)) }
+            worker.addOperation { [self] in begin(continuation) }
+        }
+    }
+
+    private func begin(_ continuation: CheckedContinuation<FileSearchSnapshot, Error>) {
+        guard !cancelled else { continuation.resume(throwing: CancellationError()); return }
+        self.continuation = continuation
+        let query = NSMetadataQuery()
+        self.query = query
+        query.operationQueue = worker
+        observer = NotificationCenter.default.addObserver(forName: .NSMetadataQueryDidFinishGathering, object: query, queue: nil) { [weak self] _ in
+            self?.worker.addOperation { [weak self] in self?.finish(timedOut: false) }
+        }
+        let timeout = DispatchWorkItem { [weak self] in
+            self?.worker.addOperation { [weak self] in self?.finish(timedOut: true) }
+        }
+        self.timeout = timeout
+        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 8, execute: timeout)
+        var error: NSError?
+        let scopes = roots.isEmpty ? [NSMetadataQueryLocalComputerScope] : roots.map(\.path)
+        if !JarvisStartMetadataQuery(query, request.predicate(), scopes,
+                                    [NSSortDescriptor(key: "kMDItemFSContentChangeDate", ascending: false)], &error) {
+            complete(.failure(error ?? SearchError.unavailable as NSError))
         }
     }
 
     func cancel() {
-        cancelled = true
-        complete(.failure(CancellationError()))
+        worker.addOperation { [self] in
+            cancelled = true
+            complete(.failure(CancellationError()))
+        }
     }
 
     private func finish(timedOut: Bool) {
-        guard continuation != nil else { return }
+        guard continuation != nil, let query else { return }
         query.disableUpdates()
         let count = query.resultCount
         let candidates = (0..<min(count, 500)).compactMap { index -> FileSearchResult? in
@@ -115,10 +136,11 @@ final class SpotlightSearchSession {
     private func complete(_ result: Result<FileSearchSnapshot, Error>) {
         guard let continuation else { return }
         self.continuation = nil
-        query.stop()
+        query?.stop()
         if let observer { NotificationCenter.default.removeObserver(observer) }
         observer = nil
         timeout?.cancel(); timeout = nil
+        query = nil
         continuation.resume(with: result)
     }
 }

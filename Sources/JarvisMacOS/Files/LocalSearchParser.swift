@@ -40,7 +40,12 @@ enum LocalSearchParser {
         var remaining = clean(text)
         let lower = remaining.lowercased()
         let explicitFile = lower.range(of: #"\b(files?|folders?|documents?|pdfs?|ppts?|pptx|presentations?|powerpoints?|spreadsheets?|images?|photos?|notes?|emails?|mail|word|slides?)\b"#, options: .regularExpression) != nil
-        let hasVerb = lower.range(of: #"^(find|locate|search|look for|show|list)\b"#, options: .regularExpression) != nil
+        // "Open PDFs in Downloads" needs a result list, not an LLM round
+        // trip or an attempt to launch an app named PDF. Keep ordinary app
+        // and folder openings on their existing routes.
+        let openDocuments = lower.range(of: #"^open\s+(?:(?:all|the|my|a|an)\s+)*(?:pdfs?|ppts?|presentations?|powerpoints?|spreadsheets?|images?|photos?|word documents?|word files?|files?)\b"#, options: .regularExpression) != nil
+            && lower.range(of: #"\b(?:in|inside|within|under|named|called|titled)\b"#, options: .regularExpression) != nil
+        let hasVerb = openDocuments || lower.range(of: #"^(find|locate|search|look for|show|list)\b"#, options: .regularExpression) != nil
         guard explicitFile || lower.hasPrefix("find ") || lower.hasPrefix("locate ") else { return nil }
         guard hasVerb || lower.range(of: #"^(pdfs?|ppts?|presentations?|documents?|files?|folders?|images?|notes?|emails?)\b"#, options: .regularExpression) != nil else { return nil }
         // Preserve the existing folder counts/listing and newest/oldest actions.
@@ -116,7 +121,11 @@ enum LocalSearchParser {
                 else { request.maximumBytes = Int64(bytes.rounded(.down)) }
             }
         }
-        if let match = remove(#"\b(?:(?:that|which)\s+)?(?:(?:may|might|could)\s+be\s+|maybe\s+)?(?:in|inside|within|under)\s+(?:either\s+)?(.+)$"#, from: &filters) {
+        // Treat "from Downloads" / "from the PDFs folder" as locations,
+        // after date phrases have been extracted. An arbitrary "from …"
+        // inside document text remains literal content.
+        let locationPattern = #"\b(?:(?:that|which)\s+)?(?:(?:may|might|could)\s+be\s+|maybe\s+)?(?:in|inside|within|under|from(?=\s+(?:(?:my|the)\s+)?(?:downloads|documents|desktop)\b)|from(?=\s+.+\s+(?:folders?|drive)\s*$))\s+(?:either\s+)?(.+)$"#
+        if let match = remove(locationPattern, from: &filters) {
             request.scopes = match[0].components(separatedBy: .init(charactersIn: ","))
                 .flatMap { $0.components(separatedBy: " or ") }
                 .flatMap { $0.components(separatedBy: " and ") }
@@ -131,7 +140,7 @@ enum LocalSearchParser {
             for (pattern, date) in dates {
                 if remove(pattern, from: &remaining) != nil { request.date = date; break }
             }
-            if let match = remove(#"\b(?:(?:that|which)\s+)?(?:(?:may|might|could)\s+be\s+|maybe\s+)?(?:in|inside|within|under)\s+(?:either\s+)?(.+)$"#, from: &remaining) {
+            if let match = remove(locationPattern, from: &remaining) {
                 request.scopes += match[0].components(separatedBy: " or ")
                     .flatMap { $0.components(separatedBy: " and ") }
                     .map { $0.replacingOccurrences(of: #"(?i)^(?:my |the )+|\s+folders?$"#, with: "", options: .regularExpression).trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -152,7 +161,7 @@ enum LocalSearchParser {
             if remove(pattern, from: &kindPart) != nil { request.kind = kind; break }
         }
         remaining = kindPart + namePart
-        remaining = remaining.replacingOccurrences(of: #"(?i)^(?:find|locate|search(?: for)?|look for|show|list)\s+(?:me\s+)?"#, with: "", options: .regularExpression)
+        remaining = remaining.replacingOccurrences(of: #"(?i)^(?:find|locate|search(?: for)?|look for|show|list|open)\s+(?:me\s+)?"#, with: "", options: .regularExpression)
         remaining = remaining.replacingOccurrences(of: #"(?i)\b(?:files?|documents?)\b"#, with: "", options: .regularExpression)
         remaining = remaining.replacingOccurrences(of: #"(?i)^(?:(?:all|my|the|a|an|any|named|called|titled|about|on|for)\s+)+"#, with: "", options: .regularExpression)
         remaining = remaining.replacingOccurrences(of: #"(?i)\b(?:named|called|titled)\s+"#, with: "", options: .regularExpression)

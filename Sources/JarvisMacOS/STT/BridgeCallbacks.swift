@@ -92,10 +92,9 @@ func on_transcript_ready(text: RustString, session_id: UInt64) {
                 // Action pill: hand the text to AppState (verifies per the
                 // user setting, then runs) and close the pill. The command
                 // result surfaces in the main window; the pill is done.
-                controller.partialTranscript = ""
-                controller.phase = .Ready
-                STTRouter.shared.onActionTranscript?(pillText)
-                controller.dismissTranscript()
+                controller.receiveActionTranscript(pillText) {
+                    STTRouter.shared.onActionTranscript?(pillText)
+                }
             } else {
                 // ⌘⇧D dictate: format (rules, plus the LLM pass when messy)
                 // then insert at the cursor. The card always shows what was

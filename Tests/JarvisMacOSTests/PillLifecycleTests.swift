@@ -106,6 +106,25 @@ final class PillLifecycleTests: XCTestCase {
         XCTAssertEqual(STTRouter.shared.owner, .none)
     }
 
+    func testActionTranscriptStopsProcessingBeforeHandoffAndResetsAfterAudioSnapshot() {
+        controller.toggleAction()
+        nativePhase = .TranscriptReady
+        controller.phase = .Processing
+        controller.partialTranscript = "open PDFs in Downloads"
+        var delivered = 0
+        controller.receiveActionTranscript("open PDFs in Downloads") {
+            delivered += 1
+            XCTAssertEqual(controller.phase, .Ready)
+            XCTAssertTrue(controller.partialTranscript.isEmpty)
+            XCTAssertEqual(STTRouter.shared.owner, .action, "Verification still needs the recording until the receiver snapshots it")
+            XCTAssertEqual(cancels, 0)
+        }
+        XCTAssertEqual(delivered, 1)
+        XCTAssertEqual(cancels, 1)
+        XCTAssertEqual(STTRouter.shared.owner, .none)
+        controller.receiveActionTranscript("late duplicate") { XCTFail("Released audio must not execute twice") }
+    }
+
     func testRetryCancelsOldCaptureAndRequestsFreshMicrophonePreparation() {
         controller.toggleAction()
         controller.phase = .Error

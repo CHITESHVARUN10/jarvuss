@@ -58,7 +58,8 @@ struct FileSearchResultsView: View {
             if model.searching {
                 emptyState(icon: "magnifyingglass", title: "Searching your Mac", detail: "Looking through Spotlight-indexed files in the requested locations.")
             } else if model.results.isEmpty {
-                emptyState(icon: "doc.text.magnifyingglass", title: "No files to show", detail: "Try fewer search words, another folder, or a wider date range.")
+                emptyState(icon: "doc.text.magnifyingglass", title: "No files to show", detail: model.status.isEmpty
+                    ? "Try fewer search words, another folder, or a wider date range." : model.status)
             } else {
                 List(selection: $model.selectedID) {
                     ForEach(Array(model.results.enumerated()), id: \.element.id) { index, item in

@@ -627,6 +627,19 @@ final class DictationController: ObservableObject {
 
     // ── Transcript actions ──────────────────────────────────
 
+    /// Hide the recording overlay before command handoff. Keep native audio
+    /// alive until the receiver has taken its verification snapshot.
+    func receiveActionTranscript(_ text: String, execute: () -> Void) {
+        guard STTRouter.shared.owner == .action else { return }
+        partialTranscript = ""
+        phase = .Ready
+        stopActivityTimers()
+        hidePanel()
+        defer { dismissTranscript() }
+        CrashDiagnostics.shared.record("action_transcript_handoff", fields: ["characters": String(text.count)])
+        execute()
+    }
+
     /// The ⌘⇧D entry point. Rules format first (sync, ~0 ms); the LLM polish
     /// (`DictationPolisher`) runs only when the rules say the input is messy,
     /// or when the app has decided the input is a list (it then sends the

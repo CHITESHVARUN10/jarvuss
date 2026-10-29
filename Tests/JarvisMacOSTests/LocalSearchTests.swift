@@ -1,4 +1,5 @@
 import XCTest
+import CDDCShim
 @testable import JarvisMacOS
 
 final class LocalSearchParsingTests: XCTestCase {
@@ -44,6 +45,42 @@ final class LocalSearchParsingTests: XCTestCase {
             LocalSearchRequest(query: "yesterday in Downloads", mode: .content))
         XCTAssertEqual(LocalSearchParser.search("find the file named \"meeting notes\" in documents"),
             LocalSearchRequest(query: "meeting notes", scopes: ["documents"]))
+    }
+
+    func testOpenDocumentRequestsUseNativeSearchAndPreserveAppOpenings() {
+        XCTAssertEqual(LocalSearchParser.search("open PDFs in Downloads"), LocalSearchRequest(kind: .pdf, scopes: ["Downloads"]))
+        XCTAssertEqual(LocalSearchParser.search("open PDF in PDFs folder"), LocalSearchRequest(kind: .pdf, scopes: ["PDFs"]))
+        XCTAssertEqual(LocalSearchParser.search("find PDFs from Downloads"), LocalSearchRequest(kind: .pdf, scopes: ["Downloads"]))
+        XCTAssertEqual(LocalSearchParser.search("find PDFs from the PDFs folder"), LocalSearchRequest(kind: .pdf, scopes: ["PDFs"]))
+        XCTAssertEqual(LocalSearchParser.search("open the file named meeting notes in documents"), LocalSearchRequest(query: "meeting notes", scopes: ["documents"]))
+        for text in ["open WhatsApp", "open Chrome", "open Notes", "open Documents", "open folder projects", "open PDFs and delete files"] {
+            XCTAssertNil(LocalSearchParser.search(text), text)
+        }
+    }
+
+    func testMetadataPredicatesNeverHaveSingleChildCompoundGroups() {
+        func check(_ predicate: NSPredicate, file: StaticString = #filePath, line: UInt = #line) {
+            if let group = predicate as? NSCompoundPredicate {
+                XCTAssertGreaterThan(group.subpredicates.count, 1, predicate.predicateFormat, file: file, line: line)
+                for case let child as NSPredicate in group.subpredicates { check(child, file: file, line: line) }
+            }
+        }
+        for kind in LocalSearchKind.allCases {
+            check(LocalSearchRequest(kind: kind).predicate())
+            check(LocalSearchRequest(query: "meeting", kind: kind, date: .lastWeek).predicate())
+        }
+    }
+
+    @MainActor
+    func testInvalidMetadataQueryIsReturnedAsAnErrorWithoutUnwindingSwift() {
+        let query = NSMetadataQuery()
+        let invalid = NSCompoundPredicate(orPredicateWithSubpredicates: [NSPredicate(format: "kMDItemContentTypeTree == %@", "com.adobe.pdf")])
+        var error: NSError?
+        XCTAssertFalse(JarvisStartMetadataQuery(query, invalid, [NSMetadataQueryLocalComputerScope], [], &error))
+        XCTAssertEqual(error?.domain, "Jarvis.Spotlight")
+        XCTAssertEqual(error?.code, 2)
+        XCTAssertTrue((error?.userInfo["reason"] as? String)?.contains("wrong number") == true)
+        query.stop()
     }
 
     func testSearchDoesNotStealWebCountsOrCompoundActions() {
@@ -101,7 +138,7 @@ final class LocalSearchParsingTests: XCTestCase {
         for flag in ["0", "1"] {
             setenv("JARVIS_RUST_PIPELINE", flag, 1)
             let planner = ActionPlanner(ollamaClient: SearchNoLLM(), intentModelRouter: SearchNoIntent(), intentLog: IntentRouterLog(enabled: false))
-            for text in ["open Bluetooth settings", "find PDFs from last week in downloads or documents", "preview the second one", "2"] {
+            for text in ["open Bluetooth settings", "find PDFs from last week in downloads or documents", "open PDFs in Downloads", "preview the second one", "2"] {
                 XCTAssertNotNil(CommandValidator.validate(text), text)
                 let plan = await planner.plan(from: text)
                 XCTAssertEqual(plan, [LocalSearchParser.route(text)!], text)
@@ -168,16 +205,30 @@ final class FileSearchSessionTests: XCTestCase {
         let search = await controller.search(LocalSearchRequest(query: "test"))
         XCTAssertTrue(search.success)
         XCTAssertFalse(controller.act(FileResultSelection(operation: .open, index: 3)).success)
-        XCTAssertTrue(controller.act(FileResultSelection(operation: .open, index: 2)).success)
-        XCTAssertEqual(opened, [second])
-        XCTAssertTrue(controller.act(FileResultSelection(operation: .preview, index: 0)).success)
+        XCTAssertTrue(controller.act(FileResultSelection(operation: .preview, index: 2)).success)
         XCTAssertEqual(controller.preview?.url, second)
-        XCTAssertEqual(opened, [second], "Preview must not open the document")
+        XCTAssertTrue(opened.isEmpty, "Preview must not open the document")
         XCTAssertTrue(controller.act(FileResultSelection(operation: .reveal, index: 1)).success)
         XCTAssertEqual(revealed, [first])
-        controller.close()
+        XCTAssertTrue(controller.act(FileResultSelection(operation: .open, index: 2)).success)
+        XCTAssertEqual(opened, [second])
+        XCTAssertFalse(controller.hasContext, "Successful Open closes the result session")
+        XCTAssertNil(controller.preview)
         XCTAssertFalse(controller.act(FileResultSelection(operation: .open, index: 2)).success)
         XCTAssertTrue(controller.results.isEmpty)
+    }
+
+    func testFailedOpenKeepsResultsAvailableForPreviewOrRetry() async throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".txt")
+        try Data("fixture".utf8).write(to: url)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let item = FileSearchResult(url: url, name: url.lastPathComponent, size: 7, modified: .now, isDirectory: false)
+        let controller = FileSearchController(engine: FixedFileSearch(results: [item]), presentsUI: false, openFile: { _ in false })
+        await controller.search(LocalSearchRequest(query: "fixture"))
+        XCTAssertFalse(controller.act(FileResultSelection(operation: .open, index: 1)).success)
+        XCTAssertTrue(controller.hasContext)
+        XCTAssertEqual(controller.results, [item])
+        XCTAssertTrue(controller.act(FileResultSelection(operation: .preview, index: 1)).success)
     }
 
     func testExpiredResultsAndDeletedFilesCannotOpenSomethingElse() async throws {

@@ -101,9 +101,12 @@ struct LocalSearchRequest: Equatable, Codable, CustomStringConvertible {
             }
         }
         if !kind.contentTypes.isEmpty {
-            terms.append(NSCompoundPredicate(orPredicateWithSubpredicates: kind.contentTypes.map {
+            let types = kind.contentTypes.map {
                 NSPredicate(format: "kMDItemContentTypeTree == %@", $0)
-            }))
+            }
+            // NSMetadataQuery rejects one-child OR/AND predicates even
+            // though NSPredicate.evaluate accepts them (PDF has one UTI).
+            terms.append(types.count == 1 ? types[0] : NSCompoundPredicate(orPredicateWithSubpredicates: types))
         }
         if let interval = date.interval(now: now, calendar: calendar) {
             terms.append(NSPredicate(format: "kMDItemFSContentChangeDate >= %@ AND kMDItemFSContentChangeDate < %@",
@@ -112,7 +115,8 @@ struct LocalSearchRequest: Equatable, Codable, CustomStringConvertible {
         if minimumBytes > 0 { terms.append(NSPredicate(format: "kMDItemFSSize >= %@", NSNumber(value: minimumBytes))) }
         if maximumBytes > 0 { terms.append(NSPredicate(format: "kMDItemFSSize <= %@", NSNumber(value: maximumBytes))) }
         if kind != .folder { terms.append(NSPredicate(format: "kMDItemContentType != %@", "public.folder")) }
-        return terms.isEmpty ? NSPredicate(value: true) : NSCompoundPredicate(andPredicateWithSubpredicates: terms)
+        if terms.isEmpty { return NSPredicate(value: true) }
+        return terms.count == 1 ? terms[0] : NSCompoundPredicate(andPredicateWithSubpredicates: terms)
     }
 }
 

@@ -40,6 +40,10 @@ final class FileSearchController: NSObject, ObservableObject, NSWindowDelegate {
     func search(_ request: LocalSearchRequest) async -> ControllerResult {
         task?.cancel()
         let id = UUID(); generation = id
+        let started = Date()
+        CrashDiagnostics.shared.record("file_search_started", fields: ["id": id.uuidString, "kind": request.kind.rawValue,
+            "mode": request.mode.rawValue, "date": request.date.rawValue, "scope_count": String(request.scopes.count),
+            "query_characters": String(request.query.count)])
         draft = request; results = []; selectedID = nil; preview = nil
         hasContext = true; contextDate = nil; searching = true
         status = "Searching the Spotlight index…"
@@ -62,10 +66,14 @@ final class FileSearchController: NSObject, ObservableObject, NSWindowDelegate {
                 : snapshot.limited ? "Showing the first \(results.count) results. Refine your search to see other matches."
                 : results.isEmpty ? "No indexed matches. Check the folder, search words, Spotlight exclusions, and macOS folder access."
                 : "\(results.count) \(noun). Select a file, or say ‘open the second one’ with ⌘⇧A."
+            CrashDiagnostics.shared.record("file_search_finished", fields: ["id": id.uuidString, "results": String(results.count),
+                "timed_out": String(snapshot.timedOut), "milliseconds": String(Int(Date().timeIntervalSince(started) * 1000))])
             return ControllerResult(message: status, success: !snapshot.timedOut)
         } catch {
             guard generation == id else { return ControllerResult(message: "Search replaced by a newer request.", success: false) }
             status = error is CancellationError ? "Search cancelled." : error.localizedDescription
+            CrashDiagnostics.shared.record("file_search_failed", fields: ["id": id.uuidString,
+                "error_domain": (error as NSError).domain, "error_code": String((error as NSError).code)])
             return ControllerResult(message: status, success: false)
         }
     }
@@ -95,6 +103,7 @@ final class FileSearchController: NSObject, ObservableObject, NSWindowDelegate {
                 return fail("Use Preview or Show in Finder for executable files and shortcuts.")
             }
             guard openFile(target.url) else { return fail("macOS could not open ‘\(target.name)’. Try Preview or Show in Finder.") }
+            close()
             status = "Opened \(target.name)."
         case .preview:
             preview = FilePreviewTarget(url: target.url)
