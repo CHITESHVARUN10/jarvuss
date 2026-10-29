@@ -10,60 +10,60 @@ struct AssistantWorkspace: View {
 
     let onOpenPreferences: () -> Void
 
-    @State private var lastAssistantResponse = ""
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         GeometryReader { proxy in
             let compact = proxy.size.height < 700
-
-            ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 0) {
-                    assistantMeta
-                        .padding(.bottom, 4)
-
-                    Group {
-                        if feed.items.isEmpty {
-                            VStack(spacing: 0) {
+            VStack(spacing: 0) {
+                assistantMeta
+                    .padding(.horizontal, 35)
+                    .padding(.top, compact ? 20 : 28)
+                    .padding(.bottom, 12)
+                    .frame(maxWidth: 850)
+                ScrollViewReader { scroll in
+                    ScrollView(.vertical, showsIndicators: true) {
+                        VStack(spacing: 0) {
+                            if feed.items.isEmpty {
                                 voiceStage(compact: compact)
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                                     .padding(.top, compact ? 4 : 12)
                                     .padding(.bottom, compact ? 10 : 16)
-
                                 suggestions
+                            } else {
+                                conversation.padding(.vertical, 10)
                             }
-                        } else {
-                            conversation
-                                .padding(.vertical, 18)
-                                .frame(maxHeight: .infinity)
+                            Color.clear.frame(height: 1).id("conversation-end")
                         }
+                        .padding(.horizontal, 35)
+                        .padding(.bottom, 12)
+                        .frame(maxWidth: 850)
+                        .frame(maxWidth: .infinity)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-                    composer
-                        .padding(.top, compact ? 14 : 22)
-                    shortcuts
-                        .padding(.top, compact ? 9 : 13)
+                    .defaultScrollAnchor(.bottom)
+                    .onChange(of: feed.items.count) { _, count in
+                        guard count > 0 else { return }
+                        withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) {
+                            scroll.scrollTo("conversation-end", anchor: .bottom)
+                        }
+                    }
                 }
-                .padding(.top, compact ? 20 : 28)
+                VStack(spacing: compact ? 9 : 13) {
+                    composer
+                    shortcuts
+                }
                 .padding(.horizontal, 35)
+                .padding(.top, compact ? 12 : 18)
                 .padding(.bottom, compact ? 14 : 24)
-                .frame(maxWidth: 850, alignment: .top)
-                .frame(minHeight: proxy.size.height, alignment: .top)
-                .frame(maxWidth: .infinity)
+                .frame(maxWidth: 850)
+                .fixedSize(horizontal: false, vertical: true)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .onChange(of: appState.currentCommand) { _, command in
-            noteUser(command)
-        }
-        .onChange(of: responseEngine.lastResponse) { _, response in
-            guard !response.isEmpty, response != lastAssistantResponse else { return }
-            lastAssistantResponse = response
-            withAnimation(.easeOut(duration: 0.2)) {
-                feed.addAssistant(response)
-            }
-        }
-        .onAppear {
-            lastAssistantResponse = responseEngine.lastResponse
+        .onChange(of: appState.currentCommand) { _, command in noteUser(command) }
+        .onChange(of: responseEngine.latestMessage?.id) { _, _ in
+            guard let message = responseEngine.latestMessage, !message.text.isEmpty else { return }
+            feed.addAssistant(message.text, succeeded: message.succeeded)
         }
     }
 
@@ -183,7 +183,7 @@ struct AssistantWorkspace: View {
     // MARK: Conversation
 
     private var conversation: some View {
-        VStack(spacing: 12) {
+        LazyVStack(spacing: 12) {
             ForEach(feed.items) { item in
                 message(item)
             }
@@ -202,7 +202,7 @@ struct AssistantWorkspace: View {
             .padding(.top, 2)
         }
         .frame(maxWidth: 760)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        .frame(maxWidth: .infinity, alignment: .top)
     }
 
     private func message(_ item: AssistantFeed.Item) -> some View {
@@ -229,14 +229,14 @@ struct AssistantWorkspace: View {
                 .textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            if !isUser {
+            if !isUser, item.succeeded != nil {
                 HStack(spacing: 6) {
-                    Image(systemName: "checkmark")
+                    Image(systemName: item.succeeded == false ? "exclamationmark.circle" : "checkmark")
                         .font(.system(size: 9, weight: .medium))
-                    Text("Handled on this Mac")
+                    Text(item.succeeded == false ? "Couldn’t complete" : "Completed")
                         .font(.system(size: 10))
                 }
-                .foregroundStyle(NoirPalette.green)
+                .foregroundStyle(item.succeeded == false ? NoirPalette.orange : NoirPalette.green)
                 .padding(.top, 10)
             }
         }

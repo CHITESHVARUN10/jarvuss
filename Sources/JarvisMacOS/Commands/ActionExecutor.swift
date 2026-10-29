@@ -491,6 +491,12 @@ final class ActionExecutor {
             )
         }
 
+        switch action {
+        case .play, .playSong, .playPlaylist, .playLikedSongs, .playLikedWithShuffle, .playPlaylistWithShuffle:
+            await prepareSpotifyForPlayback()
+        default: break
+        }
+
         let backendResult: SpotifyBackendResult
         switch action {
         case .play:
@@ -529,13 +535,32 @@ final class ActionExecutor {
                 message: "Spotify backend success (\(status)): \(message)"
             )
         case .failure(let status, let message):
-            let prefix = status.map { "Spotify backend failed (\($0))" } ?? "Spotify backend failed"
             return ActionResult(
                 action: .mediaControl(action),
                 success: false,
-                message: "\(prefix): \(message)"
+                message: Self.spotifyFailureMessage(status: status, message: message)
             )
         }
+    }
+
+    @MainActor private func prepareSpotifyForPlayback() async {
+        guard NSRunningApplication.runningApplications(withBundleIdentifier: "com.spotify.client").isEmpty,
+              let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.spotify.client") else { return }
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = false
+        _ = try? await NSWorkspace.shared.openApplication(at: url, configuration: configuration)
+    }
+
+    static func spotifyFailureMessage(status: Int?, message: String) -> String {
+        let detail = (try? JSONSerialization.jsonObject(with: Data(message.utf8)) as? [String: Any])?["detail"] as? String ?? message
+        let lower = detail.lowercased()
+        if lower.contains("no active spotify device") || lower.contains("no active device") {
+            return "Spotify isn’t ready on a playback device. Open Spotify, sign in, select this Mac in its device menu, then try again."
+        }
+        if status == 401 || lower.contains("unauthorized") { return "Spotify needs reconnecting. Open Connections → Spotify and connect again." }
+        if status == 403 || lower.contains("premium") { return "Spotify couldn’t control this device. Check your Premium account and the selected playback device." }
+        if status == 429 { return "Spotify is receiving too many requests. Wait a moment, then try again." }
+        return detail.isEmpty ? "Spotify couldn’t complete the request. Please try again." : detail
     }
 
     private func callBackendSpotify(

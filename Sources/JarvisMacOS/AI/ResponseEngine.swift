@@ -10,6 +10,12 @@ final class ResponseEngine: ObservableObject {
     static let shared = ResponseEngine()
 
     @Published var lastResponse: String = ""
+    struct Message: Identifiable {
+        let id = UUID()
+        let text: String
+        let succeeded: Bool?
+    }
+    @Published private(set) var latestMessage: Message?
     @Published var isSpeaking: Bool = false
 
     private let synthesizer = AVSpeechSynthesizer()
@@ -31,8 +37,9 @@ final class ResponseEngine: ObservableObject {
     // MARK: - Public API
 
     /// Produce a text response (always) and optional spoken response.
-    func respond(to text: String, speak: Bool = false) {
+    func respond(to text: String, speak: Bool = false, succeeded: Bool? = nil) {
         lastResponse = text
+        latestMessage = Message(text: text, succeeded: succeeded)
         if speak && !text.isEmpty {
             speakText(text)
         }
@@ -41,7 +48,7 @@ final class ResponseEngine: ObservableObject {
     /// Generate a natural response for a PlannedAction result.
     func respond(action: PlannedAction, result: ActionResult, speak: Bool) {
         let text = naturalResponse(for: action, result: result)
-        respond(to: text, speak: speak)
+        respond(to: text, speak: speak, succeeded: result.success)
     }
 
     /// Cancel any ongoing speech.

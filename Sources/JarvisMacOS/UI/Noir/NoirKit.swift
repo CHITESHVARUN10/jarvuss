@@ -776,6 +776,7 @@ final class AssistantFeed: ObservableObject {
         let id = UUID()
         let role: Role
         let text: String
+        var succeeded: Bool? = nil
     }
 
     @Published var items: [Item] = []
@@ -786,10 +787,10 @@ final class AssistantFeed: ObservableObject {
         items.append(Item(role: .user, text: trimmed))
     }
 
-    func addAssistant(_ text: String) {
+    func addAssistant(_ text: String, succeeded: Bool? = nil) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
-        items.append(Item(role: .assistant, text: trimmed))
+        items.append(Item(role: .assistant, text: trimmed, succeeded: succeeded))
     }
 
     func reset() {

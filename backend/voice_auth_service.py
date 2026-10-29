@@ -441,6 +441,7 @@ def _ensure_spotify_active_device(token: str) -> str | None:
         if _device_cache["token"] == token and _device_cache["expires_at"] > time.monotonic():
             return str(_device_cache["id"])
     devices = _spotify_devices(token)
+    devices = [device for device in devices if device.get("id") and not device.get("is_restricted", False)]
     for device in devices:
         if device.get("is_active") and device.get("id"):
             return _cache_spotify_device(token, str(device["id"]))
@@ -450,7 +451,8 @@ def _ensure_spotify_active_device(token: str) -> str | None:
     if not devices:
         return None
 
-    candidate_id = str(devices[0].get("id", ""))
+    candidate = next((device for device in devices if str(device.get("type", "")).lower() == "computer"), devices[0])
+    candidate_id = str(candidate.get("id", ""))
     if not candidate_id:
         return None
 
@@ -458,20 +460,18 @@ def _ensure_spotify_active_device(token: str) -> str | None:
         "PUT",
         "/v1/me/player",
         token,
-        body={"device_ids": [candidate_id], "play": True},
+        body={"device_ids": [candidate_id], "play": False},
     )
     logger.info(f"[Spotify] PUT /v1/me/player transfer status={status}")
     if status < 200 or status >= 300:
         logger.info(f"[Spotify][ERROR] transfer failed: {raw}")
-        return None
+        raise HTTPException(status_code=status if status in (401, 403, 429) else 502,
+                            detail=f"Spotify device activation failed: {_spotify_error_reason(status, raw, 'try selecting this Mac in Spotify')}")
 
-    time.sleep(1.0)
-    devices_after = _spotify_devices(token)
-    for device in devices_after:
-        if device.get("is_active") and device.get("id"):
-            return _cache_spotify_device(token, str(device["id"]))
-
-    return None
+    # Device discovery is eventually consistent. A successful transfer gives
+    # us an explicit target; do not require its is_active flag to update before
+    # sending the command. The action request below confirms acceptance.
+    return _cache_spotify_device(token, candidate_id)
 
 
 def _spotify_playback_state(token: str) -> dict:
@@ -549,9 +549,9 @@ def _spotify_transport_action(token: str, method: str, path: str, action_label: 
             if attempt == 0:
                 # A newly launched Spotify process may not have registered
                 # its Web API device yet. Wait only for this dependency.
-                time.sleep(0.3)
+                time.sleep(0.6)
                 continue
-            raise HTTPException(status_code=400, detail="No active Spotify device")
+            raise HTTPException(status_code=400, detail="No active Spotify device. Open Spotify, sign in, and select this Mac in its device menu, then try again.")
         status, _, raw = _spotify_api_request(
             method, path, token, query={**(query or {}), "device_id": device_id}, body=body,
         )

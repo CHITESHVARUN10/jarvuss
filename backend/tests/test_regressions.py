@@ -343,6 +343,41 @@ class VoiceStorageTests(unittest.TestCase):
 class SpotifyEfficiencyTests(unittest.TestCase):
     def setUp(self): service._invalidate_spotify_device()
 
+    def test_successful_transfer_uses_target_without_waiting_for_stale_active_flag(self):
+        with patch.object(service, "_spotify_devices", return_value=[{"id": "desktop", "is_active": False, "type": "Computer"}]) as devices, \
+             patch.object(service, "_spotify_api_request", return_value=(204, None, "")) as request, \
+             patch.object(service.time, "sleep") as sleep:
+            result = service._spotify_transport_action("token", "PUT", "/v1/me/player/play", "play", {})
+            self.assertTrue(result["action_confirmed"])
+            self.assertEqual(devices.call_count, 1)
+            sleep.assert_not_called()
+            self.assertEqual(request.call_args_list[0].kwargs["body"], {"device_ids": ["desktop"], "play": False})
+            self.assertEqual(request.call_args_list[1].kwargs["query"], {"device_id": "desktop"})
+
+    def test_restricted_devices_are_skipped_and_desktop_is_preferred(self):
+        devices = [{"id": "restricted", "is_active": True, "is_restricted": True},
+                   {"id": "phone", "type": "Smartphone"}, {"id": "desktop", "type": "Computer"}]
+        with patch.object(service, "_spotify_devices", return_value=devices), \
+             patch.object(service, "_spotify_api_request", return_value=(204, None, "")) as request:
+            self.assertEqual(service._ensure_spotify_active_device("token"), "desktop")
+            self.assertEqual(request.call_args.kwargs["body"], {"device_ids": ["desktop"], "play": False})
+
+    def test_transfer_failure_does_not_cache_device_or_report_success(self):
+        with patch.object(service, "_spotify_devices", return_value=[{"id": "desktop", "is_active": False}]), \
+             patch.object(service, "_spotify_api_request", return_value=(403, None, "Premium required")) as request:
+            with self.assertRaises(service.HTTPException) as error:
+                service._spotify_transport_action("token", "PUT", "/v1/me/player/play", "play", {})
+            self.assertEqual(error.exception.status_code, 403)
+            self.assertEqual(request.call_count, 1)
+            self.assertLess(service._device_cache["expires_at"], service.time.monotonic())
+
+    def test_pause_recovery_does_not_start_playback(self):
+        with patch.object(service, "_spotify_devices", return_value=[{"id": "desktop", "is_active": False}]), \
+             patch.object(service, "_spotify_api_request", return_value=(204, None, "")) as request:
+            service._spotify_transport_action("token", "PUT", "/v1/me/player/pause", "pause")
+            self.assertIs(request.call_args_list[0].kwargs["body"]["play"], False)
+            self.assertEqual(request.call_args_list[1].args[1], "/v1/me/player/pause")
+
     def test_transport_uses_cache_and_does_not_read_playback_state(self):
         with patch.object(service, "_spotify_devices", return_value=[{"id": "device", "is_active": True}]) as devices, \
              patch.object(service, "_spotify_api_request", return_value=(204, {}, "")) as request, \

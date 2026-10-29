@@ -136,6 +136,13 @@ final class ActionPlanner {
         // or a backend timeout. Compound/ambiguous input still uses the model.
         if actionVerbCount(cleaned) <= 1, splitByConjunction(cleaned).count <= 1,
            !QuickInfoMatcher.looksCompound(lower),
+           mediaContentTokens(lower).isEmpty,
+           let media = parseMediaCommand(lower), case .mediaControl(.play) = media {
+            logPlanEvent(branch: "rule", text: cleaned, requestID: requestID, actions: [media])
+            return [media]
+        }
+        if actionVerbCount(cleaned) <= 1, splitByConjunction(cleaned).count <= 1,
+           !QuickInfoMatcher.looksCompound(lower),
            case .execute(let actions) = FastPathRouter.route(cleaned),
            !actions.isEmpty,
            !actions.contains(where: { if case .aiQuery = $0 { return true }; return false }) {
