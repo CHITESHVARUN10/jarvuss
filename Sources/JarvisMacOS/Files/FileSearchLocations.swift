@@ -59,8 +59,15 @@ final class FileSearchLocationStore: ObservableObject {
             } else {
                 // URL directory hints/trailing slashes can differ for a saved
                 // path and the same discovered folder. Compare canonical paths.
-                let matches = Set((saved.filter { normalize($0.name) == key }.map { URL(fileURLWithPath: $0.path) }
-                    + discovered.filter { normalize($0.lastPathComponent) == key }).map { $0.standardizedFileURL.path })
+                let candidates = saved.map { (normalize($0.name), URL(fileURLWithPath: $0.path)) }
+                    + discovered.map { (normalize($0.lastPathComponent), $0) }
+                var matches = Set(candidates.filter { $0.0 == key }.map { $0.1.standardizedFileURL.path })
+                // Exact names win. Only use a simple singular/plural alias
+                // when it resolves to one location (PDF ↔ PDFs).
+                if matches.isEmpty {
+                    matches = Set(candidates.filter { $0.0 == key + "s" || $0.0 + "s" == key }
+                        .map { $0.1.standardizedFileURL.path })
+                }
                 guard matches.count == 1, let match = matches.first else {
                     throw SearchError.location("Choose ‘\(scope)’ in System → File search, or use its full folder path.\(matches.count > 1 ? " More than one location has that name." : "")")
                 }

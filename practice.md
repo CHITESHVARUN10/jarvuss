@@ -189,6 +189,9 @@ Talking is faster than Finder for "where is that file" questions.
 
 These commands use the same local Spotlight index as macOS search and open a
 numbered results window. You can also refine query, kind, date and scope there.
+Name/type searches also check files directly in the chosen folders. Those files
+appear ahead of nested matches, so a large SDK checkout cannot crowd them out.
+At most 100 results are shown. Office lock files are omitted.
 
 | You say | What happens |
 |:---|:---|
@@ -205,6 +208,7 @@ numbered results window. You can also refine query, kind, date and scope there.
 
 After a search, press **⌘⇧A** again to say a selection command. You can also
 click a result and use Return to open, Space to preview, or the dialog buttons.
+Successful Open closes the results window; Preview keeps it available.
 Only the current results session can resolve “first” or “second”; it expires
 after 10 minutes and clears when closed. Executable/script files are not opened
 through these document actions.

@@ -17,7 +17,20 @@ enum SafetyGuard {
     /// The Rust core owns the safety policy in both routing modes. The Swift
     /// adapter only translates app-specific action types (including fileQuery).
     static func validate(rawCommand command: String) -> SafetyVerdict {
-        RustPipeline.map(coreCheckSafety(raw: command))
+        // The parser commits the WHOLE command to a metadata search. Its
+        // literal filename/content is data, not an executable command (e.g.
+        // "Report Format.docx"). Compound actions remain on the Rust policy.
+        if case .searchFiles(let request)? = LocalSearchParser.route(command) {
+            // Preserve the existing Rust policy for explicit filesystem
+            // scopes; only the literal search text is exempt from verb checks.
+            for scope in request.scopes where scope.hasPrefix("/") || scope.hasPrefix("~/") {
+                let verdict = RustPipeline.map(coreCheckSafety(raw: scope))
+                if case .allowed = verdict { continue }
+                return verdict
+            }
+            return .allowed
+        }
+        return RustPipeline.map(coreCheckSafety(raw: command))
     }
 
     /// Validate a single PlannedAction before it executes.

@@ -46,7 +46,7 @@ final class FileSearchController: NSObject, ObservableObject, NSWindowDelegate {
             "query_characters": String(request.query.count)])
         draft = request; results = []; selectedID = nil; preview = nil
         hasContext = true; contextDate = nil; searching = true
-        status = "Searching the Spotlight index…"
+        status = "Searching your files…"
         present()
         defer { if generation == id { searching = false; task = nil } }
         do {
@@ -64,7 +64,7 @@ final class FileSearchController: NSObject, ObservableObject, NSWindowDelegate {
             let noun = results.count == 1 ? "result" : "results"
             status = snapshot.timedOut ? "Search timed out. Showing \(results.count) results collected so far; try a narrower search."
                 : snapshot.limited ? "Showing the first \(results.count) results. Refine your search to see other matches."
-                : results.isEmpty ? "No indexed matches. Check the folder, search words, Spotlight exclusions, and macOS folder access."
+                : results.isEmpty ? "No matching files. Check the location, search words, and folder access. Document contents also require Spotlight indexing."
                 : "\(results.count) \(noun). Select a file, or say ‘open the second one’ with ⌘⇧A."
             CrashDiagnostics.shared.record("file_search_finished", fields: ["id": id.uuidString, "results": String(results.count),
                 "timed_out": String(snapshot.timedOut), "milliseconds": String(Int(Date().timeIntervalSince(started) * 1000))])

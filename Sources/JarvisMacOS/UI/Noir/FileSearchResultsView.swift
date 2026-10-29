@@ -56,7 +56,7 @@ struct FileSearchResultsView: View {
             Rectangle().fill(NoirPalette.line).frame(height: 1)
 
             if model.searching {
-                emptyState(icon: "magnifyingglass", title: "Searching your Mac", detail: "Looking through Spotlight-indexed files in the requested locations.")
+                emptyState(icon: "magnifyingglass", title: "Searching your Mac", detail: "Looking for files in the requested locations.")
             } else if model.results.isEmpty {
                 emptyState(icon: "doc.text.magnifyingglass", title: "No files to show", detail: model.status.isEmpty
                     ? "Try fewer search words, another folder, or a wider date range." : model.status)
@@ -92,7 +92,7 @@ struct FileSearchResultsView: View {
                     Button("Open") { act(.open) }
                         .buttonStyle(NoirButtonStyle(intent: .primary, small: true))
                 }.disabled(model.searching || model.selectedID == nil)
-                Text("Only indexed, accessible content is searchable. Private Mail/Notes stores and excluded folders may not appear. Space previews the selected result; Return opens it.")
+                Text("Names in chosen folders are checked directly too. Document contents require Spotlight indexing. Space previews the selected result; Return opens it.")
                     .font(.system(size: 10)).foregroundStyle(NoirPalette.muted)
                     .fixedSize(horizontal: false, vertical: true)
             }

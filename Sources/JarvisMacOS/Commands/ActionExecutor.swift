@@ -32,6 +32,7 @@ final class ActionExecutor {
     private let ollamaClient: LLMGenerating
     private let actionRunner: ((PlannedAction) async -> ActionResult)?
     private let volumeController: VolumeController
+    private let fileSearchController: FileSearchController?
     private let displayController = DisplayController()
 
     var onLog: ((String) -> Void)? {
@@ -43,9 +44,11 @@ final class ActionExecutor {
 
     init(ollamaClient: LLMGenerating = OllamaClient(),
          volumeController: VolumeController = .shared,
+         fileSearchController: FileSearchController? = nil,
          actionRunner: ((PlannedAction) async -> ActionResult)? = nil) {
         self.ollamaClient = ollamaClient
         self.volumeController = volumeController
+        self.fileSearchController = fileSearchController
         self.actionRunner = actionRunner
     }
 
@@ -175,15 +178,21 @@ final class ActionExecutor {
         case .fileQuery(let query):
             return executeFileQuery(query, action: action)
         case .searchFiles(let request):
-            let result = await FileSearchController.shared.search(request)
+            let controller = await searchController()
+            let result = await controller.search(request)
             return ActionResult(action: action, success: result.success, message: result.message)
         case .fileResult(let selection):
-            let result = await FileSearchController.shared.act(selection)
+            let controller = await searchController()
+            let result = await controller.act(selection)
             return ActionResult(action: action, success: result.success, message: result.message)
         case .openSettings(let pane):
             let result = await pane.open()
             return ActionResult(action: action, success: result.success, message: result.message)
         }
+    }
+
+    @MainActor private func searchController() -> FileSearchController {
+        fileSearchController ?? .shared
     }
 
     /// File exploration — answered locally from FileManager, never via a

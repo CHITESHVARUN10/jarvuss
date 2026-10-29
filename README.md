@@ -93,7 +93,9 @@ Capability reference and requirements: **[dataset/CAPABILITIES.md](dataset/CAPAB
 ## Local file search and System Settings
 
 Jarvis also searches local files through `NSMetadataQuery` (Spotlight’s index),
-with a native results window. Try:
+with a native results window. For name/type searches in chosen folders it also
+checks their immediate files directly, so a large SDK tree or missing index
+entry does not hide a file sitting in Downloads. Try:
 
 - “Open Bluetooth settings” (also Wi-Fi, sound, displays, keyboard, privacy,
   accessibility, microphone, storage, updates, and other supported panes).
@@ -111,6 +113,9 @@ double-click also opens it. The list has a fixed order until the next search.
 Closing it invalidates voice selection, and selections expire after 10 minutes.
 Searches can be cancelled; requests stop gathering after eight seconds and
 report partial results honestly. At most 100 numbered results are shown.
+Files directly in the requested folders take precedence over nested matches;
+exact filename matches rank first. Office lock files (`~$…`) are omitted.
+Successful Open closes the results session; Preview keeps it available.
 
 Dates mean **last modified**; “last week” uses the previous calendar week.
 Type filters include PDF, legacy/current PowerPoint, Keynote, Word, spreadsheets,
@@ -118,12 +123,22 @@ images, audio, video, folders, and indexed mail/text notes. Add custom folders
 or drives and their spoken aliases under **System → File search**. Standard
 home folders and unambiguous home-folder/volume names resolve automatically;
 unknown or ambiguous names require choosing a location instead of guessing.
+Simple singular/plural names such as “PDF” and “PDFs” resolve to the same saved
+location when unambiguous. Spoken “Module one” can match “Module 1”.
 
 Search works without the learned model or Ollama, in either routing mode.
-It only sees metadata and content that macOS indexes and permits access to;
+Document content search sees only text that macOS indexes and permits access to;
 Spotlight exclusions, disconnected drives, unindexed content, and private
 Mail/Apple Notes stores can prevent matches. It does not crawl those databases
 or send document contents to an LLM. See [Apple’s indexing overview](https://support.apple.com/102321).
+
+For an owner-local end-to-end audit, set `JARVIS_FILE_SEARCH_AUDIT_MANIFEST` to
+an external JSON manifest and run `swift test --filter FileSearchLiveAuditTests`.
+The test enables Rust routing and uses the real planner, executor and search.
+The manifest contains `locations` (id/name/path), `cases` (command, requiredPaths,
+optional exactPaths, success, optional followup), and `actualOpenPaths` (an explicit
+allowlist; all other opens are simulated). Results are written beside the manifest.
+Keep private manifests/reports outside the repository. Normal CI skips this audit.
 
 ## The intent model, and the loop that keeps training it
 

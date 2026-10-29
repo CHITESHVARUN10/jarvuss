@@ -51,6 +51,24 @@ struct LocalSearchRequest: Equatable, Codable, CustomStringConvertible {
     var minimumBytes: Int64 = 0
     var maximumBytes: Int64 = 0 // zero = no upper bound
 
+    private static let numberWords = ["zero": "0", "one": "1", "two": "2", "three": "3", "four": "4",
+        "five": "5", "six": "6", "seven": "7", "eight": "8", "nine": "9", "ten": "10"]
+    var nameTokens: [[String]] {
+        query.split(whereSeparator: \.isWhitespace).map { token in
+            let literal = String(token)
+            if let digit = Self.numberWords[literal.lowercased()] { return [literal, digit] }
+            return [literal]
+        }
+    }
+    static func normalizedSpokenName(_ name: String) -> String {
+        name.lowercased().split(whereSeparator: \.isWhitespace).map { numberWords[String($0)] ?? String($0) }.joined(separator: " ")
+    }
+    func matchesName(_ name: String) -> Bool {
+        nameTokens.allSatisfy { alternatives in
+            alternatives.contains { name.range(of: $0, options: [.caseInsensitive, .diacriticInsensitive]) != nil }
+        }
+    }
+
     var arguments: [String: Any] {
         ["query": query, "mode": mode.rawValue, "kind": kind.rawValue,
          "scope": scopes.joined(separator: "|"), "date": date.rawValue,
@@ -96,8 +114,10 @@ struct LocalSearchRequest: Equatable, Codable, CustomStringConvertible {
         if !query.isEmpty {
             let field = mode == .content ? "kMDItemTextContent" : "kMDItemFSName"
             // A multiword filename can contain separators or extra words between tokens.
-            for token in query.split(whereSeparator: \.isWhitespace) {
-                terms.append(NSPredicate(format: "%K CONTAINS[cd] %@", field, String(token)))
+            let tokens = mode == .name ? nameTokens : query.split(whereSeparator: \.isWhitespace).map { [String($0)] }
+            for alternatives in tokens {
+                let predicates = alternatives.map { NSPredicate(format: "%K CONTAINS[cd] %@", field, $0) }
+                terms.append(predicates.count == 1 ? predicates[0] : NSCompoundPredicate(orPredicateWithSubpredicates: predicates))
             }
         }
         if !kind.contentTypes.isEmpty {

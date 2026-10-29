@@ -150,17 +150,22 @@ opens preview beside the source.
 ### Spotlight search and result actions
 
 - `files.search` searches names or indexed document contents via `NSMetadataQuery`.
+  Scoped name/type searches also check immediate files directly, preferring
+  those over nested matches and excluding Office lock files. Exact filename
+  matches rank first; simple spoken numbers match digits in names.
   Filters include kind, modification date, inclusive byte bounds, and one or
   several folder scopes. “find PDFs from last week”, “find presentations bigger
   than 20 MB”, and “find PDFs in downloads or documents” are examples.
 - Standard home folders and unambiguous mounted/home-folder names resolve
   automatically. Save custom aliases in System → File search locations.
   Unknown or ambiguous scopes stop with an explanation.
+  An unambiguous singular/plural alias such as PDF/PDFs resolves automatically.
 - A native dialog displays numbered results. `files.result` supports open,
   Quick Look and reveal in Finder, by selected row or ordinal (1–100).
   “open the first one”, “preview the second one”, “just preview it”.
   The session expires after 10 minutes and clears on close. Executables and
   scripts cannot be opened through these document actions.
+  Successful Open closes the results session; Preview keeps it available.
 - Indexing and permissions determine results. Private Notes/Mail data and
   unindexed locations are not guaranteed to appear.
 

@@ -48,6 +48,13 @@ final class ActionPlanner {
 
     func plan(from raw: String, requestID: UUID = UUID()) async -> [PlannedAction] {
         guard !Task.isCancelled else { return [] }
+        // Filename/content literals must survive legacy wake-word cleanup:
+        // a file can legitimately contain "Jarvis", "okay", or "now".
+        if let action = LocalSearchParser.route(raw),
+           case .allowed = SafetyGuard.validate(rawCommand: raw) {
+            logPlanEvent(branch: "native_search", text: raw, requestID: requestID, actions: [action])
+            return [action]
+        }
         // 1. Strip wake word and trailing noise before anything else
         let cleaned = stripWakeWord(stripTrailingNoise(raw))
         let lower   = cleaned.lowercased()

@@ -13,8 +13,10 @@ enum LocalSearchParser {
 
     static func clean(_ text: String) -> String {
         text.trimmingCharacters(in: .whitespacesAndNewlines)
-            .replacingOccurrences(of: #"(?i)^(?:(?:hey\s+)?jarvis[, ]+|please\s+|(?:can|could|would) you\s+)+"#, with: "", options: .regularExpression)
+            .replacingOccurrences(of: #"(?i)^(?:(?:(?:hey|ok|okay)\s+)?jarvis[, ]+|please\s+|(?:can|could|would) you\s+)+"#, with: "", options: .regularExpression)
             .trimmingCharacters(in: CharacterSet(charactersIn: " .!?"))
+            .replacingOccurrences(of: #"(?i)[, ]+(?:please|thank you|thanks)$"#, with: "", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     static func selection(_ text: String) -> FileResultSelection? {
@@ -125,13 +127,15 @@ enum LocalSearchParser {
         // after date phrases have been extracted. An arbitrary "from …"
         // inside document text remains literal content.
         let locationPattern = #"\b(?:(?:that|which)\s+)?(?:(?:may|might|could)\s+be\s+|maybe\s+)?(?:in|inside|within|under|from(?=\s+(?:(?:my|the)\s+)?(?:downloads|documents|desktop)\b)|from(?=\s+.+\s+(?:folders?|drive)\s*$))\s+(?:either\s+)?(.+)$"#
-        if let match = remove(locationPattern, from: &filters) {
-            request.scopes = match[0].components(separatedBy: .init(charactersIn: ","))
-                .flatMap { $0.components(separatedBy: " or ") }
-                .flatMap { $0.components(separatedBy: " and ") }
+        func scopes(from text: String) -> [String] {
+            text.replacingOccurrences(of: #"\s+(?:or|and)\s+|,"#, with: "|", options: [.regularExpression, .caseInsensitive])
+                .components(separatedBy: "|")
                 .map { $0.replacingOccurrences(of: #"(?i)^(?:my |the )+|\s+folders?$"#, with: "", options: .regularExpression)
                     .trimmingCharacters(in: .whitespacesAndNewlines) }
                 .filter { !$0.isEmpty }
+        }
+        if let match = remove(locationPattern, from: &filters) {
+            request.scopes = scopes(from: match[0])
         }
         if request.mode == .content { content = filters } else { remaining = filters }
 
@@ -141,9 +145,7 @@ enum LocalSearchParser {
                 if remove(pattern, from: &remaining) != nil { request.date = date; break }
             }
             if let match = remove(locationPattern, from: &remaining) {
-                request.scopes += match[0].components(separatedBy: " or ")
-                    .flatMap { $0.components(separatedBy: " and ") }
-                    .map { $0.replacingOccurrences(of: #"(?i)^(?:my |the )+|\s+folders?$"#, with: "", options: .regularExpression).trimmingCharacters(in: .whitespacesAndNewlines) }
+                request.scopes += scopes(from: match[0])
             }
         }
 

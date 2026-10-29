@@ -1,5 +1,6 @@
 import Foundation
 import CDDCShim
+import UniformTypeIdentifiers
 
 struct FileSearchResult: Identifiable, Equatable {
     var id: String { url.path }
@@ -100,16 +101,20 @@ final class SpotlightSearchSession: @unchecked Sendable {
             guard let item = query.result(at: index) as? NSMetadataItem,
                   let path = item.value(forAttribute: "kMDItemPath") as? String else { return nil }
             let url = URL(fileURLWithPath: path).standardizedFileURL
-            guard Self.isWithinRoots(url, roots: roots),
-                  !url.pathComponents.contains(where: { $0.hasPrefix(".") }),
+            guard Self.isWithinRoots(url, roots: roots), Self.isVisible(url),
                   !(item.value(forAttribute: "kMDItemContentTypeTree") as? [String] ?? []).contains("com.apple.application-bundle") else { return nil }
             return FileSearchResult(url: url, name: item.value(forAttribute: "kMDItemFSName") as? String ?? url.lastPathComponent,
                 size: (item.value(forAttribute: "kMDItemFSSize") as? NSNumber)?.int64Value ?? 0,
                 modified: item.value(forAttribute: "kMDItemFSContentChangeDate") as? Date ?? .distantPast,
                 isDirectory: item.value(forAttribute: "kMDItemContentType") as? String == "public.folder")
         }
-        let results = Self.rank(candidates, query: request.query)
-        complete(.success(FileSearchSnapshot(results: Array(results.prefix(100)), limited: count > 500 || results.count > 100, timedOut: timedOut)))
+        // An SDK checkout can fill the index's first 500 slots and hide
+        // older files sitting directly in Downloads. Always check the chosen
+        // folders themselves for name/type searches, without crawling trees
+        // or reading document contents. This also covers unindexed files.
+        let direct = Self.directChildren(request: request, roots: roots)
+        let results = Self.rank(candidates + direct.results, query: request.query, roots: roots)
+        complete(.success(FileSearchSnapshot(results: Array(results.prefix(100)), limited: count > 500 || results.count > 100 || direct.limited, timedOut: timedOut)))
     }
 
     static func isWithinRoots(_ url: URL, roots: [URL]) -> Bool {
@@ -118,16 +123,59 @@ final class SpotlightSearchSession: @unchecked Sendable {
         }
     }
 
-    static func rank(_ values: [FileSearchResult], query: String) -> [FileSearchResult] {
-        let unique = Dictionary(values.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }).values
+    static func isVisible(_ url: URL) -> Bool {
+        !url.pathComponents.contains(where: { $0.hasPrefix(".") }) && !url.lastPathComponent.hasPrefix("~$")
+    }
+
+    static func directChildren(request: LocalSearchRequest, roots: [URL]) -> FileSearchSnapshot {
+        guard request.mode == .name else { return FileSearchSnapshot(results: [], limited: false, timedOut: false) }
+        let keys: Set<URLResourceKey> = [.isRegularFileKey, .isDirectoryKey, .isSymbolicLinkKey,
+            .contentTypeKey, .contentModificationDateKey, .fileSizeKey]
+        let interval = request.date.interval(now: Date(), calendar: .current)
+        var results: [FileSearchResult] = [], limited = false
+        for root in roots {
+            guard let children = try? FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: Array(keys), options: [.skipsHiddenFiles]) else { continue }
+            limited = limited || children.count > 5000
+            for url in children.prefix(5000) where isVisible(url) {
+                guard let info = try? url.resourceValues(forKeys: keys), info.isSymbolicLink != true,
+                      info.isRegularFile == true || info.isDirectory == true else { continue }
+                let directory = info.isDirectory == true
+                guard (request.kind == .folder) == directory else { continue }
+                let type = info.contentType ?? UTType(filenameExtension: url.pathExtension)
+                guard type?.conforms(to: .application) != true else { continue }
+                if request.kind != .any && request.kind != .folder {
+                    guard let type, request.kind.contentTypes.contains(where: {
+                        guard let expected = UTType($0) else { return false }
+                        return type.conforms(to: expected)
+                    }) else { continue }
+                }
+                let name = url.lastPathComponent
+                guard request.matchesName(name) else { continue }
+                let size = Int64(info.fileSize ?? 0), modified = info.contentModificationDate ?? .distantPast
+                guard size >= request.minimumBytes, request.maximumBytes == 0 || size <= request.maximumBytes else { continue }
+                if let interval, !(modified >= interval.start && modified < interval.end) { continue }
+                results.append(FileSearchResult(url: url.standardizedFileURL, name: name, size: size, modified: modified, isDirectory: directory))
+            }
+        }
+        return FileSearchSnapshot(results: results, limited: limited, timedOut: false)
+    }
+
+    static func rank(_ values: [FileSearchResult], query: String, roots: [URL] = []) -> [FileSearchResult] {
+        let unique = Dictionary(values.map { ($0.id, $0) }, uniquingKeysWith: { _, latest in latest }).values
+        let rootPaths = Set(roots.map { $0.standardizedFileURL.path })
         func score(_ item: FileSearchResult) -> Int {
             guard !query.isEmpty else { return 0 }
             let name = item.url.deletingPathExtension().lastPathComponent
-            if name.compare(query, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame { return 2 }
+            if name.compare(query, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame
+                || item.name.compare(query, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame { return 2 }
+            if LocalSearchRequest.normalizedSpokenName(name) == LocalSearchRequest.normalizedSpokenName(query) { return 2 }
             return name.range(of: query, options: [.caseInsensitive, .diacriticInsensitive]) == nil ? 0 : 1
         }
         return unique.sorted {
             if score($0) != score($1) { return score($0) > score($1) }
+            let firstDirect = rootPaths.contains($0.url.deletingLastPathComponent().path)
+            let secondDirect = rootPaths.contains($1.url.deletingLastPathComponent().path)
+            if firstDirect != secondDirect { return firstDirect }
             if $0.modified != $1.modified { return $0.modified > $1.modified }
             return $0.id.localizedStandardCompare($1.id) == .orderedAscending
         }
