@@ -2,6 +2,117 @@ import XCTest
 @testable import JarvisMacOS
 
 final class SystemVolumeTests: XCTestCase {
+    func testAuthoredVolumeCorpusResolvesAmountsAndMapsEveryLabel() async throws {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let original = ProcessInfo.processInfo.environment["JARVIS_RUST_PIPELINE"]
+        defer { if let original { setenv("JARVIS_RUST_PIPELINE", original, 1) } else { unsetenv("JARVIS_RUST_PIPELINE") } }
+        for filename in ["dataset/train-071-system-volume.jsonl", "training/eval_system_volume.jsonl"] {
+            for line in try String(contentsOf: root.appendingPathComponent(filename), encoding: .utf8).split(separator: "\n") {
+                let row = try JSONSerialization.jsonObject(with: Data(line.utf8)) as! [String: Any]
+                let text = row["text"] as! String
+                let intents = row["intents"] as! [[String: Any]]
+                let expected = try XCTUnwrap(IntentActionMapper.map(intents), text)
+                if intents.count == 1, intents[0]["name"] as? String != "ai.query" {
+                    XCTAssertEqual(SystemVolumeParser.route(text), expected[0], text)
+                    XCTAssertEqual(IntentActionMapper.map(intents, sourceText: text), expected, text)
+                    for mode in ["0", "1"] {
+                        setenv("JARVIS_RUST_PIPELINE", mode, 1)
+                        let planner = ActionPlanner(ollamaClient: NoVolumeLLM(), intentModelRouter: NoVolumeModel(), intentLog: IntentRouterLog(enabled: false))
+                        let actual = await planner.plan(from: text)
+                        XCTAssertEqual(actual, expected, text)
+                        XCTAssertNotNil(CommandValidator.validate(text), text)
+                    }
+                } else {
+                    XCTAssertNil(SystemVolumeParser.route(text), text)
+                }
+            }
+        }
+    }
+
+    func testSnapshotShowsObservedCapabilitiesAndNeverInventsVolume() async {
+        let audio = FakeSystemAudio()
+        let controller = make(audio)
+        let unsupported = await controller.snapshot()
+        XCTAssertEqual(unsupported.output?.name, "Speakers")
+        XCTAssertNil(unsupported.level)
+        XCTAssertFalse(unsupported.canSetVolume)
+        audio.allow(.virtualVolume, 0.32, writable: false)
+        let readonly = await controller.snapshot()
+        XCTAssertEqual(readonly.level, 0.32)
+        XCTAssertFalse(readonly.canSetVolume)
+        audio.allow(.virtualVolume, 0.32); audio.allow(.mute(0), 1)
+        let available = await controller.snapshot()
+        XCTAssertTrue(available.canSetVolume)
+        XCTAssertTrue(available.canUnmute)
+        XCTAssertEqual(available.isMuted, true)
+        XCTAssertTrue(audio.writes.isEmpty)
+    }
+
+    func testAggregateAndMissingOutputSnapshotsDisableControls() async {
+        let audio = FakeSystemAudio()
+        audio.selected = SystemAudioOutput(id: 42, uid: "aggregate", name: "Multi-output", isAggregate: true)
+        audio.allow(.virtualVolume, 0.5)
+        let controller = make(audio)
+        let aggregate = await controller.snapshot()
+        XCTAssertNil(aggregate.level)
+        XCTAssertFalse(aggregate.canSetVolume)
+        XCTAssertFalse(aggregate.canMute)
+        XCTAssertNotNil(aggregate.detail)
+        audio.noOutput = true
+        let missing = await controller.snapshot()
+        XCTAssertNil(missing.output)
+        XCTAssertNil(missing.level)
+        XCTAssertFalse(missing.canUnmute)
+        XCTAssertTrue(audio.writes.isEmpty)
+    }
+
+    func testUICommandsCannotApplyToAnOutputThatChangedAfterTheSliderWasShown() async {
+        let audio = FakeSystemAudio()
+        audio.allow(.virtualVolume, 0.4)
+        let controller = make(audio)
+        let shown = await controller.snapshot()
+        audio.selected = audio.second
+        audio.allow(.virtualVolume, 0.8)
+        let result = await controller.perform(.setLevel(20), expectedOutput: shown.output)
+        XCTAssertFalse(result.success)
+        XCTAssertTrue(audio.writes.isEmpty)
+        XCTAssertEqual(audio.value(.virtualVolume), 0.8)
+    }
+
+    @MainActor
+    func testSoundModelSharesMuteRestorationWithVoiceAndRefreshesConfirmedLevels() async {
+        let audio = FakeSystemAudio()
+        audio.allow(.virtualVolume, 0.37)
+        let controller = make(audio)
+        let model = SystemSoundModel(controller: controller)
+        await model.refresh()
+        XCTAssertEqual(model.snapshot?.level, 0.37)
+        XCTAssertTrue(controller.executeResult(.mute).success) // Voice action.
+        await model.refresh()
+        XCTAssertEqual(model.snapshot?.isMuted, true)
+        await model.apply(.unmute, to: model.snapshot?.output) // System control.
+        XCTAssertEqual(model.lastResult?.success, true)
+        XCTAssertEqual(model.snapshot?.level, 0.37)
+        XCTAssertFalse(model.isApplying)
+        await model.apply(.setLevel(23), to: model.snapshot?.output)
+        XCTAssertEqual(model.snapshot?.level, 0.23)
+    }
+
+    @MainActor
+    func testSoundModelReportsFailureAndRefreshesNewOutputWithoutWriting() async {
+        let audio = FakeSystemAudio()
+        audio.allow(.virtualVolume, 0.4)
+        let model = SystemSoundModel(controller: make(audio))
+        await model.refresh()
+        let shown = model.snapshot?.output
+        audio.selected = audio.second; audio.allow(.virtualVolume, 0.8)
+        await model.apply(.setLevel(10), to: shown)
+        XCTAssertEqual(model.lastResult?.success, false)
+        XCTAssertEqual(model.snapshot?.output?.name, "Headphones")
+        XCTAssertEqual(model.snapshot?.level, 0.8)
+        XCTAssertTrue(audio.writes.isEmpty)
+    }
+
     func testExactSpokenAmountsAndAbsoluteVersusRelativeSemantics() {
         let cases: [(String, VolumeAction)] = [
             ("increase the volume by twenty five percent", .increase(by: 25)),

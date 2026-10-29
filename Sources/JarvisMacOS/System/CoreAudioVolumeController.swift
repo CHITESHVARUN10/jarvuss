@@ -2,7 +2,7 @@ import Foundation
 import CoreAudio
 import AudioToolbox
 
-struct SystemAudioOutput: Equatable {
+struct SystemAudioOutput: Equatable, Sendable {
     let id: AudioDeviceID
     let uid: String
     let name: String

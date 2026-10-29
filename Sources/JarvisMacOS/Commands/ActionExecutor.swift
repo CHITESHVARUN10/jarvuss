@@ -31,7 +31,7 @@ final class ActionExecutor {
     private let fileManager      = JarvisFileManager()
     private let ollamaClient: LLMGenerating
     private let actionRunner: ((PlannedAction) async -> ActionResult)?
-    private let volumeController = VolumeController()
+    private let volumeController: VolumeController
     private let displayController = DisplayController()
 
     var onLog: ((String) -> Void)? {
@@ -42,8 +42,10 @@ final class ActionExecutor {
     }
 
     init(ollamaClient: LLMGenerating = OllamaClient(),
+         volumeController: VolumeController = .shared,
          actionRunner: ((PlannedAction) async -> ActionResult)? = nil) {
         self.ollamaClient = ollamaClient
+        self.volumeController = volumeController
         self.actionRunner = actionRunner
     }
 

@@ -18,7 +18,7 @@ struct NoirSystemPage: View {
         NoirPage(
             eyebrow: "The details that make it yours",
             title: "A comfortable workspace.",
-            sub: "Fine-tune your display, dictation, and command safeguards."
+            sub: "Fine-tune your display, sound, dictation, and command safeguards."
         ) {
             HStack(alignment: .top, spacing: 18) {
                 VStack(alignment: .leading, spacing: 0) {
@@ -76,6 +76,8 @@ struct NoirSystemPage: View {
                     }
                 }
             }
+
+            NoirSoundSection()
 
             NoirFileSearchPreferences()
 

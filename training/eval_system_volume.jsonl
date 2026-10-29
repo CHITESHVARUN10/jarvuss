@@ -1,0 +1,28 @@
+{"text": "Could you set output audio to twenty-three percent please?", "intents": [{"name": "volume.set", "args": {"level": 23}}]}
+{"text": "Jarvis, adjust my volume to forty eight percent.", "intents": [{"name": "volume.set", "args": {"level": 48}}]}
+{"text": "change speaker sound to 67%", "intents": [{"name": "volume.set", "args": {"level": 67}}]}
+{"text": "put system audio at hundred percent", "intents": [{"name": "volume.set", "args": {"level": 100}}]}
+{"text": "raise volume to twenty-eight percent", "intents": [{"name": "volume.set", "args": {"level": 28}}]}
+{"text": "reduce volume to nineteen percent", "intents": [{"name": "volume.set", "args": {"level": 19}}]}
+{"text": "Please increase computer volume by thirteen percent.", "intents": [{"name": "volume.up", "args": {"by": 13}}]}
+{"text": "Jarvis, turn the sound up by twenty six percent.", "intents": [{"name": "volume.up", "args": {"by": 26}}]}
+{"text": "raise output sound by thirty-one percentage points", "intents": [{"name": "volume.up", "args": {"by": 31}}]}
+{"text": "make it louder by four percent please", "intents": [{"name": "volume.up", "args": {"by": 4}}]}
+{"text": "boost system audio by eighteen percent", "intents": [{"name": "volume.up", "args": {"by": 18}}]}
+{"text": "could you turn up speaker volume please?", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "Please decrease computer volume by fourteen percent.", "intents": [{"name": "volume.down", "args": {"by": 14}}]}
+{"text": "Jarvis, turn the audio down by twenty seven percent.", "intents": [{"name": "volume.down", "args": {"by": 27}}]}
+{"text": "lower output sound by thirty-two percentage points", "intents": [{"name": "volume.down", "args": {"by": 32}}]}
+{"text": "make it quieter by three percent please", "intents": [{"name": "volume.down", "args": {"by": 3}}]}
+{"text": "reduce system audio by sixteen percent", "intents": [{"name": "volume.down", "args": {"by": 16}}]}
+{"text": "could you turn down speaker volume please?", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "Could you mute the audio please?", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "Jarvis, turn the sound off please.", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "Could you unmute the audio please?", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "Jarvis, turn the sound on please.", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "could you show the volume please?", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "Jarvis, what is the current volume level?", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "open safari then set volume to twenty three percent", "intents": [{"name": "app.open", "args": {"name": "Safari"}}, {"name": "volume.set", "args": {"level": 23}}]}
+{"text": "lower volume by thirteen percent and pause", "intents": [{"name": "volume.down", "args": {"by": 13}}, {"name": "media.pause", "args": {}}]}
+{"text": "explain why system volume can be read-only", "intents": [{"name": "ai.query", "args": {"text": "explain why system volume can be read-only"}}]}
+{"text": "what does a multi-output device mean", "intents": [{"name": "ai.query", "args": {"text": "what does a multi-output device mean"}}]}

@@ -51,7 +51,10 @@ from real usage patterns — **not** programmatically generated.
 1. Bare relative commands ("increase the brightness", "brightness up") default
    to `by: 10` — matches current executor behavior.
 2. "decrease the brightness **to** 14" is absolute → `brightness_set 14`.
-3. Out-of-range values stay as spoken (e.g. `level: 200`) — the executor clamps.
+3. Legacy display labels can retain out-of-range values; display guardrails
+   clamp at execution. New system-volume labels use only 0–100: that pipeline
+   rejects out-of-range values. Volume “by” is a percentage-point delta;
+   “to” is an absolute target, including “increase volume to 40”.
 4. "open youtube and search for X" → single `web.search` (search opens YouTube).
 5. "search X in brave/chrome" → `web.search` with the browser stripped from
    the query (matches `parseSearchQuery`).
@@ -100,6 +103,20 @@ from real usage patterns — **not** programmatically generated.
 - `train-070-spotify-shuffle.jsonl` — 70 shuffle commands for current playback,
   Liked Songs (including “light songs” speech recognition), and named playlists;
   separate `resolved_args` record the intended collection/name/on-off state
+
+- `train-071-system-volume.jsonl` — 116 authored volume examples: absolute
+  levels, spoken-number deltas, mute/unmute, read queries, six ordered compound
+  commands and four explanatory questions that must not become volume actions.
+
+`training/eval_system_volume.jsonl` contains 28 independent evaluation phrases,
+including two compound commands and two explanatory questions. Preparation
+excludes this entire file from train/dev and writes `system_volume_eval.jsonl`.
+These rows reuse `volume.set/up/down/mute/unmute` and `info.volume`; no schema
+change is needed. Exact standalone amounts are resolved from the utterance by
+Swift, with native routing tested in both pipeline modes. Later model candidates
+can use `evaluate_native_search.py --volume` (and `--shuffle` when applicable)
+for independent volume coverage and general-command regression gates.
+**No volume RL run, model export or promotion has been performed for this dataset.**
 
 `training/eval_spotify_shuffle.jsonl` holds 12 separate shuffle evaluation
 phrases and is excluded from training. `media.shuffle` is a classifier-only

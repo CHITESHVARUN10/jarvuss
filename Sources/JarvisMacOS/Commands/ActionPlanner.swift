@@ -54,6 +54,14 @@ final class ActionPlanner {
 
         NSLog("[Plan] Input cleaned: '%@'", cleaned)
 
+        // Parse exact volume semantics before legacy wake-word cleaning or
+        // Rust local-state rules can discard punctuation or spoken tens.
+        if let volume = SystemVolumeParser.route(raw),
+           case .allowed = SafetyGuard.validate(rawCommand: raw) {
+            logPlanEvent(branch: "rule", text: raw, requestID: requestID, actions: [volume])
+            return [volume]
+        }
+
         // Native file search and fixed settings panes must precede generic
         // app/“Bluetooth status” rules, including when Rust routing is enabled.
         if let action = LocalSearchParser.route(cleaned) {

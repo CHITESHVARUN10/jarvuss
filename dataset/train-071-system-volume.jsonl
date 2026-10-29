@@ -1,0 +1,116 @@
+{"text": "set volume to zero", "intents": [{"name": "volume.set", "args": {"level": 0}}]}
+{"text": "set the volume to ten percent", "intents": [{"name": "volume.set", "args": {"level": 10}}]}
+{"text": "set system volume to twenty percent", "intents": [{"name": "volume.set", "args": {"level": 20}}]}
+{"text": "set output volume to twenty-five percent", "intents": [{"name": "volume.set", "args": {"level": 25}}]}
+{"text": "change the volume to thirty percent", "intents": [{"name": "volume.set", "args": {"level": 30}}]}
+{"text": "adjust volume to thirty five percent", "intents": [{"name": "volume.set", "args": {"level": 35}}]}
+{"text": "put the volume at forty percent", "intents": [{"name": "volume.set", "args": {"level": 40}}]}
+{"text": "set speaker volume to forty-two percent", "intents": [{"name": "volume.set", "args": {"level": 42}}]}
+{"text": "set my volume to 45%", "intents": [{"name": "volume.set", "args": {"level": 45}}]}
+{"text": "turn the volume to fifty percent", "intents": [{"name": "volume.set", "args": {"level": 50}}]}
+{"text": "set computer sound to fifty five percent", "intents": [{"name": "volume.set", "args": {"level": 55}}]}
+{"text": "set mac volume to sixty percent", "intents": [{"name": "volume.set", "args": {"level": 60}}]}
+{"text": "set the sound to sixty-five percent", "intents": [{"name": "volume.set", "args": {"level": 65}}]}
+{"text": "set the audio to seventy percent", "intents": [{"name": "volume.set", "args": {"level": 70}}]}
+{"text": "volume at seventy five percent", "intents": [{"name": "volume.set", "args": {"level": 75}}]}
+{"text": "sound to eighty percent", "intents": [{"name": "volume.set", "args": {"level": 80}}]}
+{"text": "audio at 85 percent", "intents": [{"name": "volume.set", "args": {"level": 85}}]}
+{"text": "set volume ninety", "intents": [{"name": "volume.set", "args": {"level": 90}}]}
+{"text": "set volume to ninety-five percent", "intents": [{"name": "volume.set", "args": {"level": 95}}]}
+{"text": "set volume to one hundred percent", "intents": [{"name": "volume.set", "args": {"level": 100}}]}
+{"text": "increase volume to sixty percent", "intents": [{"name": "volume.set", "args": {"level": 60}}]}
+{"text": "decrease volume to twenty percent", "intents": [{"name": "volume.set", "args": {"level": 20}}]}
+{"text": "raise the sound to thirty five percent", "intents": [{"name": "volume.set", "args": {"level": 35}}]}
+{"text": "lower system audio to fifteen percent", "intents": [{"name": "volume.set", "args": {"level": 15}}]}
+{"text": "increase volume", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "increase the sound", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "raise system volume", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "turn up the audio", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "volume up", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "make it louder", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "increase volume by five percent", "intents": [{"name": "volume.up", "args": {"by": 5}}]}
+{"text": "increase sound by seven", "intents": [{"name": "volume.up", "args": {"by": 7}}]}
+{"text": "increase output volume by 10%", "intents": [{"name": "volume.up", "args": {"by": 10}}]}
+{"text": "increase speaker volume by twelve percentage points", "intents": [{"name": "volume.up", "args": {"by": 12}}]}
+{"text": "raise the volume by fifteen percent", "intents": [{"name": "volume.up", "args": {"by": 15}}]}
+{"text": "raise computer audio by seventeen percent", "intents": [{"name": "volume.up", "args": {"by": 17}}]}
+{"text": "boost volume by twenty percent", "intents": [{"name": "volume.up", "args": {"by": 20}}]}
+{"text": "bump up the sound by twenty-two percent", "intents": [{"name": "volume.up", "args": {"by": 22}}]}
+{"text": "turn up the volume by twenty five percent", "intents": [{"name": "volume.up", "args": {"by": 25}}]}
+{"text": "turn my volume up by thirty percent", "intents": [{"name": "volume.up", "args": {"by": 30}}]}
+{"text": "volume up by 35", "intents": [{"name": "volume.up", "args": {"by": 35}}]}
+{"text": "sound up forty percent", "intents": [{"name": "volume.up", "args": {"by": 40}}]}
+{"text": "audio up by forty-five percent", "intents": [{"name": "volume.up", "args": {"by": 45}}]}
+{"text": "louder by fifty percent", "intents": [{"name": "volume.up", "args": {"by": 50}}]}
+{"text": "make it louder by two percent", "intents": [{"name": "volume.up", "args": {"by": 2}}]}
+{"text": "increase volume by zero percent", "intents": [{"name": "volume.up", "args": {"by": 0}}]}
+{"text": "Jarvis, please raise the sound by eight percent.", "intents": [{"name": "volume.up", "args": {"by": 8}}]}
+{"text": "could you increase output sound by nine percent please?", "intents": [{"name": "volume.up", "args": {"by": 9}}]}
+{"text": "decrease volume", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "decrease the sound", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "lower system volume", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "turn down the audio", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "volume down", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "make it quieter", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "decrease volume by five percent", "intents": [{"name": "volume.down", "args": {"by": 5}}]}
+{"text": "decrease sound by seven", "intents": [{"name": "volume.down", "args": {"by": 7}}]}
+{"text": "decrease output volume by 10%", "intents": [{"name": "volume.down", "args": {"by": 10}}]}
+{"text": "decrease speaker volume by twelve percentage points", "intents": [{"name": "volume.down", "args": {"by": 12}}]}
+{"text": "lower the volume by fifteen percent", "intents": [{"name": "volume.down", "args": {"by": 15}}]}
+{"text": "lower computer audio by seventeen percent", "intents": [{"name": "volume.down", "args": {"by": 17}}]}
+{"text": "reduce volume by twenty percent", "intents": [{"name": "volume.down", "args": {"by": 20}}]}
+{"text": "reduce the sound by twenty-two percent", "intents": [{"name": "volume.down", "args": {"by": 22}}]}
+{"text": "turn down the volume by twenty five percent", "intents": [{"name": "volume.down", "args": {"by": 25}}]}
+{"text": "turn my volume down by thirty percent", "intents": [{"name": "volume.down", "args": {"by": 30}}]}
+{"text": "volume down by 35", "intents": [{"name": "volume.down", "args": {"by": 35}}]}
+{"text": "sound down forty percent", "intents": [{"name": "volume.down", "args": {"by": 40}}]}
+{"text": "audio down by forty-five percent", "intents": [{"name": "volume.down", "args": {"by": 45}}]}
+{"text": "quieter by fifty percent", "intents": [{"name": "volume.down", "args": {"by": 50}}]}
+{"text": "make it quieter by two percent", "intents": [{"name": "volume.down", "args": {"by": 2}}]}
+{"text": "decrease volume by zero percent", "intents": [{"name": "volume.down", "args": {"by": 0}}]}
+{"text": "Jarvis, please lower the sound by eight percent.", "intents": [{"name": "volume.down", "args": {"by": 8}}]}
+{"text": "could you decrease output sound by nine percent please?", "intents": [{"name": "volume.down", "args": {"by": 9}}]}
+{"text": "mute", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "mute sound", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "mute audio", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "mute the sound", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "mute the audio", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "mute system audio", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "mute system sound", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "mute the volume", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "sound off", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "turn off sound", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "turn the sound off", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "Jarvis, could you mute please?", "intents": [{"name": "volume.mute", "args": {}}]}
+{"text": "unmute", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "unmute sound", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "unmute audio", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "unmute the sound", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "unmute the audio", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "unmute system audio", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "unmute system sound", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "unmute the volume", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "sound on", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "turn on sound", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "turn the sound on", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "Jarvis, could you unmute please?", "intents": [{"name": "volume.unmute", "args": {}}]}
+{"text": "system volume", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "current volume", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "volume level", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "what is the volume", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "what is the current volume", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "what's the current volume level", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "show volume", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "show the volume", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "check volume", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "how loud is the volume", "intents": [{"name": "info.volume", "args": {}}]}
+{"text": "open spotify and set volume to thirty percent", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}, {"name": "volume.set", "args": {"level": 30}}]}
+{"text": "decrease volume by twenty five percent then pause", "intents": [{"name": "volume.down", "args": {"by": 25}}, {"name": "media.pause", "args": {}}]}
+{"text": "set volume to forty percent and open notes", "intents": [{"name": "volume.set", "args": {"level": 40}}, {"name": "app.open", "args": {"name": "Notes"}}]}
+{"text": "unmute and increase volume by ten percent", "intents": [{"name": "volume.unmute", "args": {}}, {"name": "volume.up", "args": {"by": 10}}]}
+{"text": "open system settings and lower volume by five percent", "intents": [{"name": "app.open", "args": {"name": "System Settings"}}, {"name": "volume.down", "args": {"by": 5}}]}
+{"text": "increase volume to fifty percent then next song", "intents": [{"name": "volume.set", "args": {"level": 50}}, {"name": "media.next", "args": {}}]}
+{"text": "explain how volume percentage differs from decibels", "intents": [{"name": "ai.query", "args": {"text": "explain how volume percentage differs from decibels"}}]}
+{"text": "why do some HDMI outputs have no volume slider", "intents": [{"name": "ai.query", "args": {"text": "why do some HDMI outputs have no volume slider"}}]}
+{"text": "what is an aggregate audio device", "intents": [{"name": "ai.query", "args": {"text": "what is an aggregate audio device"}}]}
+{"text": "how does speaker balance work", "intents": [{"name": "ai.query", "args": {"text": "how does speaker balance work"}}]}
