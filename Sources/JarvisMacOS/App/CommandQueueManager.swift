@@ -18,6 +18,7 @@ struct QueuedCommand: Identifiable {
     let id: UUID = UUID()
     let text: String
     let priority: CommandPriority
+    let deliveryID: UUID
     let handler: () async -> Void
 }
 
@@ -35,6 +36,7 @@ final class CommandQueueManager: ObservableObject {
     @Published private(set) var currentCommandText: String = ""
 
     private var activeTask: Task<Void, Never>?
+    private var currentDeliveryID: UUID?
     /// Monotonic token identifying the current execution slot. A superseded
     /// task compares its own token before mutating queue state.
     private var generation: Int = 0
@@ -64,7 +66,7 @@ final class CommandQueueManager: ObservableObject {
             return false
         }
 
-        let cmd = QueuedCommand(text: text, priority: priority, handler: handler)
+        let cmd = QueuedCommand(text: text, priority: priority, deliveryID: deliveryID, handler: handler)
 
         // ── HIGH priority: cancel current AND clear queue ───────────────
         if priority == .high && text != currentCommandText {
@@ -112,6 +114,7 @@ final class CommandQueueManager: ObservableObject {
         guard let task = activeTask else { return }
         task.cancel()
         activeTask = nil
+        currentDeliveryID = nil
         // Bump the generation so the superseded task's completion block can
         // no longer clear `isExecuting`/`activeTask` while its replacement
         // is still running (that used to let two commands overlap).
@@ -127,6 +130,15 @@ final class CommandQueueManager: ObservableObject {
         let dropped = queue.map { "'\($0.text)'" }.joined(separator: ", ")
         if !dropped.isEmpty { log("[Queue] Cleared queue: \(dropped)") }
         queue.removeAll()
+    }
+
+    /// Test clients may cancel their own delivery without interrupting a
+    /// different user command that has since taken its place.
+    func cancelDelivery(_ id: UUID) {
+        queue.removeAll { $0.deliveryID == id }
+        guard currentDeliveryID == id else { return }
+        cancelCurrent(reason: "test run cancelled")
+        drainIfIdle()
     }
 
     // MARK: - Queue drain
@@ -152,6 +164,7 @@ final class CommandQueueManager: ObservableObject {
         let cmd = queue.removeFirst()
         isExecuting = true
         currentCommandText = cmd.text
+        currentDeliveryID = cmd.deliveryID
 
         log("[Execution] started: '\(cmd.text)'")
 
@@ -171,6 +184,7 @@ final class CommandQueueManager: ObservableObject {
                     self.log("[Execution] finished: '\(cmd.text)'")
                 }
                 self.activeTask = nil
+                self.currentDeliveryID = nil
                 self.isExecuting = false
                 self.currentCommandText = ""
                 self.drainIfIdle()
@@ -189,6 +203,7 @@ final class CommandQueueManager: ObservableObject {
                 self.onCancel?()
                 self.generation += 1
                 self.activeTask = nil
+                self.currentDeliveryID = nil
                 self.isExecuting = false
                 self.currentCommandText = ""
                 self.drainIfIdle()

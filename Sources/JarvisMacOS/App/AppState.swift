@@ -479,6 +479,9 @@ final class AppState: ObservableObject {
     }
 
     func bootstrap() async {
+        if presentsUI, CommandLine.arguments.contains("--test-mode") {
+            await CommandTestHarness.shared.start(app: self, openBrowser: false)
+        }
         if presentsUI { IntentModelSetup.shared.startAutomaticSetup() }
         BackendServiceManager.statusChangeHandler = { [weak self] status in
             self?.backendStatus = status
@@ -572,6 +575,7 @@ final class AppState: ObservableObject {
     }
 
     func shutdown() {
+        CommandTestHarness.shared.stop()
         stopEnrollment()
         statsRecorder.flush()
         stopMicrophone()

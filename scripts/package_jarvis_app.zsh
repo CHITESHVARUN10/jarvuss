@@ -170,6 +170,8 @@ if [[ -f "$ROOT_DIR/Sources/JarvisMacOS/Resources/AppIcon.icns" ]]; then
   cp "$ROOT_DIR/Sources/JarvisMacOS/Resources/AppIcon.icns" "$APP_RESOURCES/AppIcon.icns"
 fi
 
+# Local command test runner (available only while test mode is enabled).
+cp "$ROOT_DIR/htmls/command-test-runner.html" "$APP_RESOURCES/command-test-runner.html"
 # Card typefaces (registered via ATSApplicationFontsPath = Fonts).
 FONT_SRC="$ROOT_DIR/Sources/JarvisMacOS/Resources/Fonts"
 if [[ -d "$FONT_SRC" ]]; then

@@ -5,6 +5,7 @@ import AppKit
 
 struct NoirAboutPage: View {
     @ObservedObject var appState: AppState
+    @ObservedObject private var tests = CommandTestHarness.shared
 
     var body: some View {
         NoirPage(
@@ -78,6 +79,24 @@ struct NoirAboutPage: View {
                 }
                 .buttonStyle(NoirButtonStyle(intent: .quiet, small: true))
                 .padding(.top, 12)
+            }
+
+            NoirSectionHeading(title: "Command testing")
+            NoirCard(padded: true) {
+                Text("Send text through the command pipeline without recording. The local runner shows plans, execution results, and your pass/fail notes. Live execution performs real actions on this Mac.")
+                    .font(.system(size: 11)).foregroundStyle(NoirPalette.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: 10) {
+                    Button(tests.isRunning ? "Open test runner" : "Start test runner") {
+                        Task { await tests.start(app: appState) }
+                    }
+                    .buttonStyle(NoirButtonStyle(intent: .primary, small: true))
+                    if tests.isRunning {
+                        Button("Stop test mode") { tests.stop() }
+                            .buttonStyle(NoirButtonStyle(intent: .quiet, small: true))
+                    }
+                }.padding(.top, 12)
+                Text(tests.message).font(.system(size: 10)).foregroundStyle(NoirPalette.muted).padding(.top, 8)
             }
 
             NoirSectionHeading(title: "Privacy")

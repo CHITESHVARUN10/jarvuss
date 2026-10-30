@@ -563,6 +563,15 @@ final class ActionExecutor {
         return detail.isEmpty ? "Spotify couldn’t complete the request. Please try again." : detail
     }
 
+    static func spotifyResponseConfirmsAction(_ data: Data, path: String) -> Bool {
+        guard let decoded = try? JSONDecoder().decode(SpotifyBackendEnvelope.self, from: data),
+              decoded.status?.lowercased() == "ok" else { return false }
+        // A helper accepting a play request is not proof that music started.
+        // This also prevents an older running helper from showing false success.
+        if path.hasPrefix("/spotify/play") { return decoded.playbackState?.isPlaying == true }
+        return decoded.actionConfirmed == true
+    }
+
     private func callBackendSpotify(
         path: String,
         query: [URLQueryItem] = []
@@ -595,10 +604,7 @@ final class ActionExecutor {
             emitSpotify("[Spotify][Backend] Response body: \(raw)")
 
             let decoded = try? JSONDecoder().decode(SpotifyBackendEnvelope.self, from: data)
-            let actionConfirmed = decoded?.actionConfirmed == true
-            let isPlaying = decoded?.playbackState?.isPlaying == true
-            let explicitOK = decoded?.status?.lowercased() == "ok"
-            let successConfirmed = explicitOK && (actionConfirmed || isPlaying)
+            let successConfirmed = Self.spotifyResponseConfirmsAction(data, path: normalizedPath)
 
             if (200..<300).contains(status), successConfirmed {
                 let backendMessage = decoded?.message ?? (raw.isEmpty ? "ok" : raw)
@@ -616,7 +622,7 @@ final class ActionExecutor {
             emitSpotify("[Spotify][Backend] Interpreted reason: \(interpretedReason)")
 
             if (200..<300).contains(status) {
-                return .failure(status: status, message: interpretedReason)
+                return .failure(status: status, message: "Spotify accepted the request without confirming the action. If you just rebuilt Jarvis, quit and reopen it to restart the helper, then try again.")
             }
             return .failure(status: status, message: raw.isEmpty ? "unknown error" : raw)
         } catch {

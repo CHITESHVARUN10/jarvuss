@@ -18,6 +18,43 @@ Three ways in:
 Command walkthrough and examples: **[practice.md](practice.md)**.
 Capability reference and requirements: **[dataset/CAPABILITIES.md](dataset/CAPABILITIES.md)**.
 
+For repeatable tests without speaking, open **About → Command testing → Start
+test runner**. The local [runner](htmls/command-test-runner.html) provides editable
+commands, sequential runs, results, your Pass/Fail verdict, notes, and JSON export.
+Start it from Jarvis; opening the HTML file directly cannot control the app.
+Test mode stays off unless enabled, and **Stop test mode** closes its listener.
+Launching the app with `--test-mode` also enables the local API without opening a browser.
+
+The four modes are **Execute** (the normal typed-command queue and real actions),
+**Plan** (routing without execution), **Intent** (the learned model directly),
+and **Dictation** (format/polish text without pasting). Intent requires the local
+backend and installed router model; polishing may require the configured local LLM.
+These tests bypass speech recognition and voice verification. They do not test
+microphone access, recording shortcuts, or speaker authentication.
+
+Agents and terminal users can use the same session through the standard-library CLI:
+
+```sh
+python3 scripts/test_commands.py status
+python3 scripts/test_commands.py run "play music on Spotify" --mode plan
+python3 scripts/test_commands.py run "play music on Spotify" --mode execute
+python3 scripts/test_commands.py run "shuffle my liked songs" --mode intent
+python3 scripts/test_commands.py run "hello world" --mode dictation
+python3 scripts/test_commands.py list
+python3 scripts/test_commands.py review RUN_UUID fail --notes "No audible playback"
+python3 scripts/test_commands.py export /tmp/jarvis-command-tests.json
+```
+
+Execute affects the Mac and connected services; Plan and Intent never execute.
+The runner binds only to `127.0.0.1` with a per-session token, and serializes tests
+through the app queue. Test results, timings, request IDs, action messages and
+reviews are saved to `~/Library/Application Support/Jarvis/testing/runs.jsonl`
+(`JARVIS_DATA_DIR/testing` when overridden). The app result and human verdict
+are separate: API success does not replace checking the observed behavior.
+Tests are excluded from normal command statistics and the automatic training
+harvest. Logs/exports may contain private commands and file paths; review them
+before sharing. Stopping/cancelling cannot undo completed actions.
+
 ---
 
 ## What it can do today

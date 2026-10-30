@@ -335,7 +335,26 @@ So "delete everything in downloads" is refused — deliberately.
 | **Setup** | Required permissions/model downloads and optional service setup |
 
 
-## 8. Read this as a formatted document
+## 8. Test commands without repeating voice recordings
+
+Open **About → Command testing → Start test runner** after rebuilding Jarvis.
+It opens a local browser page with editable example commands and a Run button
+for each. **Run all, in order** preserves dependencies such as searching before
+“preview the first one”. Execute runs real actions; Plan and Intent inspect
+routing without execution. Intent calls the trained model directly, bypassing
+native command shortcuts. Dictation formats/polishes supplied text without pasting.
+
+For Spotify, try “play music on Spotify”, “play songs from my liked music”,
+“shuffle my liked songs”, then “pause music”. Check that the intended device
+actually plays the requested music. Use **Your verdict → Fail** and add notes
+if the app's result disagrees with what happened. The page saves feedback
+locally and exports results, plans, step messages, timings, build revision,
+request IDs and notes as JSON. No recordings or voice verification are involved.
+
+For terminal commands and log locations, see [README.md](README.md).
+Turn the listener off with **Stop test mode** when finished.
+
+## 9. Read this as a formatted document
 
 In VS Code on macOS, open this file and press **⌘⇧V** for Markdown preview.
 For source and preview side by side, press **⌘K**, release, then **V**.

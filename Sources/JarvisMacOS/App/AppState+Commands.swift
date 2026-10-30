@@ -141,25 +141,27 @@ extension AppState {
         assistantState = micActive ? .listening : .idle
     }
 
-    func runCommand(_ command: String) async {
+    func runCommand(_ command: String, testTrace: CommandTestTrace? = nil) async {
         guard !Task.isCancelled, !command.isEmpty else { return }
         let token = UUID()
         activeCommandRunToken = token
         defer {
             if activeCommandRunToken == token { invalidateActiveCommand() }
         }
-        await runCommandBody(command, runToken: token)
+        await runCommandBody(command, runToken: token, testTrace: testTrace)
     }
 
-    func runCommandBody(_ command: String, runToken: UUID) async {
-        trackRecentCommand(command)
+    func runCommandBody(_ command: String, runToken: UUID, testTrace: CommandTestTrace? = nil) async {
+        if testTrace == nil { trackRecentCommand(command) }
         var outcome = CommandOutcome.failure
-        let requestID = UUID()
+        let requestID = testTrace?.requestID ?? UUID()
         defer {
             if Task.isCancelled || activeCommandRunToken != runToken { outcome = .cancelled }
-            statsRecorder.recordCommand(success: outcome == .success)
+            testTrace?.outcome = outcome.rawValue
+            testTrace?.record("finished", outcome.rawValue)
+            if testTrace == nil { statsRecorder.recordCommand(success: outcome == .success) }
             intentLog.append([
-                "event": "execute_command",
+                "event": testTrace == nil ? "execute_command" : "test_execute_command",
                 "request_id": requestID.uuidString,
                 "text": command,
                 "success": outcome == .success,
@@ -176,14 +178,20 @@ extension AppState {
 
         switch SafetyGuard.validate(rawCommand: command) {
         case .blocked(let reason):
+            testTrace?.record("safety", reason)
             appendLog("⛔ Safety blocked: \(reason)")
-            dbManager.saveEvent(eventType: "safety_blocked", transcript: command,
-                                matched: false, metadata: ["reason": reason])
+            if testTrace == nil {
+                dbManager.saveEvent(eventType: "safety_blocked", transcript: command,
+                                    matched: false, metadata: ["reason": reason])
+            }
             return
         case .installPreview(let cmd, let source):
+            testTrace?.record("safety", "Install preview only: \(cmd). \(source)")
             appendLog("🔒 Install preview (not executed): '\(cmd)'. \(source)")
-            dbManager.saveEvent(eventType: "install_preview", transcript: command,
-                                matched: false, metadata: ["command": cmd, "source": source])
+            if testTrace == nil {
+                dbManager.saveEvent(eventType: "install_preview", transcript: command,
+                                    matched: false, metadata: ["command": cmd, "source": source])
+            }
             return
         case .allowed:
             break
@@ -194,11 +202,13 @@ extension AppState {
         if LocalSearchParser.route(command) == nil, SpotifyShuffleParser.parse(command) == nil,
            SystemVolumeParser.route(command) == nil,
            let match = matchedAutomation(for: command) {
+            testTrace?.record("routine", match.automation.keyword)
             let success = await executeAutomation(match.automation, isOffVariant: match.isOffVariant)
             outcome = success ? .success : .failure
             return
         }
         if tryHandleQuickInfoCommand(command) {
+            testTrace?.record("local_info", ResponseEngine.shared.lastResponse)
             outcome = .success
             return
         }
@@ -208,6 +218,8 @@ extension AppState {
         lastRecognizedSpeech = command
         appendLog("[Plan] Planning: '\(command)'")
         let plan = await actionPlanner.plan(from: command, requestID: requestID)
+        testTrace?.plan = plan.map(\.description)
+        testTrace?.record("planned", "\(plan.count) actions")
         guard !Task.isCancelled, activeCommandRunToken == runToken else { return }
         appendLog("[Plan] \(plan.count) step(s): \(plan.map(\.description).joined(separator: ", "))")
         assistantState = .executing
@@ -220,9 +232,10 @@ extension AppState {
             },
             onStepComplete: { [weak self] result in
                 guard let self, self.activeCommandRunToken == runToken, !Task.isCancelled else { return }
+                testTrace?.steps.append(CommandTestStep(action: result.action.description, success: result.success, message: result.message))
                 self.appendLog("  \(result.success ? "✓" : "✗") \(result.message)")
                 intentLog.append([
-                    "event": "execute_step", "request_id": requestID.uuidString,
+                    "event": testTrace == nil ? "execute_step" : "test_execute_step", "request_id": requestID.uuidString,
                     "text": command, "action": result.action.description,
                     "success": result.success, "message": result.message,
                 ])
@@ -234,10 +247,12 @@ extension AppState {
         )
         guard !Task.isCancelled, activeCommandRunToken == runToken else { return }
         outcome = CommandOutcome.evaluate(results, expectedCount: plan.count, cancelled: false)
-        dbManager.saveEvent(eventType: "multi_action_executed", transcript: command,
-                            matched: outcome == .success,
-                            executionResult: results.map(\.message).joined(separator: " | "),
-                            metadata: ["outcome": outcome.rawValue])
+        if testTrace == nil {
+            dbManager.saveEvent(eventType: "multi_action_executed", transcript: command,
+                                matched: outcome == .success,
+                                executionResult: results.map(\.message).joined(separator: " | "),
+                                metadata: ["outcome": outcome.rawValue])
+        }
     }
 
     func showFloatingResult(_ text: String, icon: String) {

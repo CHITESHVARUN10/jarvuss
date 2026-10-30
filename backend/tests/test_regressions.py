@@ -406,6 +406,62 @@ class SpotifyEfficiencyTests(unittest.TestCase):
             self.assertEqual(request.call_count, 1)
 
 
+class SpotifyPlaybackConfirmationTests(unittest.TestCase):
+    def test_empty_whitespace_and_non_json_responses_preserve_http_status(self):
+        for status, raw in [(204, b""), (204, b"  \n"), (200, b" \n"), (200, b"Accepted")]:
+            response = Mock(status=status)
+            response.read.return_value = raw
+            response.__enter__ = Mock(return_value=response)
+            response.__exit__ = Mock(return_value=False)
+            with self.subTest(status=status, raw=raw), patch.object(service, "urlopen", return_value=response):
+                code, payload, body = service._spotify_api_request("PUT", "/v1/me/player/play", "test-token", body={})
+                self.assertEqual(code, status)
+                self.assertIsNone(payload)
+                self.assertEqual(body, raw.decode())
+
+    def test_transport_errors_are_still_failures(self):
+        with patch.object(service, "urlopen", side_effect=OSError("offline")):
+            self.assertEqual(service._spotify_api_request("PUT", "/v1/me/player/play", "test-token")[0], -1)
+
+    def test_plain_play_waits_for_correct_device_without_resending_action(self):
+        states = [{"is_playing": False}, {"is_playing": True, "device_id": "phone"},
+                  {"is_playing": True, "device_id": "desktop", "volume_percent": 40}]
+        with patch.object(service, "_spotify_transport_action", return_value={"device_id": "desktop"}) as transport, \
+             patch.object(service, "_spotify_playback_state", side_effect=states) as state, patch.object(service.time, "sleep"):
+            result = service._spotify_play("token", {}, "play")
+            self.assertTrue(result["playback_confirmed"])
+            self.assertEqual(state.call_count, 3)
+            transport.assert_called_once()
+
+    def test_liked_and_playlist_requests_must_match_requested_content(self):
+        for body, wrong, right in [({"uris": ["spotify:track:liked"]}, {"track_uri": "spotify:track:other"}, {"track_uri": "spotify:track:liked"}),
+                                   ({"context_uri": "spotify:playlist:gym"}, {"context_uri": "spotify:playlist:other"}, {"context_uri": "spotify:playlist:gym"})]:
+            base = {"is_playing": True, "device_id": "desktop"}
+            with patch.object(service, "_spotify_transport_action", return_value={"device_id": "desktop"}), \
+                 patch.object(service, "_spotify_playback_state", side_effect=[{**base, **wrong}, {**base, **right}]) as state, \
+                 patch.object(service.time, "sleep"):
+                self.assertTrue(service._spotify_play("token", body, "play")["playback_confirmed"])
+                self.assertEqual(state.call_count, 2)
+
+    def test_accepted_but_paused_unknown_wrong_track_or_muted_never_reports_completed(self):
+        for state in [{"is_playing": False}, {}, {"is_playing": True, "device_id": "desktop", "track_uri": "other"},
+                      {"is_playing": True, "device_id": "desktop", "track_uri": "liked", "volume_percent": 0}]:
+            with self.subTest(state=state), patch.object(service, "_spotify_transport_action", return_value={"device_id": "desktop"}) as transport, \
+                 patch.object(service, "_spotify_playback_state", return_value=state), patch.object(service.time, "sleep"):
+                with self.assertRaises(service.HTTPException) as error:
+                    service._spotify_play("token", {"uris": ["liked"]}, "play-liked")
+                self.assertEqual(error.exception.status_code, 409)
+                transport.assert_called_once()
+
+    def test_liked_endpoint_uses_confirmation_and_surfaces_failure(self):
+        with patch.object(service, "_get_valid_spotify_access_token", return_value="token"), \
+             patch.object(service, "_spotify_liked_track_uris", return_value=["liked"]), \
+             patch.object(service, "_spotify_transport_action", return_value={"device_id": "desktop"}), \
+             patch.object(service, "_spotify_playback_state", return_value={"is_playing": False}), patch.object(service.time, "sleep"):
+            with self.assertRaises(service.HTTPException) as error: service.spotify_play_liked()
+            self.assertEqual(error.exception.status_code, 409)
+
+
 class SpotifyShuffleTests(unittest.TestCase):
     def test_standalone_shuffle_does_not_start_or_transfer_an_inactive_device(self):
         with patch.object(service, "_get_valid_spotify_access_token", return_value="token"), \

@@ -2,8 +2,8 @@
 .build/
 .vscode/
 logs/
-/htmls/
-./htmls
+/htmls/*
+!/htmls/command-test-runner.html
 .commandcode/
 backend/.venv/
 backend/venv/

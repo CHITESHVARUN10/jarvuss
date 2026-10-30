@@ -13,17 +13,25 @@ final class IntentModelClient {
         let latencyMs: Int
     }
 
-    enum ClientError: Error {
+    enum ClientError: LocalizedError {
         case unavailable
         case badStatus(Int)
         case badPayload
+
+        var errorDescription: String? {
+            switch self {
+            case .unavailable: return "The local intent backend is unavailable or disabled."
+            case .badStatus(let status): return "The intent backend returned HTTP \(status). Check Setup and the backend diagnostic log."
+            case .badPayload: return "The intent backend returned an invalid response."
+            }
+        }
     }
 
     private let baseURL: URL
     private let session: URLSession
     private let backendIsRunning: () async -> Bool
 
-    init(baseURL: URL? = nil, backendIsRunning: @escaping () async -> Bool = {
+    init(baseURL: URL? = nil, timeout: TimeInterval = 2, backendIsRunning: @escaping () async -> Bool = {
         await BackendServiceManager.isBackendResponding()
     }) {
         self.backendIsRunning = backendIsRunning
@@ -32,8 +40,8 @@ final class IntentModelClient {
             ?? "http://127.0.0.1:8000"
         self.baseURL = baseURL ?? URL(string: configured) ?? URL(string: "http://127.0.0.1:8000")!
         let config = URLSessionConfiguration.ephemeral
-        config.timeoutIntervalForRequest = 2.0
-        config.timeoutIntervalForResource = 3.0
+        config.timeoutIntervalForRequest = timeout
+        config.timeoutIntervalForResource = timeout + 1
         self.session = URLSession(configuration: config)
     }
 

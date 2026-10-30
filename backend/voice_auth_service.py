@@ -371,6 +371,8 @@ def _spotify_api_request(
     token: str,
     query: dict[str, str] | None = None,
     body: dict | None = None,
+    *,
+    timeout: float = 15,
 ) -> tuple[int, dict | None, str]:
     query_text = f"?{urlencode(query)}" if query else ""
     url = f"https://api.spotify.com{path}{query_text}"
@@ -387,10 +389,18 @@ def _spotify_api_request(
     )
 
     try:
-        with urlopen(request, timeout=15, context=_https_context()) as response:
-            raw = response.read().decode("utf-8")
-            payload = json.loads(raw) if raw else None
-            return int(response.status), payload, raw
+        with urlopen(request, timeout=timeout, context=_https_context()) as response:
+            raw = response.read().decode("utf-8", errors="replace")
+            status = int(response.status)
+            # Player writes can return no JSON (including whitespace). A body
+            # decoding problem must never turn an HTTP response into a transport
+            # failure or cause an already accepted action to be sent twice.
+            try:
+                payload = json.loads(raw) if status != 204 and raw.strip() else None
+            except json.JSONDecodeError:
+                payload = None
+                logger.info(f"[Spotify] Non-JSON response: {method} {path} status={status}")
+            return status, payload, raw
     except HTTPError as error:
         raw = error.read().decode("utf-8") if error.fp else str(error)
         try:
@@ -475,7 +485,7 @@ def _ensure_spotify_active_device(token: str) -> str | None:
 
 
 def _spotify_playback_state(token: str) -> dict:
-    status, payload, raw = _spotify_api_request("GET", "/v1/me/player", token)
+    status, payload, raw = _spotify_api_request("GET", "/v1/me/player", token, timeout=3)
     logger.info(f"[Spotify] GET /v1/me/player status={status}")
     if status == 204:
         state = {
@@ -498,6 +508,7 @@ def _spotify_playback_state(token: str) -> dict:
         "is_playing": bool(payload.get("is_playing", False)),
         "device": device.get("name", "unknown"),
         "device_id": device.get("id", ""),
+        "volume_percent": device.get("volume_percent"),
         "current_track": item.get("name", "unknown"),
         "item": item.get("name", "unknown"),
         "track_uri": item.get("uri", ""),
@@ -536,7 +547,28 @@ def _is_retryable_spotify_failure(status: int, raw: str) -> bool:
 
 
 def _spotify_play(token: str, body: dict, action_label: str) -> dict:
-    return _spotify_transport_action(token, "PUT", "/v1/me/player/play", action_label, body)
+    result = _spotify_transport_action(token, "PUT", "/v1/me/player/play", action_label, body)
+    expected_tracks = set(body.get("uris", []))
+    expected_context = body.get("context_uri")
+    # Device transfer and player state are eventually consistent. Wait briefly
+    # for the requested playback, without resending play or resetting the queue.
+    state = {}
+    for attempt in range(3):
+        if attempt:
+            time.sleep(0.3 * attempt)
+        state = _spotify_playback_state(token)
+        matches = (state.get("is_playing") is True
+                   and state.get("device_id") == result["device_id"]
+                   and (not expected_tracks or state.get("track_uri") in expected_tracks)
+                   and (not expected_context or state.get("context_uri") == expected_context))
+        if matches:
+            if state.get("volume_percent") == 0:
+                raise HTTPException(status_code=409, detail="Spotify started playback, but the selected Spotify device volume is zero. Raise its volume and try again.")
+            result.update(playback_confirmed=True, playback_state=state,
+                          message=f"{action_label} playback confirmed")
+            return result
+    logger.info(f"[Spotify] Playback unconfirmed: action={action_label} target={result['device_id']} state={state}")
+    raise HTTPException(status_code=409, detail="Spotify accepted the request, but playback could not be confirmed on the selected device. Open Spotify, select this Mac in its device menu, and try again.")
 
 
 def _spotify_transport_action(token: str, method: str, path: str, action_label: str,
@@ -558,9 +590,8 @@ def _spotify_transport_action(token: str, method: str, path: str, action_label: 
         reason = "accepted" if 200 <= status < 300 else _spotify_error_reason(status, raw, f"Spotify {action_label} failed")
         _log_spotify_action_attempt(endpoint, status, raw, reason)
         if 200 <= status < 300:
-            # API acknowledgement confirms command acceptance. A fresh state
-            # read is both expensive and eventually consistent (not a reliable
-            # immediate playback check), so keep it on the status path.
+            # This confirms acceptance only. Play and shuffle additionally
+            # verify state in their dedicated helpers.
             return {"status": "ok", "action": action_label, "action_confirmed": True,
                     "device_id": device_id, "message": f"{action_label} request accepted"}
         if attempt == 0 and _is_retryable_spotify_failure(status, raw):
