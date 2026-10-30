@@ -1,0 +1,649 @@
+{
+  "format_version": 1,
+  "exported_at": "2026-10-30T12:23:49.343Z",
+  "runs": [
+    {
+      "command": "what time is it",
+      "elapsedMs": 30,
+      "events": [
+        {
+          "message": "what time is it",
+          "stage": "validated"
+        },
+        {
+          "message": "5:49 PM",
+          "stage": "local_info"
+        },
+        {
+          "message": "success",
+          "stage": "finished"
+        }
+      ],
+      "id": "DD8D5089-D5D2-4B98-A6A1-44F327754438",
+      "mode": "execute",
+      "notes": "",
+      "outcome": "success",
+      "output": "5:49 PM",
+      "plan": [],
+      "requestID": "7D73E748-8ABE-4C7F-947A-16FBEE5DEBF3",
+      "review": "pass",
+      "revision": "0cdb6ec8b58f",
+      "rustPipeline": true,
+      "startedAt": "2026-10-30T12:19:30Z",
+      "state": "finished",
+      "steps": []
+    },
+    {
+      "command": "find PDFs in Downloads",
+      "elapsedMs": 209,
+      "events": [
+        {
+          "message": "find PDFs in Downloads",
+          "stage": "validated"
+        },
+        {
+          "message": "1 actions",
+          "stage": "planned"
+        },
+        {
+          "message": "success",
+          "stage": "finished"
+        }
+      ],
+      "id": "E7BDD30F-FB8B-482A-9055-1A93B8506E4A",
+      "mode": "execute",
+      "notes": "",
+      "outcome": "success",
+      "output": "8 results. Select a file, or say ‘open the second one’ with ⌘⇧A.",
+      "plan": [
+        "File search: {\"date\":\"any\",\"kind\":\"pdf\",\"max_bytes\":0,\"min_bytes\":0,\"mode\":\"name\",\"query\":\"\",\"scope\":\"Downloads\"}"
+      ],
+      "requestID": "5E614922-0711-43E8-B4FD-248B748346ED",
+      "review": "pass",
+      "revision": "0cdb6ec8b58f",
+      "rustPipeline": true,
+      "startedAt": "2026-10-30T12:19:42Z",
+      "state": "finished",
+      "steps": [
+        {
+          "action": "File search: {\"date\":\"any\",\"kind\":\"pdf\",\"max_bytes\":0,\"min_bytes\":0,\"mode\":\"name\",\"query\":\"\",\"scope\":\"Downloads\"}",
+          "message": "8 results. Select a file, or say ‘open the second one’ with ⌘⇧A.",
+          "success": true
+        }
+      ]
+    },
+    {
+      "command": "find presentations in Downloads",
+      "elapsedMs": 117,
+      "events": [
+        {
+          "message": "find presentations in Downloads",
+          "stage": "validated"
+        },
+        {
+          "message": "1 actions",
+          "stage": "planned"
+        },
+        {
+          "message": "success",
+          "stage": "finished"
+        }
+      ],
+      "id": "16210901-C0A2-42B4-8042-4690F90C0C83",
+      "mode": "execute",
+      "notes": "",
+      "outcome": "success",
+      "output": "8 results. Select a file, or say ‘open the second one’ with ⌘⇧A.",
+      "plan": [
+        "File search: {\"date\":\"any\",\"kind\":\"presentation\",\"max_bytes\":0,\"min_bytes\":0,\"mode\":\"name\",\"query\":\"\",\"scope\":\"Downloads\"}"
+      ],
+      "requestID": "9D52CFED-DC15-43C9-982F-5C3DB2CE86D9",
+      "review": "pass",
+      "revision": "0cdb6ec8b58f",
+      "rustPipeline": true,
+      "startedAt": "2026-10-30T12:19:49Z",
+      "state": "finished",
+      "steps": [
+        {
+          "action": "File search: {\"date\":\"any\",\"kind\":\"presentation\",\"max_bytes\":0,\"min_bytes\":0,\"mode\":\"name\",\"query\":\"\",\"scope\":\"Downloads\"}",
+          "message": "8 results. Select a file, or say ‘open the second one’ with ⌘⇧A.",
+          "success": true
+        }
+      ]
+    },
+    {
+      "command": "find presentations in Downloads",
+      "elapsedMs": 108,
+      "events": [
+        {
+          "message": "find presentations in Downloads",
+          "stage": "validated"
+        },
+        {
+          "message": "1 actions",
+          "stage": "planned"
+        },
+        {
+          "message": "success",
+          "stage": "finished"
+        }
+      ],
+      "id": "A1F2C92F-EF41-4E96-88C3-19A6180AA4F1",
+      "mode": "execute",
+      "notes": "",
+      "outcome": "success",
+      "output": "8 results. Select a file, or say ‘open the second one’ with ⌘⇧A.",
+      "plan": [
+        "File search: {\"date\":\"any\",\"kind\":\"presentation\",\"max_bytes\":0,\"min_bytes\":0,\"mode\":\"name\",\"query\":\"\",\"scope\":\"Downloads\"}"
+      ],
+      "requestID": "38043EDF-4FDC-48BB-98EC-0435DC7941C2",
+      "review": "pass",
+      "revision": "0cdb6ec8b58f",
+      "rustPipeline": true,
+      "startedAt": "2026-10-30T12:20:05Z",
+      "state": "finished",
+      "steps": [
+        {
+          "action": "File search: {\"date\":\"any\",\"kind\":\"presentation\",\"max_bytes\":0,\"min_bytes\":0,\"mode\":\"name\",\"query\":\"\",\"scope\":\"Downloads\"}",
+          "message": "8 results. Select a file, or say ‘open the second one’ with ⌘⇧A.",
+          "success": true
+        }
+      ]
+    },
+    {
+      "command": "preview the first one",
+      "elapsedMs": 88,
+      "events": [
+        {
+          "message": "preview the first one",
+          "stage": "validated"
+        },
+        {
+          "message": "1 actions",
+          "stage": "planned"
+        },
+        {
+          "message": "success",
+          "stage": "finished"
+        }
+      ],
+      "id": "9D6D6FAC-6175-47E3-B7F9-05A11EE75577",
+      "mode": "execute",
+      "notes": "",
+      "outcome": "success",
+      "output": "Previewing Sudoku_Arena_Deck.pptx.",
+      "plan": [
+        "File result: preview 1"
+      ],
+      "requestID": "9B92AEEA-D40D-4A80-977B-762F8BA6820D",
+      "review": "unreviewed",
+      "revision": "0cdb6ec8b58f",
+      "rustPipeline": true,
+      "startedAt": "2026-10-30T12:20:06Z",
+      "state": "finished",
+      "steps": [
+        {
+          "action": "File result: preview 1",
+          "message": "Previewing Sudoku_Arena_Deck.pptx.",
+          "success": true
+        }
+      ]
+    },
+    {
+      "command": "preview the first one",
+      "elapsedMs": 73,
+      "events": [
+        {
+          "message": "preview the first one",
+          "stage": "validated"
+        },
+        {
+          "message": "1 actions",
+          "stage": "planned"
+        },
+        {
+          "message": "success",
+          "stage": "finished"
+        }
+      ],
+      "id": "C3C647E4-868E-4E0A-892F-6771DE2AFCA3",
+      "mode": "execute",
+      "notes": "",
+      "outcome": "success",
+      "output": "Previewing Sudoku_Arena_Deck.pptx.",
+      "plan": [
+        "File result: preview 1"
+      ],
+      "requestID": "9A4ADD3C-36B0-441E-B673-B840E9EFB9ED",
+      "review": "unreviewed",
+      "revision": "0cdb6ec8b58f",
+      "rustPipeline": true,
+      "startedAt": "2026-10-30T12:20:07Z",
+      "state": "finished",
+      "steps": [
+        {
+          "action": "File result: preview 1",
+          "message": "Previewing Sudoku_Arena_Deck.pptx.",
+          "success": true
+        }
+      ]
+    },
+    {
+      "command": "preview the first one",
+      "elapsedMs": 80,
+      "events": [
+        {
+          "message": "preview the first one",
+          "stage": "validated"
+        },
+        {
+          "message": "1 actions",
+          "stage": "planned"
+        },
+        {
+          "message": "success",
+          "stage": "finished"
+        }
+      ],
+      "id": "823449D1-E608-4C79-88D7-F6E819A66B3E",
+      "mode": "execute",
+      "notes": "",
+      "outcome": "success",
+      "output": "Previewing Sudoku_Arena_Deck.pptx.",
+      "plan": [
+        "File result: preview 1"
+      ],
+      "requestID": "04597F7F-725D-4108-B523-22AC179037A5",
+      "review": "unreviewed",
+      "revision": "0cdb6ec8b58f",
+      "rustPipeline": true,
+      "startedAt": "2026-10-30T12:20:08Z",
+      "state": "finished",
+      "steps": [
+        {
+          "action": "File result: preview 1",
+          "message": "Previewing Sudoku_Arena_Deck.pptx.",
+          "success": true
+        }
+      ]
+    },
+    {
+      "command": "preview the first one",
+      "elapsedMs": 77,
+      "events": [
+        {
+          "message": "preview the first one",
+          "stage": "validated"
+        },
+        {
+          "message": "1 actions",
+          "stage": "planned"
+        },
+        {
+          "message": "success",
+          "stage": "finished"
+        }
+      ],
+      "id": "D5526413-3D18-456C-9689-7CA19332308D",
+      "mode": "execute",
+      "notes": "",
+      "outcome": "success",
+      "output": "Previewing Sudoku_Arena_Deck.pptx.",
+      "plan": [
+        "File result: preview 1"
+      ],
+      "requestID": "E7ECE4FC-82D6-4E0A-89DC-F9A78EC863D1",
+      "review": "unreviewed",
+      "revision": "0cdb6ec8b58f",
+      "rustPipeline": true,
+      "startedAt": "2026-10-30T12:20:08Z",
+      "state": "finished",
+      "steps": [
+        {
+          "action": "File result: preview 1",
+          "message": "Previewing Sudoku_Arena_Deck.pptx.",
+          "success": true
+        }
+      ]
+    },
+    {
+      "command": "preview the first one",
+      "elapsedMs": 78,
+      "events": [
+        {
+          "message": "preview the first one",
+          "stage": "validated"
+        },
+        {
+          "message": "1 actions",
+          "stage": "planned"
+        },
+        {
+          "message": "success",
+          "stage": "finished"
+        }
+      ],
+      "id": "B537C348-AE17-4A62-9F78-09A6A1F71237",
+      "mode": "execute",
+      "notes": "",
+      "outcome": "success",
+      "output": "Previewing Sudoku_Arena_Deck.pptx.",
+      "plan": [
+        "File result: preview 1"
+      ],
+      "requestID": "917C5E97-11BA-4E67-A5B0-35199BBA66BF",
+      "review": "unreviewed",
+      "revision": "0cdb6ec8b58f",
+      "rustPipeline": true,
+      "startedAt": "2026-10-30T12:20:09Z",
+      "state": "finished",
+      "steps": [
+        {
+          "action": "File result: preview 1",
+          "message": "Previewing Sudoku_Arena_Deck.pptx.",
+          "success": true
+        }
+      ]
+    },
+    {
+      "command": "preview the first one",
+      "elapsedMs": 80,
+      "events": [
+        {
+          "message": "preview the first one",
+          "stage": "validated"
+        },
+        {
+          "message": "1 actions",
+          "stage": "planned"
+        },
+        {
+          "message": "success",
+          "stage": "finished"
+        }
+      ],
+      "id": "E4F22BE2-B851-4C3C-8CAE-42A531ED8143",
+      "mode": "execute",
+      "notes": "No real preview came up. I told it to the preview the first one, but nothing really happened and it would have opened in the preview app but it did not.",
+      "outcome": "success",
+      "output": "Previewing Sudoku_Arena_Deck.pptx.",
+      "plan": [
+        "File result: preview 1"
+      ],
+      "requestID": "98FA04D8-5DD5-49ED-AFEF-82812E53F41D",
+      "review": "fail",
+      "revision": "0cdb6ec8b58f",
+      "rustPipeline": true,
+      "startedAt": "2026-10-30T12:20:11Z",
+      "state": "finished",
+      "steps": [
+        {
+          "action": "File result: preview 1",
+          "message": "Previewing Sudoku_Arena_Deck.pptx.",
+          "success": true
+        }
+      ]
+    },
+    {
+      "command": "play music on Spotify",
+      "elapsedMs": 2328,
+      "events": [
+        {
+          "message": "play music on Spotify",
+          "stage": "validated"
+        },
+        {
+          "message": "1 actions",
+          "stage": "planned"
+        },
+        {
+          "message": "failure",
+          "stage": "finished"
+        }
+      ],
+      "id": "E7E7AE24-18CC-4430-B211-C80127586C24",
+      "mode": "execute",
+      "notes": "",
+      "outcome": "failure",
+      "output": "Spotify accepted the request, but playback could not be confirmed on the selected device. Open Spotify, select this Mac in its device menu, and try again.",
+      "plan": [
+        "Media: play"
+      ],
+      "requestID": "79120681-5ECE-4571-B16B-B20E0F1AD6CA",
+      "review": "unreviewed",
+      "revision": "0cdb6ec8b58f",
+      "rustPipeline": true,
+      "startedAt": "2026-10-30T12:21:04Z",
+      "state": "finished",
+      "steps": [
+        {
+          "action": "Media: play",
+          "message": "Spotify accepted the request, but playback could not be confirmed on the selected device. Open Spotify, select this Mac in its device menu, and try again.",
+          "success": false
+        }
+      ]
+    },
+    {
+      "command": "play music on Spotify lied songs",
+      "elapsedMs": 2826,
+      "events": [
+        {
+          "message": "play music on Spotify lied songs",
+          "stage": "validated"
+        },
+        {
+          "message": "1 actions",
+          "stage": "planned"
+        },
+        {
+          "message": "failure",
+          "stage": "finished"
+        }
+      ],
+      "id": "EF6A021A-42A6-43D0-87CB-5945A236D8D7",
+      "mode": "execute",
+      "notes": "I tried without you know like before this test runner I tried it to I told it to play a song it played a song the first time it bought it paused the song even I was like oh did you last changes I told it you fixed it fixed it but I think it did not the reason might I don't know oh like what happened was when I told it to because I built the app once again latest one and I told it to play the song it asked me when I told it asked me for my password for the Python thing I guess is I had to enter it four times once I did that and it Played the song. Pause the song. Then I told it to you know. Play the songs. From. Light song. Liked song play song and shuffled it or something like that in that line but it did not do it for some reason so take a look into that particular thing ting.",
+      "outcome": "failure",
+      "output": "Spotify accepted the request, but playback could not be confirmed on the selected device. Open Spotify, select this Mac in its device menu, and try again.",
+      "plan": [
+        "Media: play song 'spotify lied'"
+      ],
+      "requestID": "542BC355-3AEC-4C3C-BEBD-A4CC501EEB24",
+      "review": "fail",
+      "revision": "0cdb6ec8b58f",
+      "rustPipeline": true,
+      "startedAt": "2026-10-30T12:21:27Z",
+      "state": "finished",
+      "steps": [
+        {
+          "action": "Media: play song 'spotify lied'",
+          "message": "Spotify accepted the request, but playback could not be confirmed on the selected device. Open Spotify, select this Mac in its device menu, and try again.",
+          "success": false
+        }
+      ]
+    },
+    {
+      "command": "play songs from my liked music",
+      "elapsedMs": 3258,
+      "events": [
+        {
+          "message": "play songs from my liked music",
+          "stage": "validated"
+        },
+        {
+          "message": "1 actions",
+          "stage": "planned"
+        },
+        {
+          "message": "failure",
+          "stage": "finished"
+        }
+      ],
+      "id": "3DF6269D-7EA2-440D-9215-DDD53AECAA7C",
+      "mode": "execute",
+      "notes": "",
+      "outcome": "failure",
+      "output": "Spotify accepted the request, but playback could not be confirmed on the selected device. Open Spotify, select this Mac in its device menu, and try again.",
+      "plan": [
+        "Media: play liked songs"
+      ],
+      "requestID": "A6BB6C8E-B92E-4B95-AD8A-9578225D44D8",
+      "review": "fail",
+      "revision": "0cdb6ec8b58f",
+      "rustPipeline": true,
+      "startedAt": "2026-10-30T12:23:06Z",
+      "state": "finished",
+      "steps": [
+        {
+          "action": "Media: play liked songs",
+          "message": "Spotify accepted the request, but playback could not be confirmed on the selected device. Open Spotify, select this Mac in its device menu, and try again.",
+          "success": false
+        }
+      ]
+    },
+    {
+      "command": "shuffle my liked songs",
+      "elapsedMs": 6693,
+      "events": [
+        {
+          "message": "shuffle my liked songs",
+          "stage": "validated"
+        },
+        {
+          "message": "1 actions",
+          "stage": "planned"
+        },
+        {
+          "message": "failure",
+          "stage": "finished"
+        }
+      ],
+      "id": "2FA4BC36-F235-41F9-9B07-AAC28F59D964",
+      "mode": "execute",
+      "notes": "",
+      "outcome": "failure",
+      "output": "Spotify accepted the request, but playback could not be confirmed on the selected device. Open Spotify, select this Mac in its device menu, and try again.",
+      "plan": [
+        "Media: shuffle liked songs on"
+      ],
+      "requestID": "077DB3AB-70BF-448D-8DB9-A3080FBC5C4E",
+      "review": "fail",
+      "revision": "0cdb6ec8b58f",
+      "rustPipeline": true,
+      "startedAt": "2026-10-30T12:23:13Z",
+      "state": "finished",
+      "steps": [
+        {
+          "action": "Media: shuffle liked songs on",
+          "message": "Spotify accepted the request, but playback could not be confirmed on the selected device. Open Spotify, select this Mac in its device menu, and try again.",
+          "success": false
+        }
+      ]
+    },
+    {
+      "command": "pause music",
+      "elapsedMs": 1055,
+      "events": [
+        {
+          "message": "pause music",
+          "stage": "validated"
+        },
+        {
+          "message": "1 actions",
+          "stage": "planned"
+        },
+        {
+          "message": "failure",
+          "stage": "finished"
+        }
+      ],
+      "id": "847C10D6-DC32-4493-92E8-296E19900872",
+      "mode": "execute",
+      "notes": "",
+      "outcome": "failure",
+      "output": "Spotify couldn’t control this device. Check your Premium account and the selected playback device.",
+      "plan": [
+        "Media: pause"
+      ],
+      "requestID": "B99C77B7-598B-402C-A0EA-17C718E7AE29",
+      "review": "unreviewed",
+      "revision": "0cdb6ec8b58f",
+      "rustPipeline": true,
+      "startedAt": "2026-10-30T12:23:26Z",
+      "state": "finished",
+      "steps": [
+        {
+          "action": "Media: pause",
+          "message": "Spotify couldn’t control this device. Check your Premium account and the selected playback device.",
+          "success": false
+        }
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "command": "what time is it",
+      "mode": "execute",
+      "expected": "Return this Mac’s current time.",
+      "run_id": "DD8D5089-D5D2-4B98-A6A1-44F327754438",
+      "verdict": "pass",
+      "notes": ""
+    },
+    {
+      "command": "find PDFs in Downloads",
+      "mode": "execute",
+      "expected": "Show matching PDFs in the search window.",
+      "run_id": "E7BDD30F-FB8B-482A-9055-1A93B8506E4A",
+      "verdict": "pass",
+      "notes": ""
+    },
+    {
+      "command": "find presentations in Downloads",
+      "mode": "execute",
+      "expected": "Show presentation files.",
+      "run_id": "A1F2C92F-EF41-4E96-88C3-19A6180AA4F1",
+      "verdict": "pass",
+      "notes": ""
+    },
+    {
+      "command": "preview the first one",
+      "mode": "execute",
+      "expected": "Preview result 1; retain the results. Run after a search.",
+      "run_id": "E4F22BE2-B851-4C3C-8CAE-42A531ED8143",
+      "verdict": "fail",
+      "notes": "No real preview came up. I told it to the preview the first one, but nothing really happened and it would have opened in the preview app but it did not."
+    },
+    {
+      "command": "play music on Spotify lied songs",
+      "mode": "execute",
+      "expected": "Music should audibly play on the intended device.",
+      "run_id": "EF6A021A-42A6-43D0-87CB-5945A236D8D7",
+      "verdict": "fail",
+      "notes": "I tried without you know like before this test runner I tried it to I told it to play a song it played a song the first time it bought it paused the song even I was like oh did you last changes I told it you fixed it fixed it but I think it did not the reason might I don't know oh like what happened was when I told it to because I built the app once again latest one and I told it to play the song it asked me when I told it asked me for my password for the Python thing I guess is I had to enter it four times once I did that and it Played the song. Pause the song. Then I told it to you know. Play the songs. From. Light song. Liked song play song and shuffled it or something like that in that line but it did not do it for some reason so take a look into that particular thing ting."
+    },
+    {
+      "command": "play songs from my liked music",
+      "mode": "execute",
+      "expected": "Play tracks from liked songs.",
+      "run_id": "3DF6269D-7EA2-440D-9215-DDD53AECAA7C",
+      "verdict": "fail",
+      "notes": ""
+    },
+    {
+      "command": "shuffle my liked songs",
+      "mode": "execute",
+      "expected": "Play liked songs with shuffle enabled.",
+      "run_id": "2FA4BC36-F235-41F9-9B07-AAC28F59D964",
+      "verdict": "fail",
+      "notes": ""
+    },
+    {
+      "command": "pause music",
+      "mode": "execute",
+      "expected": "Playback should stop.",
+      "run_id": "847C10D6-DC32-4493-92E8-296E19900872",
+      "verdict": "unreviewed",
+      "notes": ""
+    }
+  ]
+}

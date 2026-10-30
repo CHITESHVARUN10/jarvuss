@@ -3,7 +3,7 @@
 A practical guide to the capabilities in the current source code. Rebuild your
 installed app after pulling changes. Start with the examples below, then keep
 this open as a command reference. Device controls depend on the selected
-hardware; Spotify needs a connection, and AI answers need Ollama.
+hardware; Spotify music lookup needs a connection, and AI answers need Ollama.
 
 ---
 
@@ -45,8 +45,7 @@ text; it does not run the words as a command.
    verification compares a later recording against it. Live listening and
    verification have separate controls; live mode can use the wake word
    without enrollment when verification for that mode is off.
-6. **Spotify (optional)** — Connections pane → connect Spotify. Needed only for
-   "play …" commands.
+6. **Spotify (optional)** — Connections pane → connect Spotify. Needed for song/playlist lookup and Liked Songs; basic native transport works without it.
 7. **Start at login (optional)** — Assistant → Behaviour → Start at login, so
    Jarvis is already running when you log in.
 8. **Intent command model (optional)** — Setup → Intent command model. If no
@@ -109,12 +108,17 @@ Never spell out URLs — say the site name, or "search <engine> for <thing>".
 | "play my Focus playlist in order" | Starts that collection with shuffle off |
 | "play some jazz" | Starts playback (no invented title) |
 
-Use one of your own playlist names instead of “Focus”. Liked Songs shuffle
-samples across the library and queues up to 50 playable tracks; it does not
-load the entire library. Playlist shuffle keeps Spotify's full playlist context.
+Use one of your own playlist names instead of “Focus”. Spotify playback and
+shuffle run through its native macOS controls. Liked Songs shuffle samples a
+starting track across the library, then passes the collection to Spotify.
+Named playlists retain their playlist context.
 
-Spotify must be running on this Mac with an active device — if you get
-"No active Spotify device", open Spotify and start one song manually once.
+Spotify must be installed and signed in on this Mac. Play commands launch it
+if needed. Allow Jarvis to control Spotify in System Settings → Privacy &
+Security → Automation when prompted. Basic transport and standalone shuffle
+need no helper or OAuth; names and Liked Songs use read-only metadata lookup
+through the connected helper. Jarvis checks local playback/shuffle state and
+reports failures when the requested state is not confirmed.
 
 ### Volume, brightness, display
 
@@ -310,7 +314,7 @@ So "delete everything in downloads" is refused — deliberately.
 | "I can't reach the local model" | Ollama isn't running. Start it (`ollama serve`) for answers and dictation polish — commands, files, apps, volume and Spotify all keep working without it. |
 | Jarvis quit by itself | Check About → diagnostics and `~/Library/Application Support/Jarvis/logs/memory.log`. The configured memory guard can stop the app; a crash can have another cause. |
 | Dictation copies but doesn't paste | Accessibility grant — re-add Jarvis under Privacy & Security → Accessibility (see README). |
-| "No active Spotify device" | Open Spotify and start a song once; then voice control works. |
+| Spotify automation denied | Enable Jarvis → Spotify in Privacy & Security → Automation. |
 | Answers are silent | Turn on *Spoken replies* (Assistant → Behaviour). |
 | Music commands respond but nothing plays | Connections → Spotify shows connected? Reconnect if expired. |
 | A dictation line says "Polishing…" for a moment | The small model is resolving a correction/list — it falls back to instant rules after 1.5 s. |

@@ -23,18 +23,6 @@ final class SpotifyPlaybackRecoveryTests: XCTestCase {
         XCTAssertTrue(ActionExecutor.spotifyFailureMessage(status: 403, message: "Premium required").contains("Premium"))
     }
 
-    func testAcceptedPlaybackRequiresPlayingStateWhilePauseRequiresAcknowledgement() {
-        let accepted = Data(#"{"status":"ok","action_confirmed":true}"#.utf8)
-        for path in ["/spotify/play", "/spotify/play-liked", "/spotify/play-playlist"] {
-            XCTAssertFalse(ActionExecutor.spotifyResponseConfirmsAction(accepted, path: path))
-        }
-        XCTAssertTrue(ActionExecutor.spotifyResponseConfirmsAction(accepted, path: "/spotify/pause"))
-        let playing = Data(#"{"status":"ok","action_confirmed":true,"playback_state":{"is_playing":true}}"#.utf8)
-        XCTAssertTrue(ActionExecutor.spotifyResponseConfirmsAction(playing, path: "/spotify/play-liked"))
-        let paused = Data(#"{"status":"ok","action_confirmed":true,"playback_state":{"is_playing":false}}"#.utf8)
-        XCTAssertFalse(ActionExecutor.spotifyResponseConfirmsAction(paused, path: "/spotify/play"))
-    }
-
     @MainActor
     func testRepeatedFailuresPublishDistinctMessagesAndRetainFailureState() {
         let action = PlannedAction.mediaControl(.play)

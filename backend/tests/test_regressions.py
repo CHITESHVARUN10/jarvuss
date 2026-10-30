@@ -462,6 +462,30 @@ class SpotifyPlaybackConfirmationTests(unittest.TestCase):
             self.assertEqual(error.exception.status_code, 409)
 
 
+class SpotifyNativeTargetTests(unittest.TestCase):
+    def test_native_metadata_never_writes_to_player(self):
+        with patch.object(service, "_get_valid_spotify_access_token", return_value="token"), \
+             patch.object(service, "_spotify_api_request", side_effect=[(200, {"items": [{"track": {"uri": "spotify:track:first"}}]}, ""), (200, {"id": "test-account"}, "")]) as api, \
+             patch.object(service, "_spotify_search_track_uri", return_value="spotify:track:one"), \
+             patch.object(service, "_spotify_find_playlist_uri", return_value=("Gym", "spotify:playlist:gym")), \
+             patch.object(service, "_spotify_liked_track_uris", return_value=["spotify:track:liked"]), \
+             patch.object(service, "_spotify_transport_action") as transport:
+            self.assertEqual(service.spotify_native_target("song", "Song"), {"uri": "spotify:track:one", "track_uri": "spotify:track:one"})
+            self.assertEqual(service.spotify_native_target("playlist", "Gym"), {"uri": "spotify:playlist:gym", "track_uri": "spotify:track:first"})
+            self.assertEqual(service.spotify_native_target("liked"), {"uri": "spotify:user:test-account:collection", "track_uri": "spotify:track:liked"})
+            self.assertTrue(all(call.args[0] == "GET" for call in api.call_args_list))
+            transport.assert_not_called()
+
+    def test_missing_library_authorization_and_unknown_kinds_fail(self):
+        with patch.object(service, "_get_valid_spotify_access_token", return_value="token"), \
+             patch.object(service, "_spotify_api_request", return_value=(401, {}, "")):
+            with self.assertRaises(service.HTTPException) as error:
+                service.spotify_native_target("liked")
+            self.assertEqual(error.exception.status_code, 401)
+            with self.assertRaises(service.HTTPException): service.spotify_native_target("bad")
+            with self.assertRaises(service.HTTPException): service.spotify_native_target("song", " ")
+
+
 class SpotifyShuffleTests(unittest.TestCase):
     def test_standalone_shuffle_does_not_start_or_transfer_an_inactive_device(self):
         with patch.object(service, "_get_valid_spotify_access_token", return_value="token"), \

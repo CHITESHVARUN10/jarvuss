@@ -26,7 +26,7 @@ commands, enable listening first. **⌘⇧R** requests emergency display recover
 | Settings | “open Bluetooth settings” | Opens the macOS pane |
 | Sound | “increase sound by twenty-five percent” | Adds 25 points on the selected output |
 | Sound UI | System → Sound | Output name, reported volume, slider, mute/unmute and refresh |
-| Spotify | “shuffle my liked songs” | Requires Spotify connection and an active playback device |
+| Spotify | “shuffle my liked songs” | Requires local Spotify and Automation permission; collection lookup needs OAuth |
 | Display | “set brightness to 60” | Hardware support determines availability |
 | Info | “what time is it” | Local answer |
 | Routines | Your saved keyword | Runs the workflow you created |
@@ -110,9 +110,12 @@ opens preview beside the source.
 - Shuffle on/off for active playback, Liked Songs and named playlists:
   “shuffle it”, “turn shuffle off”, “shuffle my liked songs”,
   “play my Focus playlist on shuffle”, “play my Focus playlist in order”.
-- Liked Songs shuffle samples across the library and queues up to 50 playable
-  tracks. Named playlists retain full Spotify context and start at a random
-  position. Mode is confirmed on the target playback device/context.
+- Playback and shuffle use the native macOS Spotify scripting interface and
+  local state readback. Basic transport and standalone shuffle need no backend
+  or OAuth. Named music and Liked Songs use read-only metadata lookup.
+- Liked Songs shuffle samples a starting track across the library and passes
+  its collection context to the native player. Named playlists retain their
+  context and shuffled requests choose a random starting position.
 - Shuffle runs through native parsing. Earlier small shuffle training
   candidates failed regression gates and were not promoted.
 

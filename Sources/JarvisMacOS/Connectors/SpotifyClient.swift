@@ -45,6 +45,32 @@ final class SpotifyClient {
         self.baseURL = baseURL
     }
 
+    struct NativeTarget: Decodable {
+        let uri: String
+        let trackURI: String?
+        enum CodingKeys: String, CodingKey {
+            case uri
+            case trackURI = "track_uri"
+        }
+    }
+
+    // Lookup only: playback is controlled by the local Spotify application.
+    func nativeTarget(kind: String, name: String = "", shuffle: Bool = false) async throws -> NativeTarget {
+        guard await BackendServiceManager.ensureRunningForFeature() else {
+            throw SpotifyClientError.saveFailed("Song and library lookup needs the local helper. Enable it in Assistant → Behaviour → Backend.")
+        }
+        var parts = URLComponents(url: baseURL.appendingPathComponent("spotify/native-target"), resolvingAgainstBaseURL: false)!
+        parts.queryItems = [URLQueryItem(name: "kind", value: kind), URLQueryItem(name: "name", value: name), URLQueryItem(name: "shuffle", value: String(shuffle))]
+        var request = URLRequest(url: parts.url!)
+        request.timeoutInterval = 20
+        let (data, response) = try await BackendAccess.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+            let detail = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["detail"] as? String
+            throw SpotifyClientError.saveFailed(ActionExecutor.spotifyFailureMessage(status: (response as? HTTPURLResponse)?.statusCode, message: detail ?? "Spotify could not look up the requested music. Check Connections → Spotify."))
+        }
+        return try JSONDecoder().decode(NativeTarget.self, from: data)
+    }
+
     func status() async throws -> SpotifyStatus {
         var request = URLRequest(url: baseURL.appendingPathComponent("spotify/status"))
         request.httpMethod = "GET"

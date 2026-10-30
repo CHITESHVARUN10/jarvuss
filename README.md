@@ -77,13 +77,15 @@ before sharing. Stopping/cancelling cannot undo completed actions.
 - Spotify shuffle: “shuffle my liked songs”, “play my Gym playlist on shuffle”,
   “play a song from my light songs, shuffle it”, “shuffle it”, and “turn shuffle
   off”. Explicit “play … in order” disables shuffle for that collection.
-  Named playlists start at a random position and retain their full Spotify
-  context. Liked Songs uses a randomized queue of up to 50 playable tracks,
-  sampled from up to five pages across the saved library (plus one count read),
-  so it is not restricted to the newest 50 saves. Shuffle is confirmed on the
-  target device/context before success is reported; failures after playback
-  starts are reported as partial failures. Standalone shuffle mode changes do
-  not start an inactive device. Uses [Spotify’s shuffle API](https://developer.spotify.com/documentation/web-api/reference/toggle-shuffle-for-users-playback).
+  Playback and shuffle use Spotify's native macOS scripting interface, with
+  local player-state readback. Play/pause/next/previous and standalone shuffle
+  work without the helper or Spotify OAuth. Allow Jarvis under System Settings
+  → Privacy & Security → Automation → Spotify when prompted.
+  Song/playlist names and Liked Songs still use the helper and OAuth for
+  read-only metadata lookup. Playlist shuffle chooses a random starting
+  position; Liked Songs chooses a starting track sampled across the library.
+  The local player receives the collection context rather than a 50-track
+  Web API queue. An unconfirmed action returns a failure with details.
 - Active-output volume: “increase the sound by twenty-five percent”, “volume
   down by 15”, “set volume to forty percent”, “mute”, “unmute”, and “what is
   the current volume level”. Amounts are percentage points; “increase volume
@@ -540,7 +542,8 @@ it does not isolate the app from processes that can read files as the same user.
 | `/parse_intent` | `POST` | Learned intent router (t5-small int8 ONNX) → JSON plan |
 | `/spotify/login`, `/spotify/callback` | `GET` | Spotify OAuth |
 | `/spotify/status`, `/spotify/connect-url`, `/spotify/token` | `GET` | Connection state |
-| `/spotify/play`, `/pause`, `/next`, `/previous` | `POST` | Transport |
+| `/spotify/native-target` | `GET` | Read-only name/library lookup for native playback |
+| `/spotify/play`, `/pause`, `/next`, `/previous` | `POST` | Legacy Web API transport; unused by native commands |
 | `/spotify/play-song`, `/play-playlist`, `/play-liked` | `POST` | Play by name / liked songs |
 | `/postgres/status`, `/postgres/credentials`, `/postgres/test` | mixed | PostgreSQL connection management |
 

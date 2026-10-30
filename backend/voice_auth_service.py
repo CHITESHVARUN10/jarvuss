@@ -735,8 +735,9 @@ def _spotify_liked_track_uris(token: str) -> list[str]:
     for item in items:
         track = item.get("track") if isinstance(item, dict) else None
         uri = track.get("uri") if isinstance(track, dict) else None
-        if uri:
-            uris.append(str(uri))
+        if (isinstance(uri, str) and uri.startswith("spotify:track:")
+                and not track.get("is_local") and track.get("is_playable") is not False):
+            uris.append(uri)
     return uris
 
 
@@ -1131,6 +1132,52 @@ def postgres_test(payload: Dict[str, Any]) -> Dict[str, Any]:
         detail = (proc.stderr or proc.stdout).strip()[:300] or "connection refused"
         raise HTTPException(status_code=500, detail=detail)
     return {"status": "ok", "message": "Connection OK — SELECT 1 returned 1."}
+
+
+@app.get("/spotify/native-target")
+def spotify_native_target(kind: str, name: str = "", shuffle: bool = False) -> dict:
+    """Resolve metadata for AppleScript; never issue a Web API player write."""
+    if kind not in {"song", "playlist", "liked"}:
+        raise HTTPException(status_code=400, detail="Unsupported Spotify lookup")
+    if kind != "liked" and not name.strip():
+        raise HTTPException(status_code=400, detail="A song or playlist name is required")
+    token = _get_valid_spotify_access_token()
+    if kind == "song":
+        uri = _spotify_search_track_uri(token, name)
+        if not uri:
+            raise HTTPException(status_code=404, detail="No matching Spotify song found")
+        return {"uri": uri, "track_uri": uri}
+    if kind == "playlist":
+        match = _spotify_find_playlist_uri(token, name)
+        if not match:
+            raise HTTPException(status_code=404, detail="No matching Spotify playlist found")
+        uri = match[1]
+        offset = _spotify_random_playlist_offset(token, uri) if shuffle else 0
+        playlist_id = uri.rsplit(":", 1)[-1]
+        for suffix in ("items", "tracks"):
+            status, page, _ = _spotify_api_request("GET", f"/v1/playlists/{playlist_id}/{suffix}", token,
+                                                  query={"limit": "50", "offset": str(offset)})
+            if status in (404, 405):
+                continue
+            if status == 200 and isinstance(page, dict):
+                for entry in page.get("items", []):
+                    track = (entry.get("track") or entry.get("item")) if isinstance(entry, dict) else None
+                    if isinstance(track, dict) and not track.get("is_local") and track.get("is_playable") is not False:
+                        track_uri = track.get("uri", "")
+                        if isinstance(track_uri, str) and track_uri.startswith("spotify:track:"):
+                            return {"uri": uri, "track_uri": track_uri}
+            break
+        raise HTTPException(status_code=404, detail="Spotify could not find a playable track in this playlist.")
+    status, profile, _ = _spotify_api_request("GET", "/v1/me", token)
+    if status != 200 or not isinstance(profile, dict) or not profile.get("id"):
+        raise HTTPException(status_code=status if status in (401, 403, 429) else 502,
+                            detail="Spotify could not identify your Liked Songs library. Check Connections → Spotify.")
+    # The desktop scripting interface accepts the account collection URI;
+    # spotify:collection:tracks by itself does not start playback.
+    tracks = _spotify_shuffled_liked_track_uris(token) if shuffle else _spotify_liked_track_uris(token)
+    if not tracks:
+        raise HTTPException(status_code=404, detail="No playable liked songs found")
+    return {"uri": f"spotify:user:{profile['id']}:collection", "track_uri": tracks[0]}
 
 
 @app.post("/spotify/play")

@@ -18,6 +18,7 @@ training/*.log
 
 # Owner-only release tooling, configuration, and artifacts.
 /pipeline/
+/handoff.md
 *.swp
 *.swo
 rust-core/target/

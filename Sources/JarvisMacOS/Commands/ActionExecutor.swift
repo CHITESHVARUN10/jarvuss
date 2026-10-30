@@ -449,106 +449,13 @@ final class ActionExecutor {
         }
     }
 
-    // MARK: - Spotify / media control (backend-only)
-
-    private enum SpotifyBackendResult {
-        case success(status: Int, message: String)
-        case failure(status: Int?, message: String)
-    }
-
-    private struct SpotifyBackendEnvelope: Decodable {
-        let status: String?
-        let actionConfirmed: Bool?
-        let message: String?
-        let playbackState: PlaybackState?
-
-        struct PlaybackState: Decodable {
-            let isPlaying: Bool?
-
-            enum CodingKeys: String, CodingKey {
-                case isPlaying = "is_playing"
-            }
-        }
-
-        enum CodingKeys: String, CodingKey {
-            case status
-            case actionConfirmed = "action_confirmed"
-            case message
-            case playbackState = "playback_state"
-        }
-    }
+    // MARK: - Native Spotify control
 
     private func executeMediaAction(_ action: MediaAction) async -> ActionResult {
-        emitSpotify("[Media] Routing to backend Spotify: \(action.description)")
-
-        // Spotify lives in the Python backend — start it on demand (Automatic
-        // mode) or surface why it can't run (Off mode).
-        guard await BackendServiceManager.ensureRunningForFeature() else {
-            return ActionResult(
-                action: .mediaControl(action),
-                success: false,
-                message: "Backend is set to Off — Spotify needs it. Assistant → Behaviour → Backend."
-            )
-        }
-
-        switch action {
-        case .play, .playSong, .playPlaylist, .playLikedSongs, .playLikedWithShuffle, .playPlaylistWithShuffle:
-            await prepareSpotifyForPlayback()
-        default: break
-        }
-
-        let backendResult: SpotifyBackendResult
-        switch action {
-        case .play:
-            backendResult = await callBackendSpotify(path: "/spotify/play")
-        case .pause:
-            backendResult = await callBackendSpotify(path: "/spotify/pause")
-        case .nextTrack:
-            backendResult = await callBackendSpotify(path: "/spotify/next")
-        case .previousTrack:
-            backendResult = await callBackendSpotify(path: "/spotify/previous")
-        case .playLikedSongs:
-            backendResult = await callBackendSpotify(path: "/spotify/play-liked")
-        case .playSong(let name):
-            backendResult = await callBackendSpotify(path: "/spotify/play-song", query: [
-                URLQueryItem(name: "name", value: name)
-            ])
-        case .playPlaylist(let name):
-            backendResult = await callBackendSpotify(path: "/spotify/play-playlist", query: [
-                URLQueryItem(name: "name", value: name)
-            ])
-        case .setShuffle(let on):
-            backendResult = await callBackendSpotify(path: "/spotify/shuffle", query: [URLQueryItem(name: "enabled", value: String(on))])
-        case .playLikedWithShuffle(let on):
-            backendResult = await callBackendSpotify(path: "/spotify/play-liked", query: [URLQueryItem(name: "shuffle", value: String(on))])
-        case .playPlaylistWithShuffle(let name, let on):
-            backendResult = await callBackendSpotify(path: "/spotify/play-playlist", query: [
-                URLQueryItem(name: "name", value: name), URLQueryItem(name: "shuffle", value: String(on))
-            ])
-        }
-
-        switch backendResult {
-        case .success(let status, let message):
-            return ActionResult(
-                action: .mediaControl(action),
-                success: true,
-                message: "Spotify backend success (\(status)): \(message)"
-            )
-        case .failure(let status, let message):
-            return ActionResult(
-                action: .mediaControl(action),
-                success: false,
-                message: Self.spotifyFailureMessage(status: status, message: message)
-            )
-        }
-    }
-
-    @MainActor private func prepareSpotifyForPlayback() async {
-        guard NSRunningApplication.runningApplications(withBundleIdentifier: "com.spotify.client").isEmpty,
-              let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.spotify.client") else { return }
-        let configuration = NSWorkspace.OpenConfiguration()
-        configuration.activates = false
-        _ = try? await NSWorkspace.shared.openApplication(at: url, configuration: configuration)
+        emitSpotify("[Spotify][Native] \(action.description)")
+        let result = await NativeSpotifyController().execute(action)
+        emitSpotify("[Spotify][Native] \(result.message)")
+        return ActionResult(action: .mediaControl(action), success: result.success, message: result.message)
     }
 
     static func spotifyFailureMessage(status: Int?, message: String) -> String {
@@ -561,86 +468,6 @@ final class ActionExecutor {
         if status == 403 || lower.contains("premium") { return "Spotify couldn’t control this device. Check your Premium account and the selected playback device." }
         if status == 429 { return "Spotify is receiving too many requests. Wait a moment, then try again." }
         return detail.isEmpty ? "Spotify couldn’t complete the request. Please try again." : detail
-    }
-
-    static func spotifyResponseConfirmsAction(_ data: Data, path: String) -> Bool {
-        guard let decoded = try? JSONDecoder().decode(SpotifyBackendEnvelope.self, from: data),
-              decoded.status?.lowercased() == "ok" else { return false }
-        // A helper accepting a play request is not proof that music started.
-        // This also prevents an older running helper from showing false success.
-        if path.hasPrefix("/spotify/play") { return decoded.playbackState?.isPlaying == true }
-        return decoded.actionConfirmed == true
-    }
-
-    private func callBackendSpotify(
-        path: String,
-        query: [URLQueryItem] = []
-    ) async -> SpotifyBackendResult {
-        let baseURL = backendBaseURL()
-        guard var components = URLComponents(string: baseURL) else {
-            return .failure(status: nil, message: "Invalid backend URL: \(baseURL)")
-        }
-
-        let normalizedPath = path.hasPrefix("/") ? path : "/\(path)"
-        components.path = normalizedPath
-        components.queryItems = query.isEmpty ? nil : query
-
-        guard let url = components.url else {
-            return .failure(status: nil, message: "Failed to build backend URL for \(path)")
-        }
-
-        emitSpotify("[Spotify][Backend] Request: POST \(url.absoluteString)")
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = Data("{}".utf8)
-
-        do {
-            let (data, response) = try await BackendAccess.data(for: request)
-            let status = (response as? HTTPURLResponse)?.statusCode ?? -1
-            let raw = String(data: data, encoding: .utf8) ?? ""
-            emitSpotify("[Spotify][Backend] Response status: \(status)")
-            emitSpotify("[Spotify][Backend] Response body: \(raw)")
-
-            let decoded = try? JSONDecoder().decode(SpotifyBackendEnvelope.self, from: data)
-            let successConfirmed = Self.spotifyResponseConfirmsAction(data, path: normalizedPath)
-
-            if (200..<300).contains(status), successConfirmed {
-                let backendMessage = decoded?.message ?? (raw.isEmpty ? "ok" : raw)
-                return .success(status: status, message: backendMessage)
-            }
-
-            let interpretedReason: String = {
-                if status == 403 { return "403 restriction/premium/device limitation" }
-                if raw.lowercased().contains("no active spotify device") { return "no active device" }
-                if (200..<300).contains(status) { return "action not confirmed by playback state" }
-                if raw.isEmpty { return "unknown backend error" }
-                return "backend returned error payload"
-            }()
-
-            emitSpotify("[Spotify][Backend] Interpreted reason: \(interpretedReason)")
-
-            if (200..<300).contains(status) {
-                return .failure(status: status, message: "Spotify accepted the request without confirming the action. If you just rebuilt Jarvis, quit and reopen it to restart the helper, then try again.")
-            }
-            return .failure(status: status, message: raw.isEmpty ? "unknown error" : raw)
-        } catch {
-            emitSpotify("[Spotify][Backend][ERROR] Request failed: \(error.localizedDescription)")
-            return .failure(status: nil, message: error.localizedDescription)
-        }
-    }
-
-    private func backendBaseURL() -> String {
-        let configured = envValue("JARVIS_BACKEND_URL")
-            ?? envValue("BACKEND_BASE_URL")
-            ?? "http://127.0.0.1:8000"
-        return configured.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    private func envValue(_ key: String) -> String? {
-        let sourceDir = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
-        return DotEnvLoader.value(for: key, extraSearchDirs: [sourceDir])
     }
 
     private func emitSpotify(_ message: String) {
