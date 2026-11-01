@@ -79,6 +79,7 @@ struct NoirSystemPage: View {
 
             NoirSoundSection()
 
+            NoirProjectPreferences()
             NoirFileSearchPreferences()
 
             NoirSectionHeading(title: "Display safety")

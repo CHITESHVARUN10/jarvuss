@@ -66,3 +66,14 @@ evaluation with real audio.
 The minimum OS is macOS 26.0 in SwiftPM, Info.plist, Cargo and native build
 scripts. `scripts/macos_toolchain.zsh` selects a matching Xcode compiler and SDK
 for native compilation. Rebuild both XCFrameworks after Rust or bridge changes.
+
+## Native app and project commands
+
+`WorkspaceCommandParser` owns exact app/operation/project/root fields before
+legacy generic app routing in both modes. Learned workspace families are
+argument-free and must match native re-parsing. `ProjectLocationStore` owns
+local root/alias bookmarks; `ProjectDirectoryResolver` performs bounded scoped
+lookup off the main actor. `ProjectWorkspaceController` owns ambiguity selection
+and expiring successful-project context. `NativeWorkspaceController` owns the
+allowlisted app adapters, process deadlines, and available native readback.
+Workspace actions use the normal executor, routine steps, and command-test logs.

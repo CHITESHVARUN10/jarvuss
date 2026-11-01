@@ -48,6 +48,18 @@ opens preview beside the source.
   Netflix, GitHub, Twitter/X, Reddit, Instagram, LinkedIn, Gmail, Maps,
   ChatGPT, Vercel, Claude, Claude Code, Command Code.
 
+### App windows, tabs, and saved projects
+
+- `app.new_window`, `app.new_tab`: native Brave/Chrome windows and tabs;
+  VS Code windows, untitled editor tabs, and explicit integrated-terminal tabs.
+- `project.open`: resolve saved roots/aliases locally and open in Finder
+  (default), VS Code, or Terminal. Duplicate names require a selection.
+- “open it in Terminal” reuses the last successful project for ten minutes.
+- These learned intent labels carry no arguments. Swift owns exact fields;
+  `resolved_args` in train shard 072 and the independent workspace evaluation
+  set are end-to-end parsing oracles. Dataset preparation has not trained a model.
+- Configure System → Project locations. Details: [workspace commands](../docs/workspace-commands.md).
+
 ## 2. Web
 
 - **search** — `searchWeb(engine:query)` — engines: YouTube, Google.

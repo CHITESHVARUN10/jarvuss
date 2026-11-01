@@ -18,7 +18,7 @@ sys.path.insert(0, str(ROOT / "backend"))
 from intent_router_model import _OnnxIntentEngine
 
 
-def evaluate(model: Path, include_shuffle: bool = False, include_volume: bool = False) -> dict:
+def evaluate(model: Path, include_shuffle: bool = False, include_volume: bool = False, include_workspace: bool = False) -> dict:
     engine = _OnnxIntentEngine(model)
     files = {
         "native_search": ROOT / "training/eval_native_search.jsonl",
@@ -30,6 +30,8 @@ def evaluate(model: Path, include_shuffle: bool = False, include_volume: bool = 
         files["shuffle"] = ROOT / "training/eval_spotify_shuffle.jsonl"
     if include_volume:
         files["volume"] = ROOT / "training/eval_system_volume.jsonl"
+    if include_workspace:
+        files["workspace"] = ROOT / "training/eval_workspace.jsonl"
     report = {}
     for name, path in files.items():
         rows = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
@@ -67,8 +69,9 @@ def main() -> int:
     parser.add_argument("--output", type=Path, default=ROOT / "training/out/native-search/evaluation.json")
     parser.add_argument("--shuffle", action="store_true", help="include the independent shuffle evaluation set")
     parser.add_argument("--volume", action="store_true", help="include the independent system-volume evaluation set")
+    parser.add_argument("--workspace", action="store_true", help="include held-out window/tab/project intents")
     args = parser.parse_args()
-    report = {"candidate": evaluate(args.candidate, args.shuffle, args.volume), "baseline": evaluate(args.baseline, args.shuffle, args.volume)}
+    report = {"candidate": evaluate(args.candidate, args.shuffle, args.volume, args.workspace), "baseline": evaluate(args.baseline, args.shuffle, args.volume, args.workspace)}
     # Require a strong new-feature result and no aggregate regression on the
     # unchanged independent general-language sets before promoting weights.
     native = report["candidate"]["native_search"]
@@ -79,6 +82,8 @@ def main() -> int:
         report["promotion_passed"] = report["promotion_passed"] and report["candidate"]["shuffle"]["exact_match"] >= 0.9
     if args.volume:
         report["promotion_passed"] = report["promotion_passed"] and report["candidate"]["volume"]["exact_match"] >= 0.9
+    if args.workspace:
+        report["promotion_passed"] = report["promotion_passed"] and report["candidate"]["workspace"]["exact_match"] >= 0.9
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + "\n")
     print(f"Promotion gate: {report['promotion_passed']} (general {candidate_general} vs baseline {baseline_general})")

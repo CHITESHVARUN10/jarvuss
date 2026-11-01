@@ -84,6 +84,9 @@ extension AppState {
         let value = action.value.trimmingCharacters(in: .whitespacesAndNewlines)
 
         switch action.type {
+        case .workspaceCommand:
+            guard let plan = WorkspaceCommandParser.plan(value), plan.count == 1, case .workspace = plan[0] else { return nil }
+            return plan[0]
         case .openApp:
             guard !value.isEmpty else { return nil }
             return .openApp(value)
@@ -200,7 +203,7 @@ extension AppState {
         // A document name/content phrase can contain a routine keyword.
         // Explicit native search/settings/result commands keep their meaning.
         if LocalSearchParser.route(command) == nil, SpotifyShuffleParser.parse(command) == nil,
-           SystemVolumeParser.route(command) == nil,
+           SystemVolumeParser.route(command) == nil, WorkspaceCommandParser.plan(command) == nil,
            let match = matchedAutomation(for: command) {
             testTrace?.record("routine", match.automation.keyword)
             let success = await executeAutomation(match.automation, isOffVariant: match.isOffVariant)

@@ -234,6 +234,25 @@ class TrainingLabelTests(unittest.TestCase):
         self.assertEqual(len(pairs), 1)
         self.assertEqual(pairs[0]["source"], "model_hit")
 
+    def test_workspace_descriptions_require_authored_corrections(self):
+        row = json.loads((ROOT / "dataset/train-072-workspace.jsonl").read_text().splitlines()[0])
+        self.assertEqual(training.description_to_intent("Workspace: newWindow in brave"), row["intents"][0])
+        self.assertEqual(training.description_to_intent("Workspace: openProject in vscode project 'portfolio' from 'work'"),
+                         {"name": "project.open", "args": {}})
+        self.assertTrue(training.is_consistent(row["text"], row["intents"]))
+        self.assertFalse(training.is_consistent("open an unrelated private project in Finder", [{"name": "project.open", "args": {}}]))
+
+    def test_workspace_dataset_is_synthetic_and_independent(self):
+        train = [json.loads(line) for line in (ROOT / "dataset/train-072-workspace.jsonl").read_text().splitlines()]
+        held = [json.loads(line) for line in (ROOT / "training/eval_workspace.jsonl").read_text().splitlines()]
+        self.assertFalse({row["text"].casefold() for row in train} & {row["text"].casefold() for row in held})
+        for row in train + held:
+            self.assertNotIn("/Users/", json.dumps(row))
+            self.assertNotIn("/Volumes/", json.dumps(row))
+            if row.get("workspace_negative"): continue
+            self.assertEqual(len(row["intents"]), len(row["resolved_args"]))
+            self.assertTrue(all(intent["args"] == {} for intent in row["intents"]))
+
     def test_native_descriptions_round_trip_and_only_authored_corrections_are_rewarded(self):
         row = json.loads((ROOT / "dataset/train-066-native-search.jsonl").read_text().splitlines()[0])
         action = row["intents"][0]

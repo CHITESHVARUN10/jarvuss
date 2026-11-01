@@ -165,6 +165,10 @@ FILES_RE = re.compile(r"^([a-zA-Z]+) in '(.+)'(?: \[(\w+)\])?$")
 def description_to_intent(desc: str) -> dict | None:
     """Reverse of `PlannedAction.description`. None when unmappable."""
     desc = desc.strip()
+    workspace = re.fullmatch(r"Workspace: (newWindow|newTab|newTerminalTab|openProject) in (brave|chrome|vscode|finder|terminal)(?: project '.+')?(?: from '.+')?", desc)
+    if workspace:
+        family = {"newWindow": "app.new_window", "newTab": "app.new_tab", "newTerminalTab": "app.new_tab", "openProject": "project.open"}[workspace[1]]
+        return {"name": family, "args": {}}
     if desc.startswith("File search: "):
         try:
             args = json.loads(desc[len("File search: "):])
@@ -330,7 +334,7 @@ def is_consistent(text: str, intents) -> bool:
                 return False
         elif name == "ai.query":
             return False
-        elif name in ("files.search", "files.result", "settings.open", "media.shuffle"):
+        elif name in ("files.search", "files.result", "settings.open", "media.shuffle", "app.new_window", "app.new_tab", "project.open"):
             # A successful API call is not proof of a correct interpretation.
             # Harvest these context-sensitive operations only when the label
             # matches a human-authored correction for the same utterance.
@@ -341,7 +345,7 @@ def is_consistent(text: str, intents) -> bool:
 
 def matches_native_correction(text: str, intent: dict) -> bool:
     key = text.strip().casefold()
-    for filename in ("train-066-native-search.jsonl", "train-067-settings-panes.jsonl", "train-068-result-selection.jsonl", "train-069-native-navigation.jsonl", "train-070-spotify-shuffle.jsonl"):
+    for filename in ("train-066-native-search.jsonl", "train-067-settings-panes.jsonl", "train-068-result-selection.jsonl", "train-069-native-navigation.jsonl", "train-070-spotify-shuffle.jsonl", "train-072-workspace.jsonl"):
         path = os.path.join(ROOT, "dataset", filename)
         if not os.path.exists(path):
             continue

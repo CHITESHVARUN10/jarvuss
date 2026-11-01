@@ -105,6 +105,9 @@ final class ActionExecutor {
     private func runSingleAction(_ action: PlannedAction) async -> ActionResult {
         switch action {
 
+        case .workspace(let command):
+            let result = await ProjectWorkspaceController.shared.execute(command)
+            return ActionResult(action: action, success: result.success, message: result.message)
         case .openApp(let name):
             let result = await appController.openAndWaitForLaunch(appName: name)
             return ActionResult(action: action, success: result.success,

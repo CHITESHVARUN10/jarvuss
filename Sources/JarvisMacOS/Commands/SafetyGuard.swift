@@ -36,6 +36,9 @@ enum SafetyGuard {
     /// Validate a single PlannedAction before it executes.
     static func validate(action: PlannedAction) -> SafetyVerdict {
         switch action {
+        case .workspace(let command):
+            guard !command.project.contains("\0"), !command.root.contains("\0") else { return .blocked(reason: "Invalid project name.") }
+            return .allowed // Allowlisted apps and configured folder roots; no generated shell commands.
         case .openApp(let name):
             return checkText(name)
         case .closeApp(let name):

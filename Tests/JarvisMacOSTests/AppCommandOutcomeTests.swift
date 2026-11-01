@@ -127,6 +127,18 @@ final class AppCommandOutcomeTests: XCTestCase {
         XCTAssertEqual(executor.calls, 1, "The planner/executor path must win over a keyword found inside document content")
     }
 
+    func testNativeProjectDoesNotTriggerARoutineKeyword() async {
+        app.automations = [VoiceAutomation(keyword: "portfolio", actions: [])]
+        await app.runCommand("open portfolio project in Finder")
+        XCTAssertEqual(executor.calls, 1)
+    }
+
+    func testWorkspaceRoutineMapsStructuredSingleAction() {
+        XCTAssertEqual(app.plannedAction(for: AutomationAction(type: .workspaceCommand, value: "open a new tab in Chrome")),
+                       .workspace(.init(operation: .newTab, app: .chrome)))
+        XCTAssertNil(app.plannedAction(for: AutomationAction(type: .workspaceCommand, value: "open a new tab in Chrome and open a new window in Brave")))
+    }
+
     func testBlockedCommandRecordsExactlyOneFailureWithoutExecution() async throws {
         await app.runCommand("sudo open test")
         XCTAssertEqual(executor.calls, 0)

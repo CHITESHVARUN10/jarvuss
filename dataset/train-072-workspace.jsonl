@@ -1,0 +1,140 @@
+{"text": "open a new window in Brave", "intents": [{"name": "app.new_window", "args": {}}], "resolved_args": [{"operation": "newWindow", "app": "brave", "project": "", "root": ""}]}
+{"text": "please open a new window in Brave", "intents": [{"name": "app.new_window", "args": {}}], "resolved_args": [{"operation": "newWindow", "app": "brave", "project": "", "root": ""}]}
+{"text": "Jarvis open a new window in Brave", "intents": [{"name": "app.new_window", "args": {}}], "resolved_args": [{"operation": "newWindow", "app": "brave", "project": "", "root": ""}]}
+{"text": "open a new tab in Brave", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "brave", "project": "", "root": ""}]}
+{"text": "please open a new tab in Brave", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "brave", "project": "", "root": ""}]}
+{"text": "Jarvis open a new tab in Brave", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "brave", "project": "", "root": ""}]}
+{"text": "create a new window in Brave", "intents": [{"name": "app.new_window", "args": {}}], "resolved_args": [{"operation": "newWindow", "app": "brave", "project": "", "root": ""}]}
+{"text": "please create a new window in Brave", "intents": [{"name": "app.new_window", "args": {}}], "resolved_args": [{"operation": "newWindow", "app": "brave", "project": "", "root": ""}]}
+{"text": "Jarvis create a new window in Brave", "intents": [{"name": "app.new_window", "args": {}}], "resolved_args": [{"operation": "newWindow", "app": "brave", "project": "", "root": ""}]}
+{"text": "create a new tab in Brave", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "brave", "project": "", "root": ""}]}
+{"text": "please create a new tab in Brave", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "brave", "project": "", "root": ""}]}
+{"text": "Jarvis create a new tab in Brave", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "brave", "project": "", "root": ""}]}
+{"text": "make a new window in Brave", "intents": [{"name": "app.new_window", "args": {}}], "resolved_args": [{"operation": "newWindow", "app": "brave", "project": "", "root": ""}]}
+{"text": "please make a new window in Brave", "intents": [{"name": "app.new_window", "args": {}}], "resolved_args": [{"operation": "newWindow", "app": "brave", "project": "", "root": ""}]}
+{"text": "Jarvis make a new window in Brave", "intents": [{"name": "app.new_window", "args": {}}], "resolved_args": [{"operation": "newWindow", "app": "brave", "project": "", "root": ""}]}
+{"text": "make a new tab in Brave", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "brave", "project": "", "root": ""}]}
+{"text": "please make a new tab in Brave", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "brave", "project": "", "root": ""}]}
+{"text": "Jarvis make a new tab in Brave", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "brave", "project": "", "root": ""}]}
+{"text": "open a new window in Google Chrome", "intents": [{"name": "app.new_window", "args": {}}], "resolved_args": [{"operation": "newWindow", "app": "chrome", "project": "", "root": ""}]}
+{"text": "please open a new window in Google Chrome", "intents": [{"name": "app.new_window", "args": {}}], "resolved_args": [{"operation": "newWindow", "app": "chrome", "project": "", "root": ""}]}
+{"text": "Jarvis open a new window in Google Chrome", "intents": [{"name": "app.new_window", "args": {}}], "resolved_args": [{"operation": "newWindow", "app": "chrome", "project": "", "root": ""}]}
+{"text": "open a new tab in Google Chrome", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "chrome", "project": "", "root": ""}]}
+{"text": "please open a new tab in Google Chrome", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "chrome", "project": "", "root": ""}]}
+{"text": "Jarvis open a new tab in Google Chrome", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "chrome", "project": "", "root": ""}]}
+{"text": "create a new window in Google Chrome", "intents": [{"name": "app.new_window", "args": {}}], "resolved_args": [{"operation": "newWindow", "app": "chrome", "project": "", "root": ""}]}
+{"text": "please create a new window in Google Chrome", "intents": [{"name": "app.new_window", "args": {}}], "resolved_args": [{"operation": "newWindow", "app": "chrome", "project": "", "root": ""}]}
+{"text": "Jarvis create a new window in Google Chrome", "intents": [{"name": "app.new_window", "args": {}}], "resolved_args": [{"operation": "newWindow", "app": "chrome", "project": "", "root": ""}]}
+{"text": "create a new tab in Google Chrome", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "chrome", "project": "", "root": ""}]}
+{"text": "please create a new tab in Google Chrome", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "chrome", "project": "", "root": ""}]}
+{"text": "Jarvis create a new tab in Google Chrome", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "chrome", "project": "", "root": ""}]}
+{"text": "make a new window in Google Chrome", "intents": [{"name": "app.new_window", "args": {}}], "resolved_args": [{"operation": "newWindow", "app": "chrome", "project": "", "root": ""}]}
+{"text": "please make a new window in Google Chrome", "intents": [{"name": "app.new_window", "args": {}}], "resolved_args": [{"operation": "newWindow", "app": "chrome", "project": "", "root": ""}]}
+{"text": "Jarvis make a new window in Google Chrome", "intents": [{"name": "app.new_window", "args": {}}], "resolved_args": [{"operation": "newWindow", "app": "chrome", "project": "", "root": ""}]}
+{"text": "make a new tab in Google Chrome", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "chrome", "project": "", "root": ""}]}
+{"text": "please make a new tab in Google Chrome", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "chrome", "project": "", "root": ""}]}
+{"text": "Jarvis make a new tab in Google Chrome", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "chrome", "project": "", "root": ""}]}
+{"text": "open a new window in VS Code", "intents": [{"name": "app.new_window", "args": {}}], "resolved_args": [{"operation": "newWindow", "app": "vscode", "project": "", "root": ""}]}
+{"text": "please open a new window in VS Code", "intents": [{"name": "app.new_window", "args": {}}], "resolved_args": [{"operation": "newWindow", "app": "vscode", "project": "", "root": ""}]}
+{"text": "Jarvis open a new window in VS Code", "intents": [{"name": "app.new_window", "args": {}}], "resolved_args": [{"operation": "newWindow", "app": "vscode", "project": "", "root": ""}]}
+{"text": "open a new tab in VS Code", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "vscode", "project": "", "root": ""}]}
+{"text": "please open a new tab in VS Code", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "vscode", "project": "", "root": ""}]}
+{"text": "Jarvis open a new tab in VS Code", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "vscode", "project": "", "root": ""}]}
+{"text": "create a new window in VS Code", "intents": [{"name": "app.new_window", "args": {}}], "resolved_args": [{"operation": "newWindow", "app": "vscode", "project": "", "root": ""}]}
+{"text": "please create a new window in VS Code", "intents": [{"name": "app.new_window", "args": {}}], "resolved_args": [{"operation": "newWindow", "app": "vscode", "project": "", "root": ""}]}
+{"text": "Jarvis create a new window in VS Code", "intents": [{"name": "app.new_window", "args": {}}], "resolved_args": [{"operation": "newWindow", "app": "vscode", "project": "", "root": ""}]}
+{"text": "create a new tab in VS Code", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "vscode", "project": "", "root": ""}]}
+{"text": "please create a new tab in VS Code", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "vscode", "project": "", "root": ""}]}
+{"text": "Jarvis create a new tab in VS Code", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "vscode", "project": "", "root": ""}]}
+{"text": "make a new window in VS Code", "intents": [{"name": "app.new_window", "args": {}}], "resolved_args": [{"operation": "newWindow", "app": "vscode", "project": "", "root": ""}]}
+{"text": "please make a new window in VS Code", "intents": [{"name": "app.new_window", "args": {}}], "resolved_args": [{"operation": "newWindow", "app": "vscode", "project": "", "root": ""}]}
+{"text": "Jarvis make a new window in VS Code", "intents": [{"name": "app.new_window", "args": {}}], "resolved_args": [{"operation": "newWindow", "app": "vscode", "project": "", "root": ""}]}
+{"text": "make a new tab in VS Code", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "vscode", "project": "", "root": ""}]}
+{"text": "please make a new tab in VS Code", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "vscode", "project": "", "root": ""}]}
+{"text": "Jarvis make a new tab in VS Code", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "vscode", "project": "", "root": ""}]}
+{"text": "open a new editor tab in VS Code", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "vscode", "project": "", "root": ""}]}
+{"text": "create a new terminal tab in VS Code", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTerminalTab", "app": "vscode", "project": "", "root": ""}]}
+{"text": "open a new editor tab in Visual Studio Code", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "vscode", "project": "", "root": ""}]}
+{"text": "create a new terminal tab in Visual Studio Code", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTerminalTab", "app": "vscode", "project": "", "root": ""}]}
+{"text": "open a new editor tab in vscode", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTab", "app": "vscode", "project": "", "root": ""}]}
+{"text": "create a new terminal tab in vscode", "intents": [{"name": "app.new_tab", "args": {}}], "resolved_args": [{"operation": "newTerminalTab", "app": "vscode", "project": "", "root": ""}]}
+{"text": "open my portfolio project in Finder", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "portfolio", "root": ""}]}
+{"text": "please open portfolio in Finder", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "portfolio", "root": ""}]}
+{"text": "open my portfolio project in VS Code", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "portfolio", "root": ""}]}
+{"text": "please open portfolio in VS Code", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "portfolio", "root": ""}]}
+{"text": "open my portfolio project in Terminal", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "portfolio", "root": ""}]}
+{"text": "please open portfolio in Terminal", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "portfolio", "root": ""}]}
+{"text": "open my portfolio project", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "portfolio", "root": ""}]}
+{"text": "open portfolio project from work in Finder", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "portfolio", "root": "work"}]}
+{"text": "open my atlas-api project in Finder", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "atlas-api", "root": ""}]}
+{"text": "please open atlas-api in Finder", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "atlas-api", "root": ""}]}
+{"text": "open my atlas-api project in VS Code", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "atlas-api", "root": ""}]}
+{"text": "please open atlas-api in VS Code", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "atlas-api", "root": ""}]}
+{"text": "open my atlas-api project in Terminal", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "atlas-api", "root": ""}]}
+{"text": "please open atlas-api in Terminal", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "atlas-api", "root": ""}]}
+{"text": "open my atlas-api project", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "atlas-api", "root": ""}]}
+{"text": "open atlas-api project from work in Finder", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "atlas-api", "root": "work"}]}
+{"text": "open my orchard web project in Finder", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "orchard web", "root": ""}]}
+{"text": "please open orchard web in Finder", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "orchard web", "root": ""}]}
+{"text": "open my orchard web project in VS Code", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "orchard web", "root": ""}]}
+{"text": "please open orchard web in VS Code", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "orchard web", "root": ""}]}
+{"text": "open my orchard web project in Terminal", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "orchard web", "root": ""}]}
+{"text": "please open orchard web in Terminal", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "orchard web", "root": ""}]}
+{"text": "open my orchard web project", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "orchard web", "root": ""}]}
+{"text": "open orchard web project from work in Finder", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "orchard web", "root": "work"}]}
+{"text": "open my café-site project in Finder", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "café-site", "root": ""}]}
+{"text": "please open café-site in Finder", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "café-site", "root": ""}]}
+{"text": "open my café-site project in VS Code", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "café-site", "root": ""}]}
+{"text": "please open café-site in VS Code", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "café-site", "root": ""}]}
+{"text": "open my café-site project in Terminal", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "café-site", "root": ""}]}
+{"text": "please open café-site in Terminal", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "café-site", "root": ""}]}
+{"text": "open my café-site project", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "café-site", "root": ""}]}
+{"text": "open café-site project from work in Finder", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "café-site", "root": "work"}]}
+{"text": "open my Release Notes project in Finder", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "Release Notes", "root": ""}]}
+{"text": "please open Release Notes in Finder", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "Release Notes", "root": ""}]}
+{"text": "open my Release Notes project in VS Code", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "Release Notes", "root": ""}]}
+{"text": "please open Release Notes in VS Code", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "Release Notes", "root": ""}]}
+{"text": "open my Release Notes project in Terminal", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "Release Notes", "root": ""}]}
+{"text": "please open Release Notes in Terminal", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "Release Notes", "root": ""}]}
+{"text": "open my Release Notes project", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "Release Notes", "root": ""}]}
+{"text": "open Release Notes project from work in Finder", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "Release Notes", "root": "work"}]}
+{"text": "open my Research and Design project in Finder", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "Research and Design", "root": ""}]}
+{"text": "please open Research and Design in Finder", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "Research and Design", "root": ""}]}
+{"text": "open my Research and Design project in VS Code", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "Research and Design", "root": ""}]}
+{"text": "please open Research and Design in VS Code", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "Research and Design", "root": ""}]}
+{"text": "open my Research and Design project in Terminal", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "Research and Design", "root": ""}]}
+{"text": "please open Research and Design in Terminal", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "Research and Design", "root": ""}]}
+{"text": "open my Research and Design project", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "Research and Design", "root": ""}]}
+{"text": "open Research and Design project from work in Finder", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "Research and Design", "root": "work"}]}
+{"text": "open my dashboard.v2 project in Finder", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "dashboard.v2", "root": ""}]}
+{"text": "please open dashboard.v2 in Finder", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "dashboard.v2", "root": ""}]}
+{"text": "open my dashboard.v2 project in VS Code", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "dashboard.v2", "root": ""}]}
+{"text": "please open dashboard.v2 in VS Code", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "dashboard.v2", "root": ""}]}
+{"text": "open my dashboard.v2 project in Terminal", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "dashboard.v2", "root": ""}]}
+{"text": "please open dashboard.v2 in Terminal", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "dashboard.v2", "root": ""}]}
+{"text": "open my dashboard.v2 project", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "dashboard.v2", "root": ""}]}
+{"text": "open dashboard.v2 project from work in Finder", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "dashboard.v2", "root": "work"}]}
+{"text": "open my tiny shop project in Finder", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "tiny shop", "root": ""}]}
+{"text": "please open tiny shop in Finder", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "tiny shop", "root": ""}]}
+{"text": "open my tiny shop project in VS Code", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "tiny shop", "root": ""}]}
+{"text": "please open tiny shop in VS Code", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "tiny shop", "root": ""}]}
+{"text": "open my tiny shop project in Terminal", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "tiny shop", "root": ""}]}
+{"text": "please open tiny shop in Terminal", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "tiny shop", "root": ""}]}
+{"text": "open my tiny shop project", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "tiny shop", "root": ""}]}
+{"text": "open tiny shop project from work in Finder", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "tiny shop", "root": "work"}]}
+{"text": "open it in Finder", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "@recent", "root": ""}]}
+{"text": "open it in VS Code", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "@recent", "root": ""}]}
+{"text": "open it in Terminal", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "@recent", "root": ""}]}
+{"text": "open that in Finder", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "@recent", "root": ""}]}
+{"text": "open that in VS Code", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "@recent", "root": ""}]}
+{"text": "open that in Terminal", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "@recent", "root": ""}]}
+{"text": "open that project in Finder", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "@recent", "root": ""}]}
+{"text": "open that project in VS Code", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "@recent", "root": ""}]}
+{"text": "open that project in Terminal", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "@recent", "root": ""}]}
+{"text": "open this project in Finder", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "@recent", "root": ""}]}
+{"text": "open this project in VS Code", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "@recent", "root": ""}]}
+{"text": "open this project in Terminal", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "@recent", "root": ""}]}
+{"text": "open atlas-api project in Finder then open it in VS Code", "intents": [{"name": "project.open", "args": {}}, {"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "atlas-api", "root": ""}, {"operation": "openProject", "app": "vscode", "project": "@recent", "root": ""}]}
+{"text": "open tiny shop project in Finder then open it in VS Code", "intents": [{"name": "project.open", "args": {}}, {"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "tiny shop", "root": ""}, {"operation": "openProject", "app": "vscode", "project": "@recent", "root": ""}]}
+{"text": "open dashboard.v2 project in Finder then open it in VS Code", "intents": [{"name": "project.open", "args": {}}, {"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "dashboard.v2", "root": ""}, {"operation": "openProject", "app": "vscode", "project": "@recent", "root": ""}]}
+{"text": "open my project", "intents": [{"name": "project.open", "args": {}}], "resolved_args": [{"operation": "openProject", "app": "finder", "project": "", "root": ""}]}

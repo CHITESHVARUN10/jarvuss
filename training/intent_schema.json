@@ -1,6 +1,6 @@
 {
-  "version": 4,
-  "notes": "Source of truth for intent names + canonical arg order. prepare_data.py canonicalizes targets with this order so exact-match training is deterministic. Orders must match the dataset (dataset/*.jsonl) and the mapper in Sources/JarvisMacOS/Commands/IntentActionMapper.swift. Native search/settings/result intents classify the command family only. Swift deterministically resolves exact fields from the source utterance; dataset resolved_args retain expected end-to-end semantics for tests.",
+  "version": 5,
+  "notes": "Source of truth for intent names + canonical arg order. prepare_data.py canonicalizes targets with this order so exact-match training is deterministic. Orders must match the dataset (dataset/*.jsonl) and the mapper in Sources/JarvisMacOS/Commands/IntentActionMapper.swift. Native search/settings/result intents classify the command family only. Swift deterministically resolves exact fields from the source utterance; dataset resolved_args retain expected end-to-end semantics for tests. Workspace intent families also carry no model-generated arguments; native parsing resolves operation, app, project name and root from the original utterance.",
   "intents": {
     "app.open": {
       "args": [
@@ -269,6 +269,18 @@
       "types": {}
     },
     "media.shuffle": {
+      "args": [],
+      "types": {}
+    },
+    "app.new_window": {
+      "args": [],
+      "types": {}
+    },
+    "app.new_tab": {
+      "args": [],
+      "types": {}
+    },
+    "project.open": {
       "args": [],
       "types": {}
     }

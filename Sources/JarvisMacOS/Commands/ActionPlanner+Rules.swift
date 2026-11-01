@@ -3,6 +3,8 @@ import Foundation
 extension ActionPlanner {
     func ruleBasedPlan(cleaned: String, lower: String) -> [PlannedAction]? {
 
+        if let actions = WorkspaceCommandParser.plan(cleaned) { return actions }
+
         // ── Compound commands FIRST ─────────────────────────────────
         // A multi-clause utterance must never be parsed as one giant target:
         // "open notes and increase the volume by 20 percent" used to become

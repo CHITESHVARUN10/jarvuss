@@ -4,6 +4,7 @@ import Foundation
 
 /// Every step that the ActionPlanner produces is one of these.
 enum PlannedAction: Equatable, CustomStringConvertible {
+    case workspace(WorkspaceCommand)
     case openApp(String)
     case closeApp(String)
     case systemInfo(SystemInfoAction)
@@ -26,6 +27,7 @@ enum PlannedAction: Equatable, CustomStringConvertible {
 
     var description: String {
         switch self {
+        case .workspace(let command):      return "Workspace: \(command)"
         case .openApp(let n):              return "Open '\(n)'"
         case .closeApp(let n):             return "Close '\(n)'"
         case .systemInfo(let i):           return "Info: \(i)"

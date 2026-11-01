@@ -48,6 +48,10 @@ final class ActionPlanner {
 
     func plan(from raw: String, requestID: UUID = UUID()) async -> [PlannedAction] {
         guard !Task.isCancelled else { return [] }
+        if let actions = WorkspaceCommandParser.plan(raw), case .allowed = SafetyGuard.validate(rawCommand: raw) {
+            logPlanEvent(branch: "workspace", text: raw, requestID: requestID, actions: actions)
+            return actions
+        }
         // Filename/content literals must survive legacy wake-word cleanup:
         // a file can legitimately contain "Jarvis", "okay", or "now".
         if let action = LocalSearchParser.route(raw),

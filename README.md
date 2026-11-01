@@ -71,6 +71,7 @@ before sharing. Stopping/cancelling cannot undo completed actions.
 - **Speaker verification (optional, per mode)**: Resemblyzer voiceprint enrollment can gate execution to your voice — independently for ⌘⇧A commands and for live mode (Assistant → Privacy). With live-mode verification off, enrollment is not required and the wake word alone is the gate. When verification is required, unavailable or rejected verification never executes the command.
 
 **Command execution (⌘⇧A or "Jarvis …")**
+- Native windows/tabs and saved projects: “open a new tab in Brave”, “open a new VS Code window”, “open my portfolio project in Terminal”, and “open it in VS Code”. Configure roots and aliases in System → Project locations. See [workspace commands](docs/workspace-commands.md) for supported apps, permissions, and examples.
 - Apps: open/close with fuzzy matching and aliases ("get her desktop" → GitHub Desktop).
 - Files & folders: create files/folders in `~/Documents/Jarvis`, move, and **explore** — "how many files are in my downloads folder", "what is the latest ppt I have", "open the most recent pdf in downloads", "how much space do my pdfs take" (count, folders, list, largest, oldest, newest, total size, open newest/oldest).
 - Media & system: Spotify playback (play/pause/next/previous, by song, playlist, liked), volume, mute, display brightness (DDC + software), display modes.

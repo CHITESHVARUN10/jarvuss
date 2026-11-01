@@ -1,6 +1,7 @@
 import Foundation
 
 enum AutomationActionType: String, Codable, CaseIterable, Identifiable {
+    case workspaceCommand = "workspace_command"
     case openApp = "open_app"
     case closeApp = "close_app"
     case playSong = "play_song"
@@ -18,6 +19,7 @@ enum AutomationActionType: String, Codable, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
+        case .workspaceCommand: return "Window / tab / project"
         case .openApp: return "Open App"
         case .closeApp: return "Close App"
         case .playSong: return "Play Song"
@@ -35,6 +37,7 @@ enum AutomationActionType: String, Codable, CaseIterable, Identifiable {
 
     var placeholder: String {
         switch self {
+        case .workspaceCommand: return "open my portfolio project in VS Code"
         case .openApp, .closeApp:
             return "Spotify"
         case .playSong:

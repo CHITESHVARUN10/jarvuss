@@ -10,6 +10,20 @@ import CoreFoundation
 enum IntentActionMapper {
 
     static func map(_ intents: [[String: Any]], sourceText: String? = nil) -> [PlannedAction]? {
+        let workspaceFamilies: Set<String> = ["app.new_window", "app.new_tab", "project.open"]
+        if intents.contains(where: { workspaceFamilies.contains($0["name"] as? String ?? "") }) {
+            guard let sourceText, let native = WorkspaceCommandParser.plan(sourceText), native.count == intents.count else { return nil }
+            for (intent, action) in zip(intents, native) {
+                if case .workspace(let command) = action {
+                    guard intent["name"] as? String == command.intent,
+                          let args = intent["args"] as? [String: Any], args.isEmpty else { return nil }
+                } else {
+                    guard let name = intent["name"] as? String,
+                          let args = intent["args"] as? [String: Any], mapSingle(name: name, args: args) == action else { return nil }
+                }
+            }
+            return native
+        }
         var actions: [PlannedAction] = []
         for intent in intents {
             guard let name = intent["name"] as? String else { return nil }

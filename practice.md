@@ -92,6 +92,16 @@ Say any of these after ⌘⇧A, after "Jarvis …", or type them in the box.
 
 Never spell out URLs — say the site name, or "search <engine> for <thing>".
 
+### App windows, tabs, and projects
+
+Add your development folder in **System → Project locations → Add project root…**.
+Then try “open my portfolio project”, “open portfolio project in VS Code”,
+“open it in Terminal”, “open a new window in Brave”, or “open a new tab in Chrome”.
+For VS Code, a new tab means an untitled text editor; say “new terminal tab”
+explicitly for an integrated terminal. Allow Automation/Accessibility when needed.
+See [workspace commands](docs/workspace-commands.md) for aliases, duplicate-name
+selection, scope limits, permissions, and the ten-minute project context.
+
 ### Music & media (Spotify)
 
 | You say | What happens |
