@@ -486,9 +486,11 @@ def train(args, schema: dict) -> int:
         Seq2SeqTrainingArguments,
     )
 
+    data_dir = os.path.abspath(args.data_dir)
+    rl_pairs_path = os.path.join(data_dir, "rl_pairs.jsonl")
     data_files = {
-        "train": os.path.join(DATA_DIR, "train.jsonl"),
-        "dev": os.path.join(DATA_DIR, "dev.jsonl"),
+        "train": os.path.join(data_dir, "train.jsonl"),
+        "dev": os.path.join(data_dir, "dev.jsonl"),
     }
     ds = load_dataset("json", data_files=data_files)
     if args.dev_limit > 0:
@@ -506,8 +508,8 @@ def train(args, schema: dict) -> int:
         ds["train"] = concatenate_datasets([rehearsal] + [focus] * max(1, args.focus_repeat)).shuffle(seed=13)
         print(f"native focus: {len(focus)} ×{args.focus_repeat}; rehearsal: {len(rehearsal)}")
 
-    if os.path.exists(RL_PAIRS):
-        rl = load_dataset("json", data_files={"train": RL_PAIRS})["train"]
+    if not args.no_rl_pairs and os.path.exists(rl_pairs_path):
+        rl = load_dataset("json", data_files={"train": rl_pairs_path})["train"]
         rl = rl.remove_columns(
             [c for c in rl.column_names if c not in ("input_text", "target_text")]
         )
@@ -643,8 +645,10 @@ def train(args, schema: dict) -> int:
         "arguments": vars(args), "seed": 13,
         "train_examples": len(tokenized["train"]), "dev_examples": len(tokenized["dev"]),
         "initial_weights_sha256": fingerprint(os.path.join(args.init_from, "model.safetensors")),
-        "dataset_manifest_sha256": fingerprint(os.path.join(DATA_DIR, "dataset_manifest.json")),
-        "reward_pairs_sha256": fingerprint(RL_PAIRS),
+        "train_sha256": fingerprint(data_files["train"]),
+        "dev_sha256": fingerprint(data_files["dev"]),
+        "dataset_manifest_sha256": fingerprint(os.path.join(data_dir, "dataset_manifest.json")),
+        "reward_pairs_sha256": None if args.no_rl_pairs else fingerprint(rl_pairs_path),
     }
     os.makedirs(args.output_dir, exist_ok=True)
     with open(os.path.join(args.output_dir, "training_run.json"), "w", encoding="utf-8") as handle:
@@ -653,7 +657,7 @@ def train(args, schema: dict) -> int:
     trainer.train()
     trainer.save_model(args.output_dir)
     tokenizer.save_pretrained(args.output_dir)
-    manifest = os.path.join(DATA_DIR, "dataset_manifest.json")
+    manifest = os.path.join(data_dir, "dataset_manifest.json")
     if os.path.exists(manifest):
         shutil.copy2(manifest, os.path.join(args.output_dir, "dataset_manifest.json"))
     metrics = trainer.evaluate()
@@ -720,6 +724,8 @@ def main() -> int:
     ap.add_argument("--batch", type=int, default=8)
     ap.add_argument("--accum", type=int, default=4)
     ap.add_argument("--lr", type=float, default=3e-4, help="lower than a fresh run")
+    ap.add_argument("--data-dir", default=DATA_DIR, help="prepared data directory; use a shard-only directory for incremental training")
+    ap.add_argument("--no-rl-pairs", action="store_true", help="exclude all harvested execution examples")
     ap.add_argument("--rl-repeat", type=int, default=3,
                     help="how often to repeat harvested real-usage pairs")
     ap.add_argument("--focus-repeat", type=int, default=1, help="oversample native search/settings/selection examples")

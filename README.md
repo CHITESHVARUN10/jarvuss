@@ -229,6 +229,18 @@ python export_onnx.py --model out/native-search --dest out/native-search-onnx # 
 python evaluate_native_search.py --candidate out/native-search-onnx
 ```
 
+For a run limited to new shards, prepare a separate directory and explicitly
+exclude harvested execution pairs:
+
+```zsh
+python training/prepare_data.py --shards dataset/train-070-spotify-shuffle.jsonl dataset/train-071-system-volume.jsonl dataset/train-072-workspace.jsonl --output-dir training/out/new-shards-data
+python training/post_train.py --train --data-dir training/out/new-shards-data --no-rl-pairs --init-from training/out/native-search-final --output-dir training/out/new-shards-candidate --epochs 3 --lr 0.0001 --batch 4 --accum 4 --device cpu
+```
+
+This uses only the selected shards for gradient updates. Older commands remain
+in the checkpoint's existing weights. Independent evaluation phrases remain
+excluded from training. Evaluate a candidate before activating or publishing it.
+
 - The model **never grows** — same t5-small, same vocab. The loop sharpens it.
 - Shards 063–065 cover browser targeting and localhost. Shards 066–069 add
   250 native search, Settings, and result-selection examples. Preparation

@@ -136,10 +136,16 @@ def write_jsonl(path: str, rows: list[dict]) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", action="store_true", help="validate only, write nothing")
+    ap.add_argument("--shards", nargs="+", help="explicit dataset shard paths; omit to prepare all shards")
+    ap.add_argument("--output-dir", default=OUT_DIR, help="isolated prepared-data directory")
     args = ap.parse_args()
 
     schema = load_schema()
-    shards = train_shards()
+    shards = sorted(set(os.path.abspath(path) for path in args.shards)) if args.shards else train_shards()
+    for path in shards:
+        if not os.path.isfile(path) or os.path.dirname(os.path.realpath(path)) != os.path.realpath(DATASET_DIR) or not os.path.basename(path).startswith("train") or not path.endswith(".jsonl"):
+            ap.error(f"not a dataset training shard: {path}")
+    output_dir = os.path.abspath(args.output_dir)
     if not shards:
         print("no train*.jsonl shards found", file=sys.stderr)
         return 1
@@ -200,22 +206,22 @@ def main() -> int:
     dev = all_pairs[:dev_n]
     train = all_pairs[dev_n:]
 
-    write_jsonl(os.path.join(OUT_DIR, "train.jsonl"), train)
-    write_jsonl(os.path.join(OUT_DIR, "dev.jsonl"), dev)
-    write_jsonl(os.path.join(OUT_DIR, "valid.jsonl"), valid)
-    write_jsonl(os.path.join(OUT_DIR, "test.jsonl"), test)
+    write_jsonl(os.path.join(output_dir, "train.jsonl"), train)
+    write_jsonl(os.path.join(output_dir, "dev.jsonl"), dev)
+    write_jsonl(os.path.join(output_dir, "valid.jsonl"), valid)
+    write_jsonl(os.path.join(output_dir, "test.jsonl"), test)
     if novel:
-        write_jsonl(os.path.join(OUT_DIR, "novel.jsonl"), novel)
+        write_jsonl(os.path.join(output_dir, "novel.jsonl"), novel)
     if native_eval:
-        write_jsonl(os.path.join(OUT_DIR, "native_search_eval.jsonl"), native_eval)
+        write_jsonl(os.path.join(output_dir, "native_search_eval.jsonl"), native_eval)
     if shuffle_eval:
-        write_jsonl(os.path.join(OUT_DIR, "spotify_shuffle_eval.jsonl"), shuffle_eval)
+        write_jsonl(os.path.join(output_dir, "spotify_shuffle_eval.jsonl"), shuffle_eval)
 
     if volume_eval:
-        write_jsonl(os.path.join(OUT_DIR, "system_volume_eval.jsonl"), volume_eval)
+        write_jsonl(os.path.join(output_dir, "system_volume_eval.jsonl"), volume_eval)
 
     if workspace_eval:
-        write_jsonl(os.path.join(OUT_DIR, "workspace_eval.jsonl"), workspace_eval)
+        write_jsonl(os.path.join(output_dir, "workspace_eval.jsonl"), workspace_eval)
 
     def digest(path):
         with open(path, "rb") as handle:
@@ -226,10 +232,10 @@ def main() -> int:
         "prepared": {"train": len(train), "dev": len(dev), "excluded_conflicts": conflicts},
         "eval_only": [os.path.relpath(path, ROOT) for path in (NOVEL_PATH, NATIVE_EVAL_PATH, SHUFFLE_EVAL_PATH, VOLUME_EVAL_PATH, WORKSPACE_EVAL_PATH) if os.path.exists(path)],
     }
-    with open(os.path.join(OUT_DIR, "dataset_manifest.json"), "w", encoding="utf-8") as handle:
+    with open(os.path.join(output_dir, "dataset_manifest.json"), "w", encoding="utf-8") as handle:
         json.dump(manifest, handle, indent=2)
 
-    print(f"wrote {OUT_DIR}: train={len(train)} dev={len(dev)} "
+    print(f"wrote {output_dir}: train={len(train)} dev={len(dev)} "
           f"valid={len(valid)} test={len(test)} novel={len(novel)}")
     return 0
 
