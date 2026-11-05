@@ -3,6 +3,9 @@ import Foundation
 
 extension AppState {
     func refreshSpotifyStatus() async {
+        // Installed-app availability is independent of optional Web API lookup.
+        // Automation permission is checked by the first actual player command.
+        spotifyNativeAvailable = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.spotify.client") != nil
         BackendServiceManager.noteActivity()
         guard await BackendServiceManager.ensureRunningForFeature() else {
             spotifyLinked = false
@@ -16,7 +19,7 @@ extension AppState {
             spotifyLinked = st.clientPresent && st.accessPresent && !st.expired
             spotifyStatusText = !st.clientPresent ? "Keys missing"
                 : st.expired ? "Token expired — reconnect"
-                : "Connected"
+                : !st.accessPresent ? "Library lookup not connected" : "Library lookup connected"
             appendLog("[Spotify] Status: \(spotifyStatusText)")
         } catch {
             spotifyLinked = false

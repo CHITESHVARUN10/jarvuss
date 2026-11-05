@@ -122,7 +122,7 @@ struct NoirConnectionsPage: View {
 
     private func description(for kind: ConnectionKind) -> String {
         switch kind {
-        case .spotify:  return "Your soundtrack, a voice command away."
+        case .spotify:  return "Native playback on this Mac. Optional library lookup."
         case .ollama:   return "Local answers. On your own terms."
         case .postgres: return "A home for your activity and insights."
         }
@@ -131,9 +131,7 @@ struct NoirConnectionsPage: View {
     private func status(for kind: ConnectionKind) -> (text: String, kind: NoirTag.Kind) {
         switch kind {
         case .spotify:
-            if appState.spotifyLinked { return ("Connected", .green) }
-            if appState.spotifyStatusText == "Backend unreachable" { return ("Offline", .neutral) }
-            return ("Set up", .amber)
+            return appState.spotifyNativeAvailable ? ("App installed", .green) : ("Install Spotify", .amber)
         case .ollama:
             return appState.ollamaReachable ? ("Ready", .green) : ("Offline", .amber)
         case .postgres:
@@ -241,11 +239,17 @@ struct ConnectionSheet: View {
 
     private var spotifyBody: some View {
         VStack(alignment: .leading, spacing: 18) {
-            Text("Paste your Spotify Developer keys, Save, then Connect to authorize. The client secret is stored in your macOS Keychain.")
+            Text("Play, pause, next, previous and shuffle control the Spotify app on this Mac without API keys. Install Spotify, sign in there, and allow Jarvis under Privacy & Security → Automation when asked. Named songs, playlists and Liked Songs still use optional Web API lookup; configure that below if needed.")
                 .font(.system(size: 11))
                 .lineSpacing(5)
                 .foregroundStyle(NoirPalette.muted)
                 .fixedSize(horizontal: false, vertical: true)
+
+            Text("Native player: \(appState.spotifyNativeAvailable ? "Spotify installed" : "Install Spotify")")
+                .font(.system(size: 11))
+            Text("Optional library lookup: \(appState.spotifyStatusText)")
+                .font(.system(size: 11))
+                .foregroundStyle(NoirPalette.muted)
 
             SecureField("Client ID", text: $clientID)
                 .noirField()
@@ -345,10 +349,10 @@ struct ConnectionSheet: View {
             case .spotify:
                 Button("Close") { dismiss() }
                     .buttonStyle(NoirButtonStyle(intent: .quiet))
-                Button(busy ? "Saving…" : "Save keys") { saveSpotify() }
+                Button(busy ? "Saving…" : "Save lookup keys") { saveSpotify() }
                     .buttonStyle(NoirButtonStyle())
                     .disabled(busy || clientID.isEmpty || clientSecret.isEmpty)
-                Button("Connect") { connectSpotify() }
+                Button("Connect lookup") { connectSpotify() }
                     .buttonStyle(NoirButtonStyle(intent: .primary))
                     .disabled(busy)
 

@@ -123,7 +123,12 @@ enum DictationPolisher {
     }
 
     static func polish(rulesOutput: TranscriptFormatter.Output,
-                       directive: TranscriptFormatter.ListDirective?) async -> PolishResult {
+                       directive: TranscriptFormatter.ListDirective?, sessionID: String? = nil) async -> PolishResult {
+        func record(fields: [String: String]) {
+            var payload = fields
+            if let sessionID { payload["session_id"] = sessionID }
+            Self.record(fields: payload)
+        }
         let started = Date()
         let words = rulesOutput.outputWords
         let directiveTag = directive?.rawValue ?? "none"
@@ -433,25 +438,6 @@ enum DictationPolisher {
     }
 
     private static func record(fields: [String: String]) {
-        // Same JSONL discipline as IntentRouterLog: the guard thresholds must
-        // be tunable from observed failures, not guesses.
-        DispatchQueue.global(qos: .utility).async {
-            guard JSONSerialization.isValidJSONObject(fields) else { return }
-            guard let data = try? JSONSerialization.data(withJSONObject: fields) else { return }
-
-            guard let dir = FileManager.default
-                .urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
-                .appendingPathComponent("Jarvis/logs") else { return }
-            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-            let url = dir.appendingPathComponent("dictation_polish.jsonl")
-
-            if let handle = try? FileHandle(forWritingTo: url) {
-                _ = try? handle.seekToEnd()
-                try? handle.write(contentsOf: data + [0x0A])
-                try? handle.close()
-            } else {
-                try? data.write(to: url)
-            }
-        }
+        DictationDevLog.append(fields, fileName: "dictation_polish.jsonl")
     }
 }

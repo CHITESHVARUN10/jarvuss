@@ -26,6 +26,24 @@ final class DictationDevLogTests: XCTestCase {
         XCTAssertNotNil(object["ts"] as? String)
     }
 
+    func testConcurrentWritesKeepCompleteTimestampedLines() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        DispatchQueue.concurrentPerform(iterations: 200) { index in
+            DictationDevLog.append(["event": "test", "index": index], fileName: "test.jsonl", directory: directory)
+        }
+        DictationDevLog.flush()
+        let lines = try String(contentsOf: directory.appendingPathComponent("test.jsonl"), encoding: .utf8).split(separator: "\n")
+        XCTAssertEqual(lines.count, 200)
+        var indices = Set<Int>()
+        for line in lines {
+            let row = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(line.utf8)) as? [String: Any])
+            XCTAssertNotNil(row["ts"] as? String)
+            indices.insert(try XCTUnwrap(row["index"] as? Int))
+        }
+        XCTAssertEqual(indices.count, 200)
+    }
+
     func testUnserializablePayloadReturnsNil() {
         XCTAssertNil(DictationDevLog.line(from: ["bad": Date()]))
     }

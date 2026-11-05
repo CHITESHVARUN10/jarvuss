@@ -269,6 +269,9 @@ resident in memory instead of two.
 
 ---
 
+Command-name corrections and local speech log fields are documented in
+[Speech diagnostics](docs/speech-diagnostics.md).
+
 ## Try the dictation formatting (the read-aloud test)
 
 Press **⌘⇧D**, read one line, and pause ~1.5 s before the next. Each line lands

@@ -558,17 +558,17 @@ struct SetupDetailSheet: View {
                 .buttonStyle(NoirButtonStyle(intent: .primary))
 
         case .spotify:
-            Text("Create a Spotify app with the redirect http://127.0.0.1:8000/spotify/callback, then paste your keys in Connections and authorize.")
+            Text("Install Spotify and sign in to control playback natively. API keys are only needed for named-song and library lookup; configure that optional feature in Connections.")
                 .font(.system(size: 11))
                 .lineSpacing(5)
                 .foregroundStyle(NoirPalette.muted)
 
-            statusRow("Spotify", appState.spotifyLinked ? "Connected" : "Not connected",
-                      kind: appState.spotifyLinked ? .green : .neutral)
+            statusRow("Spotify", appState.spotifyNativeAvailable ? "Native app installed" : "Install Spotify",
+                      kind: appState.spotifyNativeAvailable ? .green : .neutral)
 
             HStack(spacing: 8) {
-                Button("Open Spotify dashboard") {
-                    openURL("https://developer.spotify.com/dashboard")
+                Button("Open Spotify") {
+                    openURL("spotify:")
                 }
                 .buttonStyle(NoirButtonStyle())
                 Button("Open Connections") {

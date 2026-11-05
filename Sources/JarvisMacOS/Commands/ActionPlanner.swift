@@ -60,8 +60,12 @@ final class ActionPlanner {
             return [action]
         }
         // 1. Strip wake word and trailing noise before anything else
-        let cleaned = stripWakeWord(stripTrailingNoise(raw))
+        let cleaned = TranscriptSanitizer.normalizeMisheardTargets(in: stripWakeWord(stripTrailingNoise(raw)))
         let lower   = cleaned.lowercased()
+        if let actions = WorkspaceCommandParser.plan(cleaned), case .allowed = SafetyGuard.validate(rawCommand: raw) {
+            logPlanEvent(branch: "workspace", text: cleaned, requestID: requestID, actions: actions)
+            return actions
+        }
 
         NSLog("[Plan] Input cleaned: '%@'", cleaned)
 

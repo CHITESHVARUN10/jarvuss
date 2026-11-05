@@ -110,6 +110,7 @@ final class AppState: ObservableObject {
     // MARK: - Connectors (Spotify)
     /// Presence-only Spotify link state — never holds secrets. Refreshed on
     /// demand from GET /spotify/status.
+    @Published var spotifyNativeAvailable: Bool = false
     @Published var spotifyLinked: Bool = false
     @Published var spotifyExpired: Bool = true
     @Published var spotifyStatusText: String = "Not connected"

@@ -133,6 +133,7 @@ final class DictationController: ObservableObject {
     private var stopRequestedAt: Date?
     private var lastFinalAt: Date?
     private var devTimeline: DevTimeline?
+    private var diagnosticSessionID = UUID().uuidString
 
     /// One dictation's captured diagnostics, as read at transcript-arrival
     /// time; the polish/insert halves are added when the text is final.
@@ -271,6 +272,10 @@ final class DictationController: ObservableObject {
     }
 
     func receiveCaptureError(_ message: String) {
+        if DictationDevLog.isEnabled {
+            DictationDevLog.append(["event": "capture_failed", "session_id": diagnosticSessionID,
+                                    "mode": String(describing: mode), "error": message])
+        }
         shortcutPreparing = false
         captureStarting = false
         stopActivityTimers()
@@ -467,6 +472,7 @@ final class DictationController: ObservableObject {
     }
 
     private func startDictation() {
+        diagnosticSessionID = UUID().uuidString
         CrashDiagnostics.shared.record("capture_requested", fields: ["mode": String(describing: mode), "limit_minutes": String(recordingLimitMinutes)])
         shortcutPreparing = false
         captureStarting = true
@@ -653,6 +659,7 @@ final class DictationController: ObservableObject {
         insertNotice = ""
         insertedAtCursor = false
         copied = false
+        diagnosticSessionID = UUID().uuidString
         originalTranscript = raw
 
         let rulesStart = Date()
@@ -684,6 +691,7 @@ final class DictationController: ObservableObject {
             // nothing to show. Free the core and close so a next press is not
             // blocked by a lingering empty card.
             NSLog("[Jarvis][Dictate] nothing usable captured — card skipped")
+            writeDevLog(finalText: "", polishMs: 0, outcome: "empty_transcript")
             dismissTranscript()
             return
         }
@@ -707,8 +715,9 @@ final class DictationController: ObservableObject {
             // main-thread territory; a background-task polish that jumps
             // straight back to mutating UI crashed (AXIsProcessTrusted*
             // through objc_msgSend on a nil on a bare thread).
+            let sessionID = diagnosticSessionID
             formattingTask.start(operation: {
-                await DictationPolisher.polish(rulesOutput: rules, directive: listDirective)
+                await DictationPolisher.polish(rulesOutput: rules, directive: listDirective, sessionID: sessionID)
             }, completion: { [weak self] result in
                 guard let self, STTRouter.shared.owner == .pill else { return }
                 self.formattingInProgress = false
@@ -782,6 +791,9 @@ final class DictationController: ObservableObject {
         let totalMs = insertLatencyStart.map { Int(Date().timeIntervalSince($0) * 1000) } ?? 0
         DictationDevLog.append([
             "event": "dictation",
+            "session_id": diagnosticSessionID,
+            "inserted": insertedAtCursor,
+            "insert_enabled": insertAtCursorEnabled,
             "raw": timeline.raw,
             "rules": timeline.rulesText,
             "final": finalText,
@@ -816,25 +828,12 @@ final class DictationController: ObservableObject {
     private func logInsertAttempt(ok: Bool, trusted: Bool, canPost: Bool, chars: Int) {
         let fields: [String: String] = [
             "event": ok ? "inserted" : "failed",
+            "session_id": diagnosticSessionID,
             "ax_trusted": trusted ? "1" : "0",
             "cg_can_post": canPost ? "1" : "0",
             "chars": String(chars),
         ]
-        DispatchQueue.global(qos: .utility).async {
-            guard let data = try? JSONSerialization.data(withJSONObject: fields) else { return }
-            guard let dir = FileManager.default
-                .urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
-                .appendingPathComponent("Jarvis/logs") else { return }
-            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-            let url = dir.appendingPathComponent("dictation_insert.jsonl")
-            if let handle = try? FileHandle(forWritingTo: url) {
-                _ = try? handle.seekToEnd()
-                try? handle.write(contentsOf: data + [0x0A])
-                try? handle.close()
-            } else {
-                try? data.write(to: url)
-            }
-        }
+        DictationDevLog.append(fields, fileName: "dictation_insert.jsonl")
     }
 
     /// Copies without flipping the Copy button — on this path the copy is a

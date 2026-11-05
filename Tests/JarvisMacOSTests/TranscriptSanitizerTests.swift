@@ -64,6 +64,25 @@ final class TranscriptSanitizerTests: XCTestCase {
         )
     }
 
+    func testKnownMishearingsOnlyChangeCommandTargets() {
+        let examples = [
+            "open chant GPT": "open ChatGPT",
+            "launch changpt": "launch ChatGPT",
+            "close brief": "close Brave Browser",
+            "open chat gpt in breif": "open ChatGPT in Brave Browser",
+            "open a new tab in beave": "open a new tab in Brave Browser",
+        ]
+        for (raw, expected) in examples {
+            XCTAssertEqual(TranscriptSanitizer.normalizeMisheardTargets(in: raw), expected)
+        }
+        for raw in ["search google for brief", "open my brief project in VS Code",
+                    "open chant gpt project in Finder", "write a brief in the document",
+                    "open \"brief\"", "open get her desktop and close spotify"] {
+            XCTAssertEqual(TranscriptSanitizer.normalizeMisheardTargets(in: raw), raw)
+        }
+        XCTAssertEqual(TranscriptSanitizer.cleanVoiceSegment("um open chant GPT please"), "open ChatGPT")
+    }
+
     func testCleanVoiceSegmentStripsFillers() {
         XCTAssertEqual(
             TranscriptSanitizer.cleanVoiceSegment("um open chrome please"),

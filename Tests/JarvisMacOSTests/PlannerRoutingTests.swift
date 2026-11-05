@@ -37,6 +37,16 @@ final class PlannerRoutingTests: XCTestCase {
         XCTAssertEqual(router.calls, 0)
     }
 
+    func testMisheardNamesRouteWithoutModel() async {
+        let router = CountingIntentRouter()
+        let planner = ActionPlanner(ollamaClient: NoModel(), intentModelRouter: router, intentLog: IntentRouterLog(enabled: false))
+        let site = await planner.plan(from: "open chant GPT in breif")
+        XCTAssertEqual(site, [.openURLInBrowser(url: "https://chatgpt.com", browser: "Brave Browser")])
+        let tabs = await planner.plan(from: "open a new tab in brief")
+        XCTAssertEqual(tabs, [.workspace(WorkspaceCommand(operation: .newTab, app: .brave))])
+        XCTAssertEqual(router.calls, 0)
+    }
+
     func testCompoundCommandStillUsesLearnedRouterAndKeepsAllSteps() async {
         let router = CountingIntentRouter()
         router.answer = [.openApp("Spotify"), .openApp("Safari")]

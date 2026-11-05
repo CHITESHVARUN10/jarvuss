@@ -41,17 +41,31 @@ enum TranscriptSanitizer {
     }
 
     static func normalizeMisheardTargets(in command: String) -> String {
-        let lower = command.lowercased()
-        if lower.hasPrefix("open ") || lower.hasPrefix("close ") {
-            if lower.contains("get her desktop") ||
-                lower.contains("getha desktop") ||
-                lower.contains("get desktop") ||
-                lower.contains("gate desktop") {
-                let verb = lower.hasPrefix("close ") ? "close" : "open"
-                return "\(verb) GitHub Desktop"
+        // Correct only whole app targets and explicit destination slots. Never
+        // fuzzy-match project names, filenames, search queries or dictation prose.
+        let aliases = [
+            (#"(?:chant\s*gpt|changpt|chat\s+gpt)"#, "ChatGPT"),
+            (#"(?:breif|brief|beave)(?:\s+browser)?"#, "Brave Browser"),
+            (#"(?:get her|getha|get|gate) desktop"#, "GitHub Desktop"),
+        ]
+        var result = command
+        for (alias, target) in aliases {
+            let browser = "(?:brave(?: browser)?|brief|breif|beave|google chrome|chrome|safari|firefox|edge|arc)"
+            let patterns = [
+                "(?i)^(open|close|launch|start|quit)\\s+(?:the\\s+)?(?:" + alias + ")([.!?]*|\\s+(?:in|on|using|with)\\s+" + browser + "[.!?]*)$",
+                // Destination only, after an open/window/tab command. An exact
+                // project called Brief remains untouched in the name slot.
+                "(?i)^((?:open|create|make)\\s+.+?\\s+(?:in|on|using|with)\\s+)(?:" + alias + ")([.!?]*)$",
+            ]
+            for (index, pattern) in patterns.enumerated() {
+                guard let regex = try? NSRegularExpression(pattern: pattern),
+                      let match = regex.firstMatch(in: result, range: NSRange(result.startIndex..., in: result)),
+                      let prefix = Range(match.range(at: 1), in: result),
+                      let suffix = Range(match.range(at: 2), in: result) else { continue }
+                result = String(result[prefix]) + (index == 0 ? " " : "") + target + String(result[suffix])
             }
         }
-        return command
+        return result
     }
 
     static func removeTrailingWakeWordFragment(from command: String) -> String {
@@ -155,7 +169,6 @@ enum TranscriptSanitizer {
         cleaned = removeTrailingWakeWordFragment(from: cleaned)
         cleaned = collapseRepeatedWords(cleaned)
         cleaned = collapseRepeatedPhrases(cleaned)
-        cleaned = normalizeMisheardTargets(in: cleaned)
 
         // Strip filler words
         let fillerRegex = "\\b(please|okay|ok|uh|um|you know|like)\\b"
@@ -170,6 +183,10 @@ enum TranscriptSanitizer {
                                    options: [.regularExpression, .caseInsensitive])
             .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
             .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        let normalized = normalizeMisheardTargets(in: cleaned)
+        if normalized != cleaned { onLog?("[Normalize] '\(cleaned)' → '\(normalized)'") }
+        cleaned = normalized
 
         // Enforce 8-word max per command
         let tokens = cleaned.split(separator: " ").map(String.init)

@@ -21,14 +21,16 @@ enum DictationDevLog {
         return UserDefaults.standard.bool(forKey: defaultsKey)
     }
 
-    static func append(_ fields: [String: Any]) {
+    private static let writer = DispatchQueue(label: "ai.jarvis.dictation-log", qos: .utility)
+
+    static func append(_ fields: [String: Any], fileName: String = "dictation_dev.jsonl", directory: URL? = nil) {
         guard let data = line(from: fields) else { return }
-        DispatchQueue.global(qos: .utility).async {
-            guard let dir = FileManager.default
+        writer.async {
+            guard let dir = directory ?? FileManager.default
                 .urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
                 .appendingPathComponent("Jarvis/logs") else { return }
             try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-            let url = dir.appendingPathComponent("dictation_dev.jsonl")
+            let url = dir.appendingPathComponent(fileName)
 
             if let handle = try? FileHandle(forWritingTo: url) {
                 _ = try? handle.seekToEnd()
@@ -36,9 +38,12 @@ enum DictationDevLog {
                 try? handle.close()
             } else {
                 try? data.write(to: url)
+                try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
             }
         }
     }
+
+    static func flush() { writer.sync {} }
 
     /// Pure: one timestamped JSON line, or nil when the payload cannot be
     /// serialized — unit-tested so the format cannot drift silently.
