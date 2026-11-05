@@ -38,6 +38,28 @@ class IncrementalDataTests(unittest.TestCase):
                     self.assertFalse((train | dev) & texts(path), path.name)
             self.assertFalse((output / 'rl_pairs.jsonl').exists())
 
+    def test_regression_shard_is_fresh_balanced_and_reproducible(self):
+        import importlib.util
+        from collections import Counter
+        spec = importlib.util.spec_from_file_location("regression_generator", ROOT / 'training/generate_regression_shard.py')
+        generator = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(generator)
+        rows = [json.loads(s) for s in generator.OUTPUT.read_text().splitlines()]
+        self.assertEqual(generator.generate(), rows)
+        normalize = generator.key
+        texts = {normalize(r['text']) for r in rows}
+        self.assertEqual(len(texts), len(rows))
+        for path in [*ROOT.glob('dataset/*.jsonl'), *ROOT.glob('training/eval_*.jsonl')]:
+            if path == generator.OUTPUT: continue
+            other = {normalize(json.loads(s)['text']) for s in path.read_text().splitlines() if s.strip()}
+            self.assertFalse(texts & other, path.name)
+        counts = Counter(r['regression_family'] for r in rows)
+        for family in ('volume', 'web_arguments', 'creation_arguments', 'install_arguments',
+                       'media_arguments', 'workspace_retention', 'shuffle_retention', 'native_retention'):
+            self.assertGreaterEqual(counts[family], 15, family)
+        self.assertGreater(sum(v for k, v in counts.items() if not k.endswith('_retention')),
+                           sum(v for k, v in counts.items() if k.endswith('_retention')))
+
     def test_rejects_evaluation_file_as_training_shard(self):
         with tempfile.TemporaryDirectory() as tmp:
             result = subprocess.run([sys.executable, str(ROOT / 'training/prepare_data.py'),

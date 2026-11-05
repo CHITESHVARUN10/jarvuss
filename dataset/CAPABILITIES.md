@@ -249,3 +249,12 @@ rewrite a query. Result actions require an existing results session.
   About exposes version, diagnostics and the Rust pipeline option.
 - Crash diagnostics are recorded locally without needing to press Report in
   the macOS crash dialog. No diagnostic upload is required to collect them.
+
+## Regression-repair shard 073
+
+[Shard 073](SHARD-073.md) adds 583 fresh examples for general-command argument
+retention, volume and compound commands, with smaller shuffle/workspace/native
+search coverage. It introduces no new executable actions or schema version.
+Existing evaluation rows are excluded, and native retention oracles are checked
+against Swift parsers. Training can select this shard alone using the isolated
+`prepare_data.py --shards` and `post_train.py --data-dir --no-rl-pairs` workflow.

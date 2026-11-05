@@ -1,0 +1,583 @@
+{"text": "google how to repair a bicycle chain please", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to repair a bicycle chain"}}], "regression_family": "web_arguments"}
+{"text": "look up how to repair a bicycle chain on Google for me", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to repair a bicycle chain"}}], "regression_family": "web_arguments"}
+{"text": "please search Google for how to repair a bicycle chain", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to repair a bicycle chain"}}], "regression_family": "web_arguments"}
+{"text": "google public libraries in Jaipur please", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "public libraries in Jaipur"}}], "regression_family": "web_arguments"}
+{"text": "look up public libraries in Jaipur on Google for me", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "public libraries in Jaipur"}}], "regression_family": "web_arguments"}
+{"text": "please search Google for public libraries in Jaipur", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "public libraries in Jaipur"}}], "regression_family": "web_arguments"}
+{"text": "google why autumn leaves change color please", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "why autumn leaves change color"}}], "regression_family": "web_arguments"}
+{"text": "look up why autumn leaves change color on Google for me", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "why autumn leaves change color"}}], "regression_family": "web_arguments"}
+{"text": "please search Google for why autumn leaves change color", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "why autumn leaves change color"}}], "regression_family": "web_arguments"}
+{"text": "google beginner pottery tutorials please", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "beginner pottery tutorials"}}], "regression_family": "web_arguments"}
+{"text": "look up beginner pottery tutorials on Google for me", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "beginner pottery tutorials"}}], "regression_family": "web_arguments"}
+{"text": "please search Google for beginner pottery tutorials", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "beginner pottery tutorials"}}], "regression_family": "web_arguments"}
+{"text": "google overnight trains to Mysore please", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "overnight trains to Mysore"}}], "regression_family": "web_arguments"}
+{"text": "look up overnight trains to Mysore on Google for me", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "overnight trains to Mysore"}}], "regression_family": "web_arguments"}
+{"text": "please search Google for overnight trains to Mysore", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "overnight trains to Mysore"}}], "regression_family": "web_arguments"}
+{"text": "google how to bake sourdough rolls please", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to bake sourdough rolls"}}], "regression_family": "web_arguments"}
+{"text": "look up how to bake sourdough rolls on Google for me", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to bake sourdough rolls"}}], "regression_family": "web_arguments"}
+{"text": "please search Google for how to bake sourdough rolls", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to bake sourdough rolls"}}], "regression_family": "web_arguments"}
+{"text": "google rainwater collection methods please", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "rainwater collection methods"}}], "regression_family": "web_arguments"}
+{"text": "look up rainwater collection methods on Google for me", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "rainwater collection methods"}}], "regression_family": "web_arguments"}
+{"text": "please search Google for rainwater collection methods", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "rainwater collection methods"}}], "regression_family": "web_arguments"}
+{"text": "google how to care for a bonsai tree please", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to care for a bonsai tree"}}], "regression_family": "web_arguments"}
+{"text": "look up how to care for a bonsai tree on Google for me", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to care for a bonsai tree"}}], "regression_family": "web_arguments"}
+{"text": "please search Google for how to care for a bonsai tree", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to care for a bonsai tree"}}], "regression_family": "web_arguments"}
+{"text": "google quiet instrumental guitar music please", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "quiet instrumental guitar music"}}], "regression_family": "web_arguments"}
+{"text": "look up quiet instrumental guitar music on Google for me", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "quiet instrumental guitar music"}}], "regression_family": "web_arguments"}
+{"text": "please search Google for quiet instrumental guitar music", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "quiet instrumental guitar music"}}], "regression_family": "web_arguments"}
+{"text": "google basic astronomy for children please", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "basic astronomy for children"}}], "regression_family": "web_arguments"}
+{"text": "look up basic astronomy for children on Google for me", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "basic astronomy for children"}}], "regression_family": "web_arguments"}
+{"text": "please search Google for basic astronomy for children", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "basic astronomy for children"}}], "regression_family": "web_arguments"}
+{"text": "search youtube for how to repair a bicycle chain please", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "how to repair a bicycle chain"}}], "regression_family": "web_arguments"}
+{"text": "look up how to repair a bicycle chain on YouTube for me", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "how to repair a bicycle chain"}}], "regression_family": "web_arguments"}
+{"text": "please search YouTube for how to repair a bicycle chain", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "how to repair a bicycle chain"}}], "regression_family": "web_arguments"}
+{"text": "search youtube for public libraries in Jaipur please", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "public libraries in Jaipur"}}], "regression_family": "web_arguments"}
+{"text": "look up public libraries in Jaipur on YouTube for me", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "public libraries in Jaipur"}}], "regression_family": "web_arguments"}
+{"text": "please search YouTube for public libraries in Jaipur", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "public libraries in Jaipur"}}], "regression_family": "web_arguments"}
+{"text": "search youtube for why autumn leaves change color please", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "why autumn leaves change color"}}], "regression_family": "web_arguments"}
+{"text": "look up why autumn leaves change color on YouTube for me", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "why autumn leaves change color"}}], "regression_family": "web_arguments"}
+{"text": "please search YouTube for why autumn leaves change color", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "why autumn leaves change color"}}], "regression_family": "web_arguments"}
+{"text": "search youtube for beginner pottery tutorials please", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "beginner pottery tutorials"}}], "regression_family": "web_arguments"}
+{"text": "look up beginner pottery tutorials on YouTube for me", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "beginner pottery tutorials"}}], "regression_family": "web_arguments"}
+{"text": "please search YouTube for beginner pottery tutorials", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "beginner pottery tutorials"}}], "regression_family": "web_arguments"}
+{"text": "search youtube for overnight trains to Mysore please", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "overnight trains to Mysore"}}], "regression_family": "web_arguments"}
+{"text": "look up overnight trains to Mysore on YouTube for me", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "overnight trains to Mysore"}}], "regression_family": "web_arguments"}
+{"text": "please search YouTube for overnight trains to Mysore", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "overnight trains to Mysore"}}], "regression_family": "web_arguments"}
+{"text": "search youtube for how to bake sourdough rolls please", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "how to bake sourdough rolls"}}], "regression_family": "web_arguments"}
+{"text": "look up how to bake sourdough rolls on YouTube for me", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "how to bake sourdough rolls"}}], "regression_family": "web_arguments"}
+{"text": "please search YouTube for how to bake sourdough rolls", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "how to bake sourdough rolls"}}], "regression_family": "web_arguments"}
+{"text": "search youtube for rainwater collection methods please", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "rainwater collection methods"}}], "regression_family": "web_arguments"}
+{"text": "look up rainwater collection methods on YouTube for me", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "rainwater collection methods"}}], "regression_family": "web_arguments"}
+{"text": "please search YouTube for rainwater collection methods", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "rainwater collection methods"}}], "regression_family": "web_arguments"}
+{"text": "search youtube for how to care for a bonsai tree please", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "how to care for a bonsai tree"}}], "regression_family": "web_arguments"}
+{"text": "look up how to care for a bonsai tree on YouTube for me", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "how to care for a bonsai tree"}}], "regression_family": "web_arguments"}
+{"text": "please search YouTube for how to care for a bonsai tree", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "how to care for a bonsai tree"}}], "regression_family": "web_arguments"}
+{"text": "search youtube for quiet instrumental guitar music please", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "quiet instrumental guitar music"}}], "regression_family": "web_arguments"}
+{"text": "look up quiet instrumental guitar music on YouTube for me", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "quiet instrumental guitar music"}}], "regression_family": "web_arguments"}
+{"text": "please search YouTube for quiet instrumental guitar music", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "quiet instrumental guitar music"}}], "regression_family": "web_arguments"}
+{"text": "search youtube for basic astronomy for children please", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "basic astronomy for children"}}], "regression_family": "web_arguments"}
+{"text": "look up basic astronomy for children on YouTube for me", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "basic astronomy for children"}}], "regression_family": "web_arguments"}
+{"text": "please search YouTube for basic astronomy for children", "intents": [{"name": "web.search", "args": {"engine": "YouTube", "query": "basic astronomy for children"}}], "regression_family": "web_arguments"}
+{"text": "search reddit for how to repair a bicycle chain please", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "how to repair a bicycle chain"}}], "regression_family": "web_arguments"}
+{"text": "look up how to repair a bicycle chain on Reddit for me", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "how to repair a bicycle chain"}}], "regression_family": "web_arguments"}
+{"text": "please search Reddit for how to repair a bicycle chain", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "how to repair a bicycle chain"}}], "regression_family": "web_arguments"}
+{"text": "search reddit for public libraries in Jaipur please", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "public libraries in Jaipur"}}], "regression_family": "web_arguments"}
+{"text": "look up public libraries in Jaipur on Reddit for me", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "public libraries in Jaipur"}}], "regression_family": "web_arguments"}
+{"text": "please search Reddit for public libraries in Jaipur", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "public libraries in Jaipur"}}], "regression_family": "web_arguments"}
+{"text": "search reddit for why autumn leaves change color please", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "why autumn leaves change color"}}], "regression_family": "web_arguments"}
+{"text": "look up why autumn leaves change color on Reddit for me", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "why autumn leaves change color"}}], "regression_family": "web_arguments"}
+{"text": "please search Reddit for why autumn leaves change color", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "why autumn leaves change color"}}], "regression_family": "web_arguments"}
+{"text": "search reddit for beginner pottery tutorials please", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "beginner pottery tutorials"}}], "regression_family": "web_arguments"}
+{"text": "look up beginner pottery tutorials on Reddit for me", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "beginner pottery tutorials"}}], "regression_family": "web_arguments"}
+{"text": "please search Reddit for beginner pottery tutorials", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "beginner pottery tutorials"}}], "regression_family": "web_arguments"}
+{"text": "search reddit for overnight trains to Mysore please", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "overnight trains to Mysore"}}], "regression_family": "web_arguments"}
+{"text": "look up overnight trains to Mysore on Reddit for me", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "overnight trains to Mysore"}}], "regression_family": "web_arguments"}
+{"text": "please search Reddit for overnight trains to Mysore", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "overnight trains to Mysore"}}], "regression_family": "web_arguments"}
+{"text": "search reddit for how to bake sourdough rolls please", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "how to bake sourdough rolls"}}], "regression_family": "web_arguments"}
+{"text": "look up how to bake sourdough rolls on Reddit for me", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "how to bake sourdough rolls"}}], "regression_family": "web_arguments"}
+{"text": "please search Reddit for how to bake sourdough rolls", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "how to bake sourdough rolls"}}], "regression_family": "web_arguments"}
+{"text": "search reddit for rainwater collection methods please", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "rainwater collection methods"}}], "regression_family": "web_arguments"}
+{"text": "look up rainwater collection methods on Reddit for me", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "rainwater collection methods"}}], "regression_family": "web_arguments"}
+{"text": "please search Reddit for rainwater collection methods", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "rainwater collection methods"}}], "regression_family": "web_arguments"}
+{"text": "search reddit for how to care for a bonsai tree please", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "how to care for a bonsai tree"}}], "regression_family": "web_arguments"}
+{"text": "look up how to care for a bonsai tree on Reddit for me", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "how to care for a bonsai tree"}}], "regression_family": "web_arguments"}
+{"text": "please search Reddit for how to care for a bonsai tree", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "how to care for a bonsai tree"}}], "regression_family": "web_arguments"}
+{"text": "search reddit for quiet instrumental guitar music please", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "quiet instrumental guitar music"}}], "regression_family": "web_arguments"}
+{"text": "look up quiet instrumental guitar music on Reddit for me", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "quiet instrumental guitar music"}}], "regression_family": "web_arguments"}
+{"text": "please search Reddit for quiet instrumental guitar music", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "quiet instrumental guitar music"}}], "regression_family": "web_arguments"}
+{"text": "search reddit for basic astronomy for children please", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "basic astronomy for children"}}], "regression_family": "web_arguments"}
+{"text": "look up basic astronomy for children on Reddit for me", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "basic astronomy for children"}}], "regression_family": "web_arguments"}
+{"text": "please search Reddit for basic astronomy for children", "intents": [{"name": "web.search", "args": {"engine": "Reddit", "query": "basic astronomy for children"}}], "regression_family": "web_arguments"}
+{"text": "search bing for how to repair a bicycle chain please", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "how to repair a bicycle chain"}}], "regression_family": "web_arguments"}
+{"text": "look up how to repair a bicycle chain on Bing for me", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "how to repair a bicycle chain"}}], "regression_family": "web_arguments"}
+{"text": "please search Bing for how to repair a bicycle chain", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "how to repair a bicycle chain"}}], "regression_family": "web_arguments"}
+{"text": "search bing for public libraries in Jaipur please", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "public libraries in Jaipur"}}], "regression_family": "web_arguments"}
+{"text": "look up public libraries in Jaipur on Bing for me", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "public libraries in Jaipur"}}], "regression_family": "web_arguments"}
+{"text": "please search Bing for public libraries in Jaipur", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "public libraries in Jaipur"}}], "regression_family": "web_arguments"}
+{"text": "search bing for why autumn leaves change color please", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "why autumn leaves change color"}}], "regression_family": "web_arguments"}
+{"text": "look up why autumn leaves change color on Bing for me", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "why autumn leaves change color"}}], "regression_family": "web_arguments"}
+{"text": "please search Bing for why autumn leaves change color", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "why autumn leaves change color"}}], "regression_family": "web_arguments"}
+{"text": "search bing for beginner pottery tutorials please", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "beginner pottery tutorials"}}], "regression_family": "web_arguments"}
+{"text": "look up beginner pottery tutorials on Bing for me", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "beginner pottery tutorials"}}], "regression_family": "web_arguments"}
+{"text": "please search Bing for beginner pottery tutorials", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "beginner pottery tutorials"}}], "regression_family": "web_arguments"}
+{"text": "search bing for overnight trains to Mysore please", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "overnight trains to Mysore"}}], "regression_family": "web_arguments"}
+{"text": "look up overnight trains to Mysore on Bing for me", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "overnight trains to Mysore"}}], "regression_family": "web_arguments"}
+{"text": "please search Bing for overnight trains to Mysore", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "overnight trains to Mysore"}}], "regression_family": "web_arguments"}
+{"text": "search bing for how to bake sourdough rolls please", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "how to bake sourdough rolls"}}], "regression_family": "web_arguments"}
+{"text": "look up how to bake sourdough rolls on Bing for me", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "how to bake sourdough rolls"}}], "regression_family": "web_arguments"}
+{"text": "please search Bing for how to bake sourdough rolls", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "how to bake sourdough rolls"}}], "regression_family": "web_arguments"}
+{"text": "search bing for rainwater collection methods please", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "rainwater collection methods"}}], "regression_family": "web_arguments"}
+{"text": "look up rainwater collection methods on Bing for me", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "rainwater collection methods"}}], "regression_family": "web_arguments"}
+{"text": "please search Bing for rainwater collection methods", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "rainwater collection methods"}}], "regression_family": "web_arguments"}
+{"text": "search bing for how to care for a bonsai tree please", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "how to care for a bonsai tree"}}], "regression_family": "web_arguments"}
+{"text": "look up how to care for a bonsai tree on Bing for me", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "how to care for a bonsai tree"}}], "regression_family": "web_arguments"}
+{"text": "please search Bing for how to care for a bonsai tree", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "how to care for a bonsai tree"}}], "regression_family": "web_arguments"}
+{"text": "search bing for quiet instrumental guitar music please", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "quiet instrumental guitar music"}}], "regression_family": "web_arguments"}
+{"text": "look up quiet instrumental guitar music on Bing for me", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "quiet instrumental guitar music"}}], "regression_family": "web_arguments"}
+{"text": "please search Bing for quiet instrumental guitar music", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "quiet instrumental guitar music"}}], "regression_family": "web_arguments"}
+{"text": "search bing for basic astronomy for children please", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "basic astronomy for children"}}], "regression_family": "web_arguments"}
+{"text": "look up basic astronomy for children on Bing for me", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "basic astronomy for children"}}], "regression_family": "web_arguments"}
+{"text": "please search Bing for basic astronomy for children", "intents": [{"name": "web.search", "args": {"engine": "Bing", "query": "basic astronomy for children"}}], "regression_family": "web_arguments"}
+{"text": "open Google and find how to repair a bicycle chain", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to repair a bicycle chain"}}], "regression_family": "web_arguments"}
+{"text": "search how to repair a bicycle chain in Brave Browser please", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to repair a bicycle chain"}}], "regression_family": "web_arguments"}
+{"text": "open Google and find public libraries in Jaipur", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "public libraries in Jaipur"}}], "regression_family": "web_arguments"}
+{"text": "search public libraries in Jaipur in Brave Browser please", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "public libraries in Jaipur"}}], "regression_family": "web_arguments"}
+{"text": "open Google and find why autumn leaves change color", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "why autumn leaves change color"}}], "regression_family": "web_arguments"}
+{"text": "search why autumn leaves change color in Brave Browser please", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "why autumn leaves change color"}}], "regression_family": "web_arguments"}
+{"text": "open Google and find beginner pottery tutorials", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "beginner pottery tutorials"}}], "regression_family": "web_arguments"}
+{"text": "search beginner pottery tutorials in Brave Browser please", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "beginner pottery tutorials"}}], "regression_family": "web_arguments"}
+{"text": "open Google and find overnight trains to Mysore", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "overnight trains to Mysore"}}], "regression_family": "web_arguments"}
+{"text": "search overnight trains to Mysore in Brave Browser please", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "overnight trains to Mysore"}}], "regression_family": "web_arguments"}
+{"text": "open Google and find how to bake sourdough rolls", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to bake sourdough rolls"}}], "regression_family": "web_arguments"}
+{"text": "search how to bake sourdough rolls in Brave Browser please", "intents": [{"name": "web.search", "args": {"engine": "Google", "query": "how to bake sourdough rolls"}}], "regression_family": "web_arguments"}
+{"text": "please show me my downloads folder", "intents": [{"name": "folder.open", "args": {"name": "downloads"}}], "regression_family": "folder_arguments"}
+{"text": "open up the downloads directory for me", "intents": [{"name": "folder.open", "args": {"name": "downloads"}}], "regression_family": "folder_arguments"}
+{"text": "take me to downloads please", "intents": [{"name": "folder.open", "args": {"name": "downloads"}}], "regression_family": "folder_arguments"}
+{"text": "please open the newest file from downloads", "intents": [{"name": "file.open_latest", "args": {"folder": "downloads"}}], "regression_family": "latest_file_arguments"}
+{"text": "get the most recently saved file in downloads", "intents": [{"name": "file.open_latest", "args": {"folder": "downloads"}}], "regression_family": "latest_file_arguments"}
+{"text": "open my latest file from the downloads folder", "intents": [{"name": "file.open_latest", "args": {"folder": "downloads"}}], "regression_family": "latest_file_arguments"}
+{"text": "please show me my documents folder", "intents": [{"name": "folder.open", "args": {"name": "documents"}}], "regression_family": "folder_arguments"}
+{"text": "open up the documents directory for me", "intents": [{"name": "folder.open", "args": {"name": "documents"}}], "regression_family": "folder_arguments"}
+{"text": "take me to documents please", "intents": [{"name": "folder.open", "args": {"name": "documents"}}], "regression_family": "folder_arguments"}
+{"text": "please open the newest file from documents", "intents": [{"name": "file.open_latest", "args": {"folder": "documents"}}], "regression_family": "latest_file_arguments"}
+{"text": "get the most recently saved file in documents", "intents": [{"name": "file.open_latest", "args": {"folder": "documents"}}], "regression_family": "latest_file_arguments"}
+{"text": "open my latest file from the documents folder", "intents": [{"name": "file.open_latest", "args": {"folder": "documents"}}], "regression_family": "latest_file_arguments"}
+{"text": "please show me my desktop folder", "intents": [{"name": "folder.open", "args": {"name": "desktop"}}], "regression_family": "folder_arguments"}
+{"text": "open up the desktop directory for me", "intents": [{"name": "folder.open", "args": {"name": "desktop"}}], "regression_family": "folder_arguments"}
+{"text": "take me to desktop please", "intents": [{"name": "folder.open", "args": {"name": "desktop"}}], "regression_family": "folder_arguments"}
+{"text": "please open the newest file from desktop", "intents": [{"name": "file.open_latest", "args": {"folder": "desktop"}}], "regression_family": "latest_file_arguments"}
+{"text": "get the most recently saved file in desktop", "intents": [{"name": "file.open_latest", "args": {"folder": "desktop"}}], "regression_family": "latest_file_arguments"}
+{"text": "open my latest file from the desktop folder", "intents": [{"name": "file.open_latest", "args": {"folder": "desktop"}}], "regression_family": "latest_file_arguments"}
+{"text": "please show me my pictures folder", "intents": [{"name": "folder.open", "args": {"name": "pictures"}}], "regression_family": "folder_arguments"}
+{"text": "open up the pictures directory for me", "intents": [{"name": "folder.open", "args": {"name": "pictures"}}], "regression_family": "folder_arguments"}
+{"text": "take me to pictures please", "intents": [{"name": "folder.open", "args": {"name": "pictures"}}], "regression_family": "folder_arguments"}
+{"text": "please open the newest file from pictures", "intents": [{"name": "file.open_latest", "args": {"folder": "pictures"}}], "regression_family": "latest_file_arguments"}
+{"text": "get the most recently saved file in pictures", "intents": [{"name": "file.open_latest", "args": {"folder": "pictures"}}], "regression_family": "latest_file_arguments"}
+{"text": "open my latest file from the pictures folder", "intents": [{"name": "file.open_latest", "args": {"folder": "pictures"}}], "regression_family": "latest_file_arguments"}
+{"text": "please show me my movies folder", "intents": [{"name": "folder.open", "args": {"name": "movies"}}], "regression_family": "folder_arguments"}
+{"text": "open up the movies directory for me", "intents": [{"name": "folder.open", "args": {"name": "movies"}}], "regression_family": "folder_arguments"}
+{"text": "take me to movies please", "intents": [{"name": "folder.open", "args": {"name": "movies"}}], "regression_family": "folder_arguments"}
+{"text": "please open the newest file from movies", "intents": [{"name": "file.open_latest", "args": {"folder": "movies"}}], "regression_family": "latest_file_arguments"}
+{"text": "get the most recently saved file in movies", "intents": [{"name": "file.open_latest", "args": {"folder": "movies"}}], "regression_family": "latest_file_arguments"}
+{"text": "open my latest file from the movies folder", "intents": [{"name": "file.open_latest", "args": {"folder": "movies"}}], "regression_family": "latest_file_arguments"}
+{"text": "please show me my music folder", "intents": [{"name": "folder.open", "args": {"name": "music"}}], "regression_family": "folder_arguments"}
+{"text": "open up the music directory for me", "intents": [{"name": "folder.open", "args": {"name": "music"}}], "regression_family": "folder_arguments"}
+{"text": "take me to music please", "intents": [{"name": "folder.open", "args": {"name": "music"}}], "regression_family": "folder_arguments"}
+{"text": "please open the newest file from music", "intents": [{"name": "file.open_latest", "args": {"folder": "music"}}], "regression_family": "latest_file_arguments"}
+{"text": "get the most recently saved file in music", "intents": [{"name": "file.open_latest", "args": {"folder": "music"}}], "regression_family": "latest_file_arguments"}
+{"text": "open my latest file from the music folder", "intents": [{"name": "file.open_latest", "args": {"folder": "music"}}], "regression_family": "latest_file_arguments"}
+{"text": "please make a file named reading tracker", "intents": [{"name": "file.create", "args": {"name": "reading tracker"}}], "regression_family": "creation_arguments"}
+{"text": "create a new file called reading tracker for me", "intents": [{"name": "file.create", "args": {"name": "reading tracker"}}], "regression_family": "creation_arguments"}
+{"text": "please make a folder named reading tracker", "intents": [{"name": "folder.create", "args": {"name": "reading tracker"}}], "regression_family": "creation_arguments"}
+{"text": "create a new folder called reading tracker for me", "intents": [{"name": "folder.create", "args": {"name": "reading tracker"}}], "regression_family": "creation_arguments"}
+{"text": "please make a file named ceramics notes", "intents": [{"name": "file.create", "args": {"name": "ceramics notes"}}], "regression_family": "creation_arguments"}
+{"text": "create a new file called ceramics notes for me", "intents": [{"name": "file.create", "args": {"name": "ceramics notes"}}], "regression_family": "creation_arguments"}
+{"text": "please make a folder named ceramics notes", "intents": [{"name": "folder.create", "args": {"name": "ceramics notes"}}], "regression_family": "creation_arguments"}
+{"text": "create a new folder called ceramics notes for me", "intents": [{"name": "folder.create", "args": {"name": "ceramics notes"}}], "regression_family": "creation_arguments"}
+{"text": "please make a file named winter itinerary", "intents": [{"name": "file.create", "args": {"name": "winter itinerary"}}], "regression_family": "creation_arguments"}
+{"text": "create a new file called winter itinerary for me", "intents": [{"name": "file.create", "args": {"name": "winter itinerary"}}], "regression_family": "creation_arguments"}
+{"text": "please make a folder named winter itinerary", "intents": [{"name": "folder.create", "args": {"name": "winter itinerary"}}], "regression_family": "creation_arguments"}
+{"text": "create a new folder called winter itinerary for me", "intents": [{"name": "folder.create", "args": {"name": "winter itinerary"}}], "regression_family": "creation_arguments"}
+{"text": "please make a file named garden calendar", "intents": [{"name": "file.create", "args": {"name": "garden calendar"}}], "regression_family": "creation_arguments"}
+{"text": "create a new file called garden calendar for me", "intents": [{"name": "file.create", "args": {"name": "garden calendar"}}], "regression_family": "creation_arguments"}
+{"text": "please make a folder named garden calendar", "intents": [{"name": "folder.create", "args": {"name": "garden calendar"}}], "regression_family": "creation_arguments"}
+{"text": "create a new folder called garden calendar for me", "intents": [{"name": "folder.create", "args": {"name": "garden calendar"}}], "regression_family": "creation_arguments"}
+{"text": "please make a file named camera checklist", "intents": [{"name": "file.create", "args": {"name": "camera checklist"}}], "regression_family": "creation_arguments"}
+{"text": "create a new file called camera checklist for me", "intents": [{"name": "file.create", "args": {"name": "camera checklist"}}], "regression_family": "creation_arguments"}
+{"text": "please make a folder named camera checklist", "intents": [{"name": "folder.create", "args": {"name": "camera checklist"}}], "regression_family": "creation_arguments"}
+{"text": "create a new folder called camera checklist for me", "intents": [{"name": "folder.create", "args": {"name": "camera checklist"}}], "regression_family": "creation_arguments"}
+{"text": "please make a file named release sketch", "intents": [{"name": "file.create", "args": {"name": "release sketch"}}], "regression_family": "creation_arguments"}
+{"text": "create a new file called release sketch for me", "intents": [{"name": "file.create", "args": {"name": "release sketch"}}], "regression_family": "creation_arguments"}
+{"text": "please make a folder named release sketch", "intents": [{"name": "folder.create", "args": {"name": "release sketch"}}], "regression_family": "creation_arguments"}
+{"text": "create a new folder called release sketch for me", "intents": [{"name": "folder.create", "args": {"name": "release sketch"}}], "regression_family": "creation_arguments"}
+{"text": "please make a file named weekly menu", "intents": [{"name": "file.create", "args": {"name": "weekly menu"}}], "regression_family": "creation_arguments"}
+{"text": "create a new file called weekly menu for me", "intents": [{"name": "file.create", "args": {"name": "weekly menu"}}], "regression_family": "creation_arguments"}
+{"text": "please make a folder named weekly menu", "intents": [{"name": "folder.create", "args": {"name": "weekly menu"}}], "regression_family": "creation_arguments"}
+{"text": "create a new folder called weekly menu for me", "intents": [{"name": "folder.create", "args": {"name": "weekly menu"}}], "regression_family": "creation_arguments"}
+{"text": "please make a file named study outline", "intents": [{"name": "file.create", "args": {"name": "study outline"}}], "regression_family": "creation_arguments"}
+{"text": "create a new file called study outline for me", "intents": [{"name": "file.create", "args": {"name": "study outline"}}], "regression_family": "creation_arguments"}
+{"text": "please make a folder named study outline", "intents": [{"name": "folder.create", "args": {"name": "study outline"}}], "regression_family": "creation_arguments"}
+{"text": "create a new folder called study outline for me", "intents": [{"name": "folder.create", "args": {"name": "study outline"}}], "regression_family": "creation_arguments"}
+{"text": "please make a file named workshop agenda", "intents": [{"name": "file.create", "args": {"name": "workshop agenda"}}], "regression_family": "creation_arguments"}
+{"text": "create a new file called workshop agenda for me", "intents": [{"name": "file.create", "args": {"name": "workshop agenda"}}], "regression_family": "creation_arguments"}
+{"text": "please make a folder named workshop agenda", "intents": [{"name": "folder.create", "args": {"name": "workshop agenda"}}], "regression_family": "creation_arguments"}
+{"text": "create a new folder called workshop agenda for me", "intents": [{"name": "folder.create", "args": {"name": "workshop agenda"}}], "regression_family": "creation_arguments"}
+{"text": "please make a file named repair journal", "intents": [{"name": "file.create", "args": {"name": "repair journal"}}], "regression_family": "creation_arguments"}
+{"text": "create a new file called repair journal for me", "intents": [{"name": "file.create", "args": {"name": "repair journal"}}], "regression_family": "creation_arguments"}
+{"text": "please make a folder named repair journal", "intents": [{"name": "folder.create", "args": {"name": "repair journal"}}], "regression_family": "creation_arguments"}
+{"text": "create a new folder called repair journal for me", "intents": [{"name": "folder.create", "args": {"name": "repair journal"}}], "regression_family": "creation_arguments"}
+{"text": "please make a file named training diary", "intents": [{"name": "file.create", "args": {"name": "training diary"}}], "regression_family": "creation_arguments"}
+{"text": "create a new file called training diary for me", "intents": [{"name": "file.create", "args": {"name": "training diary"}}], "regression_family": "creation_arguments"}
+{"text": "please make a folder named training diary", "intents": [{"name": "folder.create", "args": {"name": "training diary"}}], "regression_family": "creation_arguments"}
+{"text": "create a new folder called training diary for me", "intents": [{"name": "folder.create", "args": {"name": "training diary"}}], "regression_family": "creation_arguments"}
+{"text": "please make a file named recipe index", "intents": [{"name": "file.create", "args": {"name": "recipe index"}}], "regression_family": "creation_arguments"}
+{"text": "create a new file called recipe index for me", "intents": [{"name": "file.create", "args": {"name": "recipe index"}}], "regression_family": "creation_arguments"}
+{"text": "please make a folder named recipe index", "intents": [{"name": "folder.create", "args": {"name": "recipe index"}}], "regression_family": "creation_arguments"}
+{"text": "create a new folder called recipe index for me", "intents": [{"name": "folder.create", "args": {"name": "recipe index"}}], "regression_family": "creation_arguments"}
+{"text": "install jq through homebrew please", "intents": [{"name": "install.preview", "args": {"package": "jq", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "please install jq using brew", "intents": [{"name": "install.preview", "args": {"package": "jq", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "preview installing jq with homebrew", "intents": [{"name": "install.preview", "args": {"package": "jq", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "install tree through homebrew please", "intents": [{"name": "install.preview", "args": {"package": "tree", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "please install tree using brew", "intents": [{"name": "install.preview", "args": {"package": "tree", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "preview installing tree with homebrew", "intents": [{"name": "install.preview", "args": {"package": "tree", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "install ripgrep through homebrew please", "intents": [{"name": "install.preview", "args": {"package": "ripgrep", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "please install ripgrep using brew", "intents": [{"name": "install.preview", "args": {"package": "ripgrep", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "preview installing ripgrep with homebrew", "intents": [{"name": "install.preview", "args": {"package": "ripgrep", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "install bat through homebrew please", "intents": [{"name": "install.preview", "args": {"package": "bat", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "please install bat using brew", "intents": [{"name": "install.preview", "args": {"package": "bat", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "preview installing bat with homebrew", "intents": [{"name": "install.preview", "args": {"package": "bat", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "install fzf through homebrew please", "intents": [{"name": "install.preview", "args": {"package": "fzf", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "please install fzf using brew", "intents": [{"name": "install.preview", "args": {"package": "fzf", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "preview installing fzf with homebrew", "intents": [{"name": "install.preview", "args": {"package": "fzf", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "install tmux through homebrew please", "intents": [{"name": "install.preview", "args": {"package": "tmux", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "please install tmux using brew", "intents": [{"name": "install.preview", "args": {"package": "tmux", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "preview installing tmux with homebrew", "intents": [{"name": "install.preview", "args": {"package": "tmux", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "install imagemagick through homebrew please", "intents": [{"name": "install.preview", "args": {"package": "imagemagick", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "please install imagemagick using brew", "intents": [{"name": "install.preview", "args": {"package": "imagemagick", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "preview installing imagemagick with homebrew", "intents": [{"name": "install.preview", "args": {"package": "imagemagick", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "install pandoc through homebrew please", "intents": [{"name": "install.preview", "args": {"package": "pandoc", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "please install pandoc using brew", "intents": [{"name": "install.preview", "args": {"package": "pandoc", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "preview installing pandoc with homebrew", "intents": [{"name": "install.preview", "args": {"package": "pandoc", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "install sox through homebrew please", "intents": [{"name": "install.preview", "args": {"package": "sox", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "please install sox using brew", "intents": [{"name": "install.preview", "args": {"package": "sox", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "preview installing sox with homebrew", "intents": [{"name": "install.preview", "args": {"package": "sox", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "install fd through homebrew please", "intents": [{"name": "install.preview", "args": {"package": "fd", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "please install fd using brew", "intents": [{"name": "install.preview", "args": {"package": "fd", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "preview installing fd with homebrew", "intents": [{"name": "install.preview", "args": {"package": "fd", "source": "homebrew"}}], "regression_family": "install_arguments"}
+{"text": "I feel like hearing Yellow Submarine", "intents": [{"name": "media.play_song", "args": {"title": "Yellow Submarine"}}], "regression_family": "media_arguments"}
+{"text": "put on the song Yellow Submarine for me", "intents": [{"name": "media.play_song", "args": {"title": "Yellow Submarine"}}], "regression_family": "media_arguments"}
+{"text": "please play Yellow Submarine on Spotify", "intents": [{"name": "media.play_song", "args": {"title": "Yellow Submarine"}}], "regression_family": "media_arguments"}
+{"text": "I feel like hearing Take Five", "intents": [{"name": "media.play_song", "args": {"title": "Take Five"}}], "regression_family": "media_arguments"}
+{"text": "put on the song Take Five for me", "intents": [{"name": "media.play_song", "args": {"title": "Take Five"}}], "regression_family": "media_arguments"}
+{"text": "please play Take Five on Spotify", "intents": [{"name": "media.play_song", "args": {"title": "Take Five"}}], "regression_family": "media_arguments"}
+{"text": "I feel like hearing Moon River", "intents": [{"name": "media.play_song", "args": {"title": "Moon River"}}], "regression_family": "media_arguments"}
+{"text": "put on the song Moon River for me", "intents": [{"name": "media.play_song", "args": {"title": "Moon River"}}], "regression_family": "media_arguments"}
+{"text": "please play Moon River on Spotify", "intents": [{"name": "media.play_song", "args": {"title": "Moon River"}}], "regression_family": "media_arguments"}
+{"text": "I feel like hearing Here Comes the Sun", "intents": [{"name": "media.play_song", "args": {"title": "Here Comes the Sun"}}], "regression_family": "media_arguments"}
+{"text": "put on the song Here Comes the Sun for me", "intents": [{"name": "media.play_song", "args": {"title": "Here Comes the Sun"}}], "regression_family": "media_arguments"}
+{"text": "please play Here Comes the Sun on Spotify", "intents": [{"name": "media.play_song", "args": {"title": "Here Comes the Sun"}}], "regression_family": "media_arguments"}
+{"text": "I feel like hearing Blue in Green", "intents": [{"name": "media.play_song", "args": {"title": "Blue in Green"}}], "regression_family": "media_arguments"}
+{"text": "put on the song Blue in Green for me", "intents": [{"name": "media.play_song", "args": {"title": "Blue in Green"}}], "regression_family": "media_arguments"}
+{"text": "please play Blue in Green on Spotify", "intents": [{"name": "media.play_song", "args": {"title": "Blue in Green"}}], "regression_family": "media_arguments"}
+{"text": "I feel like hearing Waterloo Sunset", "intents": [{"name": "media.play_song", "args": {"title": "Waterloo Sunset"}}], "regression_family": "media_arguments"}
+{"text": "put on the song Waterloo Sunset for me", "intents": [{"name": "media.play_song", "args": {"title": "Waterloo Sunset"}}], "regression_family": "media_arguments"}
+{"text": "please play Waterloo Sunset on Spotify", "intents": [{"name": "media.play_song", "args": {"title": "Waterloo Sunset"}}], "regression_family": "media_arguments"}
+{"text": "I feel like hearing Dream a Little Dream", "intents": [{"name": "media.play_song", "args": {"title": "Dream a Little Dream"}}], "regression_family": "media_arguments"}
+{"text": "put on the song Dream a Little Dream for me", "intents": [{"name": "media.play_song", "args": {"title": "Dream a Little Dream"}}], "regression_family": "media_arguments"}
+{"text": "please play Dream a Little Dream on Spotify", "intents": [{"name": "media.play_song", "args": {"title": "Dream a Little Dream"}}], "regression_family": "media_arguments"}
+{"text": "I feel like hearing Golden Slumbers", "intents": [{"name": "media.play_song", "args": {"title": "Golden Slumbers"}}], "regression_family": "media_arguments"}
+{"text": "put on the song Golden Slumbers for me", "intents": [{"name": "media.play_song", "args": {"title": "Golden Slumbers"}}], "regression_family": "media_arguments"}
+{"text": "please play Golden Slumbers on Spotify", "intents": [{"name": "media.play_song", "args": {"title": "Golden Slumbers"}}], "regression_family": "media_arguments"}
+{"text": "I feel like hearing Fields of Gold", "intents": [{"name": "media.play_song", "args": {"title": "Fields of Gold"}}], "regression_family": "media_arguments"}
+{"text": "put on the song Fields of Gold for me", "intents": [{"name": "media.play_song", "args": {"title": "Fields of Gold"}}], "regression_family": "media_arguments"}
+{"text": "please play Fields of Gold on Spotify", "intents": [{"name": "media.play_song", "args": {"title": "Fields of Gold"}}], "regression_family": "media_arguments"}
+{"text": "I feel like hearing Morning Has Broken", "intents": [{"name": "media.play_song", "args": {"title": "Morning Has Broken"}}], "regression_family": "media_arguments"}
+{"text": "put on the song Morning Has Broken for me", "intents": [{"name": "media.play_song", "args": {"title": "Morning Has Broken"}}], "regression_family": "media_arguments"}
+{"text": "please play Morning Has Broken on Spotify", "intents": [{"name": "media.play_song", "args": {"title": "Morning Has Broken"}}], "regression_family": "media_arguments"}
+{"text": "I feel like hearing Across the Universe", "intents": [{"name": "media.play_song", "args": {"title": "Across the Universe"}}], "regression_family": "media_arguments"}
+{"text": "put on the song Across the Universe for me", "intents": [{"name": "media.play_song", "args": {"title": "Across the Universe"}}], "regression_family": "media_arguments"}
+{"text": "please play Across the Universe on Spotify", "intents": [{"name": "media.play_song", "args": {"title": "Across the Universe"}}], "regression_family": "media_arguments"}
+{"text": "I feel like hearing Autumn Leaves", "intents": [{"name": "media.play_song", "args": {"title": "Autumn Leaves"}}], "regression_family": "media_arguments"}
+{"text": "put on the song Autumn Leaves for me", "intents": [{"name": "media.play_song", "args": {"title": "Autumn Leaves"}}], "regression_family": "media_arguments"}
+{"text": "please play Autumn Leaves on Spotify", "intents": [{"name": "media.play_song", "args": {"title": "Autumn Leaves"}}], "regression_family": "media_arguments"}
+{"text": "start the acoustic morning playlist for me", "intents": [{"name": "media.play_playlist", "args": {"name": "acoustic morning"}}], "regression_family": "media_arguments"}
+{"text": "please play my playlist called acoustic morning", "intents": [{"name": "media.play_playlist", "args": {"name": "acoustic morning"}}], "regression_family": "media_arguments"}
+{"text": "put on playlist acoustic morning on Spotify", "intents": [{"name": "media.play_playlist", "args": {"name": "acoustic morning"}}], "regression_family": "media_arguments"}
+{"text": "start the late night piano playlist for me", "intents": [{"name": "media.play_playlist", "args": {"name": "late night piano"}}], "regression_family": "media_arguments"}
+{"text": "please play my playlist called late night piano", "intents": [{"name": "media.play_playlist", "args": {"name": "late night piano"}}], "regression_family": "media_arguments"}
+{"text": "put on playlist late night piano on Spotify", "intents": [{"name": "media.play_playlist", "args": {"name": "late night piano"}}], "regression_family": "media_arguments"}
+{"text": "start the weekend cycling playlist for me", "intents": [{"name": "media.play_playlist", "args": {"name": "weekend cycling"}}], "regression_family": "media_arguments"}
+{"text": "please play my playlist called weekend cycling", "intents": [{"name": "media.play_playlist", "args": {"name": "weekend cycling"}}], "regression_family": "media_arguments"}
+{"text": "put on playlist weekend cycling on Spotify", "intents": [{"name": "media.play_playlist", "args": {"name": "weekend cycling"}}], "regression_family": "media_arguments"}
+{"text": "start the ambient reading playlist for me", "intents": [{"name": "media.play_playlist", "args": {"name": "ambient reading"}}], "regression_family": "media_arguments"}
+{"text": "please play my playlist called ambient reading", "intents": [{"name": "media.play_playlist", "args": {"name": "ambient reading"}}], "regression_family": "media_arguments"}
+{"text": "put on playlist ambient reading on Spotify", "intents": [{"name": "media.play_playlist", "args": {"name": "ambient reading"}}], "regression_family": "media_arguments"}
+{"text": "start the rainy afternoon playlist for me", "intents": [{"name": "media.play_playlist", "args": {"name": "rainy afternoon"}}], "regression_family": "media_arguments"}
+{"text": "please play my playlist called rainy afternoon", "intents": [{"name": "media.play_playlist", "args": {"name": "rainy afternoon"}}], "regression_family": "media_arguments"}
+{"text": "put on playlist rainy afternoon on Spotify", "intents": [{"name": "media.play_playlist", "args": {"name": "rainy afternoon"}}], "regression_family": "media_arguments"}
+{"text": "start the evening jazz playlist for me", "intents": [{"name": "media.play_playlist", "args": {"name": "evening jazz"}}], "regression_family": "media_arguments"}
+{"text": "please play my playlist called evening jazz", "intents": [{"name": "media.play_playlist", "args": {"name": "evening jazz"}}], "regression_family": "media_arguments"}
+{"text": "put on playlist evening jazz on Spotify", "intents": [{"name": "media.play_playlist", "args": {"name": "evening jazz"}}], "regression_family": "media_arguments"}
+{"text": "please replay the preceding track", "intents": [{"name": "media.previous", "args": {}}], "regression_family": "media_transport"}
+{"text": "skip ahead one track please", "intents": [{"name": "media.next", "args": {}}], "regression_family": "media_transport"}
+{"text": "please pause my music now", "intents": [{"name": "media.pause", "args": {}}], "regression_family": "media_transport"}
+{"text": "resume the current track please", "intents": [{"name": "media.play", "args": {}}], "regression_family": "media_transport"}
+{"text": "start my saved songs please", "intents": [{"name": "media.play_liked", "args": {}}], "regression_family": "media_transport"}
+{"text": "could you set speaker volume to seven percent", "intents": [{"name": "volume.set", "args": {"level": 7}}], "regression_family": "volume"}
+{"text": "please put output sound at 7 percent", "intents": [{"name": "volume.set", "args": {"level": 7}}], "regression_family": "volume"}
+{"text": "raise the sound to seven percent please", "intents": [{"name": "volume.set", "args": {"level": 7}}], "regression_family": "volume"}
+{"text": "reduce the sound to 7 percent please", "intents": [{"name": "volume.set", "args": {"level": 7}}], "regression_family": "volume"}
+{"text": "please raise system volume by seven percentage points", "intents": [{"name": "volume.up", "args": {"by": 7}}], "regression_family": "volume"}
+{"text": "lower my output sound by 7 percent please", "intents": [{"name": "volume.down", "args": {"by": 7}}], "regression_family": "volume"}
+{"text": "set display brightness to 7 percent please", "intents": [{"name": "display.brightness_set", "args": {"level": 7}}], "regression_family": "display_arguments"}
+{"text": "please set screen contrast to 7 percent", "intents": [{"name": "display.contrast_set", "args": {"level": 7}}], "regression_family": "display_arguments"}
+{"text": "could you set speaker volume to fourteen percent", "intents": [{"name": "volume.set", "args": {"level": 14}}], "regression_family": "volume"}
+{"text": "please put output sound at 14 percent", "intents": [{"name": "volume.set", "args": {"level": 14}}], "regression_family": "volume"}
+{"text": "raise the sound to fourteen percent please", "intents": [{"name": "volume.set", "args": {"level": 14}}], "regression_family": "volume"}
+{"text": "reduce the sound to 14 percent please", "intents": [{"name": "volume.set", "args": {"level": 14}}], "regression_family": "volume"}
+{"text": "please raise system volume by fourteen percentage points", "intents": [{"name": "volume.up", "args": {"by": 14}}], "regression_family": "volume"}
+{"text": "lower my output sound by 14 percent please", "intents": [{"name": "volume.down", "args": {"by": 14}}], "regression_family": "volume"}
+{"text": "set display brightness to 14 percent please", "intents": [{"name": "display.brightness_set", "args": {"level": 14}}], "regression_family": "display_arguments"}
+{"text": "please set screen contrast to 14 percent", "intents": [{"name": "display.contrast_set", "args": {"level": 14}}], "regression_family": "display_arguments"}
+{"text": "could you set speaker volume to twenty two percent", "intents": [{"name": "volume.set", "args": {"level": 22}}], "regression_family": "volume"}
+{"text": "please put output sound at 22 percent", "intents": [{"name": "volume.set", "args": {"level": 22}}], "regression_family": "volume"}
+{"text": "raise the sound to twenty two percent please", "intents": [{"name": "volume.set", "args": {"level": 22}}], "regression_family": "volume"}
+{"text": "reduce the sound to 22 percent please", "intents": [{"name": "volume.set", "args": {"level": 22}}], "regression_family": "volume"}
+{"text": "please raise system volume by twenty two percentage points", "intents": [{"name": "volume.up", "args": {"by": 22}}], "regression_family": "volume"}
+{"text": "lower my output sound by 22 percent please", "intents": [{"name": "volume.down", "args": {"by": 22}}], "regression_family": "volume"}
+{"text": "set display brightness to 22 percent please", "intents": [{"name": "display.brightness_set", "args": {"level": 22}}], "regression_family": "display_arguments"}
+{"text": "please set screen contrast to 22 percent", "intents": [{"name": "display.contrast_set", "args": {"level": 22}}], "regression_family": "display_arguments"}
+{"text": "could you set speaker volume to twenty nine percent", "intents": [{"name": "volume.set", "args": {"level": 29}}], "regression_family": "volume"}
+{"text": "please put output sound at 29 percent", "intents": [{"name": "volume.set", "args": {"level": 29}}], "regression_family": "volume"}
+{"text": "raise the sound to twenty nine percent please", "intents": [{"name": "volume.set", "args": {"level": 29}}], "regression_family": "volume"}
+{"text": "reduce the sound to 29 percent please", "intents": [{"name": "volume.set", "args": {"level": 29}}], "regression_family": "volume"}
+{"text": "please raise system volume by twenty nine percentage points", "intents": [{"name": "volume.up", "args": {"by": 29}}], "regression_family": "volume"}
+{"text": "lower my output sound by 29 percent please", "intents": [{"name": "volume.down", "args": {"by": 29}}], "regression_family": "volume"}
+{"text": "set display brightness to 29 percent please", "intents": [{"name": "display.brightness_set", "args": {"level": 29}}], "regression_family": "display_arguments"}
+{"text": "please set screen contrast to 29 percent", "intents": [{"name": "display.contrast_set", "args": {"level": 29}}], "regression_family": "display_arguments"}
+{"text": "could you set speaker volume to thirty seven percent", "intents": [{"name": "volume.set", "args": {"level": 37}}], "regression_family": "volume"}
+{"text": "please put output sound at 37 percent", "intents": [{"name": "volume.set", "args": {"level": 37}}], "regression_family": "volume"}
+{"text": "raise the sound to thirty seven percent please", "intents": [{"name": "volume.set", "args": {"level": 37}}], "regression_family": "volume"}
+{"text": "reduce the sound to 37 percent please", "intents": [{"name": "volume.set", "args": {"level": 37}}], "regression_family": "volume"}
+{"text": "please raise system volume by thirty seven percentage points", "intents": [{"name": "volume.up", "args": {"by": 37}}], "regression_family": "volume"}
+{"text": "lower my output sound by 37 percent please", "intents": [{"name": "volume.down", "args": {"by": 37}}], "regression_family": "volume"}
+{"text": "set display brightness to 37 percent please", "intents": [{"name": "display.brightness_set", "args": {"level": 37}}], "regression_family": "display_arguments"}
+{"text": "please set screen contrast to 37 percent", "intents": [{"name": "display.contrast_set", "args": {"level": 37}}], "regression_family": "display_arguments"}
+{"text": "could you set speaker volume to forty six percent", "intents": [{"name": "volume.set", "args": {"level": 46}}], "regression_family": "volume"}
+{"text": "please put output sound at 46 percent", "intents": [{"name": "volume.set", "args": {"level": 46}}], "regression_family": "volume"}
+{"text": "raise the sound to forty six percent please", "intents": [{"name": "volume.set", "args": {"level": 46}}], "regression_family": "volume"}
+{"text": "reduce the sound to 46 percent please", "intents": [{"name": "volume.set", "args": {"level": 46}}], "regression_family": "volume"}
+{"text": "set display brightness to 46 percent please", "intents": [{"name": "display.brightness_set", "args": {"level": 46}}], "regression_family": "display_arguments"}
+{"text": "please set screen contrast to 46 percent", "intents": [{"name": "display.contrast_set", "args": {"level": 46}}], "regression_family": "display_arguments"}
+{"text": "could you set speaker volume to fifty three percent", "intents": [{"name": "volume.set", "args": {"level": 53}}], "regression_family": "volume"}
+{"text": "please put output sound at 53 percent", "intents": [{"name": "volume.set", "args": {"level": 53}}], "regression_family": "volume"}
+{"text": "raise the sound to fifty three percent please", "intents": [{"name": "volume.set", "args": {"level": 53}}], "regression_family": "volume"}
+{"text": "reduce the sound to 53 percent please", "intents": [{"name": "volume.set", "args": {"level": 53}}], "regression_family": "volume"}
+{"text": "set display brightness to 53 percent please", "intents": [{"name": "display.brightness_set", "args": {"level": 53}}], "regression_family": "display_arguments"}
+{"text": "please set screen contrast to 53 percent", "intents": [{"name": "display.contrast_set", "args": {"level": 53}}], "regression_family": "display_arguments"}
+{"text": "could you set speaker volume to sixty one percent", "intents": [{"name": "volume.set", "args": {"level": 61}}], "regression_family": "volume"}
+{"text": "please put output sound at 61 percent", "intents": [{"name": "volume.set", "args": {"level": 61}}], "regression_family": "volume"}
+{"text": "raise the sound to sixty one percent please", "intents": [{"name": "volume.set", "args": {"level": 61}}], "regression_family": "volume"}
+{"text": "reduce the sound to 61 percent please", "intents": [{"name": "volume.set", "args": {"level": 61}}], "regression_family": "volume"}
+{"text": "set display brightness to 61 percent please", "intents": [{"name": "display.brightness_set", "args": {"level": 61}}], "regression_family": "display_arguments"}
+{"text": "please set screen contrast to 61 percent", "intents": [{"name": "display.contrast_set", "args": {"level": 61}}], "regression_family": "display_arguments"}
+{"text": "could you set speaker volume to sixty eight percent", "intents": [{"name": "volume.set", "args": {"level": 68}}], "regression_family": "volume"}
+{"text": "please put output sound at 68 percent", "intents": [{"name": "volume.set", "args": {"level": 68}}], "regression_family": "volume"}
+{"text": "raise the sound to sixty eight percent please", "intents": [{"name": "volume.set", "args": {"level": 68}}], "regression_family": "volume"}
+{"text": "reduce the sound to 68 percent please", "intents": [{"name": "volume.set", "args": {"level": 68}}], "regression_family": "volume"}
+{"text": "set display brightness to 68 percent please", "intents": [{"name": "display.brightness_set", "args": {"level": 68}}], "regression_family": "display_arguments"}
+{"text": "please set screen contrast to 68 percent", "intents": [{"name": "display.contrast_set", "args": {"level": 68}}], "regression_family": "display_arguments"}
+{"text": "could you set speaker volume to seventy four percent", "intents": [{"name": "volume.set", "args": {"level": 74}}], "regression_family": "volume"}
+{"text": "please put output sound at 74 percent", "intents": [{"name": "volume.set", "args": {"level": 74}}], "regression_family": "volume"}
+{"text": "raise the sound to seventy four percent please", "intents": [{"name": "volume.set", "args": {"level": 74}}], "regression_family": "volume"}
+{"text": "reduce the sound to 74 percent please", "intents": [{"name": "volume.set", "args": {"level": 74}}], "regression_family": "volume"}
+{"text": "set display brightness to 74 percent please", "intents": [{"name": "display.brightness_set", "args": {"level": 74}}], "regression_family": "display_arguments"}
+{"text": "please set screen contrast to 74 percent", "intents": [{"name": "display.contrast_set", "args": {"level": 74}}], "regression_family": "display_arguments"}
+{"text": "could you set speaker volume to eighty three percent", "intents": [{"name": "volume.set", "args": {"level": 83}}], "regression_family": "volume"}
+{"text": "please put output sound at 83 percent", "intents": [{"name": "volume.set", "args": {"level": 83}}], "regression_family": "volume"}
+{"text": "raise the sound to eighty three percent please", "intents": [{"name": "volume.set", "args": {"level": 83}}], "regression_family": "volume"}
+{"text": "reduce the sound to 83 percent please", "intents": [{"name": "volume.set", "args": {"level": 83}}], "regression_family": "volume"}
+{"text": "set display brightness to 83 percent please", "intents": [{"name": "display.brightness_set", "args": {"level": 83}}], "regression_family": "display_arguments"}
+{"text": "please set screen contrast to 83 percent", "intents": [{"name": "display.contrast_set", "args": {"level": 83}}], "regression_family": "display_arguments"}
+{"text": "could you set speaker volume to ninety two percent", "intents": [{"name": "volume.set", "args": {"level": 92}}], "regression_family": "volume"}
+{"text": "please put output sound at 92 percent", "intents": [{"name": "volume.set", "args": {"level": 92}}], "regression_family": "volume"}
+{"text": "raise the sound to ninety two percent please", "intents": [{"name": "volume.set", "args": {"level": 92}}], "regression_family": "volume"}
+{"text": "reduce the sound to 92 percent please", "intents": [{"name": "volume.set", "args": {"level": 92}}], "regression_family": "volume"}
+{"text": "set display brightness to 92 percent please", "intents": [{"name": "display.brightness_set", "args": {"level": 92}}], "regression_family": "display_arguments"}
+{"text": "please set screen contrast to 92 percent", "intents": [{"name": "display.contrast_set", "args": {"level": 92}}], "regression_family": "display_arguments"}
+{"text": "could you brighten the display by 4 percent", "intents": [{"name": "display.brightness_up", "args": {"by": 4}}], "regression_family": "display_arguments"}
+{"text": "please dim my screen by 4 percent", "intents": [{"name": "display.brightness_down", "args": {"by": 4}}], "regression_family": "display_arguments"}
+{"text": "raise screen contrast by 4 please", "intents": [{"name": "display.contrast_up", "args": {"by": 4}}], "regression_family": "display_arguments"}
+{"text": "could you brighten the display by 6 percent", "intents": [{"name": "display.brightness_up", "args": {"by": 6}}], "regression_family": "display_arguments"}
+{"text": "please dim my screen by 6 percent", "intents": [{"name": "display.brightness_down", "args": {"by": 6}}], "regression_family": "display_arguments"}
+{"text": "raise screen contrast by 6 please", "intents": [{"name": "display.contrast_up", "args": {"by": 6}}], "regression_family": "display_arguments"}
+{"text": "could you brighten the display by 11 percent", "intents": [{"name": "display.brightness_up", "args": {"by": 11}}], "regression_family": "display_arguments"}
+{"text": "please dim my screen by 11 percent", "intents": [{"name": "display.brightness_down", "args": {"by": 11}}], "regression_family": "display_arguments"}
+{"text": "raise screen contrast by 11 please", "intents": [{"name": "display.contrast_up", "args": {"by": 11}}], "regression_family": "display_arguments"}
+{"text": "could you brighten the display by 17 percent", "intents": [{"name": "display.brightness_up", "args": {"by": 17}}], "regression_family": "display_arguments"}
+{"text": "please dim my screen by 17 percent", "intents": [{"name": "display.brightness_down", "args": {"by": 17}}], "regression_family": "display_arguments"}
+{"text": "raise screen contrast by 17 please", "intents": [{"name": "display.contrast_up", "args": {"by": 17}}], "regression_family": "display_arguments"}
+{"text": "could you brighten the display by 21 percent", "intents": [{"name": "display.brightness_up", "args": {"by": 21}}], "regression_family": "display_arguments"}
+{"text": "please dim my screen by 21 percent", "intents": [{"name": "display.brightness_down", "args": {"by": 21}}], "regression_family": "display_arguments"}
+{"text": "raise screen contrast by 21 please", "intents": [{"name": "display.contrast_up", "args": {"by": 21}}], "regression_family": "display_arguments"}
+{"text": "could you brighten the display by 24 percent", "intents": [{"name": "display.brightness_up", "args": {"by": 24}}], "regression_family": "display_arguments"}
+{"text": "please dim my screen by 24 percent", "intents": [{"name": "display.brightness_down", "args": {"by": 24}}], "regression_family": "display_arguments"}
+{"text": "raise screen contrast by 24 please", "intents": [{"name": "display.contrast_up", "args": {"by": 24}}], "regression_family": "display_arguments"}
+{"text": "can you please show the volume", "intents": [{"name": "info.volume", "args": {}}], "regression_family": "volume"}
+{"text": "Jarvis what is the current volume level please", "intents": [{"name": "info.volume", "args": {}}], "regression_family": "volume"}
+{"text": "could you please check volume", "intents": [{"name": "info.volume", "args": {}}], "regression_family": "volume"}
+{"text": "Jarvis how loud is the volume please", "intents": [{"name": "info.volume", "args": {}}], "regression_family": "volume"}
+{"text": "could you mute system audio please", "intents": [{"name": "volume.mute", "args": {}}], "regression_family": "volume"}
+{"text": "could you unmute system audio please", "intents": [{"name": "volume.unmute", "args": {}}], "regression_family": "volume"}
+{"text": "please set speaker volume to fifty percent", "intents": [{"name": "volume.set", "args": {"level": 50}}], "regression_family": "volume"}
+{"text": "could you open VS Code for me", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}], "regression_family": "app_arguments"}
+{"text": "please close the VS Code app", "intents": [{"name": "app.close", "args": {"name": "Visual Studio Code"}}], "regression_family": "app_arguments"}
+{"text": "launch VS Code now please", "intents": [{"name": "app.open", "args": {"name": "Visual Studio Code"}}], "regression_family": "app_arguments"}
+{"text": "could you open Chrome for me", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}], "regression_family": "app_arguments"}
+{"text": "please close the Chrome app", "intents": [{"name": "app.close", "args": {"name": "Google Chrome"}}], "regression_family": "app_arguments"}
+{"text": "launch Chrome now please", "intents": [{"name": "app.open", "args": {"name": "Google Chrome"}}], "regression_family": "app_arguments"}
+{"text": "could you open Brave for me", "intents": [{"name": "app.open", "args": {"name": "Brave Browser"}}], "regression_family": "app_arguments"}
+{"text": "please close the Brave app", "intents": [{"name": "app.close", "args": {"name": "Brave Browser"}}], "regression_family": "app_arguments"}
+{"text": "launch Brave now please", "intents": [{"name": "app.open", "args": {"name": "Brave Browser"}}], "regression_family": "app_arguments"}
+{"text": "could you open Finder for me", "intents": [{"name": "app.open", "args": {"name": "Finder"}}], "regression_family": "app_arguments"}
+{"text": "please close the Finder app", "intents": [{"name": "app.close", "args": {"name": "Finder"}}], "regression_family": "app_arguments"}
+{"text": "launch Finder now please", "intents": [{"name": "app.open", "args": {"name": "Finder"}}], "regression_family": "app_arguments"}
+{"text": "could you open Safari for me", "intents": [{"name": "app.open", "args": {"name": "Safari"}}], "regression_family": "app_arguments"}
+{"text": "please close the Safari app", "intents": [{"name": "app.close", "args": {"name": "Safari"}}], "regression_family": "app_arguments"}
+{"text": "launch Safari now please", "intents": [{"name": "app.open", "args": {"name": "Safari"}}], "regression_family": "app_arguments"}
+{"text": "could you open Terminal for me", "intents": [{"name": "app.open", "args": {"name": "Terminal"}}], "regression_family": "app_arguments"}
+{"text": "please close the Terminal app", "intents": [{"name": "app.close", "args": {"name": "Terminal"}}], "regression_family": "app_arguments"}
+{"text": "launch Terminal now please", "intents": [{"name": "app.open", "args": {"name": "Terminal"}}], "regression_family": "app_arguments"}
+{"text": "could you open Spotify for me", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}], "regression_family": "app_arguments"}
+{"text": "please close the Spotify app", "intents": [{"name": "app.close", "args": {"name": "Spotify"}}], "regression_family": "app_arguments"}
+{"text": "launch Spotify now please", "intents": [{"name": "app.open", "args": {"name": "Spotify"}}], "regression_family": "app_arguments"}
+{"text": "could you open Notes for me", "intents": [{"name": "app.open", "args": {"name": "Notes"}}], "regression_family": "app_arguments"}
+{"text": "please close the Notes app", "intents": [{"name": "app.close", "args": {"name": "Notes"}}], "regression_family": "app_arguments"}
+{"text": "launch Notes now please", "intents": [{"name": "app.open", "args": {"name": "Notes"}}], "regression_family": "app_arguments"}
+{"text": "please check whether bluetooth is enabled", "intents": [{"name": "info.bluetooth", "args": {}}], "regression_family": "info"}
+{"text": "tell me if wifi is connected please", "intents": [{"name": "info.wifi", "args": {}}], "regression_family": "info"}
+{"text": "please report my battery level", "intents": [{"name": "info.battery", "args": {}}], "regression_family": "info"}
+{"text": "tell me today's date please", "intents": [{"name": "info.date", "args": {}}], "regression_family": "info"}
+{"text": "please tell me the local time", "intents": [{"name": "info.time", "args": {}}], "regression_family": "info"}
+{"text": "please tell me the time followed by the date", "intents": [{"name": "info.time", "args": {}}, {"name": "info.date", "args": {}}], "regression_family": "compound"}
+{"text": "what is a microphone array", "intents": [{"name": "ai.query", "args": {"text": "what is a microphone array"}}], "regression_family": "ai_boundary"}
+{"text": "explain how active noise cancellation works", "intents": [{"name": "ai.query", "args": {"text": "explain how active noise cancellation works"}}], "regression_family": "ai_boundary"}
+{"text": "what does an audio sample rate describe", "intents": [{"name": "ai.query", "args": {"text": "what does an audio sample rate describe"}}], "regression_family": "ai_boundary"}
+{"text": "why do speakers need an amplifier", "intents": [{"name": "ai.query", "args": {"text": "why do speakers need an amplifier"}}], "regression_family": "ai_boundary"}
+{"text": "explain what a virtual audio interface does", "intents": [{"name": "ai.query", "args": {"text": "explain what a virtual audio interface does"}}], "regression_family": "ai_boundary"}
+{"text": "how do digital cameras focus", "intents": [{"name": "ai.query", "args": {"text": "how do digital cameras focus"}}], "regression_family": "ai_boundary"}
+{"text": "increase brightness by 13 and play the acoustic morning playlist and set volume to 43", "intents": [{"name": "display.brightness_up", "args": {"by": 13}}, {"name": "media.play_playlist", "args": {"name": "acoustic morning"}}, {"name": "volume.set", "args": {"level": 43}}], "regression_family": "compound"}
+{"text": "open Safari and set speaker volume to 33 percent", "intents": [{"name": "app.open", "args": {"name": "Safari"}}, {"name": "volume.set", "args": {"level": 33}}], "regression_family": "compound"}
+{"text": "increase brightness by 14 and play the late night piano playlist and set volume to 44", "intents": [{"name": "display.brightness_up", "args": {"by": 14}}, {"name": "media.play_playlist", "args": {"name": "late night piano"}}, {"name": "volume.set", "args": {"level": 44}}], "regression_family": "compound"}
+{"text": "open Safari and set speaker volume to 34 percent", "intents": [{"name": "app.open", "args": {"name": "Safari"}}, {"name": "volume.set", "args": {"level": 34}}], "regression_family": "compound"}
+{"text": "increase brightness by 15 and play the acoustic morning playlist and set volume to 45", "intents": [{"name": "display.brightness_up", "args": {"by": 15}}, {"name": "media.play_playlist", "args": {"name": "acoustic morning"}}, {"name": "volume.set", "args": {"level": 45}}], "regression_family": "compound"}
+{"text": "open Safari and set speaker volume to 35 percent", "intents": [{"name": "app.open", "args": {"name": "Safari"}}, {"name": "volume.set", "args": {"level": 35}}], "regression_family": "compound"}
+{"text": "increase brightness by 16 and play the late night piano playlist and set volume to 46", "intents": [{"name": "display.brightness_up", "args": {"by": 16}}, {"name": "media.play_playlist", "args": {"name": "late night piano"}}, {"name": "volume.set", "args": {"level": 46}}], "regression_family": "compound"}
+{"text": "open Safari and set speaker volume to 36 percent", "intents": [{"name": "app.open", "args": {"name": "Safari"}}, {"name": "volume.set", "args": {"level": 36}}], "regression_family": "compound"}
+{"text": "increase brightness by 17 and play the acoustic morning playlist and set volume to 47", "intents": [{"name": "display.brightness_up", "args": {"by": 17}}, {"name": "media.play_playlist", "args": {"name": "acoustic morning"}}, {"name": "volume.set", "args": {"level": 47}}], "regression_family": "compound"}
+{"text": "open Safari and set speaker volume to 37 percent", "intents": [{"name": "app.open", "args": {"name": "Safari"}}, {"name": "volume.set", "args": {"level": 37}}], "regression_family": "compound"}
+{"text": "increase brightness by 18 and play the late night piano playlist and set volume to 48", "intents": [{"name": "display.brightness_up", "args": {"by": 18}}, {"name": "media.play_playlist", "args": {"name": "late night piano"}}, {"name": "volume.set", "args": {"level": 48}}], "regression_family": "compound"}
+{"text": "open Safari and set speaker volume to 38 percent", "intents": [{"name": "app.open", "args": {"name": "Safari"}}, {"name": "volume.set", "args": {"level": 38}}], "regression_family": "compound"}
+{"text": "increase brightness by 19 and play the acoustic morning playlist and set volume to 49", "intents": [{"name": "display.brightness_up", "args": {"by": 19}}, {"name": "media.play_playlist", "args": {"name": "acoustic morning"}}, {"name": "volume.set", "args": {"level": 49}}], "regression_family": "compound"}
+{"text": "open Safari and set speaker volume to 39 percent", "intents": [{"name": "app.open", "args": {"name": "Safari"}}, {"name": "volume.set", "args": {"level": 39}}], "regression_family": "compound"}
+{"text": "increase brightness by 20 and play the late night piano playlist and set volume to 50", "intents": [{"name": "display.brightness_up", "args": {"by": 20}}, {"name": "media.play_playlist", "args": {"name": "late night piano"}}, {"name": "volume.set", "args": {"level": 50}}], "regression_family": "compound"}
+{"text": "open Safari and set speaker volume to 40 percent", "intents": [{"name": "app.open", "args": {"name": "Safari"}}, {"name": "volume.set", "args": {"level": 40}}], "regression_family": "compound"}
+{"text": "increase brightness by 21 and play the acoustic morning playlist and set volume to 51", "intents": [{"name": "display.brightness_up", "args": {"by": 21}}, {"name": "media.play_playlist", "args": {"name": "acoustic morning"}}, {"name": "volume.set", "args": {"level": 51}}], "regression_family": "compound"}
+{"text": "open Safari and set speaker volume to 41 percent", "intents": [{"name": "app.open", "args": {"name": "Safari"}}, {"name": "volume.set", "args": {"level": 41}}], "regression_family": "compound"}
+{"text": "increase brightness by 22 and play the late night piano playlist and set volume to 52", "intents": [{"name": "display.brightness_up", "args": {"by": 22}}, {"name": "media.play_playlist", "args": {"name": "late night piano"}}, {"name": "volume.set", "args": {"level": 52}}], "regression_family": "compound"}
+{"text": "open Safari and set speaker volume to 42 percent", "intents": [{"name": "app.open", "args": {"name": "Safari"}}, {"name": "volume.set", "args": {"level": 42}}], "regression_family": "compound"}
+{"text": "please turn the shuffle mode on", "intents": [{"name": "media.shuffle", "args": {}}], "regression_family": "shuffle_retention", "resolved_args": {"target": "current", "name": "", "enabled": true}}
+{"text": "could you switch shuffle on", "intents": [{"name": "media.shuffle", "args": {}}], "regression_family": "shuffle_retention", "resolved_args": {"target": "current", "name": "", "enabled": true}}
+{"text": "please set the shuffle mode on", "intents": [{"name": "media.shuffle", "args": {}}], "regression_family": "shuffle_retention", "resolved_args": {"target": "current", "name": "", "enabled": true}}
+{"text": "please turn the shuffle mode off", "intents": [{"name": "media.shuffle", "args": {}}], "regression_family": "shuffle_retention", "resolved_args": {"target": "current", "name": "", "enabled": false}}
+{"text": "could you switch shuffle off", "intents": [{"name": "media.shuffle", "args": {}}], "regression_family": "shuffle_retention", "resolved_args": {"target": "current", "name": "", "enabled": false}}
+{"text": "please set the shuffle mode off", "intents": [{"name": "media.shuffle", "args": {}}], "regression_family": "shuffle_retention", "resolved_args": {"target": "current", "name": "", "enabled": false}}
+{"text": "play playlist coastal walk in shuffle mode", "intents": [{"name": "media.shuffle", "args": {}}], "regression_family": "shuffle_retention", "resolved_args": {"target": "playlist", "name": "coastal walk", "enabled": true}}
+{"text": "play my coastal walk playlist without shuffle please", "intents": [{"name": "media.shuffle", "args": {}}], "regression_family": "shuffle_retention", "resolved_args": {"target": "playlist", "name": "coastal walk", "enabled": false}}
+{"text": "shuffle the coastal walk playlist please", "intents": [{"name": "media.shuffle", "args": {}}], "regression_family": "shuffle_retention", "resolved_args": {"target": "playlist", "name": "coastal walk", "enabled": true}}
+{"text": "play playlist quiet coding in shuffle mode", "intents": [{"name": "media.shuffle", "args": {}}], "regression_family": "shuffle_retention", "resolved_args": {"target": "playlist", "name": "quiet coding", "enabled": true}}
+{"text": "play my quiet coding playlist without shuffle please", "intents": [{"name": "media.shuffle", "args": {}}], "regression_family": "shuffle_retention", "resolved_args": {"target": "playlist", "name": "quiet coding", "enabled": false}}
+{"text": "shuffle the quiet coding playlist please", "intents": [{"name": "media.shuffle", "args": {}}], "regression_family": "shuffle_retention", "resolved_args": {"target": "playlist", "name": "quiet coding", "enabled": true}}
+{"text": "play playlist sunrise drive in shuffle mode", "intents": [{"name": "media.shuffle", "args": {}}], "regression_family": "shuffle_retention", "resolved_args": {"target": "playlist", "name": "sunrise drive", "enabled": true}}
+{"text": "play my sunrise drive playlist without shuffle please", "intents": [{"name": "media.shuffle", "args": {}}], "regression_family": "shuffle_retention", "resolved_args": {"target": "playlist", "name": "sunrise drive", "enabled": false}}
+{"text": "shuffle the sunrise drive playlist please", "intents": [{"name": "media.shuffle", "args": {}}], "regression_family": "shuffle_retention", "resolved_args": {"target": "playlist", "name": "sunrise drive", "enabled": true}}
+{"text": "play playlist piano practice in shuffle mode", "intents": [{"name": "media.shuffle", "args": {}}], "regression_family": "shuffle_retention", "resolved_args": {"target": "playlist", "name": "piano practice", "enabled": true}}
+{"text": "play my piano practice playlist without shuffle please", "intents": [{"name": "media.shuffle", "args": {}}], "regression_family": "shuffle_retention", "resolved_args": {"target": "playlist", "name": "piano practice", "enabled": false}}
+{"text": "shuffle the piano practice playlist please", "intents": [{"name": "media.shuffle", "args": {}}], "regression_family": "shuffle_retention", "resolved_args": {"target": "playlist", "name": "piano practice", "enabled": true}}
+{"text": "play playlist weekend brunch in shuffle mode", "intents": [{"name": "media.shuffle", "args": {}}], "regression_family": "shuffle_retention", "resolved_args": {"target": "playlist", "name": "weekend brunch", "enabled": true}}
+{"text": "play my weekend brunch playlist without shuffle please", "intents": [{"name": "media.shuffle", "args": {}}], "regression_family": "shuffle_retention", "resolved_args": {"target": "playlist", "name": "weekend brunch", "enabled": false}}
+{"text": "shuffle the weekend brunch playlist please", "intents": [{"name": "media.shuffle", "args": {}}], "regression_family": "shuffle_retention", "resolved_args": {"target": "playlist", "name": "weekend brunch", "enabled": true}}
+{"text": "play playlist forest trail in shuffle mode", "intents": [{"name": "media.shuffle", "args": {}}], "regression_family": "shuffle_retention", "resolved_args": {"target": "playlist", "name": "forest trail", "enabled": true}}
+{"text": "play my forest trail playlist without shuffle please", "intents": [{"name": "media.shuffle", "args": {}}], "regression_family": "shuffle_retention", "resolved_args": {"target": "playlist", "name": "forest trail", "enabled": false}}
+{"text": "shuffle the forest trail playlist please", "intents": [{"name": "media.shuffle", "args": {}}], "regression_family": "shuffle_retention", "resolved_args": {"target": "playlist", "name": "forest trail", "enabled": true}}
+{"text": "play my saved songs in random order please", "intents": [{"name": "media.shuffle", "args": {}}], "regression_family": "shuffle_retention", "resolved_args": {"target": "liked", "name": "", "enabled": true}}
+{"text": "play liked songs in order please", "intents": [{"name": "media.shuffle", "args": {}}], "regression_family": "shuffle_retention", "resolved_args": {"target": "liked", "name": "", "enabled": false}}
+{"text": "please shuffle all of my favorites", "intents": [{"name": "media.shuffle", "args": {}}], "regression_family": "shuffle_retention", "resolved_args": {"target": "liked", "name": "", "enabled": true}}
+{"text": "play songs from liked songs without shuffle please", "intents": [{"name": "media.shuffle", "args": {}}], "regression_family": "shuffle_retention", "resolved_args": {"target": "liked", "name": "", "enabled": false}}
+{"text": "could you please create one new window for Chrome", "intents": [{"name": "app.new_window", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "newWindow", "app": "chrome", "project": "", "root": ""}]}
+{"text": "can you open a new Chrome window", "intents": [{"name": "app.new_window", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "newWindow", "app": "chrome", "project": "", "root": ""}]}
+{"text": "please make one new window on Chrome", "intents": [{"name": "app.new_window", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "newWindow", "app": "chrome", "project": "", "root": ""}]}
+{"text": "could you please create one new tab for Chrome", "intents": [{"name": "app.new_tab", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "newTab", "app": "chrome", "project": "", "root": ""}]}
+{"text": "can you open a new Chrome tab", "intents": [{"name": "app.new_tab", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "newTab", "app": "chrome", "project": "", "root": ""}]}
+{"text": "please make one new tab on Chrome", "intents": [{"name": "app.new_tab", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "newTab", "app": "chrome", "project": "", "root": ""}]}
+{"text": "could you please create one new window for Brave Browser", "intents": [{"name": "app.new_window", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "newWindow", "app": "brave", "project": "", "root": ""}]}
+{"text": "can you open a new Brave Browser window", "intents": [{"name": "app.new_window", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "newWindow", "app": "brave", "project": "", "root": ""}]}
+{"text": "please make one new window on Brave Browser", "intents": [{"name": "app.new_window", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "newWindow", "app": "brave", "project": "", "root": ""}]}
+{"text": "could you please create one new tab for Brave Browser", "intents": [{"name": "app.new_tab", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "newTab", "app": "brave", "project": "", "root": ""}]}
+{"text": "can you open a new Brave Browser tab", "intents": [{"name": "app.new_tab", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "newTab", "app": "brave", "project": "", "root": ""}]}
+{"text": "please make one new tab on Brave Browser", "intents": [{"name": "app.new_tab", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "newTab", "app": "brave", "project": "", "root": ""}]}
+{"text": "could you please create one new window for Visual Studio Code", "intents": [{"name": "app.new_window", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "newWindow", "app": "vscode", "project": "", "root": ""}]}
+{"text": "can you open a new Visual Studio Code window", "intents": [{"name": "app.new_window", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "newWindow", "app": "vscode", "project": "", "root": ""}]}
+{"text": "please make one new window on Visual Studio Code", "intents": [{"name": "app.new_window", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "newWindow", "app": "vscode", "project": "", "root": ""}]}
+{"text": "could you please create one new tab for Visual Studio Code", "intents": [{"name": "app.new_tab", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "newTab", "app": "vscode", "project": "", "root": ""}]}
+{"text": "can you open a new Visual Studio Code tab", "intents": [{"name": "app.new_tab", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "newTab", "app": "vscode", "project": "", "root": ""}]}
+{"text": "please make one new tab on Visual Studio Code", "intents": [{"name": "app.new_tab", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "newTab", "app": "vscode", "project": "", "root": ""}]}
+{"text": "could you please open my harbor catalog project with Finder", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "finder", "project": "harbor catalog", "root": ""}]}
+{"text": "open harbor catalog project from experiments in Finder", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "finder", "project": "harbor catalog", "root": "experiments"}]}
+{"text": "could you please open my harbor catalog project with VS Code", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "harbor catalog", "root": ""}]}
+{"text": "open harbor catalog project from experiments in VS Code", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "harbor catalog", "root": "experiments"}]}
+{"text": "could you please open my harbor catalog project with Terminal", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "harbor catalog", "root": ""}]}
+{"text": "open harbor catalog project from experiments in Terminal", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "harbor catalog", "root": "experiments"}]}
+{"text": "could you please open my cedar-tools project with Finder", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "finder", "project": "cedar-tools", "root": ""}]}
+{"text": "open cedar-tools project from experiments in Finder", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "finder", "project": "cedar-tools", "root": "experiments"}]}
+{"text": "could you please open my cedar-tools project with VS Code", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "cedar-tools", "root": ""}]}
+{"text": "open cedar-tools project from experiments in VS Code", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "cedar-tools", "root": "experiments"}]}
+{"text": "could you please open my cedar-tools project with Terminal", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "cedar-tools", "root": ""}]}
+{"text": "open cedar-tools project from experiments in Terminal", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "cedar-tools", "root": "experiments"}]}
+{"text": "could you please open my lunar diary project with Finder", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "finder", "project": "lunar diary", "root": ""}]}
+{"text": "open lunar diary project from experiments in Finder", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "finder", "project": "lunar diary", "root": "experiments"}]}
+{"text": "could you please open my lunar diary project with VS Code", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "lunar diary", "root": ""}]}
+{"text": "open lunar diary project from experiments in VS Code", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "lunar diary", "root": "experiments"}]}
+{"text": "could you please open my lunar diary project with Terminal", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "lunar diary", "root": ""}]}
+{"text": "open lunar diary project from experiments in Terminal", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "lunar diary", "root": "experiments"}]}
+{"text": "could you please open my maple dashboard project with Finder", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "finder", "project": "maple dashboard", "root": ""}]}
+{"text": "open maple dashboard project from experiments in Finder", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "finder", "project": "maple dashboard", "root": "experiments"}]}
+{"text": "could you please open my maple dashboard project with VS Code", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "maple dashboard", "root": ""}]}
+{"text": "open maple dashboard project from experiments in VS Code", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "maple dashboard", "root": "experiments"}]}
+{"text": "could you please open my maple dashboard project with Terminal", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "maple dashboard", "root": ""}]}
+{"text": "open maple dashboard project from experiments in Terminal", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "maple dashboard", "root": "experiments"}]}
+{"text": "could you please open my cobalt-notes project with Finder", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "finder", "project": "cobalt-notes", "root": ""}]}
+{"text": "open cobalt-notes project from experiments in Finder", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "finder", "project": "cobalt-notes", "root": "experiments"}]}
+{"text": "could you please open my cobalt-notes project with VS Code", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "cobalt-notes", "root": ""}]}
+{"text": "open cobalt-notes project from experiments in VS Code", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "cobalt-notes", "root": "experiments"}]}
+{"text": "could you please open my cobalt-notes project with Terminal", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "cobalt-notes", "root": ""}]}
+{"text": "open cobalt-notes project from experiments in Terminal", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "cobalt-notes", "root": "experiments"}]}
+{"text": "could you please open my starlight api project with Finder", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "finder", "project": "starlight api", "root": ""}]}
+{"text": "open starlight api project from experiments in Finder", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "finder", "project": "starlight api", "root": "experiments"}]}
+{"text": "could you please open my starlight api project with VS Code", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "starlight api", "root": ""}]}
+{"text": "open starlight api project from experiments in VS Code", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "starlight api", "root": "experiments"}]}
+{"text": "could you please open my starlight api project with Terminal", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "starlight api", "root": ""}]}
+{"text": "open starlight api project from experiments in Terminal", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "starlight api", "root": "experiments"}]}
+{"text": "could you please open my cloud garden project with Finder", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "finder", "project": "cloud garden", "root": ""}]}
+{"text": "open cloud garden project from experiments in Finder", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "finder", "project": "cloud garden", "root": "experiments"}]}
+{"text": "could you please open my cloud garden project with VS Code", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "cloud garden", "root": ""}]}
+{"text": "open cloud garden project from experiments in VS Code", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "cloud garden", "root": "experiments"}]}
+{"text": "could you please open my cloud garden project with Terminal", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "cloud garden", "root": ""}]}
+{"text": "open cloud garden project from experiments in Terminal", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "cloud garden", "root": "experiments"}]}
+{"text": "could you please open my river atlas project with Finder", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "finder", "project": "river atlas", "root": ""}]}
+{"text": "open river atlas project from experiments in Finder", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "finder", "project": "river atlas", "root": "experiments"}]}
+{"text": "could you please open my river atlas project with VS Code", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "river atlas", "root": ""}]}
+{"text": "open river atlas project from experiments in VS Code", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "river atlas", "root": "experiments"}]}
+{"text": "could you please open my river atlas project with Terminal", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "river atlas", "root": ""}]}
+{"text": "open river atlas project from experiments in Terminal", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "river atlas", "root": "experiments"}]}
+{"text": "could you please open that project in Finder", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "finder", "project": "@recent", "root": ""}]}
+{"text": "could you please open that project in VS Code", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "vscode", "project": "@recent", "root": ""}]}
+{"text": "could you please open that project in Terminal", "intents": [{"name": "project.open", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "openProject", "app": "terminal", "project": "@recent", "root": ""}]}
+{"text": "please make a new terminal tab in VS Code", "intents": [{"name": "app.new_tab", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "newTerminalTab", "app": "vscode", "project": "", "root": ""}]}
+{"text": "can you create one new editor tab in Visual Studio Code", "intents": [{"name": "app.new_tab", "args": {}}], "regression_family": "workspace_retention", "resolved_args": [{"operation": "newTab", "app": "vscode", "project": "", "root": ""}]}
+{"text": "find the telescope logbook document", "intents": [{"name": "files.search", "args": {}}], "regression_family": "native_retention", "resolved_args": {"query": "telescope logbook", "mode": "name", "kind": "any", "scope": "", "date": "any", "min_bytes": 0, "max_bytes": 0}}
+{"text": "find PDFs containing telescope logbook", "intents": [{"name": "files.search", "args": {}}], "regression_family": "native_retention", "resolved_args": {"query": "telescope logbook", "mode": "content", "kind": "pdf", "scope": "", "date": "any", "min_bytes": 0, "max_bytes": 0}}
+{"text": "find the harvest schedule document", "intents": [{"name": "files.search", "args": {}}], "regression_family": "native_retention", "resolved_args": {"query": "harvest schedule", "mode": "name", "kind": "any", "scope": "", "date": "any", "min_bytes": 0, "max_bytes": 0}}
+{"text": "find PDFs containing harvest schedule", "intents": [{"name": "files.search", "args": {}}], "regression_family": "native_retention", "resolved_args": {"query": "harvest schedule", "mode": "content", "kind": "pdf", "scope": "", "date": "any", "min_bytes": 0, "max_bytes": 0}}
+{"text": "find the studio inventory document", "intents": [{"name": "files.search", "args": {}}], "regression_family": "native_retention", "resolved_args": {"query": "studio inventory", "mode": "name", "kind": "any", "scope": "", "date": "any", "min_bytes": 0, "max_bytes": 0}}
+{"text": "find PDFs containing studio inventory", "intents": [{"name": "files.search", "args": {}}], "regression_family": "native_retention", "resolved_args": {"query": "studio inventory", "mode": "content", "kind": "pdf", "scope": "", "date": "any", "min_bytes": 0, "max_bytes": 0}}
+{"text": "find the ceramics handbook document", "intents": [{"name": "files.search", "args": {}}], "regression_family": "native_retention", "resolved_args": {"query": "ceramics handbook", "mode": "name", "kind": "any", "scope": "", "date": "any", "min_bytes": 0, "max_bytes": 0}}
+{"text": "find PDFs containing ceramics handbook", "intents": [{"name": "files.search", "args": {}}], "regression_family": "native_retention", "resolved_args": {"query": "ceramics handbook", "mode": "content", "kind": "pdf", "scope": "", "date": "any", "min_bytes": 0, "max_bytes": 0}}
+{"text": "find the trail journal document", "intents": [{"name": "files.search", "args": {}}], "regression_family": "native_retention", "resolved_args": {"query": "trail journal", "mode": "name", "kind": "any", "scope": "", "date": "any", "min_bytes": 0, "max_bytes": 0}}
+{"text": "find PDFs containing trail journal", "intents": [{"name": "files.search", "args": {}}], "regression_family": "native_retention", "resolved_args": {"query": "trail journal", "mode": "content", "kind": "pdf", "scope": "", "date": "any", "min_bytes": 0, "max_bytes": 0}}
+{"text": "find the shipping checklist document", "intents": [{"name": "files.search", "args": {}}], "regression_family": "native_retention", "resolved_args": {"query": "shipping checklist", "mode": "name", "kind": "any", "scope": "", "date": "any", "min_bytes": 0, "max_bytes": 0}}
+{"text": "find PDFs containing shipping checklist", "intents": [{"name": "files.search", "args": {}}], "regression_family": "native_retention", "resolved_args": {"query": "shipping checklist", "mode": "content", "kind": "pdf", "scope": "", "date": "any", "min_bytes": 0, "max_bytes": 0}}
+{"text": "find the museum itinerary document", "intents": [{"name": "files.search", "args": {}}], "regression_family": "native_retention", "resolved_args": {"query": "museum itinerary", "mode": "name", "kind": "any", "scope": "", "date": "any", "min_bytes": 0, "max_bytes": 0}}
+{"text": "find PDFs containing museum itinerary", "intents": [{"name": "files.search", "args": {}}], "regression_family": "native_retention", "resolved_args": {"query": "museum itinerary", "mode": "content", "kind": "pdf", "scope": "", "date": "any", "min_bytes": 0, "max_bytes": 0}}
+{"text": "find the camera warranty document", "intents": [{"name": "files.search", "args": {}}], "regression_family": "native_retention", "resolved_args": {"query": "camera warranty", "mode": "name", "kind": "any", "scope": "", "date": "any", "min_bytes": 0, "max_bytes": 0}}
+{"text": "find PDFs containing camera warranty", "intents": [{"name": "files.search", "args": {}}], "regression_family": "native_retention", "resolved_args": {"query": "camera warranty", "mode": "content", "kind": "pdf", "scope": "", "date": "any", "min_bytes": 0, "max_bytes": 0}}
