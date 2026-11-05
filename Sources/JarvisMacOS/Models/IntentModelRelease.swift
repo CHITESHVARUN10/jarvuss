@@ -31,7 +31,7 @@ struct IntentModelRelease: Codable, Equatable, Sendable {
     var totalBytes: Int64 { files.reduce(0) { $0 + $1.sizeBytes } }
 
     func validate() throws {
-        guard formatVersion == 1, runtime == "jarvis-t5-onnx-v1", (1...4).contains(intentSchemaVersion),
+        guard formatVersion == 1, runtime == "jarvis-t5-onnx-v1", (1...5).contains(intentSchemaVersion),
               maxSourceLen == 128, maxTargetLen == 448 else {
             throw IntentModelError.message("This model release needs a newer Jarvis build. Your existing model is unchanged.")
         }

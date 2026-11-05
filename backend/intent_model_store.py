@@ -53,7 +53,7 @@ def verify(root: Path, selected: dict) -> Path:
     manifest = json.loads(manifest_file.read_text())
     if (manifest.get("format_version") != 1 or manifest.get("runtime") != "jarvis-t5-onnx-v1"
             or manifest.get("version") != selected["version"]
-            or type(manifest.get("intent_schema_version")) is not int or not 1 <= manifest["intent_schema_version"] <= 4
+            or type(manifest.get("intent_schema_version")) is not int or not 1 <= manifest["intent_schema_version"] <= 5
             or manifest.get("max_source_len") != 128 or manifest.get("max_target_len") != 448):
         raise ValueError("incompatible managed model")
     files = manifest.get("files")

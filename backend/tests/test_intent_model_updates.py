@@ -53,6 +53,20 @@ class ModelUpdateTests(unittest.TestCase):
         (self.root / "current.json").write_text(json.dumps(selected))
         self.assertIsNone(store.receipt(self.root))
 
+    def test_workspace_schema_supported_but_unknown_schema_rejected(self):
+        selected, folder = self.install()
+        manifest_path = folder / "model-release.json"
+        manifest = json.loads(manifest_path.read_text())
+        for schema in (5, 6):
+            manifest["intent_schema_version"] = schema
+            encoded = json.dumps(manifest).encode()
+            manifest_path.write_bytes(encoded)
+            selected["manifest_sha256"] = hashlib.sha256(encoded).hexdigest()
+            if schema == 5:
+                self.assertEqual(store.verify(self.root, selected), folder)
+            else:
+                with self.assertRaises(ValueError): store.verify(self.root, selected)
+
     def test_checksum_failure_symlink_and_incompatible_runtime_are_rejected(self):
         selected, folder = self.install()
         (folder / "config.json").write_bytes(b"altered data")

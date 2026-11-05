@@ -28,6 +28,17 @@ final class IntentModelSetupTests: XCTestCase {
         XCTAssertThrowsError(try JSONDecoder().decode(IntentModelRelease.self, from: JSONSerialization.data(withJSONObject: object)).validate())
     }
 
+    func testWorkspaceSchemaAcceptedAndFutureSchemaRejected() throws {
+        let fixture = try Fixture()
+        var object = try JSONSerialization.jsonObject(with: fixture.release.manifestData) as! [String: Any]
+        for schema in [5, 6] {
+            object["intent_schema_version"] = schema
+            let manifest = try JSONDecoder().decode(IntentModelRelease.self, from: JSONSerialization.data(withJSONObject: object))
+            if schema == 5 { XCTAssertNoThrow(try manifest.validate()) }
+            else { XCTAssertThrowsError(try manifest.validate()) }
+        }
+    }
+
     func testLicensedReleaseRequiresAndInstallsVerifiedNotices() async throws {
         let fixture = try Fixture()
         var object = try JSONSerialization.jsonObject(with: fixture.release.manifestData) as! [String: Any]
