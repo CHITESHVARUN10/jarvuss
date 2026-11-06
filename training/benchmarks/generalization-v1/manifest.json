@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "policy": "Audit once after development selection; never train or select checkpoints on audit results.",
+  "generator_sha256": "98011e4121e116c0956bc07f72b1f2a4cf6be1ac69e848a73f1a2a36994bed50",
+  "files": {
+    "train": {
+      "path": "dataset/train-074-generalization.jsonl",
+      "sha256": "47059339ff586f15177ef9ff7cd82fc23912b67ceb58e7cdf47abb9e8a5cbe07",
+      "count": 1580,
+      "families": {
+        "compound": 51,
+        "display": 540,
+        "volume": 540,
+        "workspace": 85,
+        "transport": 7,
+        "boundary": 30,
+        "results": 14,
+        "info": 8,
+        "folders": 12,
+        "creation": 40,
+        "native_search": 40,
+        "files_query": 18,
+        "web": 80,
+        "settings": 4,
+        "media": 40,
+        "shuffle": 41,
+        "apps": 16,
+        "urls": 6,
+        "install": 8
+      }
+    },
+    "development": {
+      "path": "training/benchmarks/generalization-v1/development.jsonl",
+      "sha256": "d0ead9c63c6ed502a5021084991951a608b88e2e639dc0dc6035f430e598cc56",
+      "count": 276,
+      "families": {
+        "native_search": 10,
+        "workspace": 28,
+        "shuffle": 12,
+        "results": 15,
+        "display": 30,
+        "files_query": 18,
+        "volume": 30,
+        "compound": 16,
+        "folders": 12,
+        "settings": 5,
+        "apps": 16,
+        "install": 8,
+        "boundary": 15,
+        "web": 20,
+        "creation": 10,
+        "info": 8,
+        "media": 10,
+        "urls": 6,
+        "transport": 7
+      }
+    },
+    "audit": {
+      "path": "training/benchmarks/generalization-v1/audit.jsonl",
+      "sha256": "be5ccc4adf73cd02560bdf48362aaea29406c1e61b5af7dba68804b7b0c56255",
+      "count": 275,
+      "families": {
+        "web": 20,
+        "folders": 12,
+        "files_query": 18,
+        "volume": 30,
+        "info": 8,
+        "workspace": 28,
+        "shuffle": 12,
+        "native_search": 10,
+        "display": 30,
+        "urls": 6,
+        "media": 10,
+        "transport": 7,
+        "compound": 16,
+        "apps": 16,
+        "results": 15,
+        "creation": 10,
+        "boundary": 15,
+        "install": 8,
+        "settings": 4
+      }
+    }
+  }
+}

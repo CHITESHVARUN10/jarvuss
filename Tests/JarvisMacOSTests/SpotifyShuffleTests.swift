@@ -2,6 +2,11 @@ import XCTest
 @testable import JarvisMacOS
 
 final class SpotifyShuffleTests: XCTestCase {
+    func testExplicitShuffleOnAndOffPreservePlaylistName() {
+        XCTAssertEqual(SpotifyShuffleParser.parse("play the Botanical Hours playlist with shuffle on"), .playPlaylistWithShuffle(name: "Botanical Hours", enabled: true))
+        XCTAssertEqual(SpotifyShuffleParser.parse("play the Botanical Hours playlist with shuffle off"), .playPlaylistWithShuffle(name: "Botanical Hours", enabled: false))
+        XCTAssertEqual(SpotifyShuffleParser.parse("play playlist called \"Shuffle On\""), nil)
+    }
     func testAuthoredShuffleCorpusResolvesExactModeAndPlaylistNames() throws {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         for name in ["dataset/train-070-spotify-shuffle.jsonl", "training/eval_spotify_shuffle.jsonl"] {

@@ -23,7 +23,7 @@ enum SpotifyShuffleParser {
         var enabled = true
         if !prefix {
             let off = #"(?i)\s+(?:without shuffle|with shuffle off|in order|sequentially)$"#
-            let on = #"(?i)[,\s]+(?:(?:and|then)\s+)?(?:shuffle(?:\s+(?:it|them))?|(?:on|with|in) shuffle(?: mode)?|shuffled|in (?:a )?random order)$"#
+            let on = #"(?i)[,\s]+(?:(?:and|then)\s+)?(?:shuffle(?:\s+(?:it|them))?|(?:on|with|in) shuffle(?: mode)?(?: on)?|shuffled|in (?:a )?random order)$"#
             if let range = text.range(of: off, options: .regularExpression) {
                 text.removeSubrange(range); enabled = false
             } else if let range = text.range(of: on, options: .regularExpression) {

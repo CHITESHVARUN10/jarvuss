@@ -1,0 +1,86 @@
+{
+  "version": 2,
+  "supersedes": "generalization-v1: corrected unsupported smallest-file labels before any audit predictions were inspected; v1 development scores remain historical.",
+  "policy": "Audit once after development selection; never train or select checkpoints on audit results.",
+  "generator_sha256": "db1b9d1ccac5e6abdfa0bc68ed79113ac10c8eb1ff2bdc61808f9baef2343aae",
+  "files": {
+    "train": {
+      "path": "dataset/train-074-generalization.jsonl",
+      "sha256": "34114892a93b39849d802c12883d6a39b430c924742fe96ee887c463472461c6",
+      "count": 1580,
+      "families": {
+        "compound": 51,
+        "display": 540,
+        "volume": 540,
+        "workspace": 85,
+        "transport": 7,
+        "boundary": 36,
+        "results": 14,
+        "info": 8,
+        "folders": 12,
+        "creation": 40,
+        "native_search": 40,
+        "web": 80,
+        "settings": 4,
+        "media": 40,
+        "shuffle": 41,
+        "apps": 16,
+        "urls": 6,
+        "files_query": 12,
+        "install": 8
+      }
+    },
+    "development": {
+      "path": "training/benchmarks/generalization-v2/development.jsonl",
+      "sha256": "fe5f36f3798151729acb632736eb94f2e44b1e594439b90f306aba3d5e77e31c",
+      "count": 276,
+      "families": {
+        "native_search": 10,
+        "workspace": 28,
+        "shuffle": 12,
+        "results": 15,
+        "display": 30,
+        "files_query": 12,
+        "volume": 30,
+        "compound": 16,
+        "boundary": 21,
+        "folders": 12,
+        "settings": 5,
+        "apps": 16,
+        "install": 8,
+        "web": 20,
+        "creation": 10,
+        "info": 8,
+        "media": 10,
+        "urls": 6,
+        "transport": 7
+      }
+    },
+    "audit": {
+      "path": "training/benchmarks/generalization-v2/audit.jsonl",
+      "sha256": "a344b15cad09790d4fb28350bde5f2f712a23a2e4ed1114849ec142672e6ac34",
+      "count": 275,
+      "families": {
+        "web": 20,
+        "folders": 12,
+        "boundary": 21,
+        "files_query": 12,
+        "volume": 30,
+        "info": 8,
+        "workspace": 28,
+        "shuffle": 12,
+        "native_search": 10,
+        "display": 30,
+        "urls": 6,
+        "media": 10,
+        "transport": 7,
+        "compound": 16,
+        "apps": 16,
+        "results": 15,
+        "creation": 10,
+        "install": 8,
+        "settings": 4
+      }
+    }
+  }
+}

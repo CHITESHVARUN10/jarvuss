@@ -236,6 +236,20 @@
         "op": "str",
         "folder": "str",
         "ext": "str"
+      },
+      "enums": {
+        "op": [
+          "count",
+          "countFolders",
+          "list",
+          "listFolders",
+          "largest",
+          "oldest",
+          "newest",
+          "totalSize",
+          "openNewest",
+          "openOldest"
+        ]
       }
     },
     "install.preview": {

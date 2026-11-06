@@ -258,3 +258,10 @@ search coverage. It introduces no new executable actions or schema version.
 Existing evaluation rows are excluded, and native retention oracles are checked
 against Swift parsers. Training can select this shard alone using the isolated
 `prepare_data.py --shards` and `post_train.py --data-dir --no-rl-pairs` workflow.
+
+## Generalization curriculum
+
+Shards 074–079 add fresh slot-copying, question/action contrasts and retention
+coverage. See [coverage and limitations](SHARDS-074-079.md) and the
+[evaluation policy](../docs/intent-generalization.md). Model release decisions
+require broader final audits as well as the existing regression suites.

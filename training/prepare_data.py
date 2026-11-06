@@ -19,6 +19,7 @@ import random
 import sys
 import hashlib
 from collections import defaultdict
+from evaluation_data import heldout_paths, text_key
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATASET_DIR = os.path.join(ROOT, "dataset")
@@ -68,10 +69,12 @@ def canonicalize(intents: list, schema: dict) -> tuple[str, list[str]]:
                 continue
             value = args[arg]
             expected = spec["types"][arg]
-            if expected == "int" and not isinstance(value, int):
+            if expected == "int" and type(value) is not int:
                 errors.append(f"[{i}] {name}.{arg}: expected int, got {type(value).__name__}")
             if expected == "str" and not isinstance(value, str):
                 errors.append(f"[{i}] {name}.{arg}: expected str, got {type(value).__name__}")
+            if arg in spec.get('enums',{}) and value not in spec['enums'][arg]:
+                errors.append(f"[{i}] {name}.{arg}: unsupported value {value!r}")
             ordered[arg] = value
         out.append({"name": name, "args": ordered})
     return json.dumps(out, separators=(",", ":"), ensure_ascii=False), errors
@@ -138,7 +141,16 @@ def main() -> int:
     ap.add_argument("--check", action="store_true", help="validate only, write nothing")
     ap.add_argument("--shards", nargs="+", help="explicit dataset shard paths; omit to prepare all shards")
     ap.add_argument("--output-dir", default=OUT_DIR, help="isolated prepared-data directory")
+    ap.add_argument("--development", help="explicit versioned development.jsonl; never an audit file")
+    ap.add_argument("--cap-per-intent-sequence", type=int, default=0,
+                    help="deterministic cap per ordered intent-name sequence; zero keeps all selected rows")
     args = ap.parse_args()
+    if args.cap_per_intent_sequence < 0:
+        ap.error('--cap-per-intent-sequence must be nonnegative')
+    development = os.path.realpath(args.development) if args.development else None
+    benchmark_root = os.path.realpath(os.path.join(ROOT, 'training', 'benchmarks')) + os.sep
+    if development and (not development.startswith(benchmark_root) or os.path.basename(development) != 'development.jsonl' or not os.path.isfile(development)):
+        ap.error('--development must be a versioned benchmarks/.../development.jsonl')
 
     schema = load_schema()
     shards = sorted(set(os.path.abspath(path) for path in args.shards)) if args.shards else train_shards()
@@ -188,9 +200,9 @@ def main() -> int:
     # old generated extension filters) are not trustworthy training targets.
     grouped = defaultdict(dict)
     for pair in all_pairs:
-        key = pair["input_text"].strip().casefold()
+        key = text_key(pair["input_text"])
         grouped[key][pair["target_text"]] = pair
-    heldout = {row["input_text"].strip().casefold() for row in valid + test + novel + native_eval + shuffle_eval + volume_eval + workspace_eval}
+    heldout = {text_key(obj['text']) for path in heldout_paths() for _, obj in read_lines(str(path))}
     conflicts = sum(len(values) > 1 for values in grouped.values())
     all_pairs = [next(iter(values.values())) for key, values in grouped.items()
                  if len(values) == 1 and key not in heldout]
@@ -202,9 +214,26 @@ def main() -> int:
 
     rng = random.Random(SEED)
     rng.shuffle(all_pairs)
-    dev_n = max(1, int(len(all_pairs) * DEV_FRACTION))
-    dev = all_pairs[:dev_n]
-    train = all_pairs[dev_n:]
+    uncapped = len(all_pairs)
+    if args.cap_per_intent_sequence:
+        counts = defaultdict(int)
+        selected = []
+        for row in all_pairs:
+            bucket = tuple(i['name'] for i in json.loads(row['target_text']))
+            if counts[bucket] < args.cap_per_intent_sequence:
+                selected.append(row)
+                counts[bucket] += 1
+        all_pairs = selected
+        print(f'balanced cap : {len(all_pairs)} of {uncapped} selected rows')
+    if development:
+        dev, dev_errors = process_file(development, schema)
+        if dev_errors:
+            return 1
+        train = all_pairs
+    else:
+        dev_n = max(1, int(len(all_pairs) * DEV_FRACTION))
+        dev = all_pairs[:dev_n]
+        train = all_pairs[dev_n:]
 
     write_jsonl(os.path.join(output_dir, "train.jsonl"), train)
     write_jsonl(os.path.join(output_dir, "dev.jsonl"), dev)
@@ -230,7 +259,10 @@ def main() -> int:
         "schema_sha256": digest(SCHEMA_PATH),
         "shards": [{"file": os.path.relpath(path, ROOT), "sha256": digest(path)} for path in shards],
         "prepared": {"train": len(train), "dev": len(dev), "excluded_conflicts": conflicts},
-        "eval_only": [os.path.relpath(path, ROOT) for path in (NOVEL_PATH, NATIVE_EVAL_PATH, SHUFFLE_EVAL_PATH, VOLUME_EVAL_PATH, WORKSPACE_EVAL_PATH) if os.path.exists(path)],
+        "eval_only": [{"file": os.path.relpath(path, ROOT), "sha256": digest(path)} for path in heldout_paths() if os.path.exists(path)],
+        "development": os.path.relpath(development, ROOT) if development else 'random-five-percent',
+        "intent_sequence_cap": args.cap_per_intent_sequence,
+        "rows_before_cap": uncapped,
     }
     with open(os.path.join(output_dir, "dataset_manifest.json"), "w", encoding="utf-8") as handle:
         json.dump(manifest, handle, indent=2)

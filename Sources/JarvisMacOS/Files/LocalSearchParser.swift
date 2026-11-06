@@ -64,7 +64,10 @@ enum LocalSearchParser {
             remaining = String(remaining[..<range.lowerBound])
             request.mode = .content
         }
-        if content.isEmpty, lower.hasPrefix("search "),
+        // In "search for files called X", "for" introduces the file search,
+        // not a contents query. Explicit name markers own that interpretation.
+        let explicitNameSearch = lower.range(of: #"^search(?: for)? (?:files?|documents?|folders?|pdfs?) (?:named|called|titled)\b"#, options: .regularExpression) != nil
+        if content.isEmpty, !explicitNameSearch, lower.hasPrefix("search "),
            let range = remaining.range(of: #"(?i)\s+for\s+"#, options: .regularExpression) {
             content = String(remaining[range.upperBound...])
             remaining = String(remaining[..<range.lowerBound])

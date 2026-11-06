@@ -34,6 +34,7 @@ import sys
 import shutil
 import hashlib
 from datetime import datetime, timezone
+from evaluation_data import heldout_paths, text_key
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(ROOT, "training", "data")
@@ -71,9 +72,11 @@ def schema_score(intents, schema: dict) -> float:
             return 0.0
         for arg, expected in spec["types"].items():
             value = args[arg]
-            if expected == "int" and not isinstance(value, int):
+            if expected == "int" and type(value) is not int:
                 return 0.0
             if expected == "str" and not isinstance(value, str):
+                return 0.0
+            if arg in spec.get('enums',{}) and value not in spec['enums'][arg]:
                 return 0.0
     return 1.0
 
@@ -522,6 +525,15 @@ def train(args, schema: dict) -> int:
         ds["train"] = concatenate_datasets([ds["train"]] + [rl] * repeats)
         print(f"added {len(rl)} RL pairs ×{repeats} (real usage corrections)")
 
+    # Applies to prepared shards AND harvested pairs, including future versioned
+    # benchmarks. Fail closed rather than silently training on an audit phrase.
+    excluded = {text_key(json.loads(line)['text']) for path in heldout_paths()
+                for line in path.read_text().splitlines() if line.strip()}
+    excluded.update(text_key(row['input_text']) for row in ds['dev'])
+    leaked = [row['input_text'] for row in ds['train'] if text_key(row['input_text']) in excluded]
+    if leaked:
+        raise ValueError(f'{len(leaked)} training rows overlap development or independent evaluation; prepare clean data first')
+
     tokenizer = AutoTokenizer.from_pretrained(args.init_from)
     model = AutoModelForSeq2SeqLM.from_pretrained(args.init_from)
 
@@ -548,8 +560,13 @@ def train(args, schema: dict) -> int:
 
     def preprocess(batch):
         inputs = tokenizer(batch["input_text"], max_length=128, truncation=True)
-        labels = tokenizer(text_target=batch["target_text"], max_length=max_target_len, truncation=True)
+        labels = tokenizer(text_target=batch["target_text"], max_length=max_target_len, truncation=True,
+                           return_offsets_mapping=args.intent_loss_weight > 1)
         inputs["labels"] = labels["input_ids"]
+        if args.intent_loss_weight > 1:
+            from intent_loss import intent_weights
+            inputs['loss_weights']=[intent_weights(text,offsets,schema,args.intent_loss_weight,args.intent_loss_scope=='typed')
+                                    for text,offsets in zip(batch['target_text'],labels['offset_mapping'])]
         return inputs
 
     tokenized = ds.map(preprocess, batched=True, remove_columns=ds["train"].column_names)
@@ -564,7 +581,7 @@ def train(args, schema: dict) -> int:
         decoded_preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
         decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
 
-        scored, native_scored = [], []
+        scored, native_scored, exact, families = [], [], [], {}
         for pred, gold in zip(decoded_preds, decoded_labels):
             try:
                 pred_intents = json.loads(pred)
@@ -576,11 +593,17 @@ def train(args, schema: dict) -> int:
                 gold_intents = None
             score = reward(pred_intents, gold_intents, schema)
             scored.append(score)
+            match = schema_score(pred_intents,schema) == 1 and pred_intents == gold_intents
+            exact.append(match)
+            for name in {item['name'] for item in gold_intents or []}:
+                families.setdefault(name, []).append(match)
             if isinstance(gold_intents, list) and any(item.get("name") in {"files.search", "files.result", "settings.open"} for item in gold_intents):
                 native_scored.append(score)
         overall = float(sum(scored) / max(1, len(scored)))
         native = float(sum(native_scored) / max(1, len(native_scored)))
         return {"reward": overall, "native_reward": native,
+                "exact_match": sum(exact) / max(1,len(exact)),
+                "macro_exact": sum(sum(v)/len(v) for v in families.values()) / max(1,len(families)),
                 "balanced_reward": (overall + native) / 2 if native_scored else overall}
 
     use_cpu = args.device == "cpu"
@@ -615,20 +638,28 @@ def train(args, schema: dict) -> int:
         # generation matrix stays resident on the GPU and OOMs on a full run.
         eval_accumulation_steps=8,
         load_best_model_at_end=True,
-        metric_for_best_model="balanced_reward" if args.focus_repeat > 1 else "reward",
+        metric_for_best_model=args.selection_metric,
         greater_is_better=True,
         save_total_limit=2,
         fp16=False,
         report_to=[],
     )
 
-    trainer = Seq2SeqTrainer(
+    collator=DataCollatorForSeq2Seq(tokenizer, model=model, padding=True)
+    trainer_class=Seq2SeqTrainer
+    if args.intent_loss_weight > 1:
+        from intent_loss import weighted_collator,trainer_type
+        trainer_class=trainer_type(args.intent_loss_mode,args.intent_loss_weight)
+        collator=weighted_collator(collator,tokenizer)
+        # The tensor is consumed by the trainer, not model.forward.
+        training_args.remove_unused_columns=False
+    trainer = trainer_class(
         model=model,
         args=training_args,
         train_dataset=tokenized["train"],
         eval_dataset=tokenized["dev"],
         processing_class=tokenizer,
-        data_collator=DataCollatorForSeq2Seq(tokenizer, model=model, padding=True),
+        data_collator=collator,
         compute_metrics=compute_metrics,
     )
 
@@ -720,6 +751,14 @@ def main() -> int:
     ap.add_argument("--init-from", default=os.path.join(OUT_DIR, "best"),
                     help="checkpoint to continue from (keeps the model size)")
     ap.add_argument("--epochs", type=int, default=3)
+    ap.add_argument("--selection-metric", choices=['macro_exact','exact_match','reward','balanced_reward'], default='macro_exact',
+                    help='select by exact intent/argument matches, balanced across intent names')
+    ap.add_argument('--intent-loss-weight',type=float,default=1.,
+                    help='optional CE weight on top-level intent-name tokens;1 preserves ordinary supervised loss')
+    ap.add_argument('--intent-loss-mode',choices=['token','grouped'],default='token',
+                    help='grouped normalizes intent-choice and argument losses separately per example')
+    ap.add_argument('--intent-loss-scope',choices=['name','typed'],default='name',
+                    help='typed also emphasizes schema enums and integer values; free-form literals remain copy targets')
     ap.add_argument("--output-dir", default=POST_DIR, help="separate checkpoint directory; preserves the existing checkpoint")
     ap.add_argument("--batch", type=int, default=8)
     ap.add_argument("--accum", type=int, default=4)
@@ -737,6 +776,11 @@ def main() -> int:
                     help="compute device; cpu avoids the MPS allocator blow-up")
     ap.add_argument("--smoke", action="store_true")
     args = ap.parse_args()
+    import math
+    if not math.isfinite(args.intent_loss_weight) or args.intent_loss_weight<1:
+        ap.error('--intent-loss-weight must be finite and >=1')
+    if args.intent_loss_mode=='grouped' and args.intent_loss_weight<=1:
+        ap.error('grouped intent loss requires --intent-loss-weight >1')
 
     schema = load_schema()
 

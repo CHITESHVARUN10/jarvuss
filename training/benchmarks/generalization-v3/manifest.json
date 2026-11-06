@@ -1,0 +1,57 @@
+{
+  "version": 3,
+  "policy": "New audit grammar and slots after consuming v2; no outputs consulted for this edition.",
+  "generator_sha256": "abda75f7e3e2388ff75ed4f38fafc556b864e5c64601acf4d7a4204b58783e68",
+  "files": {
+    "development": {
+      "sha256": "44ef9f2894f678ffc6cce4c7832d9a898785ce962cd1399f313c251ec76229b3",
+      "count": 272,
+      "families": {
+        "native_search": 10,
+        "workspace": 22,
+        "shuffle": 12,
+        "results": 15,
+        "display": 30,
+        "files_query": 12,
+        "volume": 30,
+        "compound": 14,
+        "boundary": 21,
+        "folders": 12,
+        "settings": 5,
+        "apps": 16,
+        "install": 8,
+        "web": 20,
+        "creation": 14,
+        "info": 8,
+        "media": 10,
+        "urls": 6,
+        "transport": 7
+      }
+    },
+    "audit": {
+      "sha256": "79e6463502662dee1b774c70fb22912c4de335b7f5dfb0a37d5a85e5b91771b2",
+      "count": 276,
+      "families": {
+        "web": 20,
+        "folders": 12,
+        "boundary": 22,
+        "files_query": 12,
+        "volume": 30,
+        "info": 8,
+        "workspace": 26,
+        "shuffle": 12,
+        "native_search": 10,
+        "display": 30,
+        "urls": 6,
+        "media": 10,
+        "transport": 7,
+        "compound": 14,
+        "apps": 16,
+        "results": 15,
+        "creation": 14,
+        "install": 8,
+        "settings": 4
+      }
+    }
+  }
+}

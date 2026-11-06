@@ -1,0 +1,29 @@
+{
+  "policy": "Documented separately; original legacy texts, targets, scores and promotion checks remain unchanged.",
+  "issues": [
+    {
+      "suite": "test",
+      "text": "set volume to 250",
+      "kind": "runtime policy conflict",
+      "legacy_target": [{"name": "volume.set", "args": {"level": 100}}],
+      "evidence": "SystemVolumeParser.number accepts 0 through100; SystemVolumeTests explicitly requires rejection of101. IntentActionMapper resolves single volume commands from sourceText, so an otherwise correct clamped model target cannot map this utterance directly."
+    },
+    {
+      "suite": "valid",
+      "text": "open the oldest image in pictures",
+      "kind": "ambiguous extension assumption",
+      "evidence": "Legacy target fixes ext to png although the utterance does not specify PNG versus JPEG or another image format. Kept for historical comparability; requires explicit label-policy review."
+    },
+    {
+      "suite": "novel",
+      "text": "check the date and time",
+      "kind": "ordering assumption",
+      "evidence": "Legacy target orders info.time before info.date. Returning the two information reads in source order may serve the request but fails strict sequence exact match. Original target remains unchanged."
+    }
+  ],
+  "mapping_coverage_notes": {
+    "scope": "Offline direct IntentActionMapper comparison, not complete planner precedence or live app execution.",
+    "gold_unmappable_examples": ["volume at half", "make the volume 15 percent louder", "silence the audio", "nudge the volume up by 16", "make the audio a touch softer", "cut the sound entirely", "bring the audio back", "could you mute output audio for me please", "could you unmute output audio for me please"],
+    "interpretation": "These semantically reasonable labels expose direct native-parser phrasing gaps. Do not silently drop them or attribute native repair to learned model quality. Full pipeline cleaning and fallback can differ and require separate execution verification."
+  }
+}

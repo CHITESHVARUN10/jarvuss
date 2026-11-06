@@ -1,0 +1,8 @@
+{
+  "seed": 2026110674,
+  "requested_pairs": 150,
+  "rows": 296,
+  "sha256": "c2217e0e713bd10c61b639ccf20484aad8134bde17f6f379128cc6d7cfbc16d7",
+  "generator_sha256": "c747cb5473405f8959d2827a033d5917ac36de2d5f0953b71de0a21ddd10d662",
+  "policy": "One final evaluation after checkpoint selection; use a fresh seed and new phrasing families for later selection cycles."
+}

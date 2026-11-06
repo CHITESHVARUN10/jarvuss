@@ -1,0 +1,245 @@
+{
+  "version": "1.0.2",
+  "selected_run": "run06",
+  "baseline": "Hugging Face v1.0.1; local quantized weights verified against the tagged release manifest",
+  "highlights": "**v1.0.2 selects Run 6.** Against published v1.0.1, established exact parsing improves from **166/229 (72.5%) to 222/229 (96.9%)**, and the newer 550 comparison cases improve from **298/550 (54.2%) to 475/550 (86.4%)**. Shuffle is 12/12, volume 28/28, and all 33 actual tab/project commands pass. Native search changes from 16/16 to 15/16. These are offline intent-and-argument scores, not live app success rates. The owner accepted the remaining generalization limitations.",
+  "metric": "schema-valid exact intent-and-argument JSON match",
+  "model_weights": {
+    "encoder_model_quantized.onnx": "f38c2932bc41f52e5a82f206b66eac58d440a7f68d1b42752c9d498eba7230a1",
+    "decoder_model_merged_quantized.onnx": "355232e659d797153a51325b223dc767e05b22fb440f640e3f3941f3f01adcb0"
+  },
+  "baseline_weights": {
+    "encoder_model_quantized.onnx": "90bb2f473c5d5165d00ff01c90c31dfc715a3b6b4b29fab5410b18bf41ff2316",
+    "decoder_model_merged_quantized.onnx": "3f869b15eb281e26ab3f7ff382d4fefc041b0d2a1af0e30bb8dfc98614c274cf"
+  },
+  "suites": [
+    {
+      "suite": "native_search",
+      "count": 16,
+      "active_exact": 16,
+      "run06_exact": 15,
+      "active_rate": 1.0,
+      "run06_rate": 0.9375,
+      "delta_percentage_points": -6.25,
+      "active_schema_valid": 1.0,
+      "run06_schema_valid": 1.0,
+      "improved_cases": 0,
+      "regressed_cases": 1
+    },
+    {
+      "suite": "valid",
+      "count": 45,
+      "active_exact": 41,
+      "run06_exact": 43,
+      "active_rate": 0.9111111111111111,
+      "run06_rate": 0.9555555555555556,
+      "delta_percentage_points": 4.444444444444451,
+      "active_schema_valid": 0.9777777777777777,
+      "run06_schema_valid": 1.0,
+      "improved_cases": 3,
+      "regressed_cases": 1
+    },
+    {
+      "suite": "test",
+      "count": 45,
+      "active_exact": 42,
+      "run06_exact": 43,
+      "active_rate": 0.9333333333333333,
+      "run06_rate": 0.9555555555555556,
+      "delta_percentage_points": 2.2222222222222254,
+      "active_schema_valid": 1.0,
+      "run06_schema_valid": 1.0,
+      "improved_cases": 1,
+      "regressed_cases": 0
+    },
+    {
+      "suite": "novel",
+      "count": 45,
+      "active_exact": 42,
+      "run06_exact": 44,
+      "active_rate": 0.9333333333333333,
+      "run06_rate": 0.9777777777777777,
+      "delta_percentage_points": 4.444444444444439,
+      "active_schema_valid": 1.0,
+      "run06_schema_valid": 1.0,
+      "improved_cases": 2,
+      "regressed_cases": 0
+    },
+    {
+      "suite": "shuffle",
+      "count": 12,
+      "active_exact": 0,
+      "run06_exact": 12,
+      "active_rate": 0.0,
+      "run06_rate": 1.0,
+      "delta_percentage_points": 100.0,
+      "active_schema_valid": 0.9166666666666666,
+      "run06_schema_valid": 1.0,
+      "improved_cases": 12,
+      "regressed_cases": 0
+    },
+    {
+      "suite": "volume",
+      "count": 28,
+      "active_exact": 20,
+      "run06_exact": 28,
+      "active_rate": 0.7142857142857143,
+      "run06_rate": 1.0,
+      "delta_percentage_points": 28.57142857142857,
+      "active_schema_valid": 1.0,
+      "run06_schema_valid": 1.0,
+      "improved_cases": 8,
+      "regressed_cases": 0
+    },
+    {
+      "suite": "workspace",
+      "count": 38,
+      "active_exact": 5,
+      "run06_exact": 37,
+      "active_rate": 0.13157894736842105,
+      "run06_rate": 0.9736842105263158,
+      "delta_percentage_points": 84.21052631578948,
+      "active_schema_valid": 0.9210526315789473,
+      "run06_schema_valid": 1.0,
+      "improved_cases": 33,
+      "regressed_cases": 1
+    },
+    {
+      "suite": "development",
+      "count": 272,
+      "active_exact": 151,
+      "run06_exact": 216,
+      "active_rate": 0.5551470588235294,
+      "run06_rate": 0.7941176470588235,
+      "delta_percentage_points": 23.897058823529406,
+      "active_schema_valid": 0.9227941176470589,
+      "run06_schema_valid": 0.9852941176470589,
+      "improved_cases": 75,
+      "regressed_cases": 10
+    },
+    {
+      "suite": "previous_development",
+      "count": 276,
+      "active_exact": 157,
+      "run06_exact": 258,
+      "active_rate": 0.5688405797101449,
+      "run06_rate": 0.9347826086956522,
+      "delta_percentage_points": 36.59420289855073,
+      "active_schema_valid": 0.9746376811594203,
+      "run06_schema_valid": 0.9891304347826086,
+      "improved_cases": 101,
+      "regressed_cases": 0
+    },
+    {
+      "suite": "v2_authored",
+      "count": 275,
+      "active_exact": 171,
+      "run06_exact": 259,
+      "active_rate": 0.6218181818181818,
+      "run06_rate": 0.9418181818181818,
+      "delta_percentage_points": 31.999999999999996,
+      "active_schema_valid": 0.9890909090909091,
+      "run06_schema_valid": 0.9781818181818182,
+      "improved_cases": 88,
+      "regressed_cases": 0
+    },
+    {
+      "suite": "v2_rotating",
+      "count": 296,
+      "active_exact": 175,
+      "run06_exact": 287,
+      "active_rate": 0.5912162162162162,
+      "run06_rate": 0.9695945945945946,
+      "delta_percentage_points": 37.83783783783784,
+      "active_schema_valid": 0.9493243243243243,
+      "run06_schema_valid": 0.9864864864864865,
+      "improved_cases": 112,
+      "regressed_cases": 0
+    },
+    {
+      "suite": "v2_stress",
+      "count": 34,
+      "active_exact": 10,
+      "run06_exact": 24,
+      "active_rate": 0.29411764705882354,
+      "run06_rate": 0.7058823529411765,
+      "delta_percentage_points": 41.1764705882353,
+      "active_schema_valid": 0.8529411764705882,
+      "run06_schema_valid": 1.0,
+      "improved_cases": 14,
+      "regressed_cases": 0
+    },
+    {
+      "suite": "fresh_authored",
+      "count": 276,
+      "active_exact": 150,
+      "run06_exact": 212,
+      "active_rate": 0.5434782608695652,
+      "run06_rate": 0.7681159420289855,
+      "delta_percentage_points": 22.463768115942027,
+      "active_schema_valid": 0.9492753623188406,
+      "run06_schema_valid": 0.927536231884058,
+      "improved_cases": 72,
+      "regressed_cases": 10
+    },
+    {
+      "suite": "fresh_seeded",
+      "count": 274,
+      "active_exact": 148,
+      "run06_exact": 263,
+      "active_rate": 0.5401459854014599,
+      "run06_rate": 0.9598540145985401,
+      "delta_percentage_points": 41.97080291970803,
+      "active_schema_valid": 0.927007299270073,
+      "run06_schema_valid": 0.9817518248175182,
+      "improved_cases": 115,
+      "regressed_cases": 0
+    }
+  ],
+  "fresh_combined": {
+    "count": 550,
+    "active_exact": 298,
+    "run06_exact": 475
+  },
+  "established_combined": {
+    "count": 229,
+    "active_exact": 166,
+    "run06_exact": 222
+  },
+  "training": {
+    "architecture": "t5-small unchanged",
+    "method": "continued supervised fine-tuning, token-weighted intent loss; not PPO/RLHF",
+    "selected_shards": [
+      74,
+      75,
+      76,
+      77,
+      78,
+      79
+    ],
+    "prepared_rows": 4076,
+    "train_rows_after_focus_repetition": 4944,
+    "development_rows": 272,
+    "epochs": 3,
+    "learning_rate": 3e-05,
+    "seed": 13,
+    "harvested_pairs": false
+  },
+  "provenance": {
+    "run06_development": "055b6004894e7092a8e5ea83899580a20c8c174d9e7514307b1a95a7455d66f3",
+    "run06_fresh_audit": "dd511b0670ff6d978c91110114eae66bb16125657f1ad2796566df70d31c44c9",
+    "active_development": "b2226e108c28c91161732908ad25425373de86f5c2990bc141bf58b88e84c896",
+    "active_fresh_audit": "2c0c83e9c9b4482a69433f2cc744423eaf6bf4b98a6d8e519e6a99d377d2470d",
+    "decoder_sha256": "f97e3e634e959ad71ffe8017441367dec745ab6600145c20fe443f4955755b0f",
+    "schema_sha256": "3dec599adfe34fa02ccc50ae52008e06dae14bfb8504a9b0a130822d35cb5232"
+  },
+  "strict_quality_passed": false,
+  "owner_accepted": true,
+  "limitations": [
+    "Native search 15/16 versus 16/16 previously.",
+    "Negated and quoted instructions, unfamiliar literal arguments remain imperfect.",
+    "Development and older audit suites were consulted during iteration.",
+    "Fresh 550 cases were unseen during training/checkpoint selection of runs 6 and 7; now consumed comparison tests.",
+    "Synthetic authored/seeded cases are not representative of all real speech or app execution."
+  ]
+}

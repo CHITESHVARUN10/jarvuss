@@ -3,6 +3,13 @@ import CDDCShim
 @testable import JarvisMacOS
 
 final class LocalSearchParsingTests: XCTestCase {
+    func testExplicitSearchNamesDoNotBecomeContentQueries() {
+        for text in ["search for files called botanical archive", "search files named botanical archive", "search for documents titled botanical archive"] {
+            XCTAssertEqual(LocalSearchParser.search(text), LocalSearchRequest(query: "botanical archive"), text)
+        }
+        XCTAssertEqual(LocalSearchParser.search("search for PDFs named botanical archive"), LocalSearchRequest(query: "botanical archive", kind: .pdf))
+        XCTAssertEqual(LocalSearchParser.search("search documents for botanical archive"), LocalSearchRequest(query: "botanical archive", mode: .content))
+    }
     func testUserExamplesKeepNamesScopesTypesAndFilters() {
         XCTAssertEqual(LocalSearchParser.route("open Bluetooth settings"), .openSettings(.bluetooth))
         XCTAssertEqual(LocalSearchParser.search("find the SLA stage 2 document"), LocalSearchRequest(query: "SLA stage 2"))
