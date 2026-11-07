@@ -86,3 +86,9 @@ better application code simply because it is Rust.
 References: [Swift overview](https://www.swift.org/about/),
 [Rust ownership](https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html),
 [GitHub repository languages](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-repository-languages).
+
+## Follow-up: five pure-policy migrations completed
+
+The subsequent ordered migration moved volume, workspace, shuffle, file-search,
+routine-validation and transcript-normalization policies into Rust. Native Swift
+adapters remain. See [implementation and verification](rust-pure-policy-migration.md).

@@ -22,6 +22,23 @@ pub mod rl_log;
 pub mod safety;
 pub mod validator;
 pub mod wake;
+mod text_policy;
+pub mod system_volume;
+pub mod workspace;
+pub mod shuffle;
+pub mod local_search;
+pub mod transcript;
+pub mod routine_policy;
+
+#[uniffi::export]
+pub fn parse_system_volume(raw: String) -> Option<PlannedAction> {
+    system_volume::parse(&raw)
+}
+
+#[uniffi::export]
+pub fn parse_volume_number(raw: String) -> Option<i32> {
+    system_volume::number(&raw)
+}
 
 pub use actions::{DisplayAction, MediaAction, PlannedAction, SystemInfoAction, VolumeAction};
 pub use safety::{SafetyVerdict, validate_action, validate_raw};

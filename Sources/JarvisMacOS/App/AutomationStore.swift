@@ -72,14 +72,7 @@ enum AutomationActionType: String, Codable, CaseIterable, Identifiable {
         }
     }
 
-    var requiresValue: Bool {
-        switch self {
-        case .playLiked, .pause, .next, .previous, .stopwatch:
-            return false
-        default:
-            return true
-        }
-    }
+    var requiresValue: Bool { coreRoutineRequiresValue(typeName: rawValue) }
 
     var guidance: String {
         switch self {
@@ -100,32 +93,21 @@ struct AutomationAction: Codable, Identifiable, Equatable {
     var value: String
 
     var validationMessage: String? {
-        let text = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        if type.requiresValue && text.isEmpty { return "Enter a value for \(type.displayName)." }
-        switch type {
-        case .openWebsite, .openWebsiteBrave, .openWebsiteChrome:
-            guard websiteURL != nil else { return "Enter a valid http or https website address." }
-        case .newTab, .newWindow:
-            guard WorkspaceApp.parse(text) != nil else { return "Choose Brave, Chrome, VS Code, Finder or Terminal." }
-        case .workspaceCommand:
-            guard let plan = WorkspaceCommandParser.plan(text), plan.count == 1, case .workspace = plan[0] else {
-                return "Enter one window, tab or project command, or use Run command for multiple actions."
-            }
-        case .openFile:
-            guard text.hasPrefix("/") || text.hasPrefix("~/") else { return "Enter an absolute file path or a path beginning with ~/." }
-        case .timer, .stopwatch: return "Timers and stopwatches are not available yet. Replace this action before saving."
-        default: break
+        guard let issue = coreValidateRoutineAction(typeName: type.rawValue, value: value) else { return nil }
+        switch issue {
+        case .missingValue: return "Enter a value for \(type.displayName)."
+        case .invalidWebsite: return "Enter a valid http or https website address."
+        case .invalidApp: return "Choose Brave, Chrome, VS Code, Finder or Terminal."
+        case .invalidWorkspace: return "Enter one window, tab or project command, or use Run command for multiple actions."
+        case .invalidFile: return "Enter an absolute file path or a path beginning with ~/."
+        case .unsupportedTimer: return "Timers and stopwatches are not available yet. Replace this action before saving."
+        case .unknownAction: return "Unsupported routine action."
         }
-        return nil
     }
 
     var websiteURL: String? {
-        let text = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        let normalized = text.contains("://") ? text : "https://\(text)"
-        guard !text.contains(where: \.isWhitespace), let url = URL(string: normalized),
-              ["http", "https"].contains(url.scheme?.lowercased() ?? ""),
-              let host = url.host, !host.isEmpty else { return nil }
-        return url.absoluteString
+        // Foundation remains the native URL serialization adapter.
+        coreRoutineWebsite(value: value).flatMap { URL(string: $0)?.absoluteString }
     }
 
     init(id: UUID = UUID(), type: AutomationActionType, value: String = "") {

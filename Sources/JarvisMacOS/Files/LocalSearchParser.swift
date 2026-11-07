@@ -1,7 +1,6 @@
 import Foundation
 
-/// Native-only commands are routed before app aliases, quick device reads, and
-/// the learned router in both Swift and Rust pipeline modes.
+/// Rust interprets search/filter/result requests. Spotlight and native execution stay in Swift.
 enum LocalSearchParser {
     static func route(_ text: String) -> PlannedAction? {
         let cleaned = clean(text)
@@ -10,174 +9,52 @@ enum LocalSearchParser {
         if let request = search(cleaned) { return .searchFiles(request) }
         return nil
     }
-
-    static func clean(_ text: String) -> String {
-        text.trimmingCharacters(in: .whitespacesAndNewlines)
-            .replacingOccurrences(of: #"(?i)^(?:(?:(?:hey|ok|okay)\s+)?jarvis[, ]+|please\s+|(?:can|could|would) you\s+)+"#, with: "", options: .regularExpression)
-            .trimmingCharacters(in: CharacterSet(charactersIn: " .!?"))
-            .replacingOccurrences(of: #"(?i)[, ]+(?:please|thank you|thanks)$"#, with: "", options: .regularExpression)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
+    static func clean(_ text: String) -> String { coreCleanSearchText(raw: text) }
     static func selection(_ text: String) -> FileResultSelection? {
-        let lower = clean(text).lowercased()
-        if let match = captures(#"^(?:just )?(open|preview|quick look|reveal|show in finder)(?: (?:it|that|this|the selected (?:file|result)))?$"#, lower) {
-            return FileResultSelection(operation: operation(match[0]), index: 0)
+        guard let value = coreParseFileSelection(raw: text) else { return nil }
+        let operation: FileResultOperation
+        switch value.operation {
+        case .open: operation = .open
+        case .preview: operation = .preview
+        case .reveal: operation = .reveal
         }
-        let ordinals = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth"]
-        guard let match = captures(#"^(?:(open|preview|quick look|reveal|show in finder) )?(?:the |result |file |number )?(first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|[0-9]{1,3}(?:st|nd|rd|th)?)(?: one| result| file| item)?(?: in finder)?$"#, lower) else { return nil }
-        let index = ordinals.firstIndex(of: match[1]).map { $0 + 1 }
-            ?? Int(match[1].filter(\.isNumber)) ?? 0
-        guard index > 0, index <= 100 else { return nil }
-        return FileResultSelection(operation: operation(match[0]), index: index)
+        return FileResultSelection(operation: operation, index: Int(value.index))
     }
-
-    private static func operation(_ word: String) -> FileResultOperation {
-        if word == "preview" || word == "quick look" { return .preview }
-        if word == "reveal" || word == "show in finder" { return .reveal }
-        return .open
-    }
-
     static func search(_ text: String) -> LocalSearchRequest? {
-        var remaining = clean(text)
-        let lower = remaining.lowercased()
-        let explicitFile = lower.range(of: #"\b(files?|folders?|documents?|pdfs?|ppts?|pptx|presentations?|powerpoints?|spreadsheets?|images?|photos?|notes?|emails?|mail|word|slides?)\b"#, options: .regularExpression) != nil
-        // "Open PDFs in Downloads" needs a result list, not an LLM round
-        // trip or an attempt to launch an app named PDF. Keep ordinary app
-        // and folder openings on their existing routes.
-        let openDocuments = lower.range(of: #"^open\s+(?:(?:all|the|my|a|an)\s+)*(?:pdfs?|ppts?|presentations?|powerpoints?|spreadsheets?|images?|photos?|word documents?|word files?|files?)\b"#, options: .regularExpression) != nil
-            && lower.range(of: #"\b(?:in|inside|within|under|named|called|titled)\b"#, options: .regularExpression) != nil
-        let hasVerb = openDocuments || lower.range(of: #"^(find|locate|search|look for|show|list)\b"#, options: .regularExpression) != nil
-        guard explicitFile || lower.hasPrefix("find ") || lower.hasPrefix("locate ") else { return nil }
-        guard hasVerb || lower.range(of: #"^(pdfs?|ppts?|presentations?|documents?|files?|folders?|images?|notes?|emails?)\b"#, options: .regularExpression) != nil else { return nil }
-        // Preserve the existing folder counts/listing and newest/oldest actions.
-        if lower.range(of: #"\b(how many|count|oldest|newest|latest|largest|total size)\b"#, options: .regularExpression) != nil { return nil }
-        if !explicitFile && lower.range(of: #"\b(google|youtube|web|internet)\b"#, options: .regularExpression) != nil { return nil }
-        if lower.range(of: #"\b(?:and|then)\s+(?:open|play|close|delete|run|set|search|find)\b"#, options: .regularExpression) != nil { return nil }
-
-        var request = LocalSearchRequest()
-        // Pull out content first so filenames/types inside the quoted search
-        // text do not accidentally become filters.
-        var content = ""
-        if let range = remaining.range(of: #"(?i)\b(?:that\s+)?(?:mentions?|mentioning|contains?|containing|with text|whose contents? (?:includes?|contains?))\s+(?:the phrase\s+)?"#, options: .regularExpression) {
-            content = String(remaining[range.upperBound...])
-            remaining = String(remaining[..<range.lowerBound])
-            request.mode = .content
+        guard let value = coreParseFileSearch(raw: text) else { return nil }
+        let kind: LocalSearchKind
+        switch value.kind {
+        case .any: kind = .any
+        case .folder: kind = .folder
+        case .pdf: kind = .pdf
+        case .presentation: kind = .presentation
+        case .document: kind = .document
+        case .spreadsheet: kind = .spreadsheet
+        case .image: kind = .image
+        case .audio: kind = .audio
+        case .video: kind = .video
+        case .mail: kind = .mail
+        case .note: kind = .note
         }
-        // In "search for files called X", "for" introduces the file search,
-        // not a contents query. Explicit name markers own that interpretation.
-        let explicitNameSearch = lower.range(of: #"^search(?: for)? (?:files?|documents?|folders?|pdfs?) (?:named|called|titled)\b"#, options: .regularExpression) != nil
-        if content.isEmpty, !explicitNameSearch, lower.hasPrefix("search "),
-           let range = remaining.range(of: #"(?i)\s+for\s+"#, options: .regularExpression) {
-            content = String(remaining[range.upperBound...])
-            remaining = String(remaining[..<range.lowerBound])
-            request.mode = .content
+        let date: LocalSearchDate
+        switch value.date {
+        case .any: date = .any
+        case .today: date = .today
+        case .yesterday: date = .yesterday
+        case .thisWeek: date = .thisWeek
+        case .lastWeek: date = .lastWeek
+        case .thisMonth: date = .thisMonth
+        case .lastMonth: date = .lastMonth
+        case .last7Days: date = .last7Days
+        case .last30Days: date = .last30Days
         }
-
-        var literalQuery: String?
-        // Quoted names/content are literal: “yesterday in Downloads” must
-        // not silently turn into a date filter and a folder scope.
-        let quotedPattern = #"[\"“]([^\"”]+)[\"”]"#
-        if request.mode == .content {
-            if let regex = try? NSRegularExpression(pattern: quotedPattern),
-               let match = regex.firstMatch(in: content, range: NSRange(content.startIndex..., in: content)),
-               let whole = Range(match.range, in: content), let inside = Range(match.range(at: 1), in: content) {
-                literalQuery = String(content[inside]); content.removeSubrange(whole)
-            }
-        } else if let regex = try? NSRegularExpression(pattern: quotedPattern),
-                  let match = regex.firstMatch(in: remaining, range: NSRange(remaining.startIndex..., in: remaining)),
-                  let whole = Range(match.range, in: remaining), let inside = Range(match.range(at: 1), in: remaining) {
-            literalQuery = String(remaining[inside]); remaining.removeSubrange(whole)
-        }
-
-        func remove(_ pattern: String, from value: inout String) -> [String]? {
-            guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
-                  let match = regex.firstMatch(in: value, range: NSRange(value.startIndex..., in: value)),
-                  let range = Range(match.range, in: value) else { return nil }
-            let groups = (1..<match.numberOfRanges).map { Range(match.range(at: $0), in: value).map { String(value[$0]) } ?? "" }
-            value.replaceSubrange(range, with: " ")
-            return groups
-        }
-
-        // Filters may follow the content phrase: "mentions curves in Downloads".
-        var filters = request.mode == .content ? content : remaining
-        let dates: [(String, LocalSearchDate)] = [
-            (#"\b(?:from |modified |changed |updated )?last week\b"#, .lastWeek),
-            (#"\b(?:from |modified |changed |updated )?this week\b"#, .thisWeek),
-            (#"\b(?:from |modified |changed |updated )?last month\b"#, .lastMonth),
-            (#"\b(?:from |modified |changed |updated )?this month\b"#, .thisMonth),
-            (#"\b(?:from |modified (?:in )?|changed |updated )?(?:the )?(?:last|past) (?:7|seven) days\b"#, .last7Days),
-            (#"\b(?:from |modified |changed |updated )?(?:the )?(?:last|past) (?:30|thirty) days\b"#, .last30Days),
-            (#"\b(?:from |modified |changed |updated )?yesterday\b"#, .yesterday),
-            (#"\b(?:from |modified |changed |updated )?today\b"#, .today),
-        ]
-        for (pattern, date) in dates {
-            if remove(pattern, from: &filters) != nil { request.date = date; break }
-        }
-        for (pattern, minimum) in [(#"\b(?:bigger|larger|greater|more) than\s+([0-9]+(?:\.[0-9]+)?)\s*(kb|mb|gb|bytes?)\b"#, true),
-                                    (#"\b(?:smaller|less) than\s+([0-9]+(?:\.[0-9]+)?)\s*(kb|mb|gb|bytes?)\b"#, false),
-                                    (#"\b(?:over|above|at least)\s+([0-9]+(?:\.[0-9]+)?)\s*(kb|mb|gb|bytes?)\b"#, true),
-                                    (#"\b(?:under|below|at most)\s+([0-9]+(?:\.[0-9]+)?)\s*(kb|mb|gb|bytes?)\b"#, false)] {
-            if let match = remove(pattern, from: &filters), let amount = Double(match[0]) {
-                let multiplier: Double = ["kb": 1_000, "mb": 1_000_000, "gb": 1_000_000_000][match[1].lowercased()] ?? 1
-                let bytes = amount * multiplier
-                guard bytes.isFinite, bytes > 0, bytes < Double(Int64.max) else { return nil }
-                if minimum { request.minimumBytes = Int64(bytes.rounded(.up)) }
-                else { request.maximumBytes = Int64(bytes.rounded(.down)) }
-            }
-        }
-        // Treat "from Downloads" / "from the PDFs folder" as locations,
-        // after date phrases have been extracted. An arbitrary "from …"
-        // inside document text remains literal content.
-        let locationPattern = #"\b(?:(?:that|which)\s+)?(?:(?:may|might|could)\s+be\s+|maybe\s+)?(?:in|inside|within|under|from(?=\s+(?:(?:my|the)\s+)?(?:downloads|documents|desktop)\b)|from(?=\s+.+\s+(?:folders?|drive)\s*$))\s+(?:either\s+)?(.+)$"#
-        func scopes(from text: String) -> [String] {
-            text.replacingOccurrences(of: #"\s+(?:or|and)\s+|,"#, with: "|", options: [.regularExpression, .caseInsensitive])
-                .components(separatedBy: "|")
-                .map { $0.replacingOccurrences(of: #"(?i)^(?:my |the )+|\s+folders?$"#, with: "", options: .regularExpression)
-                    .trimmingCharacters(in: .whitespacesAndNewlines) }
-                .filter { !$0.isEmpty }
-        }
-        if let match = remove(locationPattern, from: &filters) {
-            request.scopes = scopes(from: match[0])
-        }
-        if request.mode == .content { content = filters } else { remaining = filters }
-
-        // A location/date may precede “containing”, not just follow its text.
-        if request.mode == .content {
-            for (pattern, date) in dates {
-                if remove(pattern, from: &remaining) != nil { request.date = date; break }
-            }
-            if let match = remove(locationPattern, from: &remaining) {
-                request.scopes += scopes(from: match[0])
-            }
-        }
-
-        let kinds: [(String, LocalSearchKind)] = [
-            (#"\b(?:pdfs?)\b"#, .pdf), (#"\b(?:ppts?|pptx|powerpoints?|presentations?|slide decks?|slides?)\b"#, .presentation),
-            (#"\b(?:spreadsheets?|excel files?|xlsx)\b"#, .spreadsheet), (#"\b(?:word documents?|word files?|docx)\b"#, .document),
-            (#"\b(?:images?|photos?|pictures?)\b"#, .image), (#"\b(?:audio files?|music files?)\b"#, .audio),
-            (#"\b(?:videos?|movies?)\b"#, .video), (#"\b(?:emails?|mail messages?|mail)\b"#, .mail),
-            (#"\b(?:notes?)\b"#, .note), (#"\b(?:folders?)\b"#, .folder),
-        ]
-        let nameMarker = remaining.range(of: #"(?i)\b(?:named|called|titled)\b"#, options: .regularExpression)
-        var kindPart = nameMarker.map { String(remaining[..<$0.lowerBound]) } ?? remaining
-        let namePart = nameMarker.map { String(remaining[$0.lowerBound...]) } ?? ""
-        for (pattern, kind) in kinds {
-            if remove(pattern, from: &kindPart) != nil { request.kind = kind; break }
-        }
-        remaining = kindPart + namePart
-        remaining = remaining.replacingOccurrences(of: #"(?i)^(?:find|locate|search(?: for)?|look for|show|list|open)\s+(?:me\s+)?"#, with: "", options: .regularExpression)
-        remaining = remaining.replacingOccurrences(of: #"(?i)\b(?:files?|documents?)\b"#, with: "", options: .regularExpression)
-        remaining = remaining.replacingOccurrences(of: #"(?i)^(?:(?:all|my|the|a|an|any|named|called|titled|about|on|for)\s+)+"#, with: "", options: .regularExpression)
-        remaining = remaining.replacingOccurrences(of: #"(?i)\b(?:named|called|titled)\s+"#, with: "", options: .regularExpression)
-        request.query = (literalQuery ?? (request.mode == .content ? content : remaining))
-            .trimmingCharacters(in: .whitespacesAndNewlines.union(.init(charactersIn: "\"'“”‘’")))
-            .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
-        guard request.query.count <= 512, request.scopes.count <= 8,
-              !request.query.isEmpty || request.kind != .any || request.date != .any || request.minimumBytes > 0 || request.maximumBytes > 0 || !request.scopes.isEmpty else { return nil }
-        return request
+        let mode: LocalSearchRequest.Mode
+        switch value.mode { case .name: mode = .name; case .content: mode = .content }
+        return LocalSearchRequest(query: value.query, mode: mode, kind: kind, scopes: value.scopes,
+                                  date: date, minimumBytes: value.minimumBytes, maximumBytes: value.maximumBytes)
     }
 
+    // Regex helper retained for the native settings-pane adapter.
     static func captures(_ pattern: String, _ text: String) -> [String]? {
         guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
               let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) else { return nil }
