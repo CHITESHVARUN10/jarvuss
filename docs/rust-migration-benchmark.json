@@ -1,0 +1,63 @@
+{
+  "benchmark": [
+    {
+      "component": "Exact app aliases",
+      "rust_samples": [
+        1.4641433333333334,
+        1.28,
+        0.9560416666666667,
+        0.9316205555555556,
+        0.8293288888888889,
+        0.7766205555555556,
+        0.7080783333333334
+      ],
+      "rust_with_uniffi_us": 0.9316205555555556,
+      "swift_samples": [
+        5.651481111111111,
+        3.8339583333333334,
+        3.3406711111111114,
+        2.86787,
+        2.618587777777778,
+        2.451342222222222,
+        2.314051111111111
+      ],
+      "swift_us": 2.86787
+    },
+    {
+      "component": "Fuzzy / unknown names",
+      "rust_samples": [
+        31.30263833333333,
+        31.3475,
+        31.3975,
+        31.368403333333333,
+        31.69368083333333,
+        31.56795166666667,
+        31.51507
+      ],
+      "rust_with_uniffi_us": 31.3975,
+      "swift_samples": [
+        69.12742999999999,
+        68.07267416666666,
+        67.60263916666666,
+        68.16208333333333,
+        68.3328125,
+        68.73527833333334,
+        67.95013833333334
+      ],
+      "swift_us": 68.16208333333333
+    }
+  ],
+  "checksum": 487200,
+  "differences": [],
+  "parity_cases": 19,
+  "scope": "Optimized Swift (-O) versus shipped release Rust static library including UniFFI. Warm in-process calls; 7 alternating rounds of 300 corpus repeats. Not end-to-end latency or representative workload.",
+  "environment": {
+    "architecture": "arm64",
+    "os": "27.0.1",
+    "swift_optimization": "-O",
+    "rust_profile": "release",
+    "ffi_included": true
+  },
+  "baseline_source_sha256": "3b46ab7a119c8e5810780f1da5db9ce0665ba8766c6fa185169da1fdbffe2f02",
+  "note": "Observed implementation comparison: cached Rust regex versus previous Swift Foundation normalization plus fuzzy matching. Not evidence of a universal language speed advantage. Timings are load-sensitive."
+}

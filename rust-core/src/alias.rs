@@ -15,7 +15,7 @@ fn squash_ws_re() -> &'static Regex {
 
 fn normalize(value: &str) -> String {
     let lower = value.to_lowercase();
-    let cleaned = normalize_re().replace_all(&lower, " ");
+    let cleaned = normalize_re().replace_all(&lower, "");
     squash_ws_re()
         .replace_all(&cleaned, " ")
         .trim()
@@ -34,6 +34,8 @@ fn alias_map() -> Vec<(&'static str, Vec<&'static str>)> {
             vec!["brave", "brave browser", "browser", "web browser"],
         ),
         ("Firefox", vec!["firefox", "mozilla firefox", "fox"]),
+        ("Microsoft Edge", vec!["edge", "microsoft edge", "ms edge"]),
+        ("Arc", vec!["arc", "arc browser"]),
         ("Mail", vec!["mail", "apple mail", "email"]),
         ("Messages", vec!["messages", "imessage", "message"]),
         ("Calendar", vec!["calendar", "apple calendar"]),
@@ -99,9 +101,23 @@ pub fn resolve(name: &str) -> String {
         .trim()
         .trim_matches(|c: char| matches!(c, '?' | '.' | '!' | ',' | ';' | ':'))
         .trim();
-    let value = normalize(cleaned);
+    resolve_name(cleaned)
+}
+
+/// Exact lookup used when deciding whether text names a known application.
+/// Unlike resolve_name, this must never guess using fuzzy matching.
+pub fn known_name(name: &str) -> Option<String> {
+    let value = normalize(name);
+    alias_map().into_iter().find_map(|(canonical, aliases)| {
+        aliases.contains(&value.as_str()).then(|| canonical.to_string())
+    })
+}
+
+/// Match the Swift resolve contract: preserve the original unknown/empty input.
+pub fn resolve_name(name: &str) -> String {
+    let value = normalize(name);
     if value.is_empty() {
-        return cleaned.to_string();
+        return name.to_string();
     }
     for (canonical, aliases) in alias_map() {
         if aliases.iter().any(|a| *a == value) {
@@ -111,7 +127,7 @@ pub fn resolve(name: &str) -> String {
     if let Some(fuzzy) = fuzzy_resolve(&value) {
         return fuzzy;
     }
-    cleaned.to_string()
+    name.to_string()
 }
 
 fn fuzzy_resolve(value: &str) -> Option<String> {
@@ -154,5 +170,22 @@ mod tests {
     #[test]
     fn unknown_passthrough() {
         assert_eq!(resolve("SomeRandomApp"), "SomeRandomApp");
+    }
+
+    #[test]
+    fn browser_aliases_and_exact_lookup_preserve_swift_contract() {
+        for name in ["edge", "microsoft edge", "ms edge"] {
+            assert_eq!(known_name(name).as_deref(), Some("Microsoft Edge"));
+        }
+        for name in ["arc", "arc browser"] {
+            assert_eq!(known_name(name).as_deref(), Some("Arc"));
+        }
+        assert_eq!(known_name("c.h.r.o.m.e").as_deref(), Some("Google Chrome"));
+        assert_eq!(resolve_name("spotfy"), "Spotify");
+        assert_eq!(known_name("spotfy"), None);
+        assert_eq!(resolve_name("  "), "  ");
+        assert_eq!(resolve("  "), "");
+        assert_eq!(resolve_name(" UnknownApplicationXYZ! "), " UnknownApplicationXYZ! ");
+        assert_eq!(resolve(" UnknownApplicationXYZ! "), "UnknownApplicationXYZ");
     }
 }

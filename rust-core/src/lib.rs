@@ -48,6 +48,18 @@ pub fn resolve_app(name: String) -> String {
     alias::resolve(&name)
 }
 
+/// Exact app-name policy shared by Swift routing and Rust planning.
+#[uniffi::export]
+pub fn known_app_name(name: String) -> Option<String> {
+    alias::known_name(&name)
+}
+
+/// Resolve an app name without spoken-input punctuation cleanup.
+#[uniffi::export]
+pub fn resolve_app_name(name: String) -> String {
+    alias::resolve_name(&name)
+}
+
 /// Safety verdict for a raw command (cut-over counterpart of
 /// `SafetyGuard.validate(rawCommand:)`).
 #[uniffi::export]

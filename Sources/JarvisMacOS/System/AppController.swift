@@ -93,95 +93,10 @@ final class AppController {
     }
 }
 
+/// Rust owns the alias table and fuzzy policy in both pipeline modes.
+/// Swift retains only the native application-launch adapter.
 enum AppAliasResolver {
-    static func resolve(_ name: String) -> String {
-        let value = normalize(name)
-        guard !value.isEmpty else { return name }
-
-        for (canonical, aliases) in aliasMap {
-            if aliases.contains(value) {
-                return canonical
-            }
-        }
-
-        if let fuzzy = fuzzyResolve(value) {
-            return fuzzy
-        }
-
-        return name
-    }
-
-    static func knownAppName(_ input: String) -> String? {
-        let value = normalize(input)
-        return aliasMap.first { $0.value.contains(value) }?.key
-    }
-
-    private static let aliasMap: [String: Set<String>] = [
-        "Google Chrome": ["chrome", "google chrome", "googlechrom"],
-        "Spotify": ["spotify"],
-        "WhatsApp": ["whatsapp"],
-        "Safari": ["safari", "apple safari"],
-        "Photos": ["photos", "apple photos", "photo", "fotos"],
-        "Brave Browser": ["brave", "brave browser", "browser", "web browser"],
-        "Firefox": ["firefox", "mozilla firefox", "fox"],
-        "Microsoft Edge": ["edge", "microsoft edge", "ms edge"],
-        "Arc": ["arc", "arc browser"],
-        "Mail": ["mail", "apple mail", "email"],
-        "Messages": ["messages", "imessage", "message"],
-        "Calendar": ["calendar", "apple calendar"],
-        "Notes": ["notes", "apple notes", "note"],
-        "Music": ["music", "apple music"],
-        "Maps": ["maps", "apple maps", "map"],
-        "App Store": ["app store", "appstore"],
-        "City": ["city"],
-        "GitHub Desktop": [
-            "github", "github desktop", "git hub", "git hub desktop", "githab desktop",
-            "get her desktop", "getha desktop", "get desktop", "gate desktop", "get up desktop", "gita desktop"
-        ],
-        "System Settings": ["system settings", "settings", "system setting"],
-        "Visual Studio Code": ["vscode", "vs code", "visual studio code", "visual code"],
-        "Finder": ["finder"],
-        "Terminal": ["terminal"]
-    ]
-
-    private static func fuzzyResolve(_ value: String) -> String? {
-        var bestCanonical: String?
-        var bestDistance = Int.max
-
-        for (canonical, aliases) in aliasMap {
-            for alias in aliases {
-                let distance = StringDistance.levenshtein(value, alias)
-                if distance < bestDistance {
-                    bestDistance = distance
-                    bestCanonical = canonical
-                }
-            }
-        }
-
-        guard let bestCanonical else { return nil }
-        let maxAllowedDistance = max(1, value.count / 4)
-        return bestDistance <= maxAllowedDistance ? bestCanonical : nil
-    }
-
-    private static func normalize(_ value: String) -> String {
-        value
-            .lowercased()
-            .replacingOccurrences(of: "[^a-z0-9\\s]", with: "", options: .regularExpression)
-            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    /// Whisper appends sentence punctuation ("Open photos.", "Open city!").
-    /// Strip it BEFORE resolve so "photos." hits the alias map.
-    static func resolveSpoken(_ name: String) -> String {
-        // Migration cut-over: the Rust core carries the same alias table.
-        if JarvisFlags.useRustPipeline {
-            return coreResolveApp(name: name)
-        }
-        let cleaned = name
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .trimmingCharacters(in: CharacterSet(charactersIn: "?.!,,;:"))
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        return resolve(cleaned)
-    }
+    static func resolve(_ name: String) -> String { coreResolveAppName(name: name) }
+    static func knownAppName(_ input: String) -> String? { coreKnownAppName(name: input) }
+    static func resolveSpoken(_ name: String) -> String { coreResolveApp(name: name) }
 }
