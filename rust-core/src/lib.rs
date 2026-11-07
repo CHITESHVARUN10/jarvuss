@@ -14,6 +14,14 @@ pub mod alias;
 pub mod automation;
 pub mod intent_mapper;
 pub mod intent_router;
+pub mod native_intent;
+pub mod intent_store;
+pub mod backend_config;
+pub mod backend_services;
+pub mod native_voice;
+pub mod native_audio;
+pub mod voice_profiles;
+pub mod voice_service;
 pub mod ollama;
 pub mod planner;
 pub mod queue;
@@ -45,6 +53,24 @@ pub use safety::{SafetyVerdict, validate_action, validate_raw};
 pub use validator::validate as validate_command;
 
 uniffi::setup_scaffolding!();
+
+#[derive(Debug, thiserror::Error, uniffi::Error)]
+pub enum NativeIntentError {
+    #[error("{message}")]
+    Unavailable { message: String },
+}
+
+#[uniffi::export]
+pub fn native_intent_parse(text: String, bundled_directory: String, data_directory: String, runtime_library: String) -> Result<String, NativeIntentError> {
+    native_intent::parse(&text, std::path::Path::new(&bundled_directory), std::path::Path::new(&data_directory), std::path::Path::new(&runtime_library))
+        .map_err(|message| NativeIntentError::Unavailable { message })
+}
+
+#[uniffi::export]
+pub fn native_intent_status() -> String { native_intent::status() }
+
+#[uniffi::export]
+pub fn native_intent_unload_if_idle(seconds: u64) -> bool { native_intent::unload_if_idle(seconds) }
 
 /// Plan a raw command string into ordered actions.
 /// Exported to Swift via UniFFI once bindings are generated.

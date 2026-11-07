@@ -1,0 +1,156 @@
+{
+  "measured_requests_per_runtime": 252,
+  "changed_decisions": 0,
+  "exact_responses": 252,
+  "summary": {
+    "python": {
+      "ready_ms": 181.77183399893693,
+      "first_voice_request_ms": 1247.701500000403,
+      "warm_median_ms": 39.85347949856077,
+      "rss_median_bytes": 425295872,
+      "rss_samples_bytes": [
+        424034304,
+        425197568,
+        424476672,
+        425312256,
+        425345024,
+        425345024,
+        425295872
+      ]
+    },
+    "native": {
+      "ready_ms": 90.59466600228916,
+      "first_voice_request_ms": 77.05662499938626,
+      "warm_median_ms": 18.582229000458028,
+      "rss_median_bytes": 102023168,
+      "rss_samples_bytes": [
+        94420992,
+        94420992,
+        94420992,
+        102023168,
+        103628800,
+        103628800,
+        103596032
+      ]
+    }
+  },
+  "installed_app_bytes": 1300369374,
+  "candidate_app_bytes": 315429948,
+  "native_binary_sha256": "4d703ef009dc2ddf2fce0d7f08aa163d4f44e98ada8b7341ea44d1342c02a936",
+  "method": "Two isolated helpers; same synthetic profiles/audio, CPU, seven shuffled alternating rounds; no voice capture or actions.",
+  "limits": "One process launch per runtime; cold timings are observations, not repeatable startup guarantees. RSS is helper-only and includes shared pages; not total app RAM. No human biometric accuracy claim.",
+  "verification": {
+    "candidate_uuid": "903DE141-3A12-392E-8E6B-0105C9116568",
+    "candidate_revision": "8540cc1e563b+modified",
+    "built_utc": "2026-11-07T17:46:07Z",
+    "intent_files_identical": {
+      "added_tokens.json": true,
+      "LICENSE": true,
+      "tokenizer_config.json": true,
+      "special_tokens_map.json": true,
+      "config.json": true,
+      "tokenizer.json": true,
+      "generation_config.json": true,
+      "NOTICE": true,
+      "spiece.model": true,
+      "model-release.json": true,
+      "encoder_model_quantized.onnx": true,
+      "decoder_model_merged_quantized.onnx": true,
+      "model_meta.json": true
+    },
+    "python_runtime_present": false,
+    "signatures_verified": true,
+    "installed_app_preserved": true,
+    "packaged_intent_checks": 5
+  },
+  "intent_comparisons": [
+    {
+      "cases": 199,
+      "failed": 0,
+      "max_confidence_delta": 1.2567724638756772e-13,
+      "python_median_ms": 77.35085449894541,
+      "native_median_ms": 74.96160449999999
+    },
+    {
+      "cases": 704,
+      "failed": 0,
+      "max_confidence_delta": 1.297850715786808e-13,
+      "python_median_ms": 85.78245900207548,
+      "native_median_ms": 85.462875
+    }
+  ],
+  "voice_parity": {
+    "cases": 36,
+    "failed": 0,
+    "decisions": 1296,
+    "changed_confidence": 0,
+    "max_embedding_delta": 2.682209014892578e-07
+  },
+  "tests": {
+    "swift_tests": 393,
+    "swift_skipped": 10,
+    "rust_library_passed": 91,
+    "rust_helper_passed": 2,
+    "rust_integration_passed": 1,
+    "rust_ignored": 1,
+    "python_reference_tests": 64,
+    "python_reference_skipped": 1,
+    "native_helper_integration_tests": 6
+  },
+  "intent_memory_observation": {
+    "native_app_rss_bytes": [
+      660946944,
+      660946944,
+      660946944,
+      660946944,
+      660946944
+    ],
+    "scope": "Warmed installed/candidate apps after the same five intent-only requests. No voice requests or actions. RSS sums double-count shared pages; one launch per app, not a peak/RAM guarantee.",
+    "installed_checks": [
+      {
+        "command": "pause",
+        "outcome": "parsed",
+        "output": "[{\"name\":\"media.pause\",\"args\":{}}]",
+        "same": true
+      },
+      {
+        "command": "open Brave and Notes",
+        "outcome": "parsed",
+        "output": "[{\"name\":\"app.open\",\"args\":{\"name\":\"Brave Browser\"}},{\"name\":\"app.open\",\"args\":{\"name\":\"Notes\"}}]",
+        "same": true
+      },
+      {
+        "command": "open my portfolio project in VS Code",
+        "outcome": "parsed",
+        "output": "[{\"name\":\"project.open\",\"args\":{}}]",
+        "same": true
+      },
+      {
+        "command": "shuffle my liked songs",
+        "outcome": "parsed",
+        "output": "[{\"name\":\"media.shuffle\",\"args\":{}}]",
+        "same": true
+      },
+      {
+        "command": "play song Blinding Lights",
+        "outcome": "parsed",
+        "output": "[{\"name\":\"media.play_song\",\"args\":{\"title\":\"blinding lights\"}}]",
+        "same": true
+      }
+    ],
+    "installed_app_rss_bytes": [
+      128335872,
+      128335872,
+      128335872,
+      128335872,
+      128335872
+    ],
+    "installed_intent_helper_rss_bytes": [
+      758104064,
+      758104064,
+      758104064,
+      758104064,
+      758104064
+    ]
+  }
+}

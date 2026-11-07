@@ -41,7 +41,7 @@ struct AssistantPane: View {
 
             JCard {
                 JRow(title: "Backend",
-                     sub: "Voice auth, Spotify and the learned intent router live in a Python helper",
+                     sub: "Controls voice authentication and Spotify lookup; the intent model runs locally",
                      first: true) {
                     Picker("", selection: $appState.backendMode) {
                         ForEach(BackendMode.allCases, id: \.self) { mode in
@@ -120,7 +120,7 @@ struct AssistantPane: View {
             .padding(.top, 9)
 
             if appState.backendMode == .off && (appState.actionPillRequiresVerify || appState.voiceModeRequiresVerify) {
-                Text("Verification requires the Python helper. Enable the backend or turn verification off for that mode.")
+                Text("Verification requires the local helper. Enable the backend or turn verification off for that mode.")
                     .font(.system(size: 10.5))
                     .foregroundStyle(JColor.danger)
                     .fixedSize(horizontal: false, vertical: true)

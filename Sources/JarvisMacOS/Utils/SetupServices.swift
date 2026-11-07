@@ -116,21 +116,10 @@ enum HomebrewActions {
         guard BackendServiceManager.mode != .off else {
             return "Turn the backend to Automatic or Always running in Assistant before preparing it."
         }
-        let pythonInstalled = ["/opt/homebrew/bin/python3.11", "/usr/local/bin/python3.11"]
-            .contains { FileManager.default.isExecutableFile(atPath: $0) }
-        if !pythonInstalled {
-            guard let brew = brewPath() else { return "Install Homebrew from brew.sh, then retry Prepare." }
-            onLine("Installing Python 3.11…")
-            do {
-                let result = try await Process().executable(cmd: brew, args: ["install", "python@3.11"])
-                    .runCapturingOutputAsync(timeout: 1800)
-                guard result.status == 0 else { return "Python installation failed: \(result.stderr)" }
-            } catch { return error.localizedDescription }
-        }
-        onLine("Preparing helper dependencies. The first download may take several minutes…")
+        onLine("Starting the local helper…")
         let ready = await BackendServiceManager.ensureRunningForFeature()
-        onLine(ready ? "Helper ready. Voice models load only when needed." : "Preparation failed. See Jarvis/logs/backend-pip.log in Application Support.")
-        return ready ? "Python helper is ready." : "Could not prepare the helper. Check the backend logs and retry."
+        onLine(ready ? "Helper ready. Voice models load only when needed." : "Preparation failed. See Jarvis/logs/backend.log in Application Support.")
+        return ready ? "Local helper is ready." : "Could not prepare the helper. Check the backend logs and retry."
     }
 
     /// brew install postgresql@18 (when missing) + brew services start.

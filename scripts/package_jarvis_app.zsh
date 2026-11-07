@@ -23,12 +23,10 @@ APP_RESOURCES="$APP_CONTENTS/Resources"
 BACKEND_SRC="$ROOT_DIR/backend"
 BACKEND_DEST="$APP_RESOURCES/backend"
 
-USE_PYINSTALLER="${JARVIS_USE_PYINSTALLER:-0}"
-
 cd "$ROOT_DIR"
 
-# A refresh reuses native cores/backend dependencies and updates both code paths. It never
-# imports configuration, touches Keychain settings, or reinstalls dependencies.
+# A refresh reuses native cores and updates the app/helper/assets. Configuration
+# import stays exclusive to a full package; development tools live outside the app.
 if (( REFRESH_FRONTEND )); then
   if [[ ! -f "$APP_CONTENTS/Info.plist" || ! -d "$BACKEND_DEST" || ! -d "$ROOT_DIR/STTCore.xcframework" || ! -d "$ROOT_DIR/RustCore.xcframework" ]]; then
     echo "No complete existing bundle/native cores. Run full packaging first." >&2
@@ -37,15 +35,21 @@ if (( REFRESH_FRONTEND )); then
 fi
 source "$ROOT_DIR/scripts/macos_toolchain.zsh"
 
+./scripts/prepare_native_runtime.zsh
+
 if (( ! REFRESH_FRONTEND )); then
 # ── Rust STT core → STTCore.xcframework + Swift bridge (required by swift build) ──
 ./scripts/build_stt.sh --release
+fi
 
 # ── Rust command core → RustCore.xcframework + UniFFI bindings (linked into the app) ──
 ./scripts/build_rust_core.sh --release
-fi
 
 swift build
+
+# The helper is a separate executable so existing authenticated clients and
+# OAuth redirect URLs keep their contract during the native transition.
+cargo build --locked --release --manifest-path "$ROOT_DIR/rust-core/Cargo.toml" --bin jarvis-backend
 
 NEW_BIN="$BUILD_DIR/jarvis"
 
@@ -55,15 +59,14 @@ NEW_BIN="$BUILD_DIR/jarvis"
 # old errors like "Missing NSMicrophoneUsageDescription".
 mkdir -p "$APP_MACOS" "$BACKEND_DEST"
 cp "$NEW_BIN" "$APP_MACOS/Jarvis"
+cp "$ROOT_DIR/rust-core/target/release/jarvis-backend" "$APP_MACOS/JarvisBackend"
+chmod +x "$APP_MACOS/JarvisBackend"
 chmod +x "$APP_MACOS/Jarvis"
 
 cp "$ROOT_DIR/scripts/start_backend.sh" "$APP_MACOS/start_backend.sh"
 chmod +x "$APP_MACOS/start_backend.sh"
 
-cp "$BACKEND_SRC"/*.py "$BACKEND_DEST/"
-cp "$BACKEND_SRC/requirements.txt" "$BACKEND_DEST/requirements.txt"
-
-# Refresh builds must ship updated weights as well as updated Swift/Python.
+# Refresh builds must ship updated weights as well as updated app/helper code.
 # Keep this outside dependency installation and configuration migration.
 if [[ -d "$BACKEND_SRC/models" ]]; then
   mkdir -p "$BACKEND_DEST/models"
@@ -87,62 +90,15 @@ fi
 # Remove legacy generated bundle copies after migration.
 # Legacy files are removed after the signed app imports them below.
 
-# ── Python venv: create once, reinstall only if requirements changed ──────
-REQ_HASH_FILE="$BACKEND_DEST/venv/.req_hash"
+fi # full configuration/profile migration
 
-if [[ -x "$BACKEND_DEST/venv/bin/python" ]] && ! "$BACKEND_DEST/venv/bin/python" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then
-  echo "[Package] Existing venv is Python < 3.10 — recreating..."
-  rm -rf "$BACKEND_DEST/venv"
-fi
-
-if [[ ! -x "$BACKEND_DEST/venv/bin/python" ]]; then
-  echo "[Package] Creating Python venv..."
-  # Prefer Homebrew Python (>=3.10): /usr/bin/python3 is Apple-shipped 3.9,
-  # which cannot evaluate `X | Y` type annotations at runtime.
-  PYBIN=""
-  for candidate in /opt/homebrew/bin/python3.11 /opt/homebrew/bin/python3 /usr/local/bin/python3 /usr/bin/python3; do
-    if [[ -x "$candidate" ]] && "$candidate" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then
-      PYBIN="$candidate"
-      break
-    fi
-  done
-  "${PYBIN:-/usr/bin/python3}" -m venv "$BACKEND_DEST/venv"
-fi
-
-REQ_HASH="$(shasum -a 256 "$BACKEND_DEST/requirements.txt" | awk '{print $1}')"
-CACHED_HASH=""
-if [[ -f "$REQ_HASH_FILE" ]]; then
-  CACHED_HASH="$(cat "$REQ_HASH_FILE" 2>/dev/null || true)"
-fi
-
-if [[ "$REQ_HASH" != "$CACHED_HASH" ]]; then
-  echo "[Package] requirements.txt changed — running pip install (this takes a moment)..."
-  "$BACKEND_DEST/venv/bin/python" -m pip install --upgrade pip --quiet
-  "$BACKEND_DEST/venv/bin/python" -m pip install -r "$BACKEND_DEST/requirements.txt" --quiet
-  echo "$REQ_HASH" > "$REQ_HASH_FILE"
-  echo "[Package] pip install complete."
-else
-  echo "[Package] Dependencies unchanged — skipping pip install."
-fi
-
-cat > "$BACKEND_DEST/main.py" <<'PY'
-from uvicorn import run
-
-if __name__ == "__main__":
-    run("voice_auth_service:app", host="127.0.0.1", port=8000, workers=1)
-PY
-
-if [[ "$USE_PYINSTALLER" == "1" ]]; then
-  "$BACKEND_DEST/venv/bin/python" -m pip install pyinstaller
-  pushd "$BACKEND_DEST" >/dev/null
-  "$BACKEND_DEST/venv/bin/pyinstaller" --onefile --name main main.py
-  cp "$BACKEND_DEST/dist/main" "$BACKEND_DEST/main"
-  chmod +x "$BACKEND_DEST/main"
-  rm -rf "$BACKEND_DEST/build" "$BACKEND_DEST/dist" "$BACKEND_DEST/main.spec"
-  popd >/dev/null
-fi
-
-fi # full backend packaging
+# Ship only native inference/audio libraries, verified voice assets and models.
+# The old development Python environment was retained outside the bundle by
+# prepare_native_runtime.zsh before this cleanup. User data lives elsewhere.
+rm -rf "$BACKEND_DEST/venv" "$BACKEND_DEST/__pycache__" "$BACKEND_DEST/build" "$BACKEND_DEST/dist"
+rm -f "$BACKEND_DEST"/*.py(N) "$BACKEND_DEST"/*.pyc(N) "$BACKEND_DEST/requirements.txt" "$BACKEND_DEST/main" "$BACKEND_DEST/main.spec"
+mkdir -p "$APP_RESOURCES/native"
+rsync -a --delete "$ROOT_DIR/.build/native-runtime/" "$APP_RESOURCES/native/"
 
 # Copy the source-of-truth Info.plist into the bundle (mic usage string
 # is what unlocks the macOS permission prompt — never `swift run`).

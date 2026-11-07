@@ -57,7 +57,12 @@ _oauth_states = OAuthStates()
 
 @app.on_event("startup")
 def initialize_local_auth():
-    app.state.auth_token = create_token(data_directory())
+    # The Rust parent owns the public token file. Its private voice worker
+    # receives the token through its environment and never rotates that file.
+    supplied = os.environ.get("JARVIS_HELPER_AUTH_TOKEN", "") if os.environ.get("JARVIS_VOICE_ONLY") == "1" else ""
+    if supplied and (not 32 <= len(supplied) <= 128 or not re.fullmatch(r"[A-Za-z0-9_-]+", supplied)):
+        raise RuntimeError("Invalid private helper authentication")
+    app.state.auth_token = supplied or create_token(data_directory())
 
 
 @app.middleware("http")

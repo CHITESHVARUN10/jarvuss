@@ -5,7 +5,7 @@ struct BackendStartupResult {
     let message: String
 }
 
-/// Backend process policy. `.automatic` (default) starts Python only when a
+/// Backend process policy. `.automatic` (default) starts the helper only when a
 /// feature needs it and idles it out after `idleUnloadInterval`; `.always`
 /// preserves the launch-at-boot behavior; `.off` never starts it.
 enum BackendMode: String, CaseIterable {
@@ -176,9 +176,8 @@ final class BackendServiceManager {
             }
         }
 
-        // Torch imports lazily (first voice request), but a cold Python
-        // interpreter + uvicorn bind still takes a few seconds. Allow 20 s per
-        // attempt so the total retry budget (40 s across 2 attempts) covers it.
+        // Voice models load lazily. Retain the existing startup/retry budget
+        // for slow cold starts and recovery from an earlier helper process.
         for attempt in 1...2 {
             log("[Backend] Launch attempt \(attempt)/2 (timeout: 20 s each)")
             guard !Task.isCancelled, Self.mode != .off else {
@@ -188,7 +187,7 @@ final class BackendServiceManager {
             if !launch.success {
                 log("[Backend][ERROR] Failed to execute start script: \(launch.message)")
                 return BackendStartupResult(success: false,
-                    message: "Backend preparation failed: \(launch.message). Check logs/backend-pip.log in Jarvis Application Support.")
+                    message: "Backend preparation failed: \(launch.message). Check logs/backend.log in Jarvis Application Support.")
             }
 
             if await waitForHealth(timeoutSeconds: 20, log: log) {
@@ -247,6 +246,11 @@ final class BackendServiceManager {
         if command.range(of: #"(?:^|\s)-m\s+uvicorn\s+voice_auth_service:app(?:\s|$)"#,
                          options: .regularExpression) != nil { return true }
         guard let resources = Bundle.main.resourceURL else { return false }
+        if let executable = Bundle.main.executableURL?.deletingLastPathComponent().appendingPathComponent("JarvisBackend").path,
+           command.hasPrefix(executable + " --backend-dir ") { return true }
+        let developmentHelper = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+            .appendingPathComponent("rust-core/target/release/jarvis-backend").path
+        if command.hasPrefix(developmentHelper + " --backend-dir ") { return true }
         let frozen = resources.appendingPathComponent("backend/main").path
         return command == frozen || command.hasPrefix(frozen + " ")
     }

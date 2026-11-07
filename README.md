@@ -27,8 +27,8 @@ Launching the app with `--test-mode` also enables the local API without opening 
 
 The four modes are **Execute** (the normal typed-command queue and real actions),
 **Plan** (routing without execution), **Intent** (the learned model directly),
-and **Dictation** (format/polish text without pasting). Intent requires the local
-backend and installed router model; polishing may require the configured local LLM.
+and **Dictation** (format/polish text without pasting). Intent requires the installed
+router model; polishing may require the configured local LLM.
 These tests bypass speech recognition and voice verification. They do not test
 microphone access, recording shortcuts, or speaker authentication.
 
@@ -120,7 +120,7 @@ before sharing. Stopping/cancelling cannot undo completed actions.
 **The rest**
 - **Setup pane (first run)**: a checklist that detects what's missing and fixes it in-app — microphone and Accessibility grants, the Whisper model plus a custom model-folder picker, Ollama (install via brew / start / pull `qwen2.5:1.5b-instruct` with download status), PostgreSQL (install, start, **create the jarvis database with an editable user + password**, configure itself, enable logging), and a Spotify API-app guide. Reopen it anytime from the rail.
 - **Recording duration**: System → Dictation → *Maximum recording time* accepts 1–60 minutes (default 5). It applies to the next ⌘⇧D or ⌘⇧A recording; the floating panel shows elapsed audio time and the active limit. Capture stops and transcribes automatically at that limit, preserving the beginning and end. Long dictations bypass the optional small-model polish pass and retain the full rules-formatted transcript.
-- **On-demand backend (default: Automatic)**: the Python helper that serves voice auth, Spotify and the learned intent router starts for verification, Spotify, or explicit connector/setup actions and idles out after 5 minutes. Learned routing uses it only when already running; otherwise rules/Qwen handle the command — `pgrep uvicorn` is empty on a fresh boot and torch loads only on the first voice request. Assistant → Behaviour → *Backend* offers Automatic / Always running / Off.
+- **On-demand local helper (default: Automatic)**: the bundled native helper serves voice verification, Spotify lookup and connection settings. It starts for those features and idles out after 5 minutes. Learned intent inference runs inside Jarvis without starting a helper. Assistant → Behaviour → *Backend* offers Automatic / Always running / Off; Off also disables learned parsing. Python is used only by development/training tools. See [native runtime migration and benchmarks](docs/native-runtime-migration.md).
 - **Insights**: local stats on dictation, commands, success rates, LLM usage.
 - **Connections**: Spotify (OAuth via local backend) and PostgreSQL (schema-browsing status/credentials/test).
 - **rail + panes shell**: Setup, Assistant, Voice, Routines, Connections, Insights, System, About.
@@ -184,7 +184,9 @@ Keep private manifests/reports outside the repository. Normal CI skips this audi
 
 Commands are routed by a **compact learned router: t5-small, ~60M parameters**
 (0.06B — small on purpose: it must run locally in milliseconds). It is exported
-as int8 ONNX (~196 MB) and served by the local backend at `/parse_intent`.
+as int8 ONNX (~196 MB) and run locally through Rust and ONNX Runtime. The local
+helper also exposes `/parse_intent` for compatibility; the app normally uses
+in-process inference.
 The app handles unambiguous single commands locally first, then asks the model
 to resolve ambiguous or compound commands.
 
@@ -347,7 +349,7 @@ the manual steps below become optional:
 - **Whisper model** — status, active file path, auto-download, verification, and an in-app retry that resumes partial downloads. Optionally choose a model folder; the selection applies on the next launch.
 - **Ollama** — Install (brew, else the download page), Start, and **Pull model** with download status.
 - **PostgreSQL (optional)** — Install & start, then **Create** the `jarvis_db` database + `jarvis_user` role. A blank new-role password generates a secure password and saves it to the Keychain. If the server requires authentication, supply its existing administrator name/password in the separate administrator fields; these credentials are used only during setup. Existing Jarvis role passwords are preserved and verified before setup reports success.
-- **Python helper (optional)** — Prepare installs Python 3.11 via Homebrew if needed and prepares the helper dependencies. Voice models remain lazy-loaded.
+- **Local helper (optional)** — Start the helper included with Jarvis. Voice models remain lazy-loaded; no Python installation is needed to use the packaged app.
 - **Spotify (optional)** — a two-step guide (create the API app with the right redirect, then paste keys in Connections).
 
 Nothing on this checklist blocks dictation: mic + Whisper are the only requirements, and the Whisper download starts automatically at launch. PostgreSQL setup preserves existing role passwords; use the existing password or configure an existing database in Connections.
@@ -376,15 +378,13 @@ ollama serve
 Speech is offline Whisper (`large-v3-turbo`, via the Rust `stt-core`) and needs
 no extra setup — the model downloads at launch when missing. Partial downloads survive restarts and are published only after size, header and SHA-256 verification against the [pinned upstream revision](https://huggingface.co/ggerganov/whisper.cpp/blob/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-large-v3-turbo.bin).
 
-### 3) Python backend
+### 3) Native runtime and development tools
 
-The packaging script creates and maintains the venv for you. Manually:
-
-```zsh
-cd backend
-python3 -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-```
+The packaged app includes its native inference/audio libraries and voice model.
+Python is not required at runtime. Packaging provisions Python 3.11+ export and
+verification tools under `.build/native-tools/venv`, outside the app, then checks
+native voice parity before staging its assets. Training/export scripts remain
+Python. The Python reference backend is documented in [backend/README.md](backend/README.md).
 
 ---
 

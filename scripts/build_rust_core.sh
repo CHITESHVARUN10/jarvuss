@@ -116,6 +116,7 @@ src_path, dst_path = sys.argv[1], sys.argv[2]
 src = open(src_path).read()
 
 TYPES = [
+         "NativeIntentError",
          "VoiceSegment", "TranscriptBatch", "RoutineIssue", "SearchMode",
          "SearchKind", "SearchDate", "SearchRequest", "SelectionOperation",
          "FileSelection", "ShuffleTarget", "ShuffleRequest", "WorkspaceApp",
@@ -125,6 +126,9 @@ TYPES = [
          "NormalizedPriority", "OllamaGenerateOutcome", "OllamaPlanResult", "PlannedAction",
          "PlanResult", "SafetyVerdict", "SystemInfoAction", "VolumeAction"]
 FUNCS = {"normalizeCompact": "coreNormalizeCompact",
+         "nativeIntentParse": "coreNativeIntentParse",
+         "nativeIntentStatus": "coreNativeIntentStatus",
+         "nativeIntentUnloadIfIdle": "coreNativeIntentUnloadIfIdle",
          "hallucinatedSingleton": "coreHallucinatedSingleton",
          "normalizedTokens": "coreNormalizedTokens",
          "sanitizeSpoken": "coreSanitizeSpoken",

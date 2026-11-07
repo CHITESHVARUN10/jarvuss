@@ -25,3 +25,24 @@ reqwest = { version = "0.12", default-features = false, features = ["blocking", 
 dirs = "5"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 thiserror = "1"
+# Inference uses the same native ORT CPU runtime and original SentencePiece
+# implementation as Python. Dynamic ORT loading keeps tests/model-free startup lazy.
+ort = { version = "=2.0.0-rc.15", default-features = false, features = ["std", "load-dynamic", "api-31"] }
+sentencepiece = { version = "=0.14.0", features = ["static"] }
+sha2 = "0.10"
+tempfile = "3"
+tiny_http = "0.12"
+rand = "0.9"
+subtle = "2"
+fs2 = "0.4"
+libc = "0.2"
+ctrlc = { version = "3", features = ["termination"] }
+wait-timeout = "0.2"
+rustfft = "6"
+webrtc-vad = "=0.4.0"
+hound = "3"
+npyz = "=0.9.1"
+libloading = "0.9"
+multer = "=3.1.0"
+futures-util = "0.3"
+futures-executor = "0.3"

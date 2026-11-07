@@ -1,7 +1,18 @@
-# Jarvis local backend
+# Jarvis local services and Python reference
 
-FastAPI serves voice verification, learned intent parsing, Spotify, and
-PostgreSQL connection management. The app requires macOS 26.0 or later.
+The packaged app uses `JarvisBackend`, the native Rust helper. Voice enrollment,
+verification, Spotify metadata/OAuth, connection management and intent inference
+run without a Python interpreter. Native Spotify playback and macOS adapters
+remain in Swift. The app requires macOS 26.0 or later.
+
+`voice_auth_service.py` remains a development reference for differential tests,
+model export and optional legacy Web API playback endpoints. These Python
+endpoints are not included in the native app bundle. App-facing lookup routes
+are implemented by Rust; the app never uses Web API playback writes.
+
+See [migration, compatibility and benchmark evidence](../docs/native-runtime-migration.md).
+
+## Run the development reference
 
 From the repository root:
 
@@ -12,8 +23,8 @@ backend/venv/bin/python -m uvicorn voice_auth_service:app --app-dir backend --ho
 ```
 
 Use `scripts/package_jarvis_app.zsh` to build and provision the packaged app.
-Its runtime launcher uses the provisioned venv without changing the signed
-bundle; a missing/outdated environment is created in Application Support.
+Its build-time export and verification environment lives outside the signed
+bundle; it never installs a venv in Application Support at app startup.
 
 Voice embeddings and non-secret connection settings are stored in
 `~/Library/Application Support/Jarvis` (`JARVIS_DATA_DIR` overrides). Secrets

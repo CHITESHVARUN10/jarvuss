@@ -1,0 +1,243 @@
+{
+  "date": "2026-11-07",
+  "installed_build": {
+    "revision": "74485e7b3d9f+modified",
+    "uuid": "A3964B47-37EC-35A8-97CD-88F4E414D15E",
+    "timestamp": "2026-11-07T06:17:35Z"
+  },
+  "candidate_build": {
+    "revision": "8540cc1e563b+modified",
+    "uuid": "A4296311-BE97-3A68-B193-63922F7C0DB4",
+    "timestamp": "2026-11-07T08:50:16Z"
+  },
+  "candidate_path": ".build/Jarvis.app",
+  "installed_path": "/Applications/Jarvis.app",
+  "installed_app_preserved": true,
+  "model_version": "1.0.2",
+  "model_files_identical": true,
+  "baseline_source": {
+    "commit": "125a9eb616b7c1a0ed1e1a68414b8e655bbc1c5c",
+    "policy_paths": [
+      "Sources/JarvisMacOS/Commands/SystemVolumeParser.swift",
+      "Sources/JarvisMacOS/Files/LocalSearchParser.swift",
+      "Sources/JarvisMacOS/Commands/SpotifyShuffleParser.swift",
+      "Sources/JarvisMacOS/App/TranscriptSanitizer.swift",
+      "Sources/JarvisMacOS/Commands/FastPathRouter.swift",
+      "Sources/JarvisMacOS/Commands/CommandValidator.swift",
+      "Sources/JarvisMacOS/Workspace/WorkspaceCommand.swift",
+      "Sources/JarvisMacOS/App/AutomationStore.swift",
+      "Sources/JarvisMacOS/System/AppController.swift"
+    ],
+    "provenance_note": "Installed build is marked modified at 74485e7; the routines changes were subsequently committed as 125a9eb. The real installed binary is benchmarked separately; this is a reconstruction of its policy source, not proof of a byte-identical rebuild."
+  },
+  "component_probe": [
+    {
+      "component": "System volume",
+      "swift_optimized_us": 71.83282142857144,
+      "rust_with_optimized_adapter_us": 6.257114955357143,
+      "optimized_speed_ratio": 11.48018247084792,
+      "swift_debug_us": 76.69991629464286,
+      "rust_with_debug_adapter_us": 6.84775,
+      "debug_speed_ratio": 11.200747149741574,
+      "inputs": 7,
+      "rounds": 9
+    },
+    {
+      "component": "Workspace parsing",
+      "swift_optimized_us": 21.8095703125,
+      "rust_with_optimized_adapter_us": 4.03125,
+      "optimized_speed_ratio": 5.410125968992248,
+      "swift_debug_us": 27.6982421875,
+      "rust_with_debug_adapter_us": 4.872720312499999,
+      "debug_speed_ratio": 5.6843488669861975,
+      "inputs": 5,
+      "rounds": 9
+    },
+    {
+      "component": "Spotify shuffle",
+      "swift_optimized_us": 22.43671875,
+      "rust_with_optimized_adapter_us": 3.0935546875,
+      "optimized_speed_ratio": 7.252730601679398,
+      "swift_debug_us": 24.232943749999997,
+      "rust_with_debug_adapter_us": 3.649284375,
+      "debug_speed_ratio": 6.640464611640466,
+      "inputs": 5,
+      "rounds": 9
+    },
+    {
+      "component": "File search",
+      "swift_optimized_us": 157.78795624999998,
+      "rust_with_optimized_adapter_us": 24.2126953125,
+      "optimized_speed_ratio": 6.516744799103001,
+      "swift_debug_us": 165.20045625,
+      "rust_with_debug_adapter_us": 25.266535937500002,
+      "debug_speed_ratio": 6.538310461657442,
+      "inputs": 5,
+      "rounds": 9
+    },
+    {
+      "component": "Routine validation",
+      "swift_optimized_us": 6.047014508928571,
+      "rust_with_optimized_adapter_us": 2.0160435267857144,
+      "optimized_speed_ratio": 2.9994464050930727,
+      "swift_debug_us": 8.37769642857143,
+      "rust_with_debug_adapter_us": 3.2217265625,
+      "debug_speed_ratio": 2.6003747574624994,
+      "inputs": 7,
+      "rounds": 9
+    },
+    {
+      "component": "Transcript policies",
+      "swift_optimized_us": 58.5478515625,
+      "rust_with_optimized_adapter_us": 5.2502609375,
+      "optimized_speed_ratio": 11.151417474191014,
+      "swift_debug_us": 63.3794921875,
+      "rust_with_debug_adapter_us": 6.0705734375,
+      "debug_speed_ratio": 10.440445674535997,
+      "inputs": 5,
+      "rounds": 9
+    }
+  ],
+  "actual_app": {
+    "installed": {
+      "requests": 252,
+      "scenarios": 18,
+      "launches": 2,
+      "exact_reference_requests": 238,
+      "exact_reference_scenarios": 17,
+      "server_reported_ms": {
+        "count": 252,
+        "median": 1.0,
+        "mean": 0.9166666666666666,
+        "p95": 2,
+        "minimum": 0,
+        "maximum": 8
+      },
+      "client_roundtrip_ms": {
+        "count": 252,
+        "median": 6.3284585003202665,
+        "mean": 6.261397190507798,
+        "p95": 7.897666000644676,
+        "minimum": 1.946166999914567,
+        "maximum": 52.18633399999817
+      },
+      "runner_ready_ms": {
+        "count": 2,
+        "median": 578.4793544999047,
+        "mean": 578.4793544999047,
+        "p95": 686.1707919997571,
+        "minimum": 470.7879170000524,
+        "maximum": 686.1707919997571
+      },
+      "rss_mib": {
+        "count": 14,
+        "median": 130.4453125,
+        "mean": 130.4453125,
+        "p95": 133.796875,
+        "minimum": 127.09375,
+        "maximum": 133.796875
+      },
+      "launch_rss_mib": [
+        133.796875,
+        127.09375
+      ],
+      "rust_pipeline_flags": [
+        true,
+        true
+      ]
+    },
+    "candidate": {
+      "requests": 252,
+      "scenarios": 18,
+      "launches": 2,
+      "exact_reference_requests": 238,
+      "exact_reference_scenarios": 17,
+      "server_reported_ms": {
+        "count": 252,
+        "median": 0.0,
+        "mean": 0.17857142857142858,
+        "p95": 1,
+        "minimum": 0,
+        "maximum": 4
+      },
+      "client_roundtrip_ms": {
+        "count": 252,
+        "median": 2.471708499797387,
+        "mean": 3.0262017262141434,
+        "p95": 6.289165999987745,
+        "minimum": 1.0555829994700616,
+        "maximum": 12.159375000919681
+      },
+      "runner_ready_ms": {
+        "count": 2,
+        "median": 627.6062920005643,
+        "mean": 627.6062920005643,
+        "p95": 798.9851250003994,
+        "minimum": 456.22745900072914,
+        "maximum": 798.9851250003994
+      },
+      "rss_mib": {
+        "count": 14,
+        "median": 132.703125,
+        "mean": 132.71875,
+        "p95": 132.984375,
+        "minimum": 132.4375,
+        "maximum": 132.984375
+      },
+      "launch_rss_mib": [
+        132.46875,
+        132.984375
+      ],
+      "rust_pipeline_flags": [
+        true,
+        true
+      ]
+    },
+    "identical_plan_scenarios": 18,
+    "reference_mismatch": "The song-title example returns blinding lights rather than Blinding Lights in both builds; retained as an exact-reference mismatch, not a demonstrated live playback failure."
+  },
+  "bundle_size": {
+    "installed_bytes": 1300369374,
+    "candidate_bytes": 1305860814,
+    "delta_bytes": 5491440,
+    "installed_groups": {
+      "other_resources_and_signature": 14675273,
+      "native_executable_and_scripts": 44921193,
+      "models": 205718302,
+      "python_environment": 1035054606
+    },
+    "candidate_groups": {
+      "other_resources_and_signature": 14675273,
+      "native_executable_and_scripts": 50412633,
+      "models": 205718302,
+      "python_environment": 1035054606
+    },
+    "metric": "Sum of regular file lengths; symlink targets excluded; not download or disk-allocation size.",
+    "delta_percent": 0.42229847224931644
+  },
+  "verification": {
+    "signature": true,
+    "native_sections_match_build": true,
+    "uuid_matches_build": true,
+    "all_model_files_match_baseline": true,
+    "installed_app_unchanged": true
+  },
+  "environment": {
+    "architecture": "arm64",
+    "macos": "27.0.1",
+    "swift": "Apple Swift version 6.2.4 (swiftlang-6.2.4.1.4 clang-1700.6.4.2)",
+    "rust": "rustc 1.97.1 (8bab26f4f 2026-07-14)"
+  },
+  "limitations": [
+    "Installed app is a hybrid with its Rust-pipeline switch already enabled; the six newly migrated policies were Swift in that build.",
+    "Actual-app benchmark is planning-only: eighteen synthetic scenarios, seven shuffled rounds, two launches per build; no application actions, speech recognition, model invocation or live Spotify playback.",
+    "Client timing includes HTTP, diagnostic logging, polling and UI scheduling. It is test-runner interaction latency, not voice-command latency.",
+    "Server elapsedMs is truncated to whole milliseconds. Zero means below the recorded resolution; no precise server speedup ratio is claimed.",
+    "RSS and test-runner-ready samples overlap across launches and do not establish RAM, startup, battery or peak-memory improvement.",
+    "Both app bundles use the existing debug Swift packaging and release Rust libraries. Optimized Swift component probes are provided separately.",
+    "Component probe reconstructs baseline policy source at 125a9eb; the installed binary is marked modified, so byte-identical baseline-source reconstruction cannot be proven. The real installed executable is separately tested.",
+    "Warm component timings compare implementations, including cached Rust regex and the UniFFI adapter; they do not establish a universal Rust-versus-Swift language speed ratio.",
+    "One reference-plan mismatch concerns song-title capitalization in both versions. Identical plans across eighteen scenarios are not proof of correctness on all commands.",
+    "Same model artifacts; this migration does not improve learned intent or ASR accuracy."
+  ]
+}

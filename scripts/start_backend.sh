@@ -12,6 +12,10 @@ else
   BACKEND_DIR="$(cd "$SCRIPT_DIR/../backend" && pwd)"
 fi
 BUNDLED_VENV_DIR="$BACKEND_DIR/venv"
+NATIVE_HELPER="$SCRIPT_DIR/JarvisBackend"
+if [[ ! -x "$NATIVE_HELPER" ]]; then
+  NATIVE_HELPER="$SCRIPT_DIR/../rust-core/target/release/jarvis-backend"
+fi
 REQ_FILE="$BACKEND_DIR/requirements.txt"
 PID_DIR="${JARVIS_DATA_DIR:-$HOME/Library/Application Support/Jarvis}"
 case "$PID_DIR" in "~/"*) PID_DIR="$HOME/${PID_DIR:2}" ;; esac
@@ -35,7 +39,7 @@ is_pid_running() {
   kill -0 "$pid" >/dev/null 2>&1 || return 1
   local backend_command
   backend_command="$(/bin/ps -p "$pid" -o command= 2>/dev/null)" || return 1
-  [[ "$backend_command" == *"-m uvicorn voice_auth_service:app"* || "$backend_command" == "$BACKEND_DIR/main" || "$backend_command" == "$BACKEND_DIR/main "* ]]
+  [[ "$backend_command" == *"-m uvicorn voice_auth_service:app"* || "$backend_command" == "$BACKEND_DIR/main" || "$backend_command" == "$BACKEND_DIR/main "* || "$backend_command" == "$NATIVE_HELPER --backend-dir "* ]]
 }
 
 is_port_open() {
@@ -51,6 +55,14 @@ if [[ -f "$PID_FILE" ]]; then
 fi
 
 if is_port_open; then
+  exit 0
+fi
+
+# Connections and intent compatibility run without starting Python. Voice is
+# lazily delegated by this helper until native voice parity has passed.
+if [[ "${JARVIS_BACKEND_RUNTIME:-rust}" != "python" && -x "$NATIVE_HELPER" ]]; then
+  nohup "$NATIVE_HELPER" --backend-dir "$BACKEND_DIR" >> "$LOG_FILE" 2>&1 &
+  echo $! > "$PID_FILE"
   exit 0
 fi
 

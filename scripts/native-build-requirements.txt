@@ -1,0 +1,4 @@
+# Development/export/verification tools only; none of this venv ships in the app.
+-r ../backend/requirements.txt
+onnx==1.23.2
+soxr==1.1.0

@@ -24,7 +24,7 @@ enum NoirSetupKind: String, CaseIterable, Identifiable {
         case .intentModel:   return "Intent command model"
         case .ollama:        return "Ollama + AI model"
         case .postgres:      return "PostgreSQL"
-        case .backend:       return "Python helper"
+        case .backend:       return "Local helper"
         case .spotify:       return "Spotify"
         }
     }
@@ -532,7 +532,7 @@ struct SetupDetailSheet: View {
             }
 
         case .backend:
-            Text("The helper supports voice authentication, Spotify, and the learned intent router. It can run on demand, always, or remain off.")
+            Text("The helper supports voice authentication and Spotify lookup. The intent model runs inside Jarvis. It can run on demand, always, or remain off.")
                 .font(.system(size: 11))
                 .lineSpacing(5)
                 .foregroundStyle(NoirPalette.muted)
@@ -554,7 +554,7 @@ struct SetupDetailSheet: View {
             statusRow("Helper", appState.backendStatus,
                       kind: appState.backendStatus.lowercased().contains("running") ? .green : .neutral)
 
-            Button("Prepare Python helper") { prepareBackend() }
+            Button("Prepare Local helper") { prepareBackend() }
                 .buttonStyle(NoirButtonStyle(intent: .primary))
 
         case .spotify:

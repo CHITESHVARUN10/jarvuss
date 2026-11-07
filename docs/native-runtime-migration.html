@@ -1,0 +1,16 @@
+<!doctype html><html><head><style>
+body{margin:0;color:var(--foreground);font-family:var(--font-sans)}
+h3{font-size:18px;margin:4px 0 14px}h4{font-size:14px;margin:0 0 10px}
+.box{padding:16px;background:var(--card);border-radius:var(--radius);margin:12px 0}
+.line{display:grid;grid-template-columns:90px 1fr 82px;align-items:center;gap:10px;margin:8px 0;font-size:13px}
+.track{height:15px;background:var(--secondary);border-radius:var(--radius)}
+.fill{height:15px;border-radius:var(--radius)}
+.value{text-align:right;font-family:var(--font-mono);font-size:12px}
+p{font-size:12px;color:var(--muted-foreground);line-height:1.5;margin:9px 0 0}
+.legend{display:flex;gap:20px;font-size:12px;color:var(--muted-foreground);margin:0 0 6px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+@media(max-width:430px){.line{grid-template-columns:64px 1fr 72px;gap:6px}}
+</style></head><body><h3>Native runtime: measured results</h3>
+<div class="legend"><span><i class="dot" style="background:var(--chart-1)"></i>Python / installed reference</span><span><i class="dot" style="background:var(--chart-2)"></i>Rust candidate</span></div>
+<div class="box"><h4>App size</h4><div class="line"><span>Previous</span><div class="track"><div class="fill" style="width:100%;background:var(--chart-1)"></div></div><span class="value">1300.4 MB</span></div><div class="line"><span>Native</span><div class="track"><div class="fill" style="width:24.256949933365625%;background:var(--chart-2)"></div></div><span class="value">315.4 MB</span></div><p>Regular file bytes; models and native libraries included.</p></div><div class="box"><h4>Warm voice verification</h4><div class="line"><span>Previous</span><div class="track"><div class="fill" style="width:100%;background:var(--chart-1)"></div></div><span class="value">39.85 ms</span></div><div class="line"><span>Native</span><div class="track"><div class="fill" style="width:46.62636546234084%;background:var(--chart-2)"></div></div><span class="value">18.58 ms</span></div><p>HTTP median across 252 requests per runtime.</p></div><div class="box"><h4>Voice helper memory</h4><div class="line"><span>Previous</span><div class="track"><div class="fill" style="width:100%;background:var(--chart-1)"></div></div><span class="value">425.3 MB</span></div><div class="line"><span>Native</span><div class="track"><div class="fill" style="width:23.988751059403654%;background:var(--chart-2)"></div></div><span class="value">102.0 MB</span></div><p>Sampled helper RSS; excludes the main app.</p></div>
+<p>252/252 voice responses matched. The intent model and weights are unchanged. First-request timing varied between launches; these results do not measure microphone capture or total voice-command latency.</p></body></html>

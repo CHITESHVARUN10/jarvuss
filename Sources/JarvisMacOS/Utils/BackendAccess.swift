@@ -20,6 +20,7 @@ enum BackendAccess {
             throw BackendAccessError.unavailable
         }
         request.setValue(token, forHTTPHeaderField: header)
+        request.setValue(BackendServiceManager.mode == .always ? "1" : "0", forHTTPHeaderField: "X-Jarvis-Keep-Warm")
     }
 
     static func data(for original: URLRequest, session: URLSession = .shared) async throws -> (Data, URLResponse) {

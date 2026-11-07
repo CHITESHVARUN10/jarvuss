@@ -4,6 +4,7 @@ import Combine
 @MainActor
 final class IntentModelSetup: ObservableObject {
     static let shared = IntentModelSetup(runtimeStatus: {
+        if NativeIntentRuntime.enabled { return await NativeIntentRuntime.updateWarning() }
         guard await BackendServiceManager.isBackendResponding() else { return nil }
         var request = URLRequest(url: URL(string: "http://127.0.0.1:8000/intent_model/status")!)
         request.timeoutInterval = 2

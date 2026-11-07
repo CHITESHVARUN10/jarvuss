@@ -123,7 +123,9 @@ final class CommandTestHarness: ObservableObject {
             return result
         }
         if run.mode == "intent" {
-            guard await BackendServiceManager.ensureRunningForFeature() else { throw TestError("Intent testing requires the Python helper; check the backend setting") }
+            if !NativeIntentRuntime.enabled {
+                guard await BackendServiceManager.ensureRunningForFeature() else { throw TestError("Intent testing requires the local helper; check the backend setting") }
+            }
             // Deliberately bypass fast paths to inspect the learned model.
             let response = try await IntentModelClient(timeout: 30).parse(text: run.command)
             result.output = response.raw

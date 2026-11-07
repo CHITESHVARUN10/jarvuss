@@ -255,8 +255,8 @@ struct SetupPane: View {
                 actionButton("Create") { await createJarvisDatabase() }
             }
         case .backend:
-            JRow(title: "Prepare Python helper",
-                 sub: "For speaker verification, Spotify and the learned command router. Installs Python 3.11 if needed, then helper dependencies.",
+            JRow(title: "Start local helper",
+                 sub: "For speaker verification and Spotify lookup. Starts the helper included with Jarvis.",
                  first: true) {
                 actionButton("Prepare") {
                     await HomebrewActions.prepareBackend { line in
@@ -474,7 +474,7 @@ private enum SetupItemKind: String, CaseIterable, Identifiable {
         case .ollama:        return "Ollama + AI model"
         case .postgres:      return "PostgreSQL"
         case .spotify:       return "Spotify"
-        case .backend:       return "Python helper"
+        case .backend:       return "Local helper"
         }
     }
 

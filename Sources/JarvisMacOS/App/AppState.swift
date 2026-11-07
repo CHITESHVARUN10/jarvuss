@@ -61,7 +61,7 @@ final class AppState: ObservableObject {
     @Published var voiceModeRequiresVerify: Bool = UserDefaults.standard.object(forKey: "jarvis.voiceModeRequiresVerify") as? Bool ?? true {
         didSet { UserDefaults.standard.set(voiceModeRequiresVerify, forKey: "jarvis.voiceModeRequiresVerify") }
     }
-    /// Python backend process policy — Automatic (start on demand, idle out),
+    /// Local helper process policy — Automatic (start on demand, idle out),
     /// Always running (launch at boot), or Off (never start).
     @Published var backendMode: BackendMode = BackendServiceManager.mode {
         didSet {
@@ -510,7 +510,7 @@ final class AppState: ObservableObject {
     }
 
     /// Backend lifecycle at launch. `.always` starts the process; the other
-    /// modes probe and report only — nothing Python is spawned until a
+    /// modes probe and report only — no helper is spawned until a
     /// feature needs it (verification, enrollment, Spotify, Connections).
     private func applyBackendModeAtLaunch(_ mode: BackendMode) async {
         guard mode != .off else {
@@ -530,7 +530,7 @@ final class AppState: ObservableObject {
 
         if mode == .automatic {
             backendStatus = "Not started"
-            appendLog("[Backend] Automatic mode — backend starts on demand (0 MB Python at idle).")
+            appendLog("[Backend] Automatic mode — the local helper starts on demand.")
         } else {
             await startBundledBackendIfNeeded()
         }

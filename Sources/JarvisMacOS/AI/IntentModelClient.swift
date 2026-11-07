@@ -1,8 +1,7 @@
 import Foundation
 
-/// HTTP client for the learned intent parser (`POST /parse_intent` on the
-/// local backend). The backend runs the fine-tuned t5-small model and returns
-/// the ordered intent JSON plus a confidence score.
+/// Learned parser client. Native inference is the default; explicit backend
+/// URLs and JARVIS_INTENT_RUNTIME=python retain the previous HTTP transport.
 final class IntentModelClient {
 
     struct ParsedResponse {
@@ -30,14 +29,16 @@ final class IntentModelClient {
     private let baseURL: URL
     private let session: URLSession
     private let backendIsRunning: () async -> Bool
+    private let nativeParse: ((String) async throws -> String)?
 
-    init(baseURL: URL? = nil, timeout: TimeInterval = 2, backendIsRunning: @escaping () async -> Bool = {
-        await BackendServiceManager.isBackendResponding()
-    }) {
-        self.backendIsRunning = backendIsRunning
-        let configured = ProcessInfo.processInfo.environment["JARVIS_BACKEND_URL"]
+    init(baseURL: URL? = nil, timeout: TimeInterval = 2, backendIsRunning: (() async -> Bool)? = nil,
+         nativeParse: ((String) async throws -> String)? = nil) {
+        self.backendIsRunning = backendIsRunning ?? { await BackendServiceManager.isBackendResponding() }
+        let override = ProcessInfo.processInfo.environment["JARVIS_BACKEND_URL"]
             ?? ProcessInfo.processInfo.environment["BACKEND_BASE_URL"]
-            ?? "http://127.0.0.1:8000"
+        let configured = override ?? "http://127.0.0.1:8000"
+        self.nativeParse = nativeParse ?? (NativeIntentRuntime.enabled && baseURL == nil && override == nil && backendIsRunning == nil
+            ? { try await NativeIntentRuntime.parse($0) } : nil)
         self.baseURL = baseURL ?? URL(string: configured) ?? URL(string: "http://127.0.0.1:8000")!
         let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForRequest = timeout
@@ -46,6 +47,14 @@ final class IntentModelClient {
     }
 
     func parse(text: String) async throws -> ParsedResponse {
+        if let nativeParse {
+            guard BackendServiceManager.mode != .off else { throw ClientError.unavailable }
+            try Task.checkCancellation()
+            let raw = try await nativeParse(text)
+            try Task.checkCancellation()
+            guard let data = raw.data(using: .utf8) else { throw ClientError.badPayload }
+            return try Self.decode(data)
+        }
         if baseURL.host == "127.0.0.1", baseURL.port == 8000 {
             guard BackendServiceManager.mode != .off, await backendIsRunning() else { throw ClientError.unavailable }
             BackendServiceManager.noteActivity()
@@ -59,6 +68,10 @@ final class IntentModelClient {
         let (data, response) = try await BackendAccess.data(for: request, session: session)
         guard let http = response as? HTTPURLResponse else { throw ClientError.badPayload }
         guard http.statusCode == 200 else { throw ClientError.badStatus(http.statusCode) }
+        return try Self.decode(data)
+    }
+
+    private static func decode(_ data: Data) throws -> ParsedResponse {
         guard let obj = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             throw ClientError.badPayload
         }

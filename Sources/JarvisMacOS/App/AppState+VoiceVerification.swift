@@ -185,7 +185,7 @@ extension AppState {
         guard !Task.isCancelled else { return }
         voiceVerificationStatus = "Verification unavailable"
         if presentsUI {
-            popupManager.show(message: "Enable the Python helper in Setup to verify voice commands.", icon: "shield.slash", duration: 6)
+            popupManager.show(message: "Enable the local helper in Setup to verify voice commands.", icon: "shield.slash", duration: 6)
         }
         appendLog("[Voice] Command rejected: required speaker verification is unavailable.")
         statsRecorder.recordCommand(success: false)
