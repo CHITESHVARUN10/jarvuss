@@ -840,7 +840,11 @@ final class AppState: ObservableObject {
         guard !trimmedKeyword.isEmpty else { return }
 
         let normalizedOffKeyword = offKeyword?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let normalizedActions = actions.filter { !$0.type.requiresValue || !$0.value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        guard actions.allSatisfy({ $0.validationMessage == nil }) else {
+            appendLog("[Automation][ERROR] Fix incomplete or unsupported routine actions before saving.")
+            return
+        }
+        let normalizedActions = actions
         guard !normalizedActions.isEmpty else { return }
 
         if let editingID,

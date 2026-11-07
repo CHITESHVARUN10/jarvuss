@@ -8,6 +8,7 @@ struct AutomationManagerView: View {
     @State private var offKeyword: String = ""
     @State private var actions: [AutomationAction] = [AutomationAction(type: .openApp, value: "")]
     @State private var editingID: UUID?
+    @State private var errorText: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -46,11 +47,11 @@ struct AutomationManagerView: View {
                     ForEach($actions) { $action in
                         HStack(spacing: 8) {
                             Picker("Type", selection: $action.type) {
-                                ForEach(AutomationActionType.allCases) { type in
+                                ForEach(AutomationActionType.allCases.filter { AutomationActionType.selectableCases.contains($0) || $0 == action.type }) { type in
                                     Text(type.displayName).tag(type)
                                 }
                             }
-                            .frame(width: 170)
+                            .frame(width: 200)
 
                             if action.type.requiresValue {
                                 TextField(action.type.placeholder, text: $action.value)
@@ -83,8 +84,21 @@ struct AutomationManagerView: View {
                 }
             }
 
+            Text("Use Run command for any supported Jarvis command, including project destinations, file search and volume. Website actions select Brave, Chrome or your default browser.")
+                .font(JarvisType.caption)
+                .foregroundStyle(JarvisColor.textSecondary)
+            if let errorText { Text(errorText).foregroundStyle(JarvisColor.danger) }
+
             HStack(spacing: 10) {
                 Button(editingID == nil ? "Save automation" : "Update automation") {
+                    guard !keyword.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, !actions.isEmpty else {
+                        errorText = "Enter a trigger phrase and at least one action."
+                        return
+                    }
+                    if let invalid = actions.compactMap(\.validationMessage).first {
+                        errorText = invalid
+                        return
+                    }
                     appState.saveAutomation(
                         keyword: keyword,
                         offKeyword: offKeyword.isEmpty ? nil : offKeyword,
@@ -174,6 +188,7 @@ struct AutomationManagerView: View {
     }
 
     private func resetForm() {
+        errorText = nil
         editingID = nil
         keyword = ""
         offKeyword = ""

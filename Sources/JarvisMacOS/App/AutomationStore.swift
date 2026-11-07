@@ -1,6 +1,12 @@
 import Foundation
 
 enum AutomationActionType: String, Codable, CaseIterable, Identifiable {
+    case command = "command"
+    case openWebsite = "open_website"
+    case openWebsiteBrave = "open_website_brave"
+    case openWebsiteChrome = "open_website_chrome"
+    case newTab = "new_tab"
+    case newWindow = "new_window"
     case workspaceCommand = "workspace_command"
     case openApp = "open_app"
     case closeApp = "close_app"
@@ -17,8 +23,16 @@ enum AutomationActionType: String, Codable, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
+    static var selectableCases: [Self] { allCases.filter { $0 != .timer && $0 != .stopwatch } }
+
     var displayName: String {
         switch self {
+        case .command: return "Run command"
+        case .openWebsite: return "Website · default browser"
+        case .openWebsiteBrave: return "Website · Brave"
+        case .openWebsiteChrome: return "Website · Chrome"
+        case .newTab: return "New tab"
+        case .newWindow: return "New window"
         case .workspaceCommand: return "Window / tab / project"
         case .openApp: return "Open App"
         case .closeApp: return "Close App"
@@ -37,6 +51,9 @@ enum AutomationActionType: String, Codable, CaseIterable, Identifiable {
 
     var placeholder: String {
         switch self {
+        case .command: return "open my portfolio project in VS Code"
+        case .openWebsite, .openWebsiteBrave, .openWebsiteChrome: return "https://chatgpt.com"
+        case .newTab, .newWindow: return "Brave, Chrome, VS Code, Finder or Terminal"
         case .workspaceCommand: return "open my portfolio project in VS Code"
         case .openApp, .closeApp:
             return "Spotify"
@@ -63,12 +80,53 @@ enum AutomationActionType: String, Codable, CaseIterable, Identifiable {
             return true
         }
     }
+
+    var guidance: String {
+        switch self {
+        case .command: return "Use any command you would say to Jarvis: search files, set volume, open a project, or combine actions."
+        case .workspaceCommand: return "For example: open my portfolio project in VS Code, Finder or Terminal. Project locations come from your configured roots."
+        case .newTab, .newWindow: return "Enter the app where this tab or window should open."
+        case .openWebsite, .openWebsiteBrave, .openWebsiteChrome: return "Enter the website address. The selected browser will be used when this step runs."
+        case .playSong: return "Enter the song title, optionally with its artist. Playback uses your Spotify connection."
+        case .openFile: return "Enter the full file path, including its extension. The file opens in its default app."
+        default: return ""
+        }
+    }
 }
 
 struct AutomationAction: Codable, Identifiable, Equatable {
     var id: UUID = UUID()
     var type: AutomationActionType
     var value: String
+
+    var validationMessage: String? {
+        let text = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        if type.requiresValue && text.isEmpty { return "Enter a value for \(type.displayName)." }
+        switch type {
+        case .openWebsite, .openWebsiteBrave, .openWebsiteChrome:
+            guard websiteURL != nil else { return "Enter a valid http or https website address." }
+        case .newTab, .newWindow:
+            guard WorkspaceApp.parse(text) != nil else { return "Choose Brave, Chrome, VS Code, Finder or Terminal." }
+        case .workspaceCommand:
+            guard let plan = WorkspaceCommandParser.plan(text), plan.count == 1, case .workspace = plan[0] else {
+                return "Enter one window, tab or project command, or use Run command for multiple actions."
+            }
+        case .openFile:
+            guard text.hasPrefix("/") || text.hasPrefix("~/") else { return "Enter an absolute file path or a path beginning with ~/." }
+        case .timer, .stopwatch: return "Timers and stopwatches are not available yet. Replace this action before saving."
+        default: break
+        }
+        return nil
+    }
+
+    var websiteURL: String? {
+        let text = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalized = text.contains("://") ? text : "https://\(text)"
+        guard !text.contains(where: \.isWhitespace), let url = URL(string: normalized),
+              ["http", "https"].contains(url.scheme?.lowercased() ?? ""),
+              let host = url.host, !host.isEmpty else { return nil }
+        return url.absoluteString
+    }
 
     init(id: UUID = UUID(), type: AutomationActionType, value: String = "") {
         self.id = id

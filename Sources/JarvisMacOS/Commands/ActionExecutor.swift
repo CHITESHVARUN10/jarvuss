@@ -311,7 +311,8 @@ final class ActionExecutor {
     // MARK: - URL opener
 
     private func openURL(_ url: String, browser: String? = nil) -> ActionResult {
-        let normalized = url.hasPrefix("http") ? url : "https://\(url)"
+        let scheme = URL(string: url)?.scheme?.lowercased()
+        let normalized = ["http", "https", "file"].contains(scheme ?? "") ? url : "https://\(url)"
         guard let urlObj = URL(string: normalized) else {
             return ActionResult(
                 action: .openURL(url), success: false,

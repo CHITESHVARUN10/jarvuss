@@ -48,16 +48,27 @@ extension AppState {
         var allSucceeded = !automation.actions.isEmpty
         for action in automation.actions {
             guard !Task.isCancelled else { return false }
-            if action.type == .timer || action.type == .stopwatch {
-                appendLog("[Automation][ERROR] \(action.type.rawValue) is not implemented.")
+            if let error = action.validationMessage {
+                appendLog("[Automation][ERROR] \(error)")
                 allSucceeded = false
-            } else if action.type == .openFile {
-                let result = openFilePath(action.value)
-                allSucceeded = allSucceeded && result
-                appendLog(result ? "[Automation] Opened file: \(action.value)" : "[Automation][ERROR] Failed opening file: \(action.value)")
-            } else if let planned = plannedAction(for: action) {
+                continue
+            }
+            let plan: [PlannedAction]
+            if action.type == .command {
+                guard case .allowed = SafetyGuard.validate(rawCommand: action.value) else {
+                    appendLog("[Automation][ERROR] Command blocked by safety policy.")
+                    allSucceeded = false
+                    continue
+                }
+                // Use the shared planner directly; saved routine keywords must not recurse.
+                plan = await actionPlanner.plan(from: action.value, requestID: UUID())
+            } else {
+                plan = plannedAction(for: action).map { [$0] } ?? []
+            }
+            guard !Task.isCancelled else { return false }
+            if !plan.isEmpty {
                 let results = await actionExecutor.execute(
-                    plan: [planned],
+                    plan: plan,
                     onStepStart: { [weak self] plannedAction in
                         guard !Task.isCancelled else { return }
                         self?.appendLog("[Automation] ▶ \(plannedAction.description)")
@@ -67,7 +78,7 @@ extension AppState {
                         self?.appendLog("[Automation] \(result.success ? "✓" : "✗") \(result.message)")
                     }
                 )
-                allSucceeded = allSucceeded && results.count == 1 && results.allSatisfy(\.success)
+                allSucceeded = allSucceeded && results.count == plan.count && results.allSatisfy(\.success)
             } else {
                 appendLog("[Automation][ERROR] Skipped \(action.type.rawValue) — no value configured")
                 allSucceeded = false
@@ -84,6 +95,19 @@ extension AppState {
         let value = action.value.trimmingCharacters(in: .whitespacesAndNewlines)
 
         switch action.type {
+        case .command:
+            return nil // Asynchronously planned through the full command pipeline.
+        case .openWebsite, .openWebsiteBrave, .openWebsiteChrome:
+            guard let url = action.websiteURL else { return nil }
+            if action.type == .openWebsiteBrave { return .openURLInBrowser(url: url, browser: "Brave Browser") }
+            if action.type == .openWebsiteChrome { return .openURLInBrowser(url: url, browser: "Google Chrome") }
+            return .openURL(url)
+        case .newTab, .newWindow:
+            guard let app = WorkspaceApp.parse(value) else { return nil }
+            return .workspace(.init(operation: action.type == .newTab ? .newTab : .newWindow, app: app))
+        case .openFile:
+            guard action.validationMessage == nil else { return nil }
+            return .openURL(URL(fileURLWithPath: (value as NSString).expandingTildeInPath).absoluteString)
         case .workspaceCommand:
             guard let plan = WorkspaceCommandParser.plan(value), plan.count == 1, case .workspace = plan[0] else { return nil }
             return plan[0]
@@ -110,33 +134,10 @@ extension AppState {
         case .openFolder:
             guard !value.isEmpty else { return nil }
             return .openFolder(value)
-        case .timer, .stopwatch, .openFile:
+        case .timer, .stopwatch:
             return nil
         }
     }
-
-    func openFilePath(_ rawPath: String) -> Bool {
-        let path = rawPath.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !path.isEmpty else { return false }
-
-        let expanded = (path as NSString).expandingTildeInPath
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
-        process.arguments = [expanded]
-
-        do {
-            try process.run()
-            guard process.waitUntilExit(timeout: 10) else {
-                appendLog("[Automation][ERROR] Open file timed out: \(path)")
-                return false
-            }
-            return process.terminationStatus == 0
-        } catch {
-            appendLog("[Automation][ERROR] Open file failed: \(error.localizedDescription)")
-            return false
-        }
-    }
-
 
     func invalidateActiveCommand() {
         activeCommandRunToken = nil

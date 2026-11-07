@@ -40,14 +40,17 @@ private actor DeferredPlanner: ActionPlanning {
 private final class FailedExecutor: PlanExecuting {
     var onLog: ((String) -> Void)?
     var calls = 0
+    var plans: [[PlannedAction]] = []
+    var succeed = false
     func execute(plan: [PlannedAction],
                  onStepStart: @escaping @MainActor (PlannedAction) -> Void,
                  onStepComplete: @escaping @MainActor (ActionResult) -> Void) async -> [ActionResult] {
         calls += 1
+        plans.append(plan)
         var results: [ActionResult] = []
         for action in plan {
             await onStepStart(action)
-            let result = ActionResult(action: action, success: false, message: "deliberate failure")
+            let result = ActionResult(action: action, success: succeed, message: "stub result")
             results.append(result)
             await onStepComplete(result)
         }
@@ -73,6 +76,7 @@ final class AppCommandOutcomeTests: XCTestCase {
                        actionExecutor: executor, statsRecorder: stats,
                        intentLog: IntentRouterLog(logURL: directory.appendingPathComponent("intent.jsonl")),
                        activateServices: false)
+        app.voiceResponseEnabled = false
     }
 
     override func tearDownWithError() throws {
@@ -137,6 +141,85 @@ final class AppCommandOutcomeTests: XCTestCase {
         XCTAssertEqual(app.plannedAction(for: AutomationAction(type: .workspaceCommand, value: "open a new tab in Chrome")),
                        .workspace(.init(operation: .newTab, app: .chrome)))
         XCTAssertNil(app.plannedAction(for: AutomationAction(type: .workspaceCommand, value: "open a new tab in Chrome and open a new window in Brave")))
+    }
+
+    func testRoutineMapsBrowserTabsFilesAndSongs() {
+        XCTAssertEqual(app.plannedAction(for: .init(type: .openWebsiteBrave, value: "example.com/docs")),
+                       .openURLInBrowser(url: "https://example.com/docs", browser: "Brave Browser"))
+        XCTAssertEqual(app.plannedAction(for: .init(type: .openWebsiteChrome, value: "https://example.com")),
+                       .openURLInBrowser(url: "https://example.com", browser: "Google Chrome"))
+        XCTAssertEqual(app.plannedAction(for: .init(type: .openWebsite, value: "example.org")), .openURL("https://example.org"))
+        XCTAssertEqual(app.plannedAction(for: .init(type: .newTab, value: "Chrome")), .workspace(.init(operation: .newTab, app: .chrome)))
+        XCTAssertEqual(app.plannedAction(for: .init(type: .newWindow, value: "VS Code")), .workspace(.init(operation: .newWindow, app: .vscode)))
+        XCTAssertEqual(app.plannedAction(for: .init(type: .playSong, value: "Blinding Lights by The Weeknd")),
+                       .mediaControl(.playSong("Blinding Lights by The Weeknd")))
+        XCTAssertEqual(app.plannedAction(for: .init(type: .openFile, value: "/tmp/Routine Notes.pdf")),
+                       .openURL(URL(fileURLWithPath: "/tmp/Routine Notes.pdf").absoluteString))
+        XCTAssertEqual(app.plannedAction(for: .init(type: .workspaceCommand, value: "open my portfolio project in Terminal")),
+                       .workspace(.init(operation: .openProject, app: .terminal, project: "portfolio")))
+    }
+
+    func testRoutineStepsUseSharedExecutorInOrderWithoutKeywordRecursion() async {
+        executor.succeed = true
+        let routine = VoiceAutomation(keyword: "open test", actions: [
+            .init(type: .openWebsiteChrome, value: "example.com"),
+            .init(type: .newTab, value: "Brave"),
+            .init(type: .openFile, value: "/tmp/Notes.pdf"),
+            .init(type: .playSong, value: "Blue Monday"),
+            .init(type: .command, value: "open test")
+        ])
+        app.automations = [routine]
+        let success = await app.executeAutomation(routine, isOffVariant: false)
+        XCTAssertTrue(success)
+        XCTAssertEqual(executor.plans.flatMap { $0 }, [
+            .openURLInBrowser(url: "https://example.com", browser: "Google Chrome"),
+            .workspace(.init(operation: .newTab, app: .brave)),
+            .openURL(URL(fileURLWithPath: "/tmp/Notes.pdf").absoluteString),
+            .mediaControl(.playSong("Blue Monday")), .openApp("test")
+        ])
+    }
+
+    func testRoutineCommandCanExecuteACompoundPlan() async {
+        executor.succeed = true
+        let plan: [PlannedAction] = [.openApp("Notes"), .openFolder("Downloads")]
+        app = AppState(micManager: SilentMicrophone(), logger: Logger(logURL: directory.appendingPathComponent("commands.log")),
+                       dbManager: DBManager(configuration: [:]), actionPlanner: FixedPlanner(actions: plan),
+                       actionExecutor: executor, statsRecorder: stats,
+                       intentLog: IntentRouterLog(logURL: directory.appendingPathComponent("intent.jsonl")),
+                       activateServices: false)
+        app.voiceResponseEnabled = false
+        let success = await app.executeAutomation(.init(keyword: "start work", actions: [
+            .init(type: .command, value: "open Notes and open Downloads")
+        ]), isOffVariant: false)
+        XCTAssertTrue(success)
+        XCTAssertEqual(executor.plans, [plan])
+    }
+
+    func testRoutineCommandsKeepSafetyAndInvalidStepsAreFailures() async {
+        executor.succeed = true
+        let routine = VoiceAutomation(keyword: "work mode", actions: [
+            .init(type: .command, value: "sudo delete everything"),
+            .init(type: .openWebsiteChrome, value: "file:///etc/passwd"),
+            .init(type: .newTab, value: "unsupported app"),
+            .init(type: .openApp, value: "Notes")
+        ])
+        let success = await app.executeAutomation(routine, isOffVariant: false)
+        XCTAssertFalse(success)
+        XCTAssertEqual(executor.plans, [[.openApp("Notes")]])
+        XCTAssertNotNil(AutomationAction(type: .openWebsite, value: "javascript:alert(1)").validationMessage)
+        XCTAssertNotNil(AutomationAction(type: .openFile, value: "relative.pdf").validationMessage)
+    }
+
+    func testRoutineActionEncodingKeepsExistingSavedRoutinesCompatible() throws {
+        let old = AutomationAction(type: .playSong, value: "Blue Monday")
+        let encoded = try JSONEncoder().encode(old)
+        let object = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        XCTAssertEqual(object["type"] as? String, "play_song")
+        XCTAssertEqual(try JSONDecoder().decode(AutomationAction.self, from: encoded), old)
+        for type in AutomationActionType.selectableCases {
+            let action = AutomationAction(type: type, value: "example")
+            XCTAssertEqual(try JSONDecoder().decode(AutomationAction.self, from: JSONEncoder().encode(action)), action)
+        }
     }
 
     func testBlockedCommandRecordsExactlyOneFailureWithoutExecution() async throws {

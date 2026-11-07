@@ -54,7 +54,7 @@ struct NoirRoutinesPage: View {
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(NoirPalette.accent)
                 }
-                Text("Open apps and folders, play music, and start timers. Say your routine’s phrase to run its actions in order. Add an off phrase to make it easy to stop.")
+                Text("Open websites in Brave or Chrome, create tabs and windows, open files and projects, or play a specific song. Choose Run command for any other supported Jarvis command. Actions run in order.")
                     .font(.system(size: 11))
                     .lineSpacing(5)
                     .foregroundStyle(NoirPalette.muted)
@@ -247,7 +247,7 @@ struct RoutineEditorSheet: View {
                             .foregroundStyle(NoirPalette.red)
                     }
 
-                    Text("Say the trigger phrase to run these actions in sequence.")
+                    Text("Say the trigger phrase to run these actions in sequence. An off phrase acknowledges the routine as off; it does not undo completed actions.")
                         .font(.system(size: 11))
                         .foregroundStyle(NoirPalette.muted)
                 }
@@ -279,34 +279,42 @@ struct RoutineEditorSheet: View {
     }
 
     private func actionRow(_ action: Binding<AutomationAction>) -> some View {
-        HStack(spacing: 8) {
-            NoirSelect(
-                options: AutomationActionType.allCases.map { ($0, $0.displayName) },
-                selection: Binding(
-                    get: { action.wrappedValue.type },
-                    set: { newType in
-                        action.wrappedValue.type = newType
-                        if !newType.requiresValue { action.wrappedValue.value = "" }
-                    }
-                ),
-                width: 160
-            )
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+              NoirSelect(
+                  options: AutomationActionType.allCases.filter { AutomationActionType.selectableCases.contains($0) || $0 == action.wrappedValue.type }.map { ($0, $0.displayName) },
+                  selection: Binding(
+                      get: { action.wrappedValue.type },
+                      set: { newType in
+                          action.wrappedValue.type = newType
+                          if !newType.requiresValue { action.wrappedValue.value = "" }
+                      }
+                  ),
+                  width: 190
+              )
 
-            if action.wrappedValue.type.requiresValue {
-                TextField(action.wrappedValue.type.placeholder, text: action.value)
-                    .noirField()
-            } else {
-                Text("No value")
-                    .font(.system(size: 11))
-                    .foregroundStyle(NoirPalette.muted)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+              if action.wrappedValue.type.requiresValue {
+                  TextField(action.wrappedValue.type.placeholder, text: action.value)
+                      .noirField()
+              } else {
+                  Text("No value")
+                      .font(.system(size: 11))
+                      .foregroundStyle(NoirPalette.muted)
+                      .frame(maxWidth: .infinity, alignment: .leading)
+              }
+
+              NoirIconButton(icon: "xmark", help: "Remove action") {
+                  actions.removeAll { $0.id == action.wrappedValue.id }
+                  if actions.isEmpty {
+                      actions.append(AutomationAction(type: .openApp, value: ""))
+                  }
+              }
             }
-
-            NoirIconButton(icon: "xmark", help: "Remove action") {
-                actions.removeAll { $0.id == action.wrappedValue.id }
-                if actions.isEmpty {
-                    actions.append(AutomationAction(type: .openApp, value: ""))
-                }
+            if !action.wrappedValue.type.guidance.isEmpty {
+                Text(action.wrappedValue.type.guidance)
+                    .font(.system(size: 10))
+                    .foregroundStyle(NoirPalette.muted)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
     }
@@ -318,13 +326,15 @@ struct RoutineEditorSheet: View {
             return
         }
 
-        let cleaned = actions.filter {
-            !$0.type.requiresValue || !$0.value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        }
-        guard !cleaned.isEmpty else {
-            errorText = "Add at least one action with a value."
+        guard !actions.isEmpty else {
+            errorText = "Add at least one action."
             return
         }
+        if let invalid = actions.compactMap(\.validationMessage).first {
+            errorText = invalid
+            return
+        }
+        let cleaned = actions
 
         if appState.automations.contains(where: {
             $0.id != editing?.id && $0.keyword.lowercased() == trimmed.lowercased()
