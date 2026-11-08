@@ -2,6 +2,29 @@ import XCTest
 @testable import JarvisMacOS
 
 final class ProjectWorkspaceTests: XCTestCase {
+    func testLargeLimitsDoNotTrapAtRustBoundary() throws {
+        let root = try temporaryRoot()
+        _ = try directory("portfolio", in: root)
+        let matches = try ProjectDirectoryResolver.find("portfolio", locations: [
+            .init(name: "projects", path: root.path, isRoot: true)
+        ], maxEntries: .max, maxDepth: .max)
+        XCTAssertEqual(matches.count, 1)
+    }
+
+    func testCancelledLookupDoesNotReturnProjects() async throws {
+        let root = try temporaryRoot()
+        _ = try directory("portfolio", in: root)
+        let task = Task {
+            withUnsafeCurrentTask { $0?.cancel() }
+            return try ProjectDirectoryResolver.find("portfolio", locations: [
+                .init(name: "projects", path: root.path, isRoot: true)
+            ])
+        }
+        do {
+            _ = try await task.value
+            XCTFail("A cancelled lookup must not return a project")
+        } catch is CancellationError { }
+    }
     private func temporaryRoot() throws -> URL {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)

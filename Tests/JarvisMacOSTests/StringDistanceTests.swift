@@ -2,6 +2,11 @@ import XCTest
 @testable import JarvisMacOS
 
 final class StringDistanceTests: XCTestCase {
+    func testCanonicalUnicodeFormsHaveZeroDistance() {
+        XCTAssertEqual(StringDistance.levenshtein("café", "cafe\u{301}"), 0)
+        XCTAssertEqual(StringDistance.similarity("café", "cafe\u{301}"), 1.0)
+        XCTAssertEqual(StringDistance.levenshtein("각", "\u{1100}\u{1161}\u{11A8}"), 0)
+    }
     func testIdenticalStringsHaveZeroDistance() {
         XCTAssertEqual(StringDistance.levenshtein("chrome", "chrome"), 0)
     }

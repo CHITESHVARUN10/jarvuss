@@ -40,7 +40,7 @@ jobs:
           cargo test --locked --manifest-path rust-core/Cargo.toml
           zsh scripts/test_stt.zsh
       - name: Swift regression tests
-        run: swift test
+        run: swift test --build-system native
       - name: PostgreSQL integration tests
         run: |
           brew install postgresql@18

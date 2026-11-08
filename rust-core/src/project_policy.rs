@@ -9,6 +9,7 @@ use std::{
     path::{Path, PathBuf},
     time::{Duration, Instant},
 };
+use unicode_normalization::UnicodeNormalization;
 
 #[derive(Clone, Debug, uniffi::Record)]
 pub struct ProjectLocationInput {
@@ -39,7 +40,7 @@ fn error(message: impl Into<String>) -> ProjectLookupResult {
 fn normalize(value: &str) -> String {
     value
         .to_lowercase()
-        .chars()
+        .nfc()
         .filter(|c| c.is_alphanumeric())
         .collect()
 }
@@ -167,7 +168,7 @@ pub fn find_projects(
             1,
             false,
         );
-        if direct.error.is_none() && !direct.matches.is_empty() {
+        if direct.error.is_some() || !direct.matches.is_empty() {
             return direct;
         }
     }
@@ -223,15 +224,20 @@ pub fn find_projects(
                 }
             };
             for child in children.flatten() {
+                if Instant::now() > deadline {
+                    return error("Project lookup timed out. Choose a narrower root or add a project alias.");
+                }
+                let name = child.file_name().to_string_lossy().to_string();
+                // Match Foundation's skipsHiddenFiles: hidden entries never
+                // consumed the visible-entry budget before the migration.
+                if name.starts_with('.') {
+                    continue;
+                }
                 entries += 1;
                 if entries > max_entries as u64 {
                     return error(
                         "Project lookup reached its limit. Choose a narrower root or add a project alias.",
                     );
-                }
-                let name = child.file_name().to_string_lossy().to_string();
-                if name.starts_with('.') {
-                    continue;
                 }
                 // The root is canonical and every symlink is skipped, so a
                 // child path is already canonical under the root. Avoid a
@@ -334,5 +340,43 @@ mod tests {
         let result = find_projects("missing".into(), "nope".into(), locations, 10000, 3, true);
         assert!(result.error.unwrap().contains("No project root named"));
         let _ = stdfs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn hidden_entries_do_not_exhaust_visible_project_budget() {
+        let root = tempfile::tempdir().unwrap();
+        stdfs::create_dir(root.path().join("portfolio")).unwrap();
+        for i in 0..5 {
+            stdfs::write(root.path().join(format!(".hidden-{i}")), "").unwrap();
+        }
+        let result = find_projects("portfolio".into(), String::new(), vec![ProjectLocationInput {
+            name: "work".into(), path: root.path().to_string_lossy().into(), is_root: true,
+        }], 1, 1, false);
+        assert!(result.error.is_none(), "{:?}", result.error);
+        assert_eq!(result.matches.len(), 1);
+    }
+
+    #[test]
+    fn project_names_match_across_filesystem_unicode_forms() {
+        let root = tempfile::tempdir().unwrap();
+        stdfs::create_dir(root.path().join("cafe\u{301}")).unwrap();
+        let result = find_projects("café".into(), String::new(), vec![ProjectLocationInput {
+            name: "work".into(), path: root.path().to_string_lossy().into(), is_root: true,
+        }], 10, 1, false);
+        assert!(result.error.is_none());
+        assert_eq!(result.matches.len(), 1);
+    }
+
+    #[test]
+    fn direct_lookup_errors_are_not_hidden_by_recursive_fallback() {
+        // The direct pass can reach every root within its budget, whereas the
+        // recursive pass can hit its entry limit before the unavailable root.
+        let root = tempfile::tempdir().unwrap();
+        stdfs::create_dir_all(root.path().join("one/two/portfolio")).unwrap();
+        let result = find_projects("portfolio".into(), String::new(), vec![
+            ProjectLocationInput { name: "work".into(), path: root.path().to_string_lossy().into(), is_root: true },
+            ProjectLocationInput { name: "offline".into(), path: root.path().join("missing").to_string_lossy().into(), is_root: true },
+        ], 1, 3, true);
+        assert!(result.error.unwrap().contains("roots unavailable"));
     }
 }

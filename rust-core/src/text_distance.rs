@@ -1,9 +1,14 @@
 //! Grapheme-aware edit distance shared by enrollment and fuzzy matching.
 
 use unicode_segmentation::UnicodeSegmentation;
+use unicode_normalization::UnicodeNormalization;
 
 #[uniffi::export]
 pub fn levenshtein(a: String, b: String) -> u32 {
+    // Swift Character equality is canonical Unicode equality. Grapheme
+    // segmentation alone still compares decomposed UTF-8 bytes differently.
+    let a: String = a.nfc().collect();
+    let b: String = b.nfc().collect();
     let a: Vec<&str> = a.graphemes(true).collect();
     let b: Vec<&str> = b.graphemes(true).collect();
     if a.is_empty() {
@@ -60,5 +65,14 @@ mod tests {
         let far = similarity("spotify".into(), "terminal".into());
         assert!(close > far);
         assert!(close > 0.0 && close < 1.0);
+    }
+
+    #[test]
+    fn canonically_equivalent_graphemes_match_like_swift_characters() {
+        assert_eq!(levenshtein("café".into(), "cafe\u{301}".into()), 0);
+        assert_eq!(similarity("café".into(), "cafe\u{301}".into()), 1.0);
+        assert_eq!(levenshtein("각".into(), "\u{1100}\u{1161}\u{11a8}".into()), 0);
+        // Normalization must not erase a real accent difference.
+        assert_eq!(levenshtein("café".into(), "cafe".into()), 1);
     }
 }

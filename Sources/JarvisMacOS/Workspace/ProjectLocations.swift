@@ -63,11 +63,14 @@ enum ProjectResolutionError: LocalizedError {
 
 enum ProjectDirectoryResolver {
     static func find(_ query: String, root: String = "", locations: [ProjectLocation], maxEntries: Int = 10_000, maxDepth: Int = 3, preferDirect: Bool = true) throws -> [ProjectMatch] {
+        try Task.checkCancellation()
         let inputs = locations.map {
             CoreProjectLocationInput(name: $0.name, path: $0.url().path, isRoot: $0.isRoot)
         }
-        let roots = locations.filter(\.isRoot).map { $0.url() }
-        let accesses = roots.map { ($0, $0.startAccessingSecurityScopedResource()) }
+        // Aliases may be the only saved access grant for a project outside
+        // the roots. Keep those bookmark grants active during native lookup.
+        let urls = locations.map { $0.url() }
+        let accesses = urls.map { ($0, $0.startAccessingSecurityScopedResource()) }
         defer {
             for (url, access) in accesses where access {
                 url.stopAccessingSecurityScopedResource()
@@ -77,10 +80,11 @@ enum ProjectDirectoryResolver {
             query: query,
             root: root,
             locations: inputs,
-            maxEntries: UInt32(max(0, maxEntries)),
-            maxDepth: UInt32(max(0, maxDepth)),
+            maxEntries: UInt32(clamping: maxEntries),
+            maxDepth: UInt32(clamping: maxDepth),
             preferDirect: preferDirect
         )
+        try Task.checkCancellation()
         if let message = result.error {
             throw ProjectResolutionError.message(message)
         }
