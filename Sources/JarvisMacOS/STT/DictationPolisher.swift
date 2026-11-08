@@ -244,169 +244,18 @@ enum DictationPolisher {
     static func allowedDrift(forText text: String,
                              unboundedCorrections: Int,
                              directive: TranscriptFormatter.ListDirective?) -> Double {
-        if unboundedCorrections > 0 || directive != nil { return 0.35 }
-
-        let lower = text.lowercased()
-        let wordConsumingCues = [
-            // Spoken punctuation becomes a symbol.
-            "comma", "period", "full stop", "question mark", "colon", "semicolon",
-            "exclamation point",
-            // Self-correction cues the rules do not resolve themselves.
-            "no wait", "wait no", "sorry", "scratch that", "or rather",
-        ]
-        if wordConsumingCues.contains(where: { lower.contains($0) }) { return 0.35 }
-        return 0.18
+        coreAllowedDrift(text: text,
+                         unboundedCorrections: Int32(unboundedCorrections),
+                         directive: directive?.rawValue)
     }
 
     /// Decides whether the LLM output is safe to paste into a document.
-    /// Returns nil text plus the REASON list whenever an edit would be
-    /// unlawful; a non-nil text may still carry informational reasons (fence
-    /// or thinking-tag wrappers were stripped and are harmless post-strip).
-    ///
-    /// `maxDrift` is the length-change budget: the caller widens it when a
-    /// legitimate contraction is expected (self-corrections, list lead-in
-    /// removal) and tightens it for plain cleanups, where a shrinking output
-    /// means the model started summarising.
+    /// Rust owns the wrapper stripping, meta/repetition rejection and the
+    /// length-drift gate; Swift keeps the outcome/reason mapping.
     static func sanitize(_ raw: String, referenceText: String,
                          maxDrift: Double = 0.35) -> (text: String?, reasons: [String]) {
-        var text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        var reasons: [String] = []
-
-        guard !text.isEmpty else { return (nil, ["empty"]) }
-
-        // Current contract: PLAIN TEXT, no tags. Legacy/echoed <cleaned>
-        // wrappers are still unwrapped when present (last block wins), but
-        // their absence is no longer a failure — the tag requirement was the
-        // single biggest failure mode measured in production (15/26).
-        let cleanedRegex = try? NSRegularExpression(
-            pattern: #"<cleaned>([\s\S]*?)</cleaned>"#)
-        let fullRange = NSRange(text.startIndex..., in: text)
-        let cleanedMatches = cleanedRegex?.matches(in: text, range: fullRange) ?? []
-        if let lastCleaned = cleanedMatches.last, lastCleaned.numberOfRanges > 1,
-           let bodyRange = Range(lastCleaned.range(at: 1), in: text) {
-            text = String(text[bodyRange]).trimmingCharacters(in: .whitespacesAndNewlines)
-        } else if let open = text.range(of: "<cleaned>") {
-            // Small models glitch the closer (observed: "…at 4pm. />"). Take
-            // everything after the opening tag, strip a trailing malformed
-            // closer, and let the remaining guards judge the body.
-            var body = String(text[open.upperBound...])
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-            let closerPatterns = [
-                #"\s*</?\s*cleaned\s*/?>\s*$"#,
-                #"\s*<\s*/\s*>\s*$"#,
-                #"\s*/\s*>\s*$"#,
-                #"\s*<\s*$"#,
-            ]
-            for pattern in closerPatterns {
-                guard let regex = try? NSRegularExpression(pattern: pattern) else { continue }
-                let range = NSRange(body.startIndex..., in: body)
-                if regex.firstMatch(in: body, range: range) != nil {
-                    body = regex.stringByReplacingMatches(in: body, range: range, withTemplate: "")
-                    break
-                }
-            }
-            text = body.trimmingCharacters(in: .whitespacesAndNewlines)
-            reasons.append("cleaned-malformed")
-        }
-        guard !text.isEmpty else { return (nil, ["empty"]) }
-
-        // Turn-marker hygiene: the prompt is a U:/A: continuation, so a small
-        // model can echo "A:", re-emit the app's "List:" directive line, or
-        // start writing the next example ("U: …"). None of that is dictation.
-        let beforeTurn = text
-        if let marker = text.range(of: #"^A:\s*"#, options: [.regularExpression, .caseInsensitive]) {
-            text = String(text[marker.upperBound...])
-        }
-        if let marker = text.range(of: #"^List:\s*(numbered|bullets)\s*\n"#,
-                                   options: [.regularExpression, .caseInsensitive]) {
-            text = String(text[marker.upperBound...])
-        }
-        if let cut = text.range(of: #"\nU:\s"#, options: [.regularExpression, .caseInsensitive]) {
-            text = String(text[..<cut.lowerBound])
-        }
-        text = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        if text != beforeTurn {
-            reasons.append("turn-stripped")
-        }
-        guard !text.isEmpty else { return (nil, ["empty"]) }
-
-        // Qwen-family thinking wrappers must never reach the document.
-        let openTag = String(decoding: [0x3C, 0x74, 0x68, 0x69, 0x6E, 0x6B, 0x3E], as: UTF8.self)
-        let closeTag = String(decoding: [0x3C, 0x2F, 0x74, 0x68, 0x69, 0x6E, 0x6B, 0x3E], as: UTF8.self)
-        let thinkPattern = NSRegularExpression.escapedPattern(for: openTag)
-            + ".*?(?:" + NSRegularExpression.escapedPattern(for: closeTag) + "|$)"
-        if let thinkRegex = try? NSRegularExpression(
-            pattern: thinkPattern, options: [.dotMatchesLineSeparators]) {
-            let range = NSRange(text.startIndex..., in: text)
-            if thinkRegex.numberOfMatches(in: text, range: range) > 0 {
-                text = thinkRegex.stringByReplacingMatches(in: text, range: range, withTemplate: "")
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                if text.isEmpty { return (nil, ["think-only"]) }
-                reasons.append("think-stripped")
-            }
-        }
-
-        // Code-fence wrapper: strip once, then re-check the length gate.
-        if text.hasPrefix("```") {
-            let full = NSRange(text.startIndex..., in: text)
-            let openFence = try? NSRegularExpression(
-                pattern: #"^```\w*\s*"#, options: [.anchorsMatchLines])
-            let closeFence = try? NSRegularExpression(
-                pattern: #"\s*```\s*$"#, options: [.anchorsMatchLines])
-            if let openFence, let closeFence {
-                let stripped = openFence.stringByReplacingMatches(
-                    in: text, range: full, withTemplate: "")
-                text = closeFence.stringByReplacingMatches(
-                    in: stripped,
-                    range: NSRange(location: 0, length: (stripped as NSString).length),
-                    withTemplate: "")
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                if text.isEmpty { return (nil, ["fence-only"]) }
-                reasons.append("fence-stripped")
-            }
-        }
-
-        // Whole-text quote wrapper — a common small-model tic. Unwrap once
-        // only when the quote character appears nowhere else in the body.
-        if let first = text.first, "\"'“‘".contains(first), text.count > 4, first == text.last {
-            let inner = String(text.dropFirst().dropLast())
-            if !inner.contains(first) {
-                text = inner.trimmingCharacters(in: .whitespacesAndNewlines)
-                reasons.append("quote-unwrap")
-            }
-        }
-
-        // Answer-shaped leaks ("Sure, here is the cleaned text:") mean the
-        // format contract failed; paste the rules text instead of risking an
-        // assistant reply landing in the user's document.
-        let refusalPrefixes = [
-            "i'm sorry", "i am sorry", "sorry,", "here is", "here's", "as an ai",
-            "sure,", "certainly", "cleaned text", "cleaned:", "note:", "ollama",
-        ]
-        let lowered = text.lowercased()
-        if let refusal = refusalPrefixes.first(where: { lowered.hasPrefix($0) }) {
-            reasons.append("meta:\(refusal)")
-            return (nil, reasons)
-        }
-
-        // A phrase loop introduced by the model must never be pasted. The
-        // rules input was already collapsed, so any loop here is model-added.
-        if TranscriptSanitizer.hasRepeatedPhraseLoop(text) {
-            reasons.append("repetition-loop")
-            return (nil, reasons)
-        }
-
-        // Length drift: the contract is "clean up", not "rewrite". Wispr's
-        // own lesson — recall high, precision low; drift is the tell of a
-        // rewrite instead of a cleanup.
-        let reference = max(1, referenceText.count)
-        let drift = Double(abs(text.count - reference)) / Double(reference)
-        if drift > maxDrift {
-            reasons.append(String(format: "length-drift %.2f", drift))
-            return (nil, reasons)
-        }
-
-        return (text.isEmpty ? nil : text, reasons)
+        let result = coreSanitizePolished(raw: raw, reference: referenceText, maxDrift: maxDrift)
+        return (result.text, result.reasons)
     }
 
     // MARK: - Prompt

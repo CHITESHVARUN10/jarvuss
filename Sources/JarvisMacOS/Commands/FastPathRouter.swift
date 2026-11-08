@@ -117,13 +117,6 @@ enum FastPathRouter {
     }
 
     private static func knownWebsite(_ lower: String) -> String? {
-        let sites = ["youtube": "https://www.youtube.com",
-                     "google": "https://www.google.com",
-                     "netflix": "https://www.netflix.com",
-                     "github": "https://github.com"]
-        for (name, url) in sites {
-            if lower == "open \(name)" || lower == name { return url }
-        }
         if lower.hasPrefix("open ") {
             return OpenTargetResolver.siteURL(for: String(lower.dropFirst("open ".count)))
         }
@@ -131,20 +124,7 @@ enum FastPathRouter {
     }
 
     private static func websiteURL(for target: String) -> String? {
-        let t = target.lowercased().trimmingCharacters(in: .whitespaces)
-        switch t {
-        case "youtube", "you tube":       return "https://www.youtube.com"
-        case "google":                    return "https://www.google.com"
-        case "netflix":                   return "https://www.netflix.com"
-        case "github", "git hub":         return "https://github.com"
-        case "twitter", "x", "twitter x": return "https://twitter.com"
-        case "reddit":                    return "https://www.reddit.com"
-        case "instagram":                 return "https://www.instagram.com"
-        case "linkedin":                  return "https://www.linkedin.com"
-        case "gmail":                     return "https://mail.google.com"
-        case "maps", "google maps":       return "https://maps.google.com"
-        default:                          return nil
-        }
+        OpenTargetResolver.siteURL(for: target)
     }
 
     private static func singleSearch(_ lower: String) -> [PlannedAction]? {

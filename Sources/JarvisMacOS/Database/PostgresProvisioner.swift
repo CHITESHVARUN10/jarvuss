@@ -39,41 +39,34 @@ enum PostgresProvisioner {
     /// Generate a command only when missing. Existing roles and passwords
     /// belong to the user and must survive a repeated setup attempt.
     static func createRoleSQL(user: String, password: String) -> String {
-        """
-        SELECT format('CREATE ROLE %I LOGIN PASSWORD %L', \(quoteLiteral(user)), \(quoteLiteral(password)))
-        WHERE NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = \(quoteLiteral(user)))
-        \\gexec
-        """
+        coreCreateRoleSql(user: user, password: password)
     }
 
     /// `CREATE DATABASE` must run outside a transaction. The wizard checks
     /// existence first and calls this only when missing.
     static func createDatabaseSQL(database: String, user: String) -> String {
-        "CREATE DATABASE \(quoteIdentifier(database)) OWNER \(quoteIdentifier(user));"
+        coreCreateDatabaseSql(database: database, user: user)
     }
 
     static func databaseExistsQuery(database: String) -> String {
-        "SELECT 1 FROM pg_catalog.pg_database WHERE datname = \(quoteLiteral(database));"
+        coreDatabaseExistsQuery(database: database)
     }
 
     static func roleExistsQuery(user: String) -> String {
-        "SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = \(quoteLiteral(user));"
+        coreRoleExistsQuery(user: user)
     }
 
     static func quoteIdentifier(_ identifier: String) -> String {
-        "\"\(identifier.replacingOccurrences(of: "\"", with: "\"\""))\""
+        coreQuoteIdentifier(identifier: identifier)
     }
 
     static func quoteLiteral(_ value: String) -> String {
-        "'\(value.replacingOccurrences(of: "'", with: "''"))'"
+        coreQuoteLiteral(value: value)
     }
 
     /// Random, human-typeable password (no quote-unsafe characters).
     static func generatedPassword() -> String {
-        // Ambiguous characters excluded so the wizard's editable field is
-        // readable when the user wants to copy it elsewhere.
-        let alphabet = Array("abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789")
-        return String((0..<24).map { _ in alphabet.randomElement()! })
+        coreGeneratedPassword()
     }
 
     // MARK: - Execution
@@ -162,11 +155,12 @@ enum PostgresProvisioner {
     }
 
     static func validate(_ plan: Plan) throws {
-        guard [plan.database, plan.user].allSatisfy({ !$0.isEmpty && $0.utf8.count <= 63 && !$0.contains("\0") }),
-              !plan.password.contains("\0"),
-              !plan.administrator.isEmpty, !plan.administrator.contains("\0"),
-              !plan.administratorPassword.contains("\0"),
-              let port = Int(plan.port), (1...65535).contains(port) else {
+        guard coreValidateProvisionPlan(database: plan.database,
+                                        user: plan.user,
+                                        password: plan.password,
+                                        port: plan.port,
+                                        administrator: plan.administrator,
+                                        administratorPassword: plan.administratorPassword) else {
             throw ProvisionError.commandFailed(
                 "Use database and role names of 1–63 bytes, a password without NUL bytes, and a valid port.")
         }
@@ -203,17 +197,10 @@ enum PostgresProvisioner {
     }
 
     static func connectionFailure(detail: String, plan: Plan, verifyLogin: Bool) -> String {
-        let lower = detail.lowercased()
-        if !verifyLogin && (lower.contains("no password supplied") || lower.contains("password authentication failed")) {
-            return "PostgreSQL requires the existing server administrator's credentials. Enter the PostgreSQL administrator name and password in Setup. The Jarvis password field belongs to the application account, not the administrator."
-        }
-        if verifyLogin && (lower.contains("no password supplied") || lower.contains("password authentication failed")) {
-            return "The existing Jarvis role '\(plan.user)' rejected this password. Enter its current password; setup preserves existing role passwords."
-        }
-        var redacted = detail
-        for secret in [plan.password, plan.administratorPassword] where !secret.isEmpty {
-            redacted = redacted.replacingOccurrences(of: secret, with: "[redacted]")
-        }
-        return redacted.isEmpty ? "PostgreSQL command failed." : redacted
+        coreConnectionFailure(detail: detail,
+                              user: plan.user,
+                              password: plan.password,
+                              administratorPassword: plan.administratorPassword,
+                              verifyLogin: verifyLogin)
     }
 }

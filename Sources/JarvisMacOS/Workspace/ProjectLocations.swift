@@ -62,72 +62,32 @@ enum ProjectResolutionError: LocalizedError {
 }
 
 enum ProjectDirectoryResolver {
-    static func normalize(_ value: String) -> String { value.lowercased().filter { $0.isLetter || $0.isNumber } }
     static func find(_ query: String, root: String = "", locations: [ProjectLocation], maxEntries: Int = 10_000, maxDepth: Int = 3, preferDirect: Bool = true) throws -> [ProjectMatch] {
-        guard !query.contains("/"), !query.contains("\\"), query != ".", query != "..", !query.contains("\0") else {
-            throw ProjectResolutionError.message("Use a project name or saved alias, rather than a path.")
+        let inputs = locations.map {
+            CoreProjectLocationInput(name: $0.name, path: $0.url().path, isRoot: $0.isRoot)
         }
-        guard (query.isEmpty || !normalize(query).isEmpty), (root.isEmpty || !normalize(root).isEmpty) else {
-            throw ProjectResolutionError.message("Use a project or root name containing letters or numbers.")
-        }
-        let rootKey = normalize(root)
-        let roots = locations.filter { $0.isRoot && (rootKey.isEmpty || normalize($0.name) == rootKey) }
-        if !rootKey.isEmpty && roots.isEmpty { throw ProjectResolutionError.message("No project root named ‘\(root)’. Add it in System → Project locations.") }
-        let key = normalize(query)
-        let aliases = locations.filter { !$0.isRoot && normalize($0.name) == key && !key.isEmpty }
-        var matches: [ProjectMatch] = []
-        func isDirectory(_ url: URL) -> Bool {
-            (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true
-        }
-        for alias in aliases {
-            let url = alias.url().standardizedFileURL.resolvingSymlinksInPath()
-            if !rootKey.isEmpty && !roots.contains(where: { within(url, root: $0.url().resolvingSymlinksInPath()) }) { continue }
-            guard isDirectory(url) else { throw ProjectResolutionError.message("The saved project ‘\(alias.name)’ is unavailable. Connect its drive or choose the folder again.") }
-            matches.append(ProjectMatch(url: url, rootName: alias.name))
-        }
-        if !matches.isEmpty { return unique(matches) }
-        guard !roots.isEmpty else { throw ProjectResolutionError.message("Add a project root or project alias in System → Project locations first.") }
-        // A root's immediate project folders take precedence over nested
-        // dependencies or unrelated directories with the same name.
-        if preferDirect && maxDepth > 1 {
-            let direct = try find(query, root: root, locations: locations, maxEntries: maxEntries, maxDepth: 1, preferDirect: false)
-            if !direct.isEmpty { return direct }
-        }
-        let excluded: Set<String> = ["node_modules", "vendor", "build", "dist", "target", "pods", "__pycache__", "venv"]
-        var visited = Set<String>(), entries = 0, unavailable: [String] = []
-        let deadline = Date().addingTimeInterval(3)
-        for saved in roots {
-            let rootURL = saved.url().standardizedFileURL.resolvingSymlinksInPath()
-            let access = rootURL.startAccessingSecurityScopedResource()
-            defer { if access { rootURL.stopAccessingSecurityScopedResource() } }
-            guard isDirectory(rootURL) else { unavailable.append(saved.name); continue }
-            var pending: [(URL, Int)] = [(rootURL, 0)]
-            var cursor = 0
-            while cursor < pending.count {
-                try Task.checkCancellation()
-                guard Date() < deadline else { throw ProjectResolutionError.message("Project lookup timed out. Choose a narrower root or add a project alias.") }
-                let (parent, depth) = pending[cursor]; cursor += 1
-                guard visited.insert(parent.path).inserted else { continue }
-                let children: [URL]
-                do { children = try FileManager.default.contentsOfDirectory(at: parent, includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey], options: [.skipsHiddenFiles]) }
-                catch { throw ProjectResolutionError.message("Cannot read ‘\(parent.lastPathComponent)’. Check folder access in System → Project locations.") }
-                for child in children {
-                    entries += 1
-                    guard entries <= maxEntries else { throw ProjectResolutionError.message("Project lookup reached its limit. Choose a narrower root or add a project alias.") }
-                    let values = try? child.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
-                    guard values?.isDirectory == true, values?.isSymbolicLink != true else { continue }
-                    let url = child.standardizedFileURL.resolvingSymlinksInPath()
-                    guard within(url, root: rootURL), !excluded.contains(child.lastPathComponent.lowercased()) else { continue }
-                    if key.isEmpty || normalize(child.lastPathComponent) == key { matches.append(ProjectMatch(url: url, rootName: saved.name)) }
-                    if depth + 1 < maxDepth { pending.append((url, depth + 1)) }
-                }
+        let roots = locations.filter(\.isRoot).map { $0.url() }
+        let accesses = roots.map { ($0, $0.startAccessingSecurityScopedResource()) }
+        defer {
+            for (url, access) in accesses where access {
+                url.stopAccessingSecurityScopedResource()
             }
         }
-        if !unavailable.isEmpty { throw ProjectResolutionError.message("Project roots unavailable: \(unavailable.joined(separator: ", ")). Connect their drives or remove them in System → Project locations.") }
-        return unique(matches).sorted { $0.url.path.localizedStandardCompare($1.url.path) == .orderedAscending }
+        let result = coreFindProjects(
+            query: query,
+            root: root,
+            locations: inputs,
+            maxEntries: UInt32(max(0, maxEntries)),
+            maxDepth: UInt32(max(0, maxDepth)),
+            preferDirect: preferDirect
+        )
+        if let message = result.error {
+            throw ProjectResolutionError.message(message)
+        }
+        return result.matches
+            .map { ProjectMatch(url: URL(fileURLWithPath: $0.path, isDirectory: true),
+                                rootName: $0.rootName) }
+            .sorted { $0.url.path.localizedStandardCompare($1.url.path) == .orderedAscending }
     }
-    private static func within(_ url: URL, root: URL) -> Bool { root.path == "/" || url.path == root.path || url.path.hasPrefix(root.path + "/") }
-    private static func unique(_ matches: [ProjectMatch]) -> [ProjectMatch] {
-        var seen = Set<String>(); return matches.filter { seen.insert($0.id).inserted }
-    }
+
 }

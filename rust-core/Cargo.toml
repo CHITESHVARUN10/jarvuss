@@ -46,3 +46,6 @@ libloading = "0.9"
 multer = "=3.1.0"
 futures-util = "0.3"
 futures-executor = "0.3"
+
+[profile.release.build-override]
+strip = "none"

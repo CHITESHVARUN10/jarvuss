@@ -41,25 +41,7 @@ enum DotEnvLoader {
     // MARK: - Internals
 
     static func parse(_ text: String) -> [String: String] {
-        var out: [String: String] = [:]
-        for line in text.components(separatedBy: .newlines) {
-            var trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
-            if trimmed.isEmpty || trimmed.hasPrefix("#") { continue }
-            if trimmed.hasPrefix("export ") {
-                trimmed = String(trimmed.dropFirst(7)).trimmingCharacters(in: .whitespaces)
-            }
-            let parts = trimmed.split(separator: "=", maxSplits: 1).map(String.init)
-            guard parts.count == 2 else { continue }
-            let key = parts[0].trimmingCharacters(in: .whitespaces)
-            var value = parts[1].trimmingCharacters(in: .whitespaces)
-            if value.count >= 2, let first = value.first,
-               (first == "\"" || first == "'"), value.last == first {
-                value = String(value.dropFirst().dropLast())
-            }
-            guard !key.isEmpty else { continue }
-            out[key] = value
-        }
-        return out
+        coreParseDotenv(text: text)
     }
 
     private static func candidates(extraSearchDirs: [URL]) -> [URL] {

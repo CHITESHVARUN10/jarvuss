@@ -124,7 +124,9 @@ TYPES = [
          "AutomationMatch", "AutomationStoreError", "CommandAction", "CommandPriority",
          "DisplayAction", "IntentRouteOutcome", "MediaAction", "NormalizedCommand",
          "NormalizedPriority", "OllamaGenerateOutcome", "OllamaPlanResult", "PlannedAction",
-         "PlanResult", "SafetyVerdict", "SystemInfoAction", "VolumeAction"]
+         "PlanResult", "SafetyVerdict", "SystemInfoAction", "VolumeAction",
+         "FormattedTranscript", "SanitizeResult", "OpenTarget",
+         "ProjectLocationInput", "ProjectMatch", "ProjectLookupResult"]
 FUNCS = {"normalizeCompact": "coreNormalizeCompact",
          "nativeIntentParse": "coreNativeIntentParse",
          "nativeIntentStatus": "coreNativeIntentStatus",
@@ -172,7 +174,30 @@ FUNCS = {"normalizeCompact": "coreNormalizeCompact",
          "rlAppend": "coreRlAppend",
          "ollamaGenerate": "coreOllamaGenerate",
          "ollamaPlan": "coreOllamaPlan",
-         "ollamaNormalize": "coreOllamaNormalize"}
+         "ollamaNormalize": "coreOllamaNormalize",
+         "formatTranscript": "coreFormatTranscript",
+         "transcriptShouldUseLlm": "coreTranscriptShouldUseLlm",
+         "transcriptListDirective": "coreTranscriptListDirective",
+         "recapitalize": "coreRecapitalize",
+         "allowedDrift": "coreAllowedDrift",
+         "sanitizePolished": "coreSanitizePolished",
+         "levenshtein": "coreLevenshtein",
+         "similarity": "coreSimilarity",
+         "canonicalBrowser": "coreCanonicalBrowser",
+         "siteUrl": "coreSiteUrl",
+         "parseOpenInBrowser": "coreParseOpenInBrowser",
+         "parseLocalDev": "coreParseLocalDev",
+         "parseDotenv": "coreParseDotenv",
+         "createRoleSql": "coreCreateRoleSql",
+         "createDatabaseSql": "coreCreateDatabaseSql",
+         "databaseExistsQuery": "coreDatabaseExistsQuery",
+         "roleExistsQuery": "coreRoleExistsQuery",
+         "quoteIdentifier": "coreQuoteIdentifier",
+         "quoteLiteral": "coreQuoteLiteral",
+         "generatedPassword": "coreGeneratedPassword",
+         "validateProvisionPlan": "coreValidateProvisionPlan",
+         "connectionFailure": "coreConnectionFailure",
+         "findProjects": "coreFindProjects"}
 
 for name in TYPES:
     if not re.search(rf"\b{name}\b", src):

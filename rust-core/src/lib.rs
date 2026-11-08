@@ -37,6 +37,12 @@ pub mod shuffle;
 pub mod local_search;
 pub mod transcript;
 pub mod routine_policy;
+pub mod dictation;
+pub mod text_distance;
+pub mod open_target;
+pub mod env_policy;
+pub mod postgres_sql;
+pub mod project_policy;
 
 #[uniffi::export]
 pub fn parse_system_volume(raw: String) -> Option<PlannedAction> {

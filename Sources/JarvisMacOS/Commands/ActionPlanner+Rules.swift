@@ -288,23 +288,9 @@ extension ActionPlanner {
     }
 
     /// Maps common spoken website names to their canonical URLs.
-    /// Add new sites here only — do NOT add native apps (Spotify, WhatsApp, etc.).
+    /// The Rust core owns the site table; native apps stay on app routing.
     func knownWebsiteURL(for target: String) -> String? {
-        if let url = OpenTargetResolver.siteURL(for: target) { return url }
-        let t = target.lowercased().trimmingCharacters(in: .whitespaces)
-        switch t {
-        case "youtube", "you tube":       return "https://www.youtube.com"
-        case "google":                    return "https://www.google.com"
-        case "netflix":                   return "https://www.netflix.com"
-        case "github", "git hub":         return "https://github.com"
-        case "twitter", "x", "twitter x": return "https://twitter.com"
-        case "reddit":                    return "https://www.reddit.com"
-        case "instagram":                 return "https://www.instagram.com"
-        case "linkedin":                  return "https://www.linkedin.com"
-        case "gmail":                     return "https://mail.google.com"
-        case "maps", "google maps":       return "https://maps.google.com"
-        default:                          return nil
-        }
+        OpenTargetResolver.siteURL(for: target)
     }
 
     func parseInfoCommand(_ lower: String) -> SystemInfoAction? {

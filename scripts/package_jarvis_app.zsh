@@ -45,7 +45,7 @@ fi
 # ── Rust command core → RustCore.xcframework + UniFFI bindings (linked into the app) ──
 ./scripts/build_rust_core.sh --release
 
-swift build
+swift build --build-system native
 
 # The helper is a separate executable so existing authenticated clients and
 # OAuth redirect URLs keep their contract during the native transition.

@@ -31,8 +31,12 @@ fn main() -> anyhow::Result<()> {
 
     let mut engine =
         jarvis_stt::inference::engine::InferenceEngine::new(model_path, 4);
+    let load_start = std::time::Instant::now();
     engine.load()?;
+    println!("LOAD_MS: {}", load_start.elapsed().as_millis());
+    let infer_start = std::time::Instant::now();
     let text = engine.transcribe(&samples)?;
+    println!("TRANSCRIBE_MS: {}", infer_start.elapsed().as_millis());
     println!("TRANSCRIPT: '{text}'");
 
     let lower = text.to_lowercase();
