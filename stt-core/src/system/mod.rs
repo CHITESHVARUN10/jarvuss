@@ -136,9 +136,15 @@ pub fn insert_text(text: &str) -> anyhow::Result<()> {
         return Err(anyhow::anyhow!("Accessibility permission missing"));
     }
 
-    let previous = get_clipboard().ok().flatten();
-
-    copy_to_clipboard(text)?;
+    // One pasteboard instance for read + write. Creating two arboard
+    // clipboards on the main thread adds avoidable latency before ⌘V.
+    let mut clipboard = arboard::Clipboard::new()
+        .map_err(|e| anyhow::anyhow!("Failed to access clipboard: {}", e))?;
+    let previous = clipboard.get_text().ok();
+    clipboard
+        .set_text(text)
+        .map_err(|e| anyhow::anyhow!("Failed to set clipboard text: {}", e))?;
+    drop(clipboard);
     paste_into_frontmost()?;
 
     tracing::info!(chars = text.len(), "Inserted text into frontmost app");

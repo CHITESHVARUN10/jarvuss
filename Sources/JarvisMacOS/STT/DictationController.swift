@@ -731,16 +731,21 @@ final class DictationController: ObservableObject {
             }, completion: { [weak self] result in
                 guard let self, STTRouter.shared.owner == .pill else { return }
                 self.formattingInProgress = false
-                self.transcript = result.text
-                self.persistLastDictation(polished: result.text)
-                self.insertFormattedText()
-                self.writeDevLog(finalText: result.text,
+                let finalText = result.text
+                // Paste before publishing the polished text. The popup update
+                // is UI work; the insertion should not wait behind it.
+                self.insertFormattedText(text: finalText)
+                self.transcript = finalText
+                self.persistLastDictation(polished: finalText)
+                self.resizePanelForCurrentState()
+                self.positionPanelForCurrentState()
+                self.writeDevLog(finalText: finalText,
                                  polishMs: result.elapsedMs,
                                  outcome: result.outcome.rawValue)
             })
         } else {
-            persistLastDictation(polished: rules.text)
             insertFormattedText()
+            persistLastDictation(polished: rules.text)
             writeDevLog(finalText: rules.text, polishMs: 0, outcome: "rules_not_needed")
         }
         scheduleHardCapDismiss()
@@ -749,7 +754,8 @@ final class DictationController: ObservableObject {
     /// Paste the final text at the cursor. Insert failure is never silent:
     /// the formatted text is copied so the user still has it, and the card
     /// carries the permission notice with a one-tap grant.
-    private func insertFormattedText() {
+    private func insertFormattedText(text: String? = nil) {
+        let text = text ?? transcript
         defer {
             // Polishing can change the measured height, including in copy-only mode.
             resizePanelForCurrentState()
@@ -764,16 +770,19 @@ final class DictationController: ObservableObject {
 
         let trusted = has_accessibility_permission()
         let canPost = has_event_posting_permission()
-        let ok = insert_text(transcript)
-        NSLog("[Jarvis][Dictate] insert: %d (stop→insert %.0f ms, %d chars, ax=%d cg=%d)",
-              ok ? 1 : 0, elapsed * 1000, transcript.count, trusted ? 1 : 0, canPost ? 1 : 0)
-        logInsertAttempt(ok: ok, trusted: trusted, canPost: canPost, chars: transcript.count)
+        let insertStart = Date()
+        let ok = insert_text(text)
+        let insertMs = Int(Date().timeIntervalSince(insertStart) * 1000)
+        NSLog("[Jarvis][Dictate] insert: %d (transcript→insert %.0f ms, insert call %d ms, %d chars, ax=%d cg=%d)",
+              ok ? 1 : 0, elapsed * 1000, insertMs, text.count, trusted ? 1 : 0, canPost ? 1 : 0)
+        logInsertAttempt(ok: ok, trusted: trusted, canPost: canPost, chars: text.count,
+                         transcriptMs: Int(elapsed * 1000), insertMs: insertMs)
 
         if ok {
             insertedAtCursor = true
             scheduleInsertAutoDismiss()
         } else {
-            silentlyCopyTranscript()
+            silentlyCopyTranscript(text)
             if trusted || canPost {
                 // Both gates said yes yet the paste did not land — not a
                 // permission problem; the JSONL above has the details.
@@ -835,24 +844,28 @@ final class DictationController: ObservableObject {
 
     /// One JSONL line per insert attempt — the answer to "why didn't it
     /// paste" without needing a console.
-    private func logInsertAttempt(ok: Bool, trusted: Bool, canPost: Bool, chars: Int) {
+    private func logInsertAttempt(ok: Bool, trusted: Bool, canPost: Bool, chars: Int,
+                                  transcriptMs: Int, insertMs: Int) {
         let fields: [String: String] = [
             "event": ok ? "inserted" : "failed",
             "session_id": diagnosticSessionID,
             "ax_trusted": trusted ? "1" : "0",
             "cg_can_post": canPost ? "1" : "0",
             "chars": String(chars),
+            "transcript_ms": String(transcriptMs),
+            "insert_ms": String(insertMs),
         ]
         DictationDevLog.append(fields, fileName: "dictation_insert.jsonl")
     }
 
     /// Copies without flipping the Copy button — on this path the copy is a
     /// fallback, not an action the user took, and the button must stay live.
-    private func silentlyCopyTranscript() {
+    private func silentlyCopyTranscript(_ text: String? = nil) {
+        let text = text ?? transcript
         let pb = NSPasteboard.general
         pb.clearContents()
-        pb.setString(transcript, forType: .string)
-        StatsRecorder.shared.recordCopy(chars: transcript.count)
+        pb.setString(text, forType: .string)
+        StatsRecorder.shared.recordCopy(chars: text.count)
     }
 
     /// After a successful paste the card must not demand a mouse click to go
@@ -879,6 +892,14 @@ final class DictationController: ObservableObject {
         let work = DispatchWorkItem { [weak self] in
             guard let self, self.formattingTask.generation == generation,
                   self.phase == .TranscriptReady else { return }
+            // The polish pass has its own bounded timeout. Closing the card
+            // here would invalidate the pending insertion and silently drop
+            // the text, which is exactly the "card stayed, nothing pasted"
+            // failure. Give the polish another card interval instead.
+            if self.formattingInProgress {
+                self.scheduleHardCapDismiss()
+                return
+            }
             NSLog("[Jarvis][Dictate] card auto-closed (%d s cap)", self.cardDismissSeconds)
             self.dismissTranscript()
         }

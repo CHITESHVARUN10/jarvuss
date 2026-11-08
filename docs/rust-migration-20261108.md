@@ -126,9 +126,14 @@ The installed build is now a release Swift build with the optimized Rust core.
   `formattingInProgress` are now ignored and the result still inserts. Added
   `PillLifecycleTests.testHotkeyDuringPolishDoesNotCancelThePendingInsertion`.
   Insert logs showed `ax_trusted=1`; the missing paste was cancellation, not TCC.
+- **Insertion latency**: the final text is pasted before the popup publishes it;
+  the native insert reuses one clipboard instance; the card hard-cap cannot
+  dismiss a card while polish is active (it reschedules), so it cannot invalidate
+  the pending paste. `dictation_insert.jsonl` now records `transcript_ms` and
+  `insert_ms` to separate polish/UI time from the actual clipboard+⌘V call.
 
 Measured after optimization: intent raw median **90–93 ms** (was 111 ms), cached
 repeats **~0 ms**, plan **0–1 ms**, idle **110.5 MiB RSS / 43 MiB footprint**.
 Swift 394 tests / 13 skipped / 0 failures; Rust 112 passed / 1 ignored; STT 37
-passed / 1 ignored. Installed build revision `621d31b+modified`, executable UUID
-`C6282160-B68D-3377-8820-15C6DE92CEFB`.
+passed / 1 ignored. Installed build revision `125c199+modified`, executable UUID
+`E371984B-B2F0-3948-A40A-393FD4EEEBEF`.
