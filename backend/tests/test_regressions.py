@@ -39,6 +39,9 @@ import intent_router_model as intent
 import voice_auth_service as service
 from runtime_config import RuntimeConfig, SECRET_KEYS, read_env, Keychain
 
+# Loading a script by file path does not add its directory to sys.path.
+# Match `python training/post_train.py` so its sibling imports work in CI too.
+sys.path.insert(0, str(ROOT / "training"))
 spec = importlib.util.spec_from_file_location("post_train_review_tests", ROOT / "training/post_train.py")
 training = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(training)
