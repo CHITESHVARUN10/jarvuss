@@ -2,6 +2,7 @@
 .build/
 .vscode/
 logs/
+docs/runtime-*.html
 /htmls/*
 !/htmls/command-test-runner.html
 .commandcode/
@@ -34,3 +35,4 @@ Sources/JarvisMacOS/Bridge/
 /models/
 /rag_documents/
 /rag_index/
+__pycache__/

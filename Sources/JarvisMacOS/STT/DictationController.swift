@@ -322,10 +322,20 @@ final class DictationController: ObservableObject {
 
     func toggleDictation() {
         shortcutPreparing = false
-        if STTRouter.shared.isModalOwner,
-           phase == .Processing || phase == .TranscriptReady || phase == .Error {
-            dismissTranscript()
-            return
+        if STTRouter.shared.isModalOwner {
+            // The polish pass is already running. A repeated hotkey press used
+            // to dismiss the card, which invalidated the polish task and threw
+            // away the text the user was waiting for. Let it finish; the card
+            // has its own close control for an explicit cancel. A press during
+            // STT .Processing still cancels, as before.
+            if phase == .TranscriptReady && formattingInProgress {
+                NSLog("[Jarvis][STT] toggle during polish — ignored; result will insert")
+                return
+            }
+            if phase == .Processing || phase == .TranscriptReady || phase == .Error {
+                dismissTranscript()
+                return
+            }
         }
         if pendingStartOnReady {
             if pendingStartMode == .dictate { dismissTranscript() }

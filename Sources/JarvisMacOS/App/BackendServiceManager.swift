@@ -38,7 +38,7 @@ final class BackendServiceManager {
         set { UserDefaults.standard.set(newValue.rawValue, forKey: modeDefaultsKey) }
     }
 
-    static let idleUnloadInterval: TimeInterval = 300
+    static let idleUnloadInterval: TimeInterval = 120
     /// Set by AppState so an idle stop updates the visible status text.
     static var idleStopHandler: ((String) -> Void)?
     @MainActor static var statusChangeHandler: ((String) -> Void)?

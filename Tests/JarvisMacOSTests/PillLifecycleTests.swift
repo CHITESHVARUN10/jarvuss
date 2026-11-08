@@ -60,6 +60,19 @@ final class PillLifecycleTests: XCTestCase {
         XCTAssertEqual(STTRouter.shared.owner, .none)
     }
 
+    func testHotkeyDuringPolishDoesNotCancelThePendingInsertion() {
+        controller.toggleDictation()
+        controller.toggleDictation()
+        XCTAssertEqual(controller.phase, .Processing)
+        controller.phase = .TranscriptReady
+        controller.formattingInProgress = true
+        controller.toggleDictation()
+        XCTAssertEqual(starts, 1)
+        XCTAssertEqual(cancels, 0)
+        XCTAssertEqual(STTRouter.shared.owner, .pill)
+        XCTAssertTrue(controller.formattingInProgress)
+    }
+
     func testShortcutOnFinishedCardClosesWithoutStartingAnotherRecording() {
         controller.toggleDictation()
         controller.phase = .TranscriptReady

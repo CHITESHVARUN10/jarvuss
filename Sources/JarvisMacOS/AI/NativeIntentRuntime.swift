@@ -5,10 +5,13 @@ import Foundation
 enum NativeIntentRuntime {
     private static let idleTimer: DispatchSourceTimer = {
         let timer = DispatchSource.makeTimerSource(queue: .global(qos: .utility))
-        timer.schedule(deadline: .now() + 60, repeating: 60)
+        // Check often enough that the 120 s idle threshold is not delayed by
+        // a full minute. The model is ~700 MB resident, so releasing it
+        // promptly matters more than the negligible timer cost.
+        timer.schedule(deadline: .now() + 30, repeating: 30)
         timer.setEventHandler {
             guard BackendServiceManager.mode != .always else { return }
-            _ = coreNativeIntentUnloadIfIdle(seconds: BackendServiceManager.mode == .off ? 0 : 300)
+            _ = coreNativeIntentUnloadIfIdle(seconds: BackendServiceManager.mode == .off ? 0 : 120)
         }
         timer.resume()
         return timer

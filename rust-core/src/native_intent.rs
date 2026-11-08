@@ -83,11 +83,23 @@ impl Engine {
             chars.insert(ch, v);
         }
         let env = environment(library)?;
-        let threads = (std::thread::available_parallelism()
-            .map(usize::from)
-            .unwrap_or(4)
-            / 2)
-        .max(1);
+        let threads = std::env::var("JARVIS_INTENT_THREADS")
+            .ok()
+            .and_then(|value| value.parse::<usize>().ok())
+            .filter(|value| (1..=64).contains(value))
+            .unwrap_or_else(|| {
+                (std::thread::available_parallelism()
+                    .map(usize::from)
+                    .unwrap_or(4)
+                    / 2)
+                .max(1)
+            });
+        // ORT's CPU arena can grow pathologically (observed >2 GB with two
+        // threads). Per-run allocation keeps memory stable with no measured
+        // latency cost; opt back in with JARVIS_INTENT_ARENA=1.
+        let arena = std::env::var("JARVIS_INTENT_ARENA")
+            .map(|value| !matches!(value.as_str(), "0" | "false" | "off"))
+            .unwrap_or(false);
         let session = || {
             Session::builder(env)
                 .map_err(err)?
@@ -96,7 +108,7 @@ impl Engine {
                 .with_auto_device(AutoDevicePolicy::PreferCPU)
                 .map_err(err)?
                 .with_execution_providers([ort::ep::CPU::default()
-                    .with_arena_allocator(true)
+                    .with_arena_allocator(arena)
                     .build()])
                 .map_err(err)?
                 .with_optimization_level(GraphOptimizationLevel::All)
@@ -301,6 +313,32 @@ struct State {
     active: Value,
     update_error: Option<String>,
     last_activity: Option<Instant>,
+    cache: Vec<(String, String)>,
+}
+
+const CACHE_LIMIT: usize = 64;
+
+fn cache_get<'a>(cache: &'a [(String, String)], text: &str) -> Option<&'a str> {
+    cache
+        .iter()
+        .find(|(key, _)| key == text)
+        .map(|(_, value)| value.as_str())
+}
+
+fn cache_put(cache: &mut Vec<(String, String)>, text: String, value: String) {
+    if cache.iter().any(|(key, _)| *key == text) {
+        return;
+    }
+    if cache.len() >= CACHE_LIMIT {
+        cache.remove(0);
+    }
+    cache.push((text, value));
+}
+
+fn cache_enabled() -> bool {
+    std::env::var("JARVIS_INTENT_CACHE")
+        .map(|value| !matches!(value.as_str(), "0" | "false" | "off"))
+        .unwrap_or(true)
 }
 static STATE: OnceLock<Mutex<State>> = OnceLock::new();
 impl State {
@@ -330,6 +368,7 @@ impl State {
             };
         }
         self.key = key;
+        self.cache.clear();
         self.update_error = None;
         let mut choices: Vec<(Option<Receipt>, &str)> = Vec::new();
         if let Some(r) = desired.clone() {
@@ -410,13 +449,27 @@ pub fn parse(text: &str, bundled: &Path, data: &Path, library: &Path) -> Result<
     let start = Instant::now();
     state.last_activity = Some(start);
     state.load(bundled, data, library)?;
+    if cache_enabled() {
+        if let Some(cached) = cache_get(&state.cache, text) {
+            if let Ok(mut value) = serde_json::from_str::<Value>(cached) {
+                value["latency_ms"] = json!(0);
+                value["cached"] = json!(true);
+                return Ok(value.to_string());
+            }
+        }
+    }
     let g=match state.engine.as_mut().ok_or("intent model unavailable")?.generate_until(text,Some(start+Duration::from_secs(2))){Ok(g)=>g,Err(e)if e=="input_too_long"=>return Ok(json!({"actions":null,"parse_ok":false,"confidence":0,"raw":"","latency_ms":0,"reason":e}).to_string()),Err(e)=>return Err(e)};
     let actions: Option<Value> = serde_json::from_str::<Value>(&g.raw).ok().filter(|v| {
         v.as_array()
             .is_some_and(|a| !a.is_empty() && a.iter().all(Value::is_object))
     });
+    let parse_ok = actions.is_some();
     let confidence = (g.confidence * 10000.0).round_ties_even() / 10000.0;
-    Ok(json!({"actions":actions,"parse_ok":actions.is_some(),"raw":g.raw,"confidence":confidence,"latency_ms":start.elapsed().as_millis()}).to_string())
+    let response = json!({"actions":actions,"parse_ok":parse_ok,"raw":g.raw,"confidence":confidence,"latency_ms":start.elapsed().as_millis()}).to_string();
+    if cache_enabled() && parse_ok {
+        cache_put(&mut state.cache, text.to_string(), response.clone());
+    }
+    Ok(response)
 }
 pub fn status() -> String {
     let Ok(state) = STATE.get_or_init(Default::default).try_lock() else {
@@ -448,8 +501,25 @@ pub fn unload_if_idle(seconds: u64) -> bool {
         return false;
     }
     *state = State::default();
+    release_free_pages();
     true
 }
+
+/// Ask macOS to return free pages after a large model drop. Without this the
+/// allocator can keep the session's pages resident long after the model is
+/// gone, which makes the footprint look unchanged.
+#[cfg(target_os = "macos")]
+fn release_free_pages() {
+    unsafe extern "C" {
+        fn malloc_zone_pressure_relief(zone: *mut std::ffi::c_void, goal: usize) -> usize;
+    }
+    unsafe {
+        malloc_zone_pressure_relief(std::ptr::null_mut(), 0);
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
+fn release_free_pages() {}
 
 #[cfg(test)]
 mod tests {
@@ -461,6 +531,19 @@ mod tests {
         assert!((p.exp() - 1.0 / (2.0 + (-1.0f64).exp())).abs() < 1e-12);
         assert!(argmax_logprob(&[f32::NAN]).is_err());
     }
+    #[test]
+    fn cache_is_bounded_and_deduplicates() {
+        let mut cache = Vec::new();
+        for index in 0..100 {
+            cache_put(&mut cache, format!("t{index}"), format!("v{index}"));
+        }
+        assert_eq!(cache.len(), CACHE_LIMIT);
+        assert_eq!(cache_get(&cache, "t99"), Some("v99"));
+        cache_put(&mut cache, "t99".into(), "new".into());
+        assert_eq!(cache_get(&cache, "t99"), Some("v99"));
+        assert_eq!(cache_get(&cache, "missing"), None);
+    }
+
     #[test]
     fn rejects_input_without_loading() {
         assert!(parse(

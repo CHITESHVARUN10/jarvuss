@@ -29,8 +29,13 @@ fn main() -> anyhow::Result<()> {
         .collect();
     println!("read {} samples ({:.2}s)", samples.len(), samples.len() as f32 / 16000.0);
 
+    let threads = std::env::var("JARVIS_STT_THREADS")
+        .ok()
+        .and_then(|value| value.parse::<i32>().ok())
+        .filter(|value| (1..=16).contains(value))
+        .unwrap_or(4);
     let mut engine =
-        jarvis_stt::inference::engine::InferenceEngine::new(model_path, 4);
+        jarvis_stt::inference::engine::InferenceEngine::new(model_path, threads);
     let load_start = std::time::Instant::now();
     engine.load()?;
     println!("LOAD_MS: {}", load_start.elapsed().as_millis());

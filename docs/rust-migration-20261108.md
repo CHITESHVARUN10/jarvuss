@@ -24,7 +24,7 @@ process execution or model-call ownership moved.
 ## Verification
 
 - Rust: **111 passed, 0 failed, 1 ignored** (`cargo test --locked --manifest-path rust-core/Cargo.toml --lib`).
-- Swift: **393 tests, 13 skipped, 0 failures** (`swift test --build-system native`).
+- Swift: **394 tests, 13 skipped, 0 failures** (`swift test --build-system native`).
 - `git diff --check` clean.
 - The existing `TranscriptFormatterTests`, `ListDirectiveTests`,
   `DictationPolisherTests`, `StringDistanceTests`, `ProjectWorkspaceTests` and
@@ -95,3 +95,40 @@ Reports and chart:
   with the signed Swift app.
 - SwiftUI/AppKit, Accessibility, AppleScript, CoreAudio, DisplayServices,
   Spotlight/MDQuery, TCC and process execution remain native adapters.
+
+## 2026-11-08 performance/memory follow-up
+
+The installed build is now a release Swift build with the optimized Rust core.
+
+- **Release packaging**: package script builds `-c release`; app binary
+  55.4→20 MB, installed bundle 303→269 MB, idle 133→110 MiB RSS (62→43 MiB
+  footprint).
+- **ORT intent arena**: disabled by default (`JARVIS_INTENT_ARENA=1` opts back
+  in). It was observed growing to 2.3 GB with two threads; per-run allocation
+  keeps the resident peak stable at ~700 MiB. No intent-memory leak: 695→697 MiB
+  across 36 repeated runs.
+- **Intent result cache**: 64 entries, exact-text keyed, cleared on model
+  change/unload. First occurrence is real inference (~90 ms); repeats are cache
+  hits (~0 ms). `JARVIS_INTENT_CACHE=0` bypasses it for diagnostics.
+- **Idle residency**: intent model 120 s (checked every 30 s), backend helper 120 s.
+  STT model stays at 300 s: the 120 s experiment caused cold Whisper reloads before dictation. Intent unload is followed by
+  `malloc_zone_pressure_relief`; the next command reloads in ~415 ms. ORT still
+  retains allocator pages after unload, so the process footprint does not return
+  all the way to idle.
+- **Project traversal**: child paths are already canonical under a canonical
+  root with symlinks skipped, so the per-entry `canonicalize` syscall was
+  removed.
+- **Threads**: intent 5, Whisper 4. Whisper 2/4/6/8/10-thread runs were flat
+  (1.29–1.31 s for the synthetic clip).
+- **Dictation regression fix**: the 120 s STT idle caused cold Whisper reloads;
+  STT is back to 300 s. A repeated hotkey press during the polish pass used to
+  dismiss the card and invalidate the pending insertion; presses during
+  `formattingInProgress` are now ignored and the result still inserts. Added
+  `PillLifecycleTests.testHotkeyDuringPolishDoesNotCancelThePendingInsertion`.
+  Insert logs showed `ax_trusted=1`; the missing paste was cancellation, not TCC.
+
+Measured after optimization: intent raw median **90–93 ms** (was 111 ms), cached
+repeats **~0 ms**, plan **0–1 ms**, idle **110.5 MiB RSS / 43 MiB footprint**.
+Swift 394 tests / 13 skipped / 0 failures; Rust 112 passed / 1 ignored; STT 37
+passed / 1 ignored. Installed build revision `621d31b+modified`, executable UUID
+`C6282160-B68D-3377-8820-15C6DE92CEFB`.

@@ -15,7 +15,7 @@ for option in "$@"; do
 done
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-BUILD_DIR="$ROOT_DIR/.build/debug"
+BUILD_DIR="$ROOT_DIR/.build/release"
 APP_BUNDLE="$ROOT_DIR/.build/Jarvis.app"
 APP_CONTENTS="$APP_BUNDLE/Contents"
 APP_MACOS="$APP_CONTENTS/MacOS"
@@ -45,7 +45,7 @@ fi
 # ── Rust command core → RustCore.xcframework + UniFFI bindings (linked into the app) ──
 ./scripts/build_rust_core.sh --release
 
-swift build --build-system native
+swift build -c release --build-system native
 
 # The helper is a separate executable so existing authenticated clients and
 # OAuth redirect URLs keep their contract during the native transition.

@@ -692,6 +692,7 @@ fn inference_worker(rx: mpsc::Receiver<InferenceJob>) {
                         engine.unload();
                     }
                 });
+                release_free_pages();
                 MODEL_RESIDENT.store(false, Ordering::SeqCst);
                 // Honest post-unload state: the model FILE is usually still
                 // on disk (is_installed) — only the RAM context is gone, and
@@ -1589,3 +1590,18 @@ mod capture_lifecycle_tests {
         assert_eq!(with_app(|app| app.phase), SessionPhase::Ready);
     }
 }
+
+/// Return freed model pages to the OS immediately. The process allocator can
+/// otherwise keep the Whisper session's pages resident after unload.
+#[cfg(target_os = "macos")]
+fn release_free_pages() {
+    unsafe extern "C" {
+        fn malloc_zone_pressure_relief(zone: *mut std::ffi::c_void, goal: usize) -> usize;
+    }
+    unsafe {
+        malloc_zone_pressure_relief(std::ptr::null_mut(), 0);
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
+fn release_free_pages() {}

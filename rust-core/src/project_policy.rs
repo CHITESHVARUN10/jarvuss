@@ -233,18 +233,16 @@ pub fn find_projects(
                 if name.starts_with('.') {
                     continue;
                 }
-                let symlink = child
-                    .file_type()
-                    .map(|value| value.is_symlink())
-                    .unwrap_or(true);
-                if symlink {
+                // The root is canonical and every symlink is skipped, so a
+                // child path is already canonical under the root. Avoid a
+                // canonicalize syscall per entry (large trees showed this
+                // dominated the lookup).
+                let file_type = child.file_type().ok();
+                if file_type.is_none() || file_type.is_some_and(|value| value.is_symlink() || !value.is_dir()) {
                     continue;
                 }
-                let path = child.path();
-                let Some(url) = fs::canonicalize(&path).ok() else {
-                    continue;
-                };
-                if !is_directory(&url) || !within(&url, &root_url) {
+                let url = child.path();
+                if !within(&url, &root_url) {
                     continue;
                 }
                 if EXCLUDED.contains(&name.to_lowercase().as_str()) {
