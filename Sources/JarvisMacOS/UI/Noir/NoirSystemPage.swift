@@ -8,7 +8,9 @@ struct NoirSystemPage: View {
     @ObservedObject private var dictation = DictationController.shared
     @ObservedObject private var recovery = DisplayRecovery.shared
     @EnvironmentObject private var toasts: ToastCenter
+    @Environment(\.obsidianWindowWidth) private var windowWidth
 
+    @State private var assistantPreferencesOpen = false
     @State private var brightness: Double = 65
     @State private var contrast: Double = 50
     @State private var editingBrightness = false
@@ -19,10 +21,13 @@ struct NoirSystemPage: View {
     var body: some View {
         NoirPage(
             eyebrow: "The details that make it yours",
-            title: "A comfortable workspace.",
+            title: "General",
             sub: "Fine-tune your display, sound, dictation, and command safeguards."
         ) {
-            HStack(alignment: .top, spacing: 18) {
+            let columns = windowWidth < 1100
+                ? AnyLayout(VStackLayout(alignment: .leading, spacing: 18))
+                : AnyLayout(HStackLayout(alignment: .top, spacing: 18))
+            columns {
                 VStack(alignment: .leading, spacing: 0) {
                     NoirSectionHeading(
                         title: "Display",
@@ -52,7 +57,7 @@ struct NoirSystemPage: View {
                             NoirDivider()
                             NoirSettingRow(title: "Display profile") {
                                 Text(appState.displayProfileName)
-                                    .font(.system(size: 11, design: .monospaced))
+                                    .obsidianFont(size: 11, design: .monospaced)
                                     .foregroundStyle(NoirPalette.secondary)
                             }
                         }
@@ -79,6 +84,13 @@ struct NoirSystemPage: View {
                 }
             }
 
+            NoirSectionHeading(title: "Assistant behavior")
+            NoirCard {
+                NoirSettingRow(title: "Startup, verification, and responses", sub: "Helper lifecycle, memory limit, voice mode, and dictation diagnostics.") {
+                    Button("Configure") { assistantPreferencesOpen = true }.buttonStyle(NoirButtonStyle(intent: .quiet, small: true))
+                }
+            }
+            ObsidianCoreServices(appState: appState)
             NoirSoundSection()
 
             NoirSectionHeading(title: "Live speech")
@@ -89,7 +101,7 @@ struct NoirSystemPage: View {
                 }
                 TextField("Speech language (for example en-IN or en-US)", text: $liveSpeechLocale)
                 Text("Applies when you restart listening. Apple downloads supported language assets through macOS. Shortcut dictation uses the existing Whisper model.")
-                    .font(.system(size: 11)).foregroundStyle(NoirPalette.secondary)
+                    .obsidianFont(size: 11).foregroundStyle(NoirPalette.secondary)
             }
 
             NoirProjectPreferences()
@@ -99,15 +111,15 @@ struct NoirSystemPage: View {
             NoirSectionHeading(title: "Display safety")
             NoirCard(padded: true) {
                 Text("Jarvis keeps brightness at 10% or higher, contrast at 20% or higher, and software dimming above zero.")
-                    .font(.system(size: 12))
+                    .obsidianFont(size: 12)
                     .foregroundStyle(NoirPalette.secondary)
                 Text("If the screen becomes unreadable, press ⌘⇧R. Or press ⌘⇧A, say ‘Restore my display’, then press ⌘⇧A again to finish. Recovery bypasses verification only for this exact, safe action.")
-                    .font(.system(size: 11))
+                    .obsidianFont(size: 11)
                     .foregroundStyle(NoirPalette.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 8)
                 Text("Requests 60% brightness, 50% external contrast and normal software brightness using macOS and supported display controls. BetterDisplay is optional. If you use it, keep its notification integration enabled to release its dimming; software image adjustments are suspended until you re-enable them in BetterDisplay. Jarvis must be running.")
-                    .font(.system(size: 11))
+                    .obsidianFont(size: 11)
                     .foregroundStyle(NoirPalette.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 8)
@@ -117,10 +129,10 @@ struct NoirSystemPage: View {
                     .padding(.top, 12)
                 if !recovery.shortcutRegistered {
                     Text("⌘⇧R is unavailable. Another app may already use it; the button and voice phrase still work.")
-                        .font(.system(size: 11)).foregroundStyle(NoirPalette.orange).padding(.top, 8)
+                        .obsidianFont(size: 11).foregroundStyle(NoirPalette.orange).padding(.top, 8)
                 }
                 if !recovery.status.isEmpty {
-                    Text(recovery.status).font(.system(size: 11)).foregroundStyle(NoirPalette.secondary).padding(.top, 8)
+                    Text(recovery.status).obsidianFont(size: 11).foregroundStyle(NoirPalette.secondary).padding(.top, 8)
                 }
             }
 
@@ -163,7 +175,7 @@ struct NoirSystemPage: View {
                     ) {
                         Stepper(value: $dictation.recordingLimitMinutes, in: 1...60) {
                             Text("\(dictation.recordingLimitMinutes) min")
-                                .font(.system(size: 12, design: .monospaced))
+                                .obsidianFont(size: 12, design: .monospaced)
                         }
                         .frame(width: 126)
                         .accessibilityLabel("Maximum recording time in minutes")
@@ -186,7 +198,7 @@ struct NoirSystemPage: View {
                 title: "Last dictation",
                 trailing: AnyView(
                     Text("Latest only")
-                        .font(.system(size: 11, design: .monospaced))
+                        .obsidianFont(size: 11, design: .monospaced)
                         .foregroundStyle(NoirPalette.muted)
                 )
             )
@@ -194,7 +206,7 @@ struct NoirSystemPage: View {
             NoirCard(padded: true) {
                 if dictation.lastPolished.isEmpty && dictation.lastOriginal.isEmpty {
                     Text("No dictation yet. Try the button above.")
-                        .font(.system(size: 12))
+                        .obsidianFont(size: 12)
                         .foregroundStyle(NoirPalette.muted)
                         .padding(.vertical, 6)
                 } else {
@@ -215,9 +227,12 @@ struct NoirSystemPage: View {
             }
 
             Text("Each new dictation replaces the previous one.")
-                .font(.system(size: 11))
+                .obsidianFont(size: 11)
                 .foregroundStyle(NoirPalette.muted)
                 .padding(.top, 14)
+        }
+        .sheet(isPresented: $assistantPreferencesOpen) {
+            AssistantPreferencesSheet(appState: appState).environmentObject(toasts).presentationBackground(.clear)
         }
         .onAppear {
             syncDisplayValues()
@@ -244,7 +259,7 @@ struct NoirSystemPage: View {
             .frame(width: 118)
 
             Text("\(Int(value.wrappedValue.rounded()))%")
-                .font(.system(size: 11, design: .monospaced))
+                .obsidianFont(size: 11, design: .monospaced)
                 .foregroundStyle(NoirPalette.secondary)
                 .frame(width: 34, alignment: .trailing)
         }
@@ -307,7 +322,7 @@ struct NoirSystemPage: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Text(label.uppercased())
-                    .font(.system(size: 9, weight: .medium))
+                    .obsidianFont(size: 9, weight: .medium)
                     .tracking(1.6)
                     .foregroundStyle(NoirPalette.muted)
                 Spacer(minLength: 8)
@@ -318,7 +333,7 @@ struct NoirSystemPage: View {
                 }
             }
             Text(text)
-                .font(.system(size: 12))
+                .obsidianFont(size: 12)
                 .lineSpacing(5)
                 .foregroundStyle(muted ? NoirPalette.muted : NoirPalette.secondary)
                 .textSelection(.enabled)

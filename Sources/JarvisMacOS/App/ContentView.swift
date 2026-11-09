@@ -21,6 +21,6 @@ struct ContentView: View {
                     .frame(maxWidth: 360)
             }
         }
-        .frame(minWidth: 1080, minHeight: 700)
+        .frame(minWidth: 840, minHeight: 700)
     }
 }

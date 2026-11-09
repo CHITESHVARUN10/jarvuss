@@ -51,13 +51,13 @@ struct NoirSoundSection: View {
                                 .disabled(sound.snapshot?.canSetVolume != true || sound.isApplying)
 
                                 Text("\(Int((isEditing ? volume : Double(level) * 100).rounded()))%")
-                                    .font(.system(size: 12, design: .monospaced))
+                                    .obsidianFont(size: 12, design: .monospaced)
                                     .foregroundStyle(NoirPalette.secondary)
                                     .frame(width: 38, alignment: .trailing)
                             }
                         } else {
                             Text(sound.snapshot == nil ? "Reading…" : "Unavailable")
-                                .font(.system(size: 12))
+                                .obsidianFont(size: 12)
                                 .foregroundStyle(NoirPalette.muted)
                         }
                     }
@@ -77,7 +77,7 @@ struct NoirSoundSection: View {
             }
             if let result = sound.lastResult, !result.success {
                 Text(result.message)
-                    .font(.system(size: 11))
+                    .obsidianFont(size: 11)
                     .foregroundStyle(NoirPalette.orange)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 10)
@@ -85,13 +85,13 @@ struct NoirSoundSection: View {
             }
             if let detail = sound.snapshot?.detail {
                 Text(detail)
-                    .font(.system(size: 11))
+                    .obsidianFont(size: 11)
                     .foregroundStyle(NoirPalette.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 10)
             }
             Text("Try “increase volume by ten percent” or “set volume to forty percent”.")
-                .font(.system(size: 11))
+                .obsidianFont(size: 11)
                 .foregroundStyle(NoirPalette.muted)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 10)

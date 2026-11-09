@@ -57,15 +57,15 @@ struct FileSearchResultsView: View {
     private var searchHeader: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Text("File search").font(.system(size: 14, weight: .medium))
+                Text("File search").obsidianFont(size: 14, weight: .medium)
                 Spacer()
                 Text(model.searching ? "Searching…" : "\(model.results.count) \(model.results.count == 1 ? "result" : "results")")
-                    .font(.system(size: 11)).monospacedDigit().foregroundStyle(NoirPalette.muted)
+                    .obsidianFont(size: 11).monospacedDigit().foregroundStyle(NoirPalette.muted)
             }
             HStack(spacing: 11) {
-                Image(systemName: "magnifyingglass").font(.system(size: 15)).foregroundStyle(NoirPalette.accent)
+                Image(systemName: "magnifyingglass").obsidianFont(size: 15).foregroundStyle(NoirPalette.accent)
                 TextField(model.draft.mode == .name ? "Search file names…" : "Search words inside documents…", text: $model.draft.query)
-                    .font(.system(size: 14)).textFieldStyle(.plain)
+                    .obsidianFont(size: 14).textFieldStyle(.plain)
                     .focused($queryFocused)
                     .onSubmit { search() }
                     .accessibilityLabel("File search words")
@@ -100,10 +100,10 @@ struct FileSearchResultsView: View {
             }.controlSize(.small)
             if model.draft.minimumBytes > 0 || model.draft.maximumBytes > 0 {
                 HStack(spacing: 8) {
-                    Image(systemName: "line.3.horizontal.decrease").font(.system(size: 10))
-                    Text(sizeFilterText).font(.system(size: 11))
+                    Image(systemName: "line.3.horizontal.decrease").obsidianFont(size: 10)
+                    Text(sizeFilterText).obsidianFont(size: 11)
                     Button("Clear") { model.draft.minimumBytes = 0; model.draft.maximumBytes = 0 }
-                        .font(.system(size: 11)).buttonStyle(.plain).foregroundStyle(NoirPalette.accent)
+                        .obsidianFont(size: 11).buttonStyle(.plain).foregroundStyle(NoirPalette.accent)
                         .accessibilityLabel("Clear size filter")
                 }.foregroundStyle(NoirPalette.secondary)
             }
@@ -117,7 +117,7 @@ struct FileSearchResultsView: View {
             Text("Modified").frame(width: 105, alignment: .trailing)
             Text("Size").frame(width: 68, alignment: .trailing)
         }
-        .font(.system(size: 10, weight: .medium)).foregroundStyle(NoirPalette.muted)
+        .obsidianFont(size: 10, weight: .medium).foregroundStyle(NoirPalette.muted)
         .padding(.horizontal, 24).padding(.vertical, 11)
         .background(NoirPalette.footer)
         .overlay(alignment: .bottom) { Rectangle().fill(NoirPalette.line).frame(height: 1) }
@@ -128,9 +128,9 @@ struct FileSearchResultsView: View {
             HStack(spacing: 8) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(selected?.name ?? "Select a file")
-                        .font(.system(size: 11, weight: .medium)).lineLimit(1).truncationMode(.middle)
+                        .obsidianFont(size: 11, weight: .medium).lineLimit(1).truncationMode(.middle)
                     Text(selected == nil ? "Choose a result to preview or open" : "Selected file")
-                        .font(.system(size: 10)).foregroundStyle(NoirPalette.muted)
+                        .obsidianFont(size: 10).foregroundStyle(NoirPalette.muted)
                 }.frame(maxWidth: .infinity, alignment: .leading)
                 HStack(spacing: 7) {
                     Button { act(.reveal) } label: { Label("Finder", systemImage: "arrow.up.forward.square") }
@@ -145,7 +145,7 @@ struct FileSearchResultsView: View {
             HStack(alignment: .firstTextBaseline, spacing: 16) {
                 Text(model.status).lineLimit(2).frame(maxWidth: .infinity, alignment: .leading)
                 Text("Space  Preview    ↩  Open").fixedSize().foregroundStyle(NoirPalette.muted)
-            }.font(.system(size: 10)).foregroundStyle(NoirPalette.secondary)
+            }.obsidianFont(size: 10).foregroundStyle(NoirPalette.secondary)
         }
         .padding(.horizontal, 20).padding(.vertical, 15)
         .background(NoirPalette.footer)
@@ -163,7 +163,7 @@ struct FileSearchResultsView: View {
             }
         } label: {
             Label(model.draft.scopes.isEmpty ? "This Mac" : model.draft.scopes.count == 1 ? model.draft.scopes[0].capitalized : "\(model.draft.scopes.count) folders", systemImage: "folder")
-                .font(.system(size: 11)).lineLimit(1)
+                .obsidianFont(size: 11).lineLimit(1)
         }
         .menuStyle(.borderlessButton).frame(minWidth: 70, maxWidth: 150)
         .accessibilityLabel("Search folders")
@@ -182,16 +182,16 @@ struct FileSearchResultsView: View {
 
     private func resultRow(_ item: FileSearchResult, index: Int) -> some View {
         HStack(spacing: 12) {
-            Text("\(index + 1)").font(.system(size: 11, design: .monospaced))
+            Text("\(index + 1)").obsidianFont(size: 11, design: .monospaced)
                 .foregroundStyle(model.selectedID == item.id ? NoirPalette.accent : NoirPalette.muted)
                 .frame(width: 24, alignment: .trailing)
             Image(nsImage: NSWorkspace.shared.icon(for: item.isDirectory ? .folder : UTType(filenameExtension: item.url.pathExtension) ?? .data))
                 .resizable().scaledToFit().frame(width: 28, height: 32).accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 5) {
-                Text(item.name).font(.system(size: 13, weight: .medium)).foregroundStyle(NoirPalette.text).lineLimit(1)
+                Text(item.name).obsidianFont(size: 13, weight: .medium).foregroundStyle(NoirPalette.text).lineLimit(1)
                     .help(item.name)
                 Text(item.url.deletingLastPathComponent().path)
-                    .font(.system(size: 10.5)).foregroundStyle(NoirPalette.secondary)
+                    .obsidianFont(size: 10.5).foregroundStyle(NoirPalette.secondary)
                     .lineLimit(1).truncationMode(.middle)
             }.frame(maxWidth: .infinity, alignment: .leading)
             Text(item.modified == .distantPast ? "—" : item.modified.formatted(date: .abbreviated, time: .omitted))
@@ -199,7 +199,7 @@ struct FileSearchResultsView: View {
             Text(item.isDirectory ? "Folder" : FileExplorer.formatSize(item.size))
                 .frame(width: 68, alignment: .trailing)
         }
-        .font(.system(size: 10.5)).foregroundStyle(NoirPalette.secondary)
+        .obsidianFont(size: 10.5).foregroundStyle(NoirPalette.secondary)
         .padding(.horizontal, 12).padding(.vertical, 12)
         .foregroundStyle(NoirPalette.text)
         .contentShape(Rectangle())
@@ -209,9 +209,9 @@ struct FileSearchResultsView: View {
 
     private func emptyState(icon: String, title: String, detail: String) -> some View {
         VStack(spacing: 12) {
-            Image(systemName: icon).font(.system(size: 27, weight: .light)).foregroundStyle(NoirPalette.muted)
-            Text(title).font(.system(size: 15, weight: .medium))
-            Text(detail).font(.system(size: 12)).foregroundStyle(NoirPalette.secondary)
+            Image(systemName: icon).obsidianFont(size: 27, weight: .light).foregroundStyle(NoirPalette.muted)
+            Text(title).obsidianFont(size: 15, weight: .medium)
+            Text(detail).obsidianFont(size: 12).foregroundStyle(NoirPalette.secondary)
                 .multilineTextAlignment(.center).frame(maxWidth: 390)
         }.frame(maxWidth: .infinity, maxHeight: .infinity).padding(28)
     }
@@ -225,8 +225,8 @@ struct FileSearchPreviewView: View {
             HStack(spacing: 12) {
                 Image(systemName: "eye").foregroundStyle(NoirPalette.accent)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(target.url.lastPathComponent).font(.system(size: 13, weight: .medium)).lineLimit(1)
-                    Text(target.url.deletingLastPathComponent().path).font(.system(size: 10.5))
+                    Text(target.url.lastPathComponent).obsidianFont(size: 13, weight: .medium).lineLimit(1)
+                    Text(target.url.deletingLastPathComponent().path).obsidianFont(size: 10.5)
                         .foregroundStyle(NoirPalette.muted).lineLimit(1).truncationMode(.middle)
                 }
                 Spacer()
@@ -292,16 +292,16 @@ struct NoirFileSearchPreferences: View {
         NoirCard(padded: true) {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Say ‘find PDFs from last week in Downloads or Documents’, then use ⌘⇧A to say ‘open the second one’ or ‘preview it’.")
-                    .font(.system(size: 12)).foregroundStyle(NoirPalette.secondary)
+                    .obsidianFont(size: 12).foregroundStyle(NoirPalette.secondary)
                 Text("Add other folders or drives below. Their names become spoken search locations. Searches use Spotlight’s index and respect macOS folder permissions and indexing exclusions.")
-                    .font(.system(size: 11)).foregroundStyle(NoirPalette.muted)
+                    .obsidianFont(size: 11).foregroundStyle(NoirPalette.muted)
                 ForEach($store.locations) { $location in
                     HStack(spacing: 12) {
                         Image(systemName: "folder").foregroundStyle(NoirPalette.accent)
                         VStack(alignment: .leading, spacing: 4) {
                             TextField("Spoken folder name", text: $location.name)
-                                .textFieldStyle(.plain).font(.system(size: 12, weight: .medium))
-                            Text(location.path).font(.system(size: 10.5)).foregroundStyle(NoirPalette.muted)
+                                .textFieldStyle(.plain).obsidianFont(size: 12, weight: .medium)
+                            Text(location.path).obsidianFont(size: 10.5).foregroundStyle(NoirPalette.muted)
                                 .lineLimit(1).truncationMode(.middle)
                         }
                         Spacer()

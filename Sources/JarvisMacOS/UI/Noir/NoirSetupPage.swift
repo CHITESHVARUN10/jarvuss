@@ -102,7 +102,7 @@ struct NoirSetupPage: View {
 
             HStack(spacing: 16) {
                 Text("Optional steps are always available here.")
-                    .font(.system(size: 11))
+                    .obsidianFont(size: 11)
                     .foregroundStyle(NoirPalette.muted)
                 Spacer(minLength: 8)
                 Button {
@@ -113,7 +113,7 @@ struct NoirSetupPage: View {
                     HStack(spacing: 6) {
                         Text("Finish setup")
                         Image(systemName: "arrow.right")
-                            .font(.system(size: 11, weight: .medium))
+                            .obsidianFont(size: 11, weight: .medium)
                     }
                 }
                 .buttonStyle(NoirButtonStyle(intent: .primary))
@@ -133,7 +133,7 @@ struct NoirSetupPage: View {
         NoirCard(padded: true) {
             HStack(spacing: 12) {
                 Text(essentialsReady == 3 ? "Your essentials are ready" : "Finish the essentials")
-                    .font(.system(size: 12, weight: .medium))
+                    .obsidianFont(size: 12, weight: .medium)
                     .foregroundStyle(NoirPalette.text)
                 Spacer(minLength: 8)
                 NoirTag(
@@ -156,7 +156,7 @@ struct NoirSetupPage: View {
             .padding(.top, 18)
 
             Text("Microphone, accessibility, and the speech model are the only required steps.")
-                .font(.system(size: 11))
+                .obsidianFont(size: 11)
                 .foregroundStyle(NoirPalette.muted)
                 .padding(.top, 10)
         }
@@ -191,17 +191,17 @@ struct NoirSetupPage: View {
                             lineWidth: 1
                         )
                     Image(systemName: status.ready ? "checkmark" : kind.icon)
-                        .font(.system(size: 12, weight: .medium))
+                        .obsidianFont(size: 12, weight: .medium)
                         .foregroundStyle(status.ready ? NoirPalette.green : NoirPalette.muted)
                 }
                 .frame(width: 26, height: 26)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(kind.title)
-                        .font(.system(size: 12))
+                        .obsidianFont(size: 12)
                         .foregroundStyle(NoirPalette.text)
                     Text(kind.subtitle)
-                        .font(.system(size: 11))
+                        .obsidianFont(size: 11)
                         .foregroundStyle(NoirPalette.muted)
                 }
 
@@ -324,17 +324,17 @@ struct SetupDetailSheet: View {
                     RoundedRectangle(cornerRadius: 9, style: .continuous)
                         .strokeBorder(NoirPalette.line, lineWidth: 1)
                     Image(systemName: kind.icon)
-                        .font(.system(size: 15))
+                        .obsidianFont(size: 15)
                         .foregroundStyle(NoirPalette.secondary)
                 }
                 .frame(width: 34, height: 34)
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(kind.title)
-                        .font(.system(size: 15, weight: .medium))
+                        .obsidianFont(size: 15, weight: .medium)
                         .foregroundStyle(NoirPalette.text)
                     Text(kind.subtitle)
-                        .font(.system(size: 11))
+                        .obsidianFont(size: 11)
                         .foregroundStyle(NoirPalette.muted)
                 }
 
@@ -354,7 +354,7 @@ struct SetupDetailSheet: View {
                         HStack(spacing: 8) {
                             if busy { ProgressView().controlSize(.small) }
                             Text(progressLine.isEmpty ? "Working…" : progressLine)
-                                .font(.system(size: 11))
+                                .obsidianFont(size: 11)
                                 .foregroundStyle(NoirPalette.muted)
                         }
                     }
@@ -398,7 +398,7 @@ struct SetupDetailSheet: View {
         switch kind {
         case .microphone:
             Text("Allow Jarvis to use your microphone for dictation and voice commands. Audio is transcribed locally and never uploaded.")
-                .font(.system(size: 11))
+                .obsidianFont(size: 11)
                 .lineSpacing(5)
                 .foregroundStyle(NoirPalette.muted)
 
@@ -414,7 +414,7 @@ struct SetupDetailSheet: View {
 
         case .accessibility:
             Text("Jarvis needs accessibility access to paste dictated text at the cursor in other applications.")
-                .font(.system(size: 11))
+                .obsidianFont(size: 11)
                 .lineSpacing(5)
                 .foregroundStyle(NoirPalette.muted)
 
@@ -433,7 +433,7 @@ struct SetupDetailSheet: View {
 
         case .whisper:
             Text("Shortcut dictation uses Whisper large-v3-turbo (approximately 1.5 GB). Live commands use Apple on-device speech by default; choose its language or the Whisper fallback in System → Live speech.")
-                .font(.system(size: 11))
+                .obsidianFont(size: 11)
                 .lineSpacing(5)
                 .foregroundStyle(NoirPalette.muted)
 
@@ -441,11 +441,11 @@ struct SetupDetailSheet: View {
                       kind: whisperReady ? .green : .amber)
 
             Text(whisperPhaseNote)
-                .font(.system(size: 11))
+                .obsidianFont(size: 11)
                 .foregroundStyle(NoirPalette.muted)
 
             Text(get_model_path().toString())
-                .font(.system(size: 10, design: .monospaced))
+                .obsidianFont(size: 10, design: .monospaced)
                 .foregroundStyle(NoirPalette.secondary)
                 .textSelection(.enabled)
                 .fixedSize(horizontal: false, vertical: true)
@@ -469,7 +469,7 @@ struct SetupDetailSheet: View {
                     NoirDivider()
                     NoirSettingRow(title: "Model") {
                         Text("qwen2.5:1.5b-instruct")
-                            .font(.system(size: 11, design: .monospaced))
+                            .obsidianFont(size: 11, design: .monospaced)
                             .foregroundStyle(NoirPalette.secondary)
                     }
                 }
@@ -526,14 +526,14 @@ struct SetupDetailSheet: View {
                     .noirField()
                     .noirFieldLabel("Administrator password")
                 Text("The administrator credentials belong to your existing PostgreSQL server. The Jarvis password is for the application account. Existing role passwords are preserved.")
-                    .font(.system(size: 11))
+                    .obsidianFont(size: 11)
                     .foregroundStyle(NoirPalette.muted)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
         case .backend:
             Text("The helper supports voice authentication and database connections. The intent model runs inside Jarvis. It can run on demand, always, or remain off.")
-                .font(.system(size: 11))
+                .obsidianFont(size: 11)
                 .lineSpacing(5)
                 .foregroundStyle(NoirPalette.muted)
 
@@ -559,7 +559,7 @@ struct SetupDetailSheet: View {
 
         case .spotify:
             Text("Install Spotify and sign in to control playback natively. Allow Automation for playback and Accessibility for local song and library lookup. No API keys are required.")
-                .font(.system(size: 11))
+                .obsidianFont(size: 11)
                 .lineSpacing(5)
                 .foregroundStyle(NoirPalette.muted)
 
@@ -571,9 +571,8 @@ struct SetupDetailSheet: View {
                     openURL("spotify:")
                 }
                 .buttonStyle(NoirButtonStyle())
-                Button("Open Connections") {
-                    appState.activeSection = .connections
-                    dismiss()
+                Button("Automation settings") {
+                    openURL("x-apple.systempreferences:com.apple.preference.security?Privacy_Automation")
                 }
                 .buttonStyle(NoirButtonStyle(intent: .primary))
             }
@@ -625,7 +624,7 @@ struct SetupDetailSheet: View {
     private func statusRow(_ label: String, _ value: String, kind: NoirTag.Kind) -> some View {
         HStack {
             Text(label)
-                .font(.system(size: 12))
+                .obsidianFont(size: 12)
                 .foregroundStyle(NoirPalette.text)
             Spacer(minLength: 8)
             NoirTag(text: value, kind: kind)
@@ -636,7 +635,7 @@ struct SetupDetailSheet: View {
 
     private func noticeCard(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 11))
+            .obsidianFont(size: 11)
             .lineSpacing(4)
             .foregroundStyle(NoirPalette.secondary)
             .fixedSize(horizontal: false, vertical: true)

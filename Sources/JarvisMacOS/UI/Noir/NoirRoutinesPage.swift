@@ -12,7 +12,7 @@ struct NoirRoutinesPage: View {
     var body: some View {
         NoirPage(
             eyebrow: "Your day, a little easier",
-            title: "One phrase. More done.",
+            title: "Routines",
             sub: "Bring a few actions together and give them a name.",
             trailing: AnyView(
                 Button {
@@ -27,10 +27,10 @@ struct NoirRoutinesPage: View {
                 NoirCard(padded: true) {
                     VStack(spacing: 8) {
                         Image(systemName: "bolt")
-                            .font(.system(size: 22, weight: .light))
+                            .obsidianFont(size: 22, weight: .light)
                             .foregroundStyle(NoirPalette.muted)
                         Text("Your next shortcut starts here.\nCreate your first routine.")
-                            .font(.system(size: 12))
+                            .obsidianFont(size: 12)
                             .multilineTextAlignment(.center)
                             .foregroundStyle(NoirPalette.muted)
                     }
@@ -48,14 +48,14 @@ struct NoirRoutinesPage: View {
             NoirCard(padded: true) {
                 HStack(spacing: 9) {
                     Image(systemName: "bolt")
-                        .font(.system(size: 14))
+                        .obsidianFont(size: 14)
                         .foregroundStyle(NoirPalette.accent)
                     Text("Built around your words")
-                        .font(.system(size: 12, weight: .medium))
+                        .obsidianFont(size: 12, weight: .medium)
                         .foregroundStyle(NoirPalette.accent)
                 }
                 Text("Open websites in Brave or Chrome, create tabs and windows, open files and projects, or play a specific song. Choose Run command for any other supported Jarvis command. Actions run in order.")
-                    .font(.system(size: 11))
+                    .obsidianFont(size: 11)
                     .lineSpacing(5)
                     .foregroundStyle(NoirPalette.muted)
                     .fixedSize(horizontal: false, vertical: true)
@@ -64,7 +64,7 @@ struct NoirRoutinesPage: View {
             .padding(.top, 27)
 
             Text("Routines are stored locally on this Mac and run in order.")
-                .font(.system(size: 11))
+                .obsidianFont(size: 11)
                 .foregroundStyle(NoirPalette.muted)
                 .padding(.top, 18)
         }
@@ -102,23 +102,23 @@ struct NoirRoutinesPage: View {
                     RoundedRectangle(cornerRadius: 9, style: .continuous)
                         .strokeBorder(NoirPalette.accent.opacity(0.09), lineWidth: 1)
                     Image(systemName: "bolt")
-                        .font(.system(size: 16))
+                        .obsidianFont(size: 16)
                         .foregroundStyle(NoirPalette.accent)
                 }
                 .frame(width: 38, height: 38)
 
                 VStack(alignment: .leading, spacing: 0) {
                     Text(routine.keyword)
-                        .font(.system(size: 13))
+                        .obsidianFont(size: 13)
                         .foregroundStyle(NoirPalette.text)
                     Text(stepSummary(routine))
-                        .font(.system(size: 11))
+                        .obsidianFont(size: 11)
                         .lineSpacing(4)
                         .foregroundStyle(NoirPalette.muted)
                         .padding(.top, 7)
                     if let off = routine.offKeyword, !off.isEmpty {
                         Text("Off phrase: “\(off)”")
-                            .font(.system(size: 11))
+                            .obsidianFont(size: 11)
                             .foregroundStyle(NoirPalette.muted)
                             .padding(.top, 5)
                     }
@@ -198,7 +198,7 @@ struct RoutineEditorSheet: View {
         VStack(spacing: 0) {
             HStack {
                 Text(editing == nil ? "A new routine" : "Edit routine")
-                    .font(.system(size: 15, weight: .medium))
+                    .obsidianFont(size: 15, weight: .medium)
                     .foregroundStyle(NoirPalette.text)
                 Spacer()
                 NoirIconButton(icon: "xmark", help: "Close") { dismiss() }
@@ -222,7 +222,7 @@ struct RoutineEditorSheet: View {
                     VStack(alignment: .leading, spacing: 0) {
                         HStack {
                             Text("Actions, in order")
-                                .font(.system(size: 11))
+                                .obsidianFont(size: 11)
                                 .foregroundStyle(NoirPalette.secondary)
                             Spacer()
                             Button {
@@ -243,12 +243,12 @@ struct RoutineEditorSheet: View {
 
                     if let errorText {
                         Text(errorText)
-                            .font(.system(size: 11))
+                            .obsidianFont(size: 11)
                             .foregroundStyle(NoirPalette.red)
                     }
 
                     Text("Say the trigger phrase to run these actions in sequence. An off phrase acknowledges the routine as off; it does not undo completed actions.")
-                        .font(.system(size: 11))
+                        .obsidianFont(size: 11)
                         .foregroundStyle(NoirPalette.muted)
                 }
                 .padding(.horizontal, 24)
@@ -298,7 +298,7 @@ struct RoutineEditorSheet: View {
                       .noirField()
               } else {
                   Text("No value")
-                      .font(.system(size: 11))
+                      .obsidianFont(size: 11)
                       .foregroundStyle(NoirPalette.muted)
                       .frame(maxWidth: .infinity, alignment: .leading)
               }
@@ -311,10 +311,10 @@ struct RoutineEditorSheet: View {
               }
             }
             Toggle("Only run if the previous step succeeded", isOn: action.requiresPreviousSuccess)
-                .font(.system(size: 11))
+                .obsidianFont(size: 11)
             if !action.wrappedValue.type.guidance.isEmpty {
                 Text(action.wrappedValue.type.guidance)
-                    .font(.system(size: 10))
+                    .obsidianFont(size: 10)
                     .foregroundStyle(NoirPalette.muted)
                     .fixedSize(horizontal: false, vertical: true)
             }

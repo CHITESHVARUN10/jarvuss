@@ -3,35 +3,36 @@ import AppKit
 
 // MARK: - Palette
 
-/// Noir tokens, 1:1 with HTMLS/jarvis-noir.html.
+/// Shared Obsidian surfaces and live appearance tokens.
 enum NoirPalette {
-    static let desktop = Color(hex: 0x090A0B)
-    static let sidebar = Color(hex: 0x141517)
-    static let base    = Color(hex: 0x191A1C)
-    static let surface = Color(hex: 0x1E1F22)
-    static let raised  = Color(hex: 0x242528)
-    static let footer  = Color(hex: 0x17181A)
+    static let desktop = Color(hex: 0x000000)
+    static let sidebar = Color(hex: 0x0D0D0F)
+    static let base    = Color(hex: 0x050506)
+    static let surface = Color(hex: 0x111114)
+    static let raised  = Color(hex: 0x1B1C22)
+    static let footer  = Color(hex: 0x0C0C0E)
 
-    static let line       = Color.white.opacity(0.075)
-    static let lineStrong = Color.white.opacity(0.13)
+    static var line: Color { Color.white.opacity(0.105 * AppAppearance.shared.borderContrast) }
+    static var lineStrong: Color { Color.white.opacity(0.17 * AppAppearance.shared.borderContrast) }
     static let hairline   = Color.white.opacity(0.06)
 
-    static let text      = Color(hex: 0xEFEEE9)
-    static let secondary = Color(hex: 0xB2B2B7)
-    static let muted     = Color(hex: 0x929399)
-    static let faint     = Color(hex: 0x6E6F78)
+    static let text      = Color(hex: 0xF7F8FA)
+    static let secondary = Color(hex: 0xBCC3D2)
+    static let muted     = Color(hex: 0x969EAF)
+    static let faint     = Color(hex: 0x707B91)
     static let navLabel  = Color(hex: 0x8C8D95)
 
-    static let accent     = Color(hex: 0xB9B6E9)
-    static let accentSoft = Color(hex: 0xB9B6E9).opacity(0.10)
-    static let accentEdge = Color(hex: 0xB9B6E9).opacity(0.22)
+    static var accent: Color { AppAppearance.shared.accent.color }
+    static var onAccent: Color { Color(hex: AppAppearance.shared.accent.foregroundHex) }
+    static var accentSoft: Color { accent.opacity(0.12) }
+    static var accentEdge: Color { accent.opacity(0.26) }
 
     static let green  = Color(hex: 0xA3C8AE)
     static let orange = Color(hex: 0xDDBD90)
     static let red    = Color(hex: 0xE19B9B)
 
-    static let fieldBg = Color(hex: 0x18191B)
-    static let logBg   = Color(hex: 0x17181A)
+    static let fieldBg = Color(hex: 0x0B0C10)
+    static let logBg   = Color(hex: 0x0C0C0E)
 }
 
 extension Color {
@@ -49,10 +50,10 @@ extension Color {
 // MARK: - Type helpers
 
 enum NoirType {
-    static let pageTitle = Font.system(size: 29, weight: .regular)
+    static let pageTitle = Font.system(size: 27, weight: .semibold)
     static let h2        = Font.system(size: 12, weight: .medium)
-    static let body      = Font.system(size: 12, weight: .regular)
-    static let small     = Font.system(size: 11, weight: .regular)
+    static let body      = Font.system(size: 13, weight: .regular)
+    static let small     = Font.system(size: 12, weight: .regular)
     static let micro     = Font.system(size: 10, weight: .regular)
     static let mono      = Font.system(size: 11, weight: .regular, design: .monospaced)
     static let monoSmall = Font.system(size: 10, weight: .regular, design: .monospaced)
@@ -64,7 +65,7 @@ struct NoirEyebrow: View {
     let text: String
     var body: some View {
         Text(text.uppercased())
-            .font(.system(size: 10, weight: .medium))
+            .obsidianFont(size: 10, weight: .medium)
             .tracking(1.8)
             .foregroundStyle(NoirPalette.muted)
     }
@@ -80,22 +81,21 @@ struct NoirPageHead: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            NoirEyebrow(text: eyebrow)
             HStack(alignment: .center, spacing: 20) {
                 Text(title)
-                    .font(NoirType.pageTitle)
-                    .tracking(-0.9)
+                    .obsidianFont(size: 27, weight: .semibold)
+                    .tracking(-0.5)
                     .foregroundStyle(NoirPalette.text)
                 Spacer(minLength: 0)
                 if let trailing { trailing }
             }
             .padding(.top, 9)
             Text(sub)
-                .font(.system(size: 12))
+                .obsidianFont(size: 12)
                 .foregroundStyle(NoirPalette.muted)
                 .padding(.top, 9)
         }
-        .padding(.bottom, 28)
+        .padding(.bottom, 22)
     }
 }
 
@@ -112,177 +112,12 @@ struct NoirPage<Content: View>: View {
                 NoirPageHead(eyebrow: eyebrow, title: title, sub: sub, trailing: trailing)
                 content()
             }
-            .padding(.top, 40)
-            .padding(.horizontal, 42)
-            .padding(.bottom, 44)
-            .frame(maxWidth: 1000, alignment: .leading)
-            .frame(maxWidth: .infinity, alignment: .center)
-            .background(NoirScrollbarInstaller())
+            .padding(.top, 24)
+            .padding(.horizontal, 30)
+            .padding(.bottom, 28)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .scrollIndicators(.visible)
-    }
-}
-
-/// SwiftUI's overlay scroller auto-hides on macOS, which leaves long settings
-/// pages with no visible thumb. This installs a persistent, draggable scroll
-/// indicator inside the page's NSScrollView.
-private struct NoirScrollbarInstaller: NSViewRepresentable {
-    func makeNSView(context: Context) -> NSView {
-        let view = NSView(frame: .zero)
-        scheduleInstall(from: view)
-        return view
-    }
-
-    func updateNSView(_ nsView: NSView, context: Context) {
-        scheduleInstall(from: nsView)
-    }
-
-    private func scheduleInstall(from view: NSView) {
-        DispatchQueue.main.async { install(from: view) }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { install(from: view) }
-    }
-
-    private func install(from view: NSView) {
-        let windowScroll = view.window?.contentView.flatMap { findScrollView(in: $0) }
-        guard let scroll = nearestScrollView(from: view) ?? windowScroll else { return }
-        let identifier = NSUserInterfaceItemIdentifier("noir.scrollbar")
-        guard !scroll.subviews.contains(where: { $0.identifier == identifier }) else { return }
-
-        let overlay = NoirScrollOverlay(scrollView: scroll)
-        overlay.identifier = identifier
-        overlay.frame = NSRect(x: max(0, scroll.bounds.width - 10),
-                               y: 0,
-                               width: 10,
-                               height: scroll.bounds.height)
-        overlay.autoresizingMask = [NSView.AutoresizingMask.minXMargin, NSView.AutoresizingMask.height]
-        scroll.addSubview(overlay)
-        scroll.hasVerticalScroller = false
-        scroll.autohidesScrollers = true
-    }
-
-    private func nearestScrollView(from view: NSView) -> NSScrollView? {
-        var node = view.superview
-        while let current = node {
-            if let scroll = current as? NSScrollView { return scroll }
-            node = current.superview
-        }
-        return nil
-    }
-
-    private func findScrollView(in view: NSView) -> NSScrollView? {
-        if let scroll = view as? NSScrollView { return scroll }
-        for child in view.subviews {
-            if let found = findScrollView(in: child) { return found }
-        }
-        return nil
-    }
-}
-
-/// Always-visible 4pt track with a proportional thumb. Click the track to
-/// jump, drag the thumb to scroll. The thumbnail is intentionally quiet so
-/// the page still reads as a static settings surface.
-private final class NoirScrollOverlay: NSView {
-    private weak var scrollView: NSScrollView?
-    private var boundsObserver: NSObjectProtocol?
-    private var frameObserver: NSObjectProtocol?
-    private var dragOffset: CGFloat?
-
-    init(scrollView: NSScrollView) {
-        self.scrollView = scrollView
-        super.init(frame: .zero)
-        wantsLayer = true
-        layer?.backgroundColor = NSColor.clear.cgColor
-        scrollView.contentView.postsBoundsChangedNotifications = true
-        scrollView.postsFrameChangedNotifications = true
-        boundsObserver = NotificationCenter.default.addObserver(
-            forName: NSView.boundsDidChangeNotification,
-            object: scrollView.contentView,
-            queue: .main
-        ) { [weak self] _ in self?.needsDisplay = true }
-        frameObserver = NotificationCenter.default.addObserver(
-            forName: NSView.frameDidChangeNotification,
-            object: scrollView.contentView,
-            queue: .main
-        ) { [weak self] _ in self?.needsDisplay = true }
-    }
-
-    required init?(coder: NSCoder) { nil }
-
-    deinit {
-        if let boundsObserver { NotificationCenter.default.removeObserver(boundsObserver) }
-        if let frameObserver { NotificationCenter.default.removeObserver(frameObserver) }
-    }
-
-    override var isFlipped: Bool { true }
-    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
-
-    private struct Metrics {
-        let track: NSRect
-        let thumb: NSRect
-        let maxScroll: CGFloat
-    }
-
-    private func metrics() -> Metrics? {
-        guard let scrollView,
-              let document = scrollView.documentView else { return nil }
-        let documentHeight = document.frame.height
-        let viewportHeight = scrollView.contentView.bounds.height
-        guard documentHeight > viewportHeight + 1, bounds.height > 24 else { return nil }
-
-        let track = NSRect(x: (bounds.width - 5) / 2, y: 6, width: 5, height: bounds.height - 12)
-        let thumbHeight = max(36, track.height * (viewportHeight / documentHeight))
-        let maxScroll = documentHeight - viewportHeight
-        let progress = min(max(scrollView.contentView.bounds.origin.y / maxScroll, 0), 1)
-        let thumbY = track.minY + (track.height - thumbHeight) * progress
-        let thumb = NSRect(x: track.minX, y: thumbY, width: track.width, height: thumbHeight)
-        return Metrics(track: track, thumb: thumb, maxScroll: maxScroll)
-    }
-
-    override func draw(_ dirtyRect: NSRect) {
-        guard let metrics = metrics() else { return }
-
-        NSColor.white.withAlphaComponent(0.07).setFill()
-        NSBezierPath(roundedRect: metrics.track, xRadius: 2.5, yRadius: 2.5).fill()
-
-        NSColor.white.withAlphaComponent(0.30).setFill()
-        NSBezierPath(roundedRect: metrics.thumb, xRadius: 2.5, yRadius: 2.5).fill()
-    }
-
-    override func mouseDown(with event: NSEvent) {
-        guard let metrics = metrics() else { return }
-        let point = convert(event.locationInWindow, from: nil)
-
-        if metrics.thumb.contains(point) {
-            dragOffset = point.y - metrics.thumb.minY
-        } else {
-            dragOffset = metrics.thumb.height / 2
-            scroll(toThumbY: point.y - dragOffset!, metrics: metrics)
-        }
-    }
-
-    override func mouseDragged(with event: NSEvent) {
-        guard let metrics = metrics(), let dragOffset else { return }
-        let point = convert(event.locationInWindow, from: nil)
-        scroll(toThumbY: point.y - dragOffset, metrics: metrics)
-    }
-
-    override func mouseUp(with event: NSEvent) {
-        dragOffset = nil
-    }
-
-    private func scroll(toThumbY rawY: CGFloat, metrics: Metrics) {
-        guard let scrollView else { return }
-        let travel = max(1, metrics.track.height - metrics.thumb.height)
-        let y = min(max(rawY, metrics.track.minY), metrics.track.maxY - metrics.thumb.height)
-        let progress = (y - metrics.track.minY) / travel
-        let target = progress * metrics.maxScroll
-
-        scrollView.contentView.scroll(to: NSPoint(
-            x: scrollView.contentView.bounds.origin.x,
-            y: target
-        ))
-        scrollView.reflectScrolledClipView(scrollView.contentView)
-        needsDisplay = true
     }
 }
 
@@ -296,7 +131,7 @@ struct NoirSectionHeading: View {
     var body: some View {
         HStack(spacing: 16) {
             Text(title)
-                .font(.system(size: 12, weight: .medium))
+                .obsidianFont(size: 12, weight: .medium)
                 .foregroundStyle(NoirPalette.text)
             Spacer(minLength: 0)
             if let trailing { trailing }
@@ -341,11 +176,11 @@ struct NoirSettingRow<Control: View>: View {
         HStack(alignment: .center, spacing: 22) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.system(size: 12))
+                    .obsidianFont(size: 12)
                     .foregroundStyle(NoirPalette.text)
                 if let sub {
                     Text(sub)
-                        .font(.system(size: 11))
+                        .obsidianFont(size: 11)
                         .lineSpacing(3)
                         .foregroundStyle(NoirPalette.muted)
                         .fixedSize(horizontal: false, vertical: true)
@@ -354,9 +189,9 @@ struct NoirSettingRow<Control: View>: View {
             Spacer(minLength: 8)
             control()
         }
-        .frame(minHeight: 66)
+        .frame(minHeight: 60)
         .padding(.horizontal, 19)
-        .padding(.vertical, 14)
+        .padding(.vertical, 13)
     }
 }
 
@@ -421,10 +256,10 @@ struct NoirTag: View {
         HStack(spacing: 6) {
             if let icon {
                 Image(systemName: icon)
-                    .font(.system(size: 9, weight: .medium))
+                    .obsidianFont(size: 9, weight: .medium)
             }
             Text(text)
-                .font(.system(size: 10))
+                .obsidianFont(size: 10)
                 .lineLimit(1)
         }
         .foregroundStyle(fg)
@@ -482,7 +317,7 @@ struct NoirButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: small ? 11 : 12, weight: .medium))
+            .obsidianFont(size: small ? 11 : 12, weight: .medium)
             .foregroundStyle(foreground)
             .frame(minHeight: small ? 27 : 33)
             .padding(.horizontal, small ? 10 : 13)
@@ -501,8 +336,8 @@ struct NoirButtonStyle: ButtonStyle {
     private var foreground: Color {
         switch intent {
         case .standard: return NoirPalette.text
-        case .primary:  return Color(hex: 0x22212E)
-        case .quiet:    return NoirPalette.secondary
+        case .primary:  return NoirPalette.onAccent
+        case .quiet:    return NoirPalette.accent
         case .danger:   return NoirPalette.red
         }
     }
@@ -510,8 +345,8 @@ struct NoirButtonStyle: ButtonStyle {
     private func background(pressed: Bool) -> Color {
         switch intent {
         case .standard: return Color(hex: pressed ? 0x34353B : 0x292A2E)
-        case .primary:  return Color(hex: pressed ? 0xCFCCF4 : 0xB9B6E9)
-        case .quiet:    return pressed ? Color.white.opacity(0.04) : .clear
+        case .primary:  return NoirPalette.accent.opacity(pressed ? 0.82 : 1)
+        case .quiet:    return pressed ? NoirPalette.accentSoft : .clear
         case .danger:   return Color(hex: 0x342829)
         }
     }
@@ -535,7 +370,7 @@ struct NoirIconButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: icon)
-                .font(.system(size: 13, weight: .regular))
+                .obsidianFont(size: 13, weight: .regular)
                 .foregroundStyle(hovering ? NoirPalette.text : NoirPalette.muted)
                 .frame(width: 30, height: 30)
                 .background(
@@ -557,7 +392,7 @@ struct NoirFieldStyle: ViewModifier {
     func body(content: Content) -> some View {
         content
             .textFieldStyle(.plain)
-            .font(.system(size: 12))
+            .obsidianFont(size: 12)
             .foregroundStyle(NoirPalette.text)
             .padding(.horizontal, 11)
             .padding(.vertical, 10)
@@ -578,7 +413,7 @@ extension View {
     func noirFieldLabel(_ text: String) -> some View {
         VStack(alignment: .leading, spacing: 7) {
             Text(text)
-                .font(.system(size: 11))
+                .obsidianFont(size: 11)
                 .foregroundStyle(NoirPalette.secondary)
             self
         }
@@ -604,12 +439,12 @@ struct NoirSelect<Value: Equatable>: View {
         } label: {
             HStack(spacing: 8) {
                 Text(currentLabel)
-                    .font(.system(size: 12))
+                    .obsidianFont(size: 12)
                     .foregroundStyle(NoirPalette.text)
                     .lineLimit(1)
                 Spacer(minLength: 8)
                 Image(systemName: "chevron.down")
-                    .font(.system(size: 9, weight: .medium))
+                    .obsidianFont(size: 9, weight: .medium)
                     .foregroundStyle(NoirPalette.muted)
             }
             .padding(.horizontal, 10)
@@ -635,12 +470,12 @@ struct NoirSelect<Value: Equatable>: View {
                     } label: {
                         HStack(spacing: 8) {
                             Text(option.label)
-                                .font(.system(size: 11.5))
+                                .obsidianFont(size: 11.5)
                                 .foregroundStyle(selected ? NoirPalette.accent : NoirPalette.secondary)
                             Spacer(minLength: 8)
                             if selected {
                                 Image(systemName: "checkmark")
-                                    .font(.system(size: 9, weight: .medium))
+                                    .obsidianFont(size: 9, weight: .medium)
                                     .foregroundStyle(NoirPalette.accent)
                             }
                         }
@@ -676,13 +511,13 @@ struct NoirSegmented: View {
                 let on = selection == option
                 Button { selection = option } label: {
                     Text(option)
-                        .font(.system(size: 10, weight: .regular))
-                        .foregroundStyle(on ? NoirPalette.text : NoirPalette.muted)
+                        .obsidianFont(size: 10, weight: .regular)
+                        .foregroundStyle(on ? NoirPalette.accent : NoirPalette.muted)
                         .padding(.horizontal, 12)
                         .frame(height: 24)
                         .background(
                             RoundedRectangle(cornerRadius: 4, style: .continuous)
-                                .fill(on ? Color(hex: 0x2F3035) : .clear)
+                                .fill(on ? NoirPalette.accentSoft : .clear)
                         )
                         .shadow(color: on ? .black.opacity(0.19) : .clear, radius: 1.5, y: 1)
                 }
@@ -710,7 +545,7 @@ struct NoirBrandMark: View {
             RoundedRectangle(cornerRadius: size * 0.3, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [Color(hex: 0x4E4D5C), Color(hex: 0x24242C)],
+                        colors: [NoirPalette.accent.opacity(0.6), NoirPalette.surface],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -718,8 +553,8 @@ struct NoirBrandMark: View {
             RoundedRectangle(cornerRadius: size * 0.3, style: .continuous)
                 .strokeBorder(Color.white.opacity(0.23), lineWidth: 1)
             Image(systemName: "sparkle")
-                .font(.system(size: size * 0.63, weight: .light))
-                .foregroundStyle(Color(hex: 0xE4E1F6))
+                .obsidianFont(size: size * 0.63, weight: .light)
+                .foregroundStyle(NoirPalette.accent)
         }
         .frame(width: size, height: size)
         .shadow(color: .black.opacity(0.25), radius: 6, y: 3)
@@ -749,14 +584,14 @@ struct NoirToastView: View {
 
     var body: some View {
         Text(text)
-            .font(.system(size: 11))
+            .obsidianFont(size: 11)
             .lineSpacing(3)
             .foregroundStyle(NoirPalette.secondary)
             .padding(.horizontal, 18)
-            .padding(.vertical, 11)
+            .padding(.vertical, 13)
             .background(
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Color(hex: 0x303036))
+                    .fill(NoirPalette.raised)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 8, style: .continuous)

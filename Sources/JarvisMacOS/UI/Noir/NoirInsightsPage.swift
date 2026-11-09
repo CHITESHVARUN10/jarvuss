@@ -12,7 +12,7 @@ struct NoirInsightsPage: View {
     var body: some View {
         NoirPage(
             eyebrow: "Small moments, added up",
-            title: "Your time, given back.",
+            title: "Activity",
             sub: "A little perspective on how Jarvis fits into your day.",
             trailing: AnyView(
                 HStack(spacing: 10) {
@@ -35,7 +35,7 @@ struct NoirInsightsPage: View {
                 title: "Daily activity",
                 trailing: AnyView(
                     Text("Last 7 days")
-                        .font(.system(size: 10))
+                        .obsidianFont(size: 10)
                         .foregroundStyle(NoirPalette.muted)
                 )
             )
@@ -43,7 +43,7 @@ struct NoirInsightsPage: View {
             NoirCard(padded: true) {
                 HStack {
                     Text("Time spent speaking")
-                        .font(.system(size: 11))
+                        .obsidianFont(size: 11)
                         .foregroundStyle(NoirPalette.muted)
                     Spacer(minLength: 8)
                     NoirTag(text: "On-device data")
@@ -87,7 +87,7 @@ struct NoirInsightsPage: View {
             }
 
             Text("Usage comes from your configured event storage. Nothing leaves this Mac.")
-                .font(.system(size: 11))
+                .obsidianFont(size: 11)
                 .foregroundStyle(NoirPalette.muted)
                 .padding(.top, 18)
         }
@@ -127,18 +127,18 @@ struct NoirInsightsPage: View {
     private func statCard(label: String, value: String, sub: String) -> some View {
         NoirCard(padded: true) {
             Text(label.uppercased())
-                .font(.system(size: 9, weight: .medium))
+                .obsidianFont(size: 9, weight: .medium)
                 .tracking(1)
                 .foregroundStyle(NoirPalette.muted)
             Text(value)
-                .font(.system(size: 29, weight: .regular))
+                .obsidianFont(size: 29, weight: .regular)
                 .tracking(-0.9)
                 .foregroundStyle(NoirPalette.text)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
                 .padding(.top, 13)
             Text(sub)
-                .font(.system(size: 10))
+                .obsidianFont(size: 10)
                 .foregroundStyle(NoirPalette.muted)
                 .padding(.top, 5)
         }
@@ -158,7 +158,7 @@ struct NoirInsightsPage: View {
         return Group {
             if days.isEmpty {
                 Text("No usage yet — press ⌘⇧D and talk.")
-                    .font(.system(size: 12))
+                    .obsidianFont(size: 12)
                     .foregroundStyle(NoirPalette.muted)
                     .frame(maxWidth: .infinity, minHeight: 180)
             } else {
@@ -171,8 +171,8 @@ struct NoirInsightsPage: View {
                                     .fill(
                                         LinearGradient(
                                             colors: index == days.count - 1
-                                                ? [Color(hex: 0x8B85AE), Color(hex: 0xC4BFE3)]
-                                                : [Color(hex: 0x56516E), Color(hex: 0x9C96C1)],
+                                                ? [NoirPalette.accent.opacity(0.55), NoirPalette.accent]
+                                                : [NoirPalette.accent.opacity(0.25), NoirPalette.accent.opacity(0.65)],
                                             startPoint: .bottom,
                                             endPoint: .top
                                         )
@@ -182,7 +182,7 @@ struct NoirInsightsPage: View {
                                            height: max(3, bucket.talkSecs / maxTalk * 135))
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 4, style: .continuous)
-                                            .strokeBorder(Color(hex: 0xC9BFFF).opacity(0.10), lineWidth: 1)
+                                            .strokeBorder(NoirPalette.accent.opacity(0.15), lineWidth: 1)
                                     )
                             }
                             .frame(height: 135, alignment: .bottom)
@@ -192,7 +192,7 @@ struct NoirInsightsPage: View {
                             }
 
                             Text(shortDay(bucket.day))
-                                .font(.system(size: 10))
+                                .obsidianFont(size: 10)
                                 .foregroundStyle(NoirPalette.muted)
                         }
                     }
@@ -218,17 +218,17 @@ struct NoirInsightsPage: View {
         HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.system(size: 12))
+                    .obsidianFont(size: 12)
                     .foregroundStyle(NoirPalette.text)
                 if let sub {
                     Text(sub)
-                        .font(.system(size: 11))
+                        .obsidianFont(size: 11)
                         .foregroundStyle(NoirPalette.muted)
                 }
             }
             Spacer(minLength: 8)
             Text(value)
-                .font(.system(size: 12, design: .monospaced))
+                .obsidianFont(size: 12, design: .monospaced)
                 .foregroundStyle(valueColor)
         }
         .padding(.horizontal, 19)

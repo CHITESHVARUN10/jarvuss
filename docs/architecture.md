@@ -117,3 +117,17 @@ ML. Compiled caches are keyed by encoder weight hash and ORT version; unavailabl
 provider registration is an error. Production always selects the verified CPU
 path. The prototype was slower on the tested synthetic clips, so it is not
 promoted. See `system-improvements-20261109.md` for evidence and limitations.
+
+## Desktop interface
+
+The Obsidian UI uses a native SwiftUI/AppKit shell with a compact navigation rail,
+a command session, and an adaptive inspector. Appearance has its own destination;
+Settings groups General, Setup, and About. Core service configuration lives in
+General. Pages use the window width and native scroll indicators.
+
+The assistant orb alone uses the approved offline Three.js renderer in a
+transparent WKWebView. Its local assets and MIT license are packaged explicitly.
+The renderer receives validated appearance settings, never command text or
+credentials, and its content security policy blocks networking. It pauses when
+hidden and is destroyed when leaving the page. All other UI remains native.
+See [Obsidian UI](obsidian-ui-20261109.md) for validation and implementation details.

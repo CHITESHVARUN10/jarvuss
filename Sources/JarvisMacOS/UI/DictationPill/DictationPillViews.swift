@@ -90,8 +90,8 @@ private struct DictationCard<Content: View>: View {
             .padding(DictationHUDLayout.inset)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .background(
-                RoundedRectangle(cornerRadius: 13, style: .continuous)
-                    .fill(DictationCardPalette.card)
+                GlassPanelBackground()
+                    .clipShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 13, style: .continuous)
@@ -430,8 +430,8 @@ struct DictationReadyView: View {
         }
         .frame(width: 240, height: 44)
         .background(
-            RoundedRectangle(cornerRadius: 13, style: .continuous)
-                .fill(DictationCardPalette.card)
+            GlassPanelBackground()
+                .clipShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 13, style: .continuous)
@@ -456,8 +456,8 @@ struct DictationReloadingView: View {
         }
         .frame(height: 52)
         .background(
-            RoundedRectangle(cornerRadius: 13, style: .continuous)
-                .fill(DictationCardPalette.card)
+            GlassPanelBackground()
+                .clipShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 13, style: .continuous)
@@ -502,8 +502,8 @@ struct DictationErrorView: View {
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 13, style: .continuous)
-                .fill(DictationCardPalette.card)
+            GlassPanelBackground()
+                .clipShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 13, style: .continuous)
@@ -537,8 +537,8 @@ struct DictationDownloadProgressView: View {
         }
         .padding(18)
         .background(
-            RoundedRectangle(cornerRadius: 13, style: .continuous)
-                .fill(DictationCardPalette.card)
+            GlassPanelBackground()
+                .clipShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 13, style: .continuous)
@@ -550,11 +550,11 @@ struct DictationDownloadProgressView: View {
 // MARK: - Palette
 
 enum DictationCardPalette {
-    static let text      = NoirPalette.text
-    static let muted     = NoirPalette.muted
-    static let secondary = NoirPalette.secondary
-    static let accent    = NoirPalette.accent
-    static let ok        = NoirPalette.green
+    static var text: Color { NoirPalette.text }
+    static var muted: Color { NoirPalette.muted }
+    static var secondary: Color { NoirPalette.secondary }
+    static var accent: Color { NoirPalette.accent }
+    static var ok: Color { NoirPalette.green }
     static let card      = Color(hex: 0x26262D)
-    static let edge      = NoirPalette.accent.opacity(0.29)
+    static var edge: Color { NoirPalette.accent.opacity(0.29) }
 }

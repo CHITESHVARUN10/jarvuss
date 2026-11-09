@@ -126,6 +126,12 @@ if [[ -f "$ROOT_DIR/Sources/JarvisMacOS/Resources/AppIcon.icns" ]]; then
   cp "$ROOT_DIR/Sources/JarvisMacOS/Resources/AppIcon.icns" "$APP_RESOURCES/AppIcon.icns"
 fi
 
+# Exact approved Three.js orb. Kept separate from the native application UI.
+ORB_SOURCE="$ROOT_DIR/Sources/JarvisMacOS/UI/Obsidian/OrbAssets"
+[[ -s "$ORB_SOURCE/renderer.html" && -s "$ORB_SOURCE/THREE-LICENSE.txt" ]] || { echo "Orb renderer assets are missing." >&2; exit 1; }
+mkdir -p "$APP_RESOURCES/Orb"
+rsync -a --delete "$ORB_SOURCE/" "$APP_RESOURCES/Orb/"
+
 # Local command test runner (available only while test mode is enabled).
 cp "$ROOT_DIR/htmls/command-test-runner.html" "$APP_RESOURCES/command-test-runner.html"
 # Card typefaces (registered via ATSApplicationFontsPath = Fonts).

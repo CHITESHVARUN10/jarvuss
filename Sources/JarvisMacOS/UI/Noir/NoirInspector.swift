@@ -1,242 +1,120 @@
 import SwiftUI
 import AppKit
 
-// MARK: - Inspector
-
 struct NoirInspector: View {
     @ObservedObject var appState: AppState
     @ObservedObject var feed: AssistantFeed
-
+    @ObservedObject private var projects = ProjectLocationStore.shared
     let onOpenPreferences: () -> Void
     let onOpenVoice: () -> Void
-
+    var width: CGFloat = 234
     var body: some View {
-        ScrollView(.vertical, showsIndicators: false) {
+        ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Text("In the background")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(NoirPalette.text)
-                Text("A few things, just as you like them.")
-                    .font(.system(size: 10))
-                    .foregroundStyle(NoirPalette.muted)
-                    .padding(.top, 7)
-
-                sessionSection
-                identitySection
-                recentSection
-
-                HStack(alignment: .top, spacing: 8) {
-                    Image(systemName: "lock")
-                        .font(.system(size: 11))
-                        .padding(.top, 2)
-                    Text("Speech is processed on your Mac. Connected services handle their own requests.")
-                        .font(.system(size: 10))
-                        .lineSpacing(4)
-                }
-                .foregroundStyle(NoirPalette.muted)
-                .padding(.top, 25)
-            }
-            .padding(.horizontal, 23)
-            .padding(.top, 29)
-            .padding(.bottom, 28)
-        }
-        .frame(width: 258)
-        .frame(maxHeight: .infinity)
-        .background(NoirPalette.footer.opacity(0.62))
-        .overlay(alignment: .leading) {
-            Rectangle().fill(NoirPalette.line).frame(width: 1)
-        }
-    }
-
-    // MARK: Session
-
-    private var sessionSection: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            sectionLabel("This session")
-
-            inspectorSwitch(
-                icon: "shield",
-                label: "Verify commands",
-                isOn: $appState.actionPillRequiresVerify
-            )
-
-            inspectorSwitch(
-                icon: "mic",
-                label: "Hands-free mode",
-                isOn: handsFreeBinding,
-                disabled: !appState.canUseVoiceMode && !appState.voiceModeEnabled
-            )
-
-            inspectorSwitch(
-                icon: "bubble.left",
-                label: "Spoken replies",
-                isOn: $appState.voiceResponseEnabled
-            )
-
-            Text(appState.voiceModeEnabled
-                 ? "Say “Jarvis” to begin. Follow-ups stay open for \(appState.sessionTimeoutSeconds) seconds."
-                 : "Start a session with the orb, or type a command below.")
-                .font(.system(size: 10))
-                .lineSpacing(4)
-                .foregroundStyle(NoirPalette.muted)
-                .padding(.top, 12)
-
-            inspectorLink("Assistant preferences", action: onOpenPreferences)
-        }
-        .padding(.top, 24)
-        .padding(.bottom, 24)
-        .overlay(alignment: .bottom) {
-            Rectangle().fill(NoirPalette.line).frame(height: 1)
-        }
-    }
-
-    private var handsFreeBinding: Binding<Bool> {
-        Binding(
-            get: { appState.voiceModeEnabled },
-            set: { newValue in
-                if newValue {
-                    guard appState.canUseVoiceMode else { return }
-                    appState.voiceModeEnabled = true
-                } else {
-                    appState.voiceModeEnabled = false
-                }
-            }
-        )
-    }
-
-    // MARK: Identity
-
-    private var identitySection: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            sectionLabel("Voice identity")
-
-            HStack(spacing: 9) {
-                Image(systemName: "waveform")
-                    .font(.system(size: 13))
-                    .foregroundStyle(NoirPalette.muted)
-                Text(appState.voiceProfileReady ? "Your voice is recognized" : "Voice profile needs enrollment")
-                    .font(.system(size: 11))
-                    .foregroundStyle(NoirPalette.secondary)
-            }
-            .padding(.bottom, 12)
-
-            HStack(spacing: 10) {
-                NoirTag(
-                    text: appState.voiceProfileReady ? "Profile ready" : "Enroll your voice",
-                    kind: appState.voiceProfileReady ? .green : .amber
-                )
-                Text("\(appState.backendEnrollmentSampleCount) samples")
-                    .font(.system(size: 11, design: .monospaced))
-                    .foregroundStyle(NoirPalette.muted)
-                Spacer(minLength: 0)
-            }
-
-            inspectorLink("Manage voice profile", action: onOpenVoice)
-        }
-        .padding(.top, 24)
-        .padding(.bottom, 24)
-        .overlay(alignment: .bottom) {
-            Rectangle().fill(NoirPalette.line).frame(height: 1)
-        }
-    }
-
-    // MARK: Recent
-
-    private var recentSection: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            sectionLabel("Recent commands")
-
-            let commands = recentCommands
-            if commands.isEmpty {
-                Text("No commands yet — press ⌘⇧D and talk.")
-                    .font(.system(size: 10))
-                    .foregroundStyle(NoirPalette.muted)
-                    .padding(.top, 2)
-            } else {
-                ForEach(Array(commands.enumerated()), id: \.offset) { _, entry in
-                    HStack(alignment: .top, spacing: 9) {
-                        Image(systemName: entry.live ? "checkmark" : "clock")
-                            .font(.system(size: 11))
-                            .foregroundStyle(NoirPalette.muted)
-                            .frame(width: 13)
-                            .padding(.top, 1)
+                HStack {
+                    Text("Session").obsidianFont(size: 10, weight: .medium)
+                    Spacer()
+                    Text("LOCAL").obsidianFont(size: 8).foregroundStyle(NoirPalette.muted)
+                }.foregroundStyle(NoirPalette.secondary).frame(height: 43)
+                NoirDivider()
+                sectionLabel("Input")
+                setting("Live listening", binding: Binding(get: { appState.isLiveListening }, set: { start in
+                    if start { appState.noteManualMicStart(); Task { await appState.startMicrophone() } }
+                    else { appState.stopMicrophone() }
+                }))
+                Label("System microphone", systemImage: "mic").obsidianFont(size: 10).foregroundStyle(NoirPalette.secondary)
+                    .padding(9).frame(maxWidth: .infinity, alignment: .leading).background(NoirPalette.surface, in: RoundedRectangle(cornerRadius: 5))
+                sectionLabel("Quick controls")
+                ObsidianInspectorSound()
+                setting("Verify commands", binding: $appState.actionPillRequiresVerify)
+                setting("Spoken replies", binding: $appState.voiceResponseEnabled)
+                sectionLabel("Workspace")
+                Button { appState.activeSection = .system } label: {
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "folder").obsidianFont(size: 12).foregroundStyle(NoirPalette.accent)
                         VStack(alignment: .leading, spacing: 5) {
-                            Text(entry.text)
-                                .font(.system(size: 11))
-                                .foregroundStyle(NoirPalette.secondary)
-                                .lineLimit(2)
-                            Text(entry.live ? "Just now · local" : "Recent · local")
-                                .font(.system(size: 9))
-                                .foregroundStyle(NoirPalette.muted)
+                            Text(projects.locations.first(where: \.isRoot)?.name ?? "Project folders").obsidianFont(size: 11).foregroundStyle(NoirPalette.text)
+                            Text(projects.locations.first(where: \.isRoot)?.path ?? "Choose a project location")
+                                .obsidianFont(size: 9).foregroundStyle(NoirPalette.muted).lineLimit(2).truncationMode(.middle)
                         }
                         Spacer(minLength: 0)
-                    }
-                    .padding(.vertical, 9)
+                    }.padding(10).frame(maxWidth: .infinity, alignment: .leading).background(NoirPalette.surface, in: RoundedRectangle(cornerRadius: 6))
+                }.buttonStyle(.plain)
+                sectionLabel("Voice & behavior")
+                HStack {
+                    Text(appState.voiceProfileReady ? "Voice profile ready" : "Voice profile not set").obsidianFont(size: 10).foregroundStyle(NoirPalette.secondary)
+                    Spacer(minLength: 4)
+                    Text("\(appState.backendEnrollmentSampleCount)").obsidianFont(size: 10, design: .monospaced).foregroundStyle(NoirPalette.muted)
+                }
+                Button("Manage voice profile", action: onOpenVoice).buttonStyle(.plain).obsidianFont(size: 10).foregroundStyle(NoirPalette.accent).padding(.top, 10)
+                Button("Assistant preferences", action: onOpenPreferences).buttonStyle(.plain).obsidianFont(size: 10).foregroundStyle(NoirPalette.accent).padding(.top, 12)
+                sectionLabel("Recent commands")
+                let commands = feed.items.filter { $0.role == .user }.suffix(3).map(\.text)
+                ForEach(Array(commands.reversed().enumerated()), id: \.offset) { _, command in
+                    Text(command).obsidianFont(size: 10).foregroundStyle(NoirPalette.secondary).lineLimit(2).padding(.bottom, 10)
+                }
+                if commands.isEmpty { Text("No commands this session.").obsidianFont(size: 10).foregroundStyle(NoirPalette.muted) }
+                Text("Speech is processed on this Mac.").obsidianFont(size: 9).foregroundStyle(NoirPalette.muted).padding(.top, 22)
+            }.padding(.horizontal, 18).padding(.bottom, 20)
+        }
+        .frame(width: width).frame(maxHeight: .infinity).background(NoirPalette.footer)
+        .overlay(alignment: .leading) { Rectangle().fill(NoirPalette.line).frame(width: 1) }
+    }
+    private func sectionLabel(_ title: String) -> some View {
+        Text(title.uppercased()).obsidianFont(size: 9, weight: .medium).tracking(0.7).foregroundStyle(NoirPalette.muted).padding(.top, 23).padding(.bottom, 13)
+    }
+    private func setting(_ title: String, binding: Binding<Bool>) -> some View {
+        HStack { Text(title).obsidianFont(size: 11).foregroundStyle(NoirPalette.secondary); Spacer(minLength: 8); NoirSwitch(isOn: binding) }.padding(.bottom, 13)
+    }
+}
+
+@MainActor
+private struct ObsidianInspectorSound: View {
+    @StateObject private var sound = SystemSoundModel()
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var value = 0.0
+    @State private var editing = false
+    @State private var output: SystemAudioOutput?
+    @State private var commit: Task<Void, Never>?
+    var body: some View {
+        VStack(spacing: 9) {
+            HStack {
+                Text("Output volume")
+                Spacer()
+                Text(sound.snapshot?.level.map { "\(Int(($0 * 100).rounded()))%" } ?? "—").monospacedDigit()
+            }.obsidianFont(size: 10).foregroundStyle(NoirPalette.secondary)
+            Slider(value: Binding(get: { value }, set: { newValue in
+                value = newValue
+                guard !editing else { return }
+                commit?.cancel()
+                let expected = sound.snapshot?.output
+                commit = Task {
+                    do { try await Task.sleep(for: .milliseconds(150)) } catch { return }
+                    await sound.apply(.setLevel(Int(newValue.rounded())), to: expected)
+                }
+            }), in: 0...100) { began in
+                commit?.cancel(); editing = began
+                if began { output = sound.snapshot?.output }
+                else {
+                    let expected = output; output = nil
+                    let target = Int(value.rounded())
+                    Task { await sound.apply(.setLevel(target), to: expected) }
+                }
+            }.tint(NoirPalette.accent).controlSize(.small).accessibilityLabel("Output volume")
+                .disabled(sound.snapshot?.canSetVolume != true || sound.isApplying)
+        }.padding(.bottom, 16)
+            .task(id: scenePhase) {
+                guard scenePhase == .active else { return }
+                while !Task.isCancelled {
+                    await sound.refresh(); sync()
+                    do { try await Task.sleep(for: .seconds(3)) } catch { break }
                 }
             }
-        }
-        .padding(.top, 24)
+            .onChange(of: sound.snapshot?.level) { _, _ in sync() }
+            .onChange(of: sound.isApplying) { _, applying in if !applying { sync() } }
+            .onDisappear { commit?.cancel() }
     }
-
-    private struct RecentEntry {
-        let text: String
-        let live: Bool
-    }
-
-    private var recentCommands: [RecentEntry] {
-        let live = feed.items
-            .filter { $0.role == .user }
-            .suffix(3)
-            .reversed()
-            .map { RecentEntry(text: $0.text, live: true) }
-        if !live.isEmpty { return Array(live) }
-        return appState.recentCommands.prefix(3).map { RecentEntry(text: $0, live: false) }
-    }
-
-    // MARK: Pieces
-
-    private func sectionLabel(_ text: String) -> some View {
-        Text(text.uppercased())
-            .font(.system(size: 9, weight: .medium))
-            .tracking(1.3)
-            .foregroundStyle(NoirPalette.muted)
-            .padding(.bottom, 16)
-    }
-
-    private func inspectorSwitch(
-        icon: String,
-        label: String,
-        isOn: Binding<Bool>,
-        disabled: Bool = false
-    ) -> some View {
-        HStack(spacing: 9) {
-            Image(systemName: icon)
-                .font(.system(size: 12))
-                .foregroundStyle(NoirPalette.muted)
-                .frame(width: 14)
-            Text(label)
-                .font(.system(size: 11))
-                .foregroundStyle(NoirPalette.secondary)
-            Spacer(minLength: 8)
-            NoirSwitch(isOn: isOn, disabled: disabled)
-        }
-        .padding(.bottom, 15)
-    }
-
-    private func inspectorLink(_ title: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 5) {
-                Text(title)
-                Image(systemName: "arrow.right")
-                    .font(.system(size: 9))
-            }
-            .font(.system(size: 10))
-            .foregroundStyle(NoirPalette.muted)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .padding(.top, 16)
-    }
+    private func sync() { if !editing, let level = sound.snapshot?.level { value = Double(level) * 100 } }
 }
 
 // MARK: - Assistant preferences
@@ -250,7 +128,7 @@ struct AssistantPreferencesSheet: View {
         VStack(spacing: 0) {
             HStack {
                 Text("Assistant preferences")
-                    .font(.system(size: 15, weight: .medium))
+                    .obsidianFont(size: 15, weight: .medium)
                     .foregroundStyle(NoirPalette.text)
                 Spacer()
                 NoirIconButton(icon: "xmark", help: "Close") { dismiss() }
@@ -287,7 +165,7 @@ struct AssistantPreferencesSheet: View {
                                 sub: "Required to execute a command."
                             ) {
                                 Text(String(format: "%.2f", appState.voiceVerifyThreshold))
-                                    .font(.system(size: 12, design: .monospaced))
+                                    .obsidianFont(size: 12, design: .monospaced)
                                     .foregroundStyle(NoirPalette.secondary)
                             }
                         }
@@ -377,7 +255,7 @@ struct AssistantPreferencesSheet: View {
                     if launchAtLogin.requiresApproval {
                         HStack(alignment: .top, spacing: 8) {
                             Text("Start at login needs approval under Login Items.")
-                                .font(.system(size: 11))
+                                .obsidianFont(size: 11)
                                 .foregroundStyle(NoirPalette.orange)
                             Spacer(minLength: 8)
                             Button("Open Login Items") {
@@ -390,13 +268,13 @@ struct AssistantPreferencesSheet: View {
 
                     if let error = launchAtLogin.errorText {
                         Text(error)
-                            .font(.system(size: 10))
+                            .obsidianFont(size: 10)
                             .foregroundStyle(NoirPalette.red)
                             .padding(.top, 12)
                     }
 
                     Text(noteText)
-                        .font(.system(size: 11))
+                        .obsidianFont(size: 11)
                         .lineSpacing(4)
                         .foregroundStyle(NoirPalette.muted)
                         .padding(.top, 15)
@@ -419,7 +297,7 @@ struct AssistantPreferencesSheet: View {
             }
         }
         .frame(width: 540, height: 660)
-        .background(NoirPalette.base)
+        .background(GlassPanelBackground())
         .preferredColorScheme(.dark)
     }
 

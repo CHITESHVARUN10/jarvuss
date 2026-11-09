@@ -18,7 +18,7 @@ struct CommandFeedbackView: View {
                 ForEach(CommandCorrection.Cause.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
             }
             Text("Saved only on this Mac for review. Corrections do not change the model or start training.")
-                .font(.system(size: 11)).foregroundStyle(NoirPalette.secondary)
+                .obsidianFont(size: 11).foregroundStyle(NoirPalette.secondary)
             Button(saving ? "Saving…" : "Save correction") {
                 saving = true
                 let correction = CommandCorrection(requestID: reviewedRequestID, heard: heard, intended: intended, cause: cause)
@@ -28,7 +28,7 @@ struct CommandFeedbackView: View {
                     saving = false
                 }
             }.disabled(saving || heard.isEmpty || intended.isEmpty)
-            if !status.isEmpty { Text(status).font(.system(size: 11)) }
+            if !status.isEmpty { Text(status).obsidianFont(size: 11) }
         }.onAppear { if heard.isEmpty { heard = initialCommand; reviewedRequestID = requestID } }
     }
 }

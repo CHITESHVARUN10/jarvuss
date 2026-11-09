@@ -1,532 +1,173 @@
 import SwiftUI
 import AppKit
 
-// MARK: - Assistant page
-
+/// Live session UI. Suggestions only populate the composer; execution always
+/// goes through the existing typed-command / shortcut pipelines.
 struct AssistantWorkspace: View {
     @ObservedObject var appState: AppState
     @ObservedObject var feed: AssistantFeed
     @ObservedObject private var responseEngine = ResponseEngine.shared
-
-    let onOpenPreferences: () -> Void
-
+    var onToggleInspector: () -> Void = {}
+    var inspectorAvailable = true
+    var orbSize: CGFloat = 190
+    @State private var inputMode = "command"
+    @State private var composerFocused = false
+    @State private var focusRequest = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         GeometryReader { proxy in
-            let compact = proxy.size.height < 700
-            VStack(spacing: 0) {
-                assistantMeta
-                    .padding(.horizontal, 35)
-                    .padding(.top, compact ? 20 : 28)
-                    .padding(.bottom, 12)
-                    .frame(maxWidth: 850)
-                ScrollViewReader { scroll in
-                    ScrollView(.vertical, showsIndicators: true) {
-                        VStack(spacing: 0) {
-                            if feed.items.isEmpty {
-                                voiceStage(compact: compact)
-                                    .padding(.top, compact ? 4 : 12)
-                                    .padding(.bottom, compact ? 10 : 16)
-                                suggestions
-                            } else {
-                                conversation.padding(.vertical, 10)
-                            }
-                            Color.clear.frame(height: 1).id("conversation-end")
-                        }
-                        .padding(.horizontal, 35)
-                        .padding(.bottom, 12)
-                        .frame(maxWidth: 850)
-                        .frame(maxWidth: .infinity)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .defaultScrollAnchor(.bottom)
-                    .onChange(of: feed.items.count) { _, count in
-                        guard count > 0 else { return }
-                        withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) {
-                            scroll.scrollTo("conversation-end", anchor: .bottom)
-                        }
-                    }
-                }
-                VStack(spacing: compact ? 9 : 13) {
-                    composer
-                    shortcuts
-                }
-                .padding(.horizontal, 35)
-                .padding(.top, compact ? 12 : 18)
-                .padding(.bottom, compact ? 14 : 24)
-                .frame(maxWidth: 850)
-                .fixedSize(horizontal: false, vertical: true)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            session(orbSize: min(orbSize, max(150, proxy.size.height * 0.30)))
         }
+    }
+    private func session(orbSize: CGFloat) -> some View {
+        VStack(spacing: 0) {
+            sessionToolbar
+            VStack(spacing: 0) {
+                Button(action: toggleListening) {
+                    AssistantOrbView(isListening: appState.isLiveListening).frame(width: orbSize, height: orbSize)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(appState.isLiveListening ? "Stop listening" : "Start listening")
+                VStack(alignment: .center, spacing: 9) {
+                    Text(appState.isLiveListening ? "Listening for a command." : "Ready for a command.")
+                        .obsidianFont(size: 19, weight: .medium).foregroundStyle(NoirPalette.text)
+                    Text("Control your apps, open a project, or dictate at your cursor.")
+                        .obsidianFont(size: 12).lineSpacing(4).multilineTextAlignment(.center).foregroundStyle(NoirPalette.secondary)
+                    HStack(spacing: 6) {
+                        Circle().fill(appState.isLiveListening ? NoirPalette.accent : NoirPalette.muted).frame(width: 4, height: 4)
+                        Text(stateLine).obsidianFont(size: 9).foregroundStyle(NoirPalette.muted)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity).padding(.horizontal, 24).padding(.top, 2).padding(.bottom, 20)
+            .overlay(alignment: .bottom) { Rectangle().fill(NoirPalette.hairline).frame(height: 1) }
+            ScrollViewReader { scroll in
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 17) {
+                        if feed.items.isEmpty {
+                            Text("No commands in this session.").obsidianFont(size: 11).foregroundStyle(NoirPalette.muted)
+                                .frame(maxWidth: .infinity).padding(.vertical, 35)
+                        }
+                        ForEach(feed.items) { item in message(item) }
+                        Color.clear.frame(height: 1).id("conversation-end")
+                    }.padding(.horizontal, 24).padding(.vertical, 22)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .onChange(of: feed.items.count) { _, _ in
+                    withAnimation(reduceMotion ? nil : .easeOut(duration: 0.16)) { scroll.scrollTo("conversation-end", anchor: .bottom) }
+                }
+            }
+            VStack(alignment: .leading, spacing: 9) {
+                composer
+                HStack(spacing: 6) {
+                    suggestion("Open project", command: "open my projects in Finder")
+                    suggestion("New tab in Brave", command: "open a new tab in Brave")
+                    suggestion("Play a song", command: "play Dreams by Fleetwood Mac")
+                }
+            }.padding(.horizontal, 22).padding(.top, 10).padding(.bottom, 19)
+        }
+        .background(NoirPalette.base)
         .onChange(of: appState.currentCommand) { _, command in noteUser(command) }
         .onChange(of: responseEngine.latestMessage?.id) { _, _ in
             guard let message = responseEngine.latestMessage, !message.text.isEmpty else { return }
             feed.addAssistant(message.text, succeeded: message.succeeded)
         }
     }
-
-    // MARK: Meta
-
-    private var assistantMeta: some View {
-        HStack(spacing: 8) {
-            Text("YOUR PERSONAL WORKSPACE")
-                .font(.system(size: 9, weight: .medium))
-                .tracking(1.2)
-                .foregroundStyle(NoirPalette.muted)
-
-            Spacer(minLength: 8)
-
-            HStack(spacing: 7) {
-                Image(systemName: "shield")
-                    .font(.system(size: 11))
-                Text("Verification \(appState.actionPillRequiresVerify ? "on" : "off")")
-                    .font(.system(size: 10))
-            }
-            .foregroundStyle(NoirPalette.muted)
-        }
+    private var sessionToolbar: some View {
+        HStack(spacing: 9) {
+            Text("Assistant").obsidianFont(size: 11, weight: .semibold).foregroundStyle(NoirPalette.text)
+            Text("Local session").obsidianFont(size: 8).foregroundStyle(NoirPalette.muted).padding(4)
+                .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(NoirPalette.line, lineWidth: 1))
+            Spacer()
+            Button { feed.reset() } label: { Label("New session", systemImage: "plus").obsidianFont(size: 10) }
+                .buttonStyle(.plain).foregroundStyle(NoirPalette.secondary)
+            if inspectorAvailable { NoirIconButton(icon: "sidebar.right", help: "Toggle session inspector", action: onToggleInspector) }
+        }.padding(.horizontal, 20).frame(height: 43).background(NoirPalette.footer)
+            .overlay(alignment: .bottom) { Rectangle().fill(NoirPalette.line).frame(height: 1) }
     }
-
-    // MARK: Voice stage
-
-    private func voiceStage(compact: Bool) -> some View {
-        VStack(spacing: 0) {
-            Spacer(minLength: 4)
-
-            NoirOrb(isListening: appState.isLiveListening) {
-                toggleListening()
-            }
-            .frame(width: 206, height: 206)
-            .scaleEffect(compact ? 0.74 : 1)
-            .frame(width: compact ? 152 : 206, height: compact ? 152 : 206)
-            .padding(.bottom, compact ? 12 : 24)
-
-            Text(appState.isLiveListening ? "I’m listening." : "A little less effort.")
-                .font(.system(size: compact ? 27 : 32, weight: .regular))
-                .tracking(-1)
-                .foregroundStyle(NoirPalette.text)
-                .multilineTextAlignment(.center)
-
-            Text(appState.isLiveListening
-                 ? "Say “Jarvis” followed by a command.\nClick the orb again to pause."
-                 : "Your voice. A quieter way to get things done.\nClick the orb and tell me what’s next.")
-                .font(.system(size: 12))
-                .lineSpacing(6)
-                .multilineTextAlignment(.center)
-                .foregroundStyle(NoirPalette.muted)
-                .padding(.top, compact ? 8 : 12)
-
-            HStack(spacing: 7) {
-                Circle()
-                    .fill(appState.isLiveListening ? NoirPalette.accent : NoirPalette.muted)
-                    .frame(width: 5, height: 5)
-                Text(stateLine)
-                    .font(.system(size: 10))
-                    .tracking(0.3)
-            }
-            .foregroundStyle(appState.isLiveListening ? NoirPalette.accent : NoirPalette.secondary)
-            .padding(.top, compact ? 12 : 20)
-
-            Spacer(minLength: 4)
-        }
-        .frame(minHeight: compact ? 240 : 310)
-    }
-
     private var stateLine: String {
-        guard appState.isLiveListening else { return "Ready when you are" }
+        guard appState.isLiveListening else { return "Standby · microphone off" }
         switch appState.assistantState {
-        case .idle:       return "Ready when you are"
-        case .listening:  return "Listening · microphone live"
-        case .recording:  return "Recording · microphone live"
-        case .processing: return "Thinking on this Mac"
-        case .executing:  return "Working on it"
+        case .idle, .listening: return "Listening · microphone live"
+        case .recording: return "Recording · microphone live"
+        case .processing: return "Processing on this Mac"
+        case .executing: return "Executing command"
         }
     }
-
     private func toggleListening() {
-        if appState.isLiveListening {
-            appState.stopMicrophone()
-        } else {
-            appState.noteManualMicStart()
-            Task { await appState.startMicrophone() }
-        }
+        if appState.isLiveListening { appState.stopMicrophone() }
+        else { appState.noteManualMicStart(); Task { await appState.startMicrophone() } }
     }
-
-    // MARK: Suggestions
-
-    private var suggestions: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text("A FEW THINGS TO TRY")
-                .font(.system(size: 9, weight: .medium))
-                .tracking(1.5)
-                .foregroundStyle(NoirPalette.muted)
-                .padding(.bottom, 12)
-
-            HStack(spacing: 10) {
-                suggestion(icon: "square.grid.2x2", label: "Open an application", command: "open Safari")
-                suggestion(icon: "music.note", label: "Set the soundtrack", command: "play my Deep Focus playlist")
-                suggestion(icon: "clock", label: "Find your focus", command: "start a 25 minute timer")
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private func suggestion(icon: String, label: String, command: String) -> some View {
-        SuggestionCard(icon: icon, label: label) {
-            appState.commandInput = command
-            noteUser(command)
-            appState.executeTypedCommand()
-        }
-    }
-
-    // MARK: Conversation
-
-    private var conversation: some View {
-        LazyVStack(spacing: 12) {
-            ForEach(feed.items) { item in
-                message(item)
-            }
-
-            HStack(spacing: 16) {
-                Text("This conversation is a local record for this session.")
-                    .font(.system(size: 11))
-                    .foregroundStyle(NoirPalette.muted)
-                Spacer(minLength: 8)
-                NoirIconButton(icon: "arrow.clockwise", help: "Return to start") {
-                    withAnimation(.easeOut(duration: 0.2)) {
-                        feed.reset()
-                    }
-                }
-            }
-            .padding(.top, 2)
-        }
-        .frame(maxWidth: 760)
-        .frame(maxWidth: .infinity, alignment: .top)
-    }
-
     private func message(_ item: AssistantFeed.Item) -> some View {
-        let isUser = item.role == .user
-        return VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 6) {
-                if !isUser {
-                    Image(systemName: "sparkle")
-                        .font(.system(size: 11))
-                        .foregroundStyle(NoirPalette.accent)
-                }
-                Text(isUser ? "You" : "Jarvis")
-                    .font(.system(size: 9, weight: .medium))
-                    .tracking(1.2)
-                    .textCase(.uppercase)
-                    .foregroundStyle(NoirPalette.muted)
+        let user = item.role == .user
+        return HStack(alignment: .top, spacing: 9) {
+            if user { Spacer(minLength: 45) }
+            else {
+                Image(systemName: "sparkle").obsidianFont(size: 11).foregroundStyle(NoirPalette.accent)
+                    .frame(width: 24, height: 24).background(NoirPalette.accentSoft, in: RoundedRectangle(cornerRadius: 6))
             }
-            .padding(.bottom, 8)
-
-            Text(item.text)
-                .font(.system(size: 12))
-                .lineSpacing(7)
-                .foregroundStyle(NoirPalette.text)
-                .textSelection(.enabled)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            if !isUser, item.succeeded != nil {
-                HStack(spacing: 6) {
-                    Image(systemName: item.succeeded == false ? "exclamationmark.circle" : "checkmark")
-                        .font(.system(size: 9, weight: .medium))
-                    Text(item.succeeded == false ? "Couldn’t complete" : "Completed")
-                        .font(.system(size: 10))
+            VStack(alignment: .leading, spacing: 9) {
+                if !user { Text("Jarvis").obsidianFont(size: 10, weight: .medium).foregroundStyle(NoirPalette.secondary) }
+                Text(item.text).obsidianFont(size: 12).lineSpacing(5).textSelection(.enabled)
+                    .foregroundStyle(NoirPalette.text).padding(12)
+                    .frame(maxWidth: user ? nil : .infinity, alignment: .leading)
+                    .background(user ? NoirPalette.raised : NoirPalette.surface, in: RoundedRectangle(cornerRadius: 8))
+                    .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(NoirPalette.line, lineWidth: 1))
+                if !user, let succeeded = item.succeeded {
+                    Label(succeeded ? "Handled" : "Couldn’t complete", systemImage: succeeded ? "checkmark" : "exclamationmark.circle")
+                        .obsidianFont(size: 9).foregroundStyle(succeeded ? NoirPalette.green : NoirPalette.orange)
                 }
-                .foregroundStyle(item.succeeded == false ? NoirPalette.orange : NoirPalette.green)
-                .padding(.top, 10)
+                if !user, item.id == feed.items.last?.id {
+                    Button("Review latest command") { appState.activeSection = .system }.obsidianFont(size: 9).buttonStyle(.plain).foregroundStyle(NoirPalette.muted)
+                }
             }
         }
-        .padding(.horizontal, 17)
-        .padding(.vertical, 15)
-        .frame(maxWidth: isUser ? 700 : 740, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 9, style: .continuous)
-                .fill(isUser ? Color.white.opacity(0.024) : NoirPalette.accentSoft)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 9, style: .continuous)
-                .strokeBorder(isUser ? NoirPalette.line : NoirPalette.accent.opacity(0.11), lineWidth: 1)
-        )
-        .frame(maxWidth: .infinity, alignment: isUser ? .trailing : .leading)
-        .transition(.opacity.combined(with: .offset(y: 4)))
     }
-
+    private var composer: some View {
+        VStack(spacing: 10) {
+            HStack {
+                ObsidianCommandField(text: $appState.commandInput, focusRequest: focusRequest, onFocus: { composerFocused = $0 }, onSubmit: submitTyped)
+                    .frame(minHeight: 30)
+                Button(action: submitTyped) {
+                    Image(systemName: "arrow.up").obsidianFont(size: 15, weight: .semibold).foregroundStyle(canSend ? NoirPalette.onAccent : .white.opacity(0.7))
+                        .frame(width: 32, height: 32).background(canSend ? NoirPalette.accent : NoirPalette.raised, in: RoundedRectangle(cornerRadius: 7))
+                }.buttonStyle(.plain).disabled(!canSend).help("Run command").accessibilityLabel("Run command")
+            }
+            HStack(spacing: 8) {
+                Text("Record").obsidianFont(size: 9).foregroundStyle(NoirPalette.muted)
+                Picker("Recording mode", selection: $inputMode) {
+                    Text("Command").tag("command"); Text("Dictation").tag("dictation")
+                }.labelsHidden().pickerStyle(.menu).frame(width: 104).controlSize(.small)
+                NoirIconButton(icon: "mic", help: inputMode == "command" ? "Record a command" : "Start dictation") {
+                    PillShortcutCoordinator.shared.press(inputMode == "command" ? .action : .dictate)
+                }
+                Spacer()
+                Text("⌘⇧A command · ⌘⇧D dictation").obsidianFont(size: 9).foregroundStyle(NoirPalette.muted)
+            }
+        }.padding(12).background(NoirPalette.surface, in: RoundedRectangle(cornerRadius: 10))
+            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(composerFocused ? NoirPalette.accent.opacity(0.65) : NoirPalette.lineStrong, lineWidth: 1))
+    }
+    private var canSend: Bool { !appState.commandInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    private func submitTyped() { guard canSend else { return }; noteUser(appState.commandInput); appState.executeTypedCommand() }
     private func noteUser(_ text: String) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
-        if feed.items.last?.role == .user && feed.items.last?.text == trimmed { return }
-        withAnimation(.easeOut(duration: 0.2)) {
-            feed.addUser(trimmed)
-        }
+        guard !trimmed.isEmpty, !(feed.items.last?.role == .user && feed.items.last?.text == trimmed) else { return }
+        feed.addUser(trimmed)
     }
-
-    // MARK: Composer
-
-    private var composer: some View {
-        VStack(spacing: 0) {
-            TextField("Or type what you have in mind…", text: $appState.commandInput)
-                .textFieldStyle(.plain)
-                .font(.system(size: 12))
-                .foregroundStyle(NoirPalette.text)
-                .padding(.horizontal, 2)
-                .padding(.bottom, 14)
-                .onSubmit(submitTyped)
-
-            HStack(spacing: 8) {
-                HStack(spacing: 7) {
-                    Image(systemName: "sparkle")
-                        .font(.system(size: 11))
-                    Text("On-device intelligence")
-                        .font(.system(size: 10))
-                }
-                .foregroundStyle(NoirPalette.muted)
-
-                Spacer(minLength: 8)
-
-                NoirIconButton(icon: "mic", help: "Start dictation") {
-                    PillShortcutCoordinator.shared.press(.dictate)
-                }
-
-                Button(action: submitTyped) {
-                    Image(systemName: "arrow.up")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(Color(hex: 0x2A2639))
-                        .frame(width: 26, height: 26)
-                        .background(
-                            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                .fill(NoirPalette.accent)
-                        )
-                }
-                .buttonStyle(.plain)
-                .disabled(!canSend)
-                .opacity(canSend ? 1 : 0.3)
-            }
-        }
-        .padding(.horizontal, 13)
-        .padding(.top, 13)
-        .padding(.bottom, 11)
-        .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(Color(hex: 0x222326))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .strokeBorder(NoirPalette.lineStrong, lineWidth: 1)
-        )
-        .frame(maxWidth: 850)
-        .frame(maxWidth: .infinity)
-    }
-
-    private var canSend: Bool {
-        !appState.commandInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
-
-    private func submitTyped() {
-        let text = appState.commandInput.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else { return }
-        noteUser(text)
-        appState.executeTypedCommand()
-    }
-
-    private var shortcuts: some View {
-        HStack(spacing: 16) {
-            shortcut("⌘ ⇧ D", "Dictate")
-            shortcut("⌘ ⇧ A", "Command")
-            shortcut("↵", "Send")
-        }
-        .frame(maxWidth: .infinity)
-    }
-
-    private func shortcut(_ keys: String, _ label: String) -> some View {
-        HStack(spacing: 5) {
-            Text(keys)
-                .font(.system(size: 9))
-                .foregroundStyle(NoirPalette.secondary)
-                .padding(.horizontal, 4)
-                .padding(.vertical, 1)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 4, style: .continuous)
-                        .strokeBorder(NoirPalette.line, lineWidth: 1)
-                )
-            Text(label)
-                .font(.system(size: 9))
-                .foregroundStyle(NoirPalette.muted)
-        }
+    private func suggestion(_ label: String, command: String) -> some View {
+        Button(label) { appState.commandInput = command; focusRequest += 1 }.obsidianFont(size: 9).buttonStyle(.plain)
+            .foregroundStyle(NoirPalette.secondary).padding(.horizontal, 7).padding(.vertical, 5)
+            .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(NoirPalette.line, lineWidth: 1))
     }
 }
 
-// MARK: - Suggestion card
-
-private struct SuggestionCard: View {
-    let icon: String
-    let label: String
-    let action: () -> Void
-
-    @State private var hovering = false
-
-    var body: some View {
-        Button(action: action) {
-            ZStack(alignment: .topTrailing) {
-                VStack(alignment: .leading, spacing: 9) {
-                    Image(systemName: icon)
-                        .font(.system(size: 14))
-                        .foregroundStyle(NoirPalette.secondary)
-                    Text(label)
-                        .font(.system(size: 11))
-                        .foregroundStyle(NoirPalette.secondary)
-                        .lineLimit(1)
-                }
-                .frame(maxWidth: .infinity, minHeight: 80, alignment: .bottomLeading)
-
-                Image(systemName: "arrow.up.right")
-                    .font(.system(size: 11))
-                    .foregroundStyle(Color(hex: 0x75757F))
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 13)
-            .background(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(hovering ? NoirPalette.accentSoft : Color.white.opacity(0.008))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .strokeBorder(hovering ? NoirPalette.accent.opacity(0.21) : NoirPalette.line, lineWidth: 1)
-            )
-            .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-        }
-        .buttonStyle(.plain)
-        .onHover { hovering = $0 }
-    }
-}
-
-// MARK: - Orb
-
+/// Used by older presentation surfaces, backed by the same selected 3D style.
 struct NoirOrb: View {
     let isListening: Bool
     let action: () -> Void
-
-    @State private var spin = false
-    @State private var breathe = false
-    @State private var hovering = false
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
     var body: some View {
-        Button(action: action) {
-            ZStack {
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [NoirPalette.accent.opacity(0.07), .clear],
-                            center: .center,
-                            startRadius: 18,
-                            endRadius: 140
-                        )
-                    )
-                    .frame(width: 256, height: 256)
-
-                Circle()
-                    .strokeBorder(NoirPalette.accent.opacity(hovering ? 0.24 : 0.05), lineWidth: 1)
-                    .frame(width: 182, height: 182)
-
-                meridianField
-                    .frame(width: 200, height: 200)
-                    .rotationEffect(.degrees(spin ? 360 : 0))
-                    .animation(
-                        reduceMotion ? nil : .linear(duration: 34).repeatForever(autoreverses: false),
-                        value: spin
-                    )
-
-                markerDot(size: 4, x: 51, y: -57)
-                markerDot(size: 3, x: -58, y: 51)
-
-                ZStack {
-                    Circle()
-                        .fill(
-                            RadialGradient(
-                                colors: [Color(hex: 0x363440).opacity(0.67), Color(hex: 0x24232B).opacity(0.5)],
-                                center: .center,
-                                startRadius: 2,
-                                endRadius: 24
-                            )
-                        )
-                    Circle()
-                        .strokeBorder(Color(hex: 0xE5E1FF).opacity(0.125), lineWidth: 1)
-                    Image(systemName: "mic")
-                        .font(.system(size: 17, weight: .regular))
-                        .foregroundStyle(Color(hex: 0xD5D0EF))
-                }
-                .frame(width: 40, height: 40)
-                .shadow(color: NoirPalette.accent.opacity(isListening ? 0.28 : 0.08), radius: 14)
-            }
-            .scaleEffect(breathe && isListening ? 1.035 : 1.0)
-            .animation(
-                isListening && !reduceMotion
-                    ? .easeInOut(duration: 2).repeatForever(autoreverses: true)
-                    : .easeOut(duration: 0.3),
-                value: breathe
-            )
-            .contentShape(Circle())
-        }
-        .buttonStyle(.plain)
-        .onHover { hovering = $0 }
-        .onAppear {
-            spin = true
-            breathe = true
-        }
-        .accessibilityLabel(isListening ? "Stop listening" : "Start listening")
-        .accessibilityAddTraits(isListening ? .isSelected : [])
-    }
-
-    private var meridianField: some View {
-        ZStack {
-            meridian(spans: [(69, 77), (52, 77), (26, 77)], rotation: -32)
-            meridian(spans: [(77, 54), (77, 29), (77, 10)], rotation: 23)
-            meridian(spans: [(69, 77), (43, 77)], rotation: 42)
-
-            Circle()
-                .stroke(meridianGradient, lineWidth: 0.7)
-                .frame(width: 154, height: 154)
-
-            Circle()
-                .stroke(
-                    NoirPalette.accent.opacity(0.2),
-                    style: StrokeStyle(lineWidth: 0.7, lineCap: .round, dash: [1, 7])
-                )
-                .frame(width: 170, height: 170)
-        }
-    }
-
-    private func meridian(spans: [(CGFloat, CGFloat)], rotation: Double) -> some View {
-        ZStack {
-            ForEach(Array(spans.enumerated()), id: \.offset) { _, span in
-                Ellipse()
-                    .stroke(meridianGradient, lineWidth: 0.7)
-                    .frame(width: span.0 * 2, height: span.1 * 2)
-            }
-        }
-        .rotationEffect(.degrees(rotation))
-    }
-
-    private var meridianGradient: LinearGradient {
-        LinearGradient(
-            colors: [
-                Color(hex: 0xDCD4F4).opacity(0.65),
-                Color(hex: 0xB5ABDA).opacity(0.17),
-                Color(hex: 0xE2DCF5).opacity(0.5)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
-
-    private func markerDot(size: CGFloat, x: CGFloat, y: CGFloat) -> some View {
-        Circle()
-            .fill(Color(hex: 0xD2C9EA))
-            .frame(width: size, height: size)
-            .offset(x: x, y: y)
+        Button(action: action) { AssistantOrbView(isListening: isListening) }.buttonStyle(.plain)
+            .accessibilityLabel(isListening ? "Stop listening" : "Start listening")
     }
 }

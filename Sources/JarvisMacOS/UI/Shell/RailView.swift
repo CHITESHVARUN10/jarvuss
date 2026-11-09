@@ -8,7 +8,7 @@ enum RailSection: String, CaseIterable, Identifiable {
     case insights
     case routines
     case system
-    case connections
+    case appearance
     case about
 
     var id: String { rawValue }
@@ -20,8 +20,8 @@ enum RailSection: String, CaseIterable, Identifiable {
         case .voice:       return "Voice"
         case .insights:    return "Insights"
         case .routines:    return "Routines"
-        case .system:      return "System"
-        case .connections: return "Connections"
+        case .system:      return "Settings"
+        case .appearance: return "Appearance"
         case .about:       return "About"
         }
     }
@@ -34,14 +34,14 @@ enum RailSection: String, CaseIterable, Identifiable {
         case .insights:    return "chart.xyaxis.line"
         case .routines:    return "bolt"
         case .system:      return "gearshape"
-        case .connections: return "cable.connector"
+        case .appearance: return "paintpalette"
         case .about:       return "info.circle"
         }
     }
 
     /// Sections shown in the main nav column (about is pinned to the bottom).
     static var main: [RailSection] {
-        [.setup, .assistant, .voice, .insights, .routines, .system, .connections]
+        [.setup, .assistant, .voice, .insights, .routines, .system, .appearance]
     }
 }
 
@@ -143,8 +143,8 @@ struct RailView: View {
             return !appState.setupCompleted
         case .voice:
             return !appState.voiceProfileReady
-        case .connections:
-            return !appState.spotifyNativeAvailable || !appState.postgresConfigured
+        case .appearance:
+            return false
         default:
             return false
         }

@@ -9,13 +9,13 @@ struct NoirIntentModelRow: View {
             Button(action: onOpen) {
                 HStack(spacing: 15) {
                     Image(systemName: model.isInstalled ? "checkmark.circle" : "arrow.down.circle")
-                        .font(.system(size: 22, weight: .light))
+                        .obsidianFont(size: 22, weight: .light)
                         .foregroundStyle(model.isInstalled ? NoirPalette.green : NoirPalette.muted)
                         .frame(width: 26)
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Intent command model").font(.system(size: 12)).foregroundStyle(NoirPalette.text)
+                        Text("Intent command model").obsidianFont(size: 12).foregroundStyle(NoirPalette.text)
                         Text(model.isDownloading ? "Downloading… \(Int(model.progress * 100))%" : "On-device command understanding · approximately 206 MB.")
-                            .font(.system(size: 11)).foregroundStyle(NoirPalette.muted)
+                            .obsidianFont(size: 11).foregroundStyle(NoirPalette.muted)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     Spacer(minLength: 8)
@@ -42,16 +42,16 @@ struct NoirIntentModelDetail: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("This small model helps Jarvis understand commands locally. It is separate from Whisper transcription and the Ollama model. A Hugging Face account is not required.")
-                .font(.system(size: 12)).lineSpacing(4).foregroundStyle(NoirPalette.secondary)
+                .obsidianFont(size: 12).lineSpacing(4).foregroundStyle(NoirPalette.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             NoirCard {
                 VStack(spacing: 0) {
                     NoirSettingRow(title: "Installed version") {
-                        Text(model.installedVersion ?? "Not installed").font(.system(size: 12, design: .monospaced)).foregroundStyle(NoirPalette.secondary)
+                        Text(model.installedVersion ?? "Not installed").obsidianFont(size: 12, design: .monospaced).foregroundStyle(NoirPalette.secondary)
                     }
                     NoirDivider()
                     NoirSettingRow(title: "Latest release") {
-                        Text(model.latestVersion ?? "Not checked").font(.system(size: 12, design: .monospaced)).foregroundStyle(NoirPalette.secondary)
+                        Text(model.latestVersion ?? "Not checked").obsidianFont(size: 12, design: .monospaced).foregroundStyle(NoirPalette.secondary)
                     }
                 }
             }
@@ -60,10 +60,10 @@ struct NoirIntentModelDetail: View {
                     .accessibilityLabel("Intent model download")
                     .accessibilityValue("\(Int(model.progress * 100)) percent")
             }
-            Text(model.message).font(.system(size: 11)).foregroundStyle(NoirPalette.secondary)
+            Text(model.message).obsidianFont(size: 11).foregroundStyle(NoirPalette.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             if let warning = model.runtimeWarning {
-                Text(warning).font(.system(size: 11)).foregroundStyle(NoirPalette.orange)
+                Text(warning).obsidianFont(size: 11).foregroundStyle(NoirPalette.orange)
                     .fixedSize(horizontal: false, vertical: true)
             }
             HStack(spacing: 8) {
@@ -81,7 +81,7 @@ struct NoirIntentModelDetail: View {
                 }
             }
             Text("Downloads are verified before activation. A failed update keeps your working model. Native commands and dictation remain available without this model.")
-                .font(.system(size: 11)).foregroundStyle(NoirPalette.muted)
+                .obsidianFont(size: 11).foregroundStyle(NoirPalette.muted)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .onAppear { if model.lastChecked == nil { model.checkForUpdates() } }

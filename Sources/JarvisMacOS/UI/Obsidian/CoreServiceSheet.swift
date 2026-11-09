@@ -1,159 +1,6 @@
 import SwiftUI
 import AppKit
 
-// MARK: - Connections
-
-struct NoirConnectionsPage: View {
-    @ObservedObject var appState: AppState
-    @EnvironmentObject private var toasts: ToastCenter
-
-    @State private var activeConnection: ConnectionKind?
-
-    var body: some View {
-        NoirPage(
-            eyebrow: "A few good connections",
-            title: "Your tools, in conversation.",
-            sub: "Bring your music, local intelligence, and activity storage together."
-        ) {
-            VStack(spacing: 12) {
-                connectionCard(.spotify)
-                connectionCard(.ollama)
-                connectionCard(.postgres)
-            }
-
-            NoirSectionHeading(title: "More possibilities")
-
-            NoirCard(padded: true) {
-                HStack(alignment: .center, spacing: 16) {
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text("More connections, in time.")
-                            .font(.system(size: 12))
-                            .foregroundStyle(NoirPalette.text)
-                        Text("New integrations will appear here when they’re available.")
-                            .font(.system(size: 11))
-                            .foregroundStyle(NoirPalette.muted)
-                    }
-                    Spacer(minLength: 8)
-                    Button {
-                    } label: {
-                        Label("Add connection", systemImage: "plus")
-                    }
-                    .buttonStyle(NoirButtonStyle(intent: .quiet))
-                    .disabled(true)
-                }
-            }
-
-            Text("Connection forms talk only to the services you configure. Secrets stay in the macOS Keychain.")
-                .font(.system(size: 11))
-                .foregroundStyle(NoirPalette.muted)
-                .padding(.top, 18)
-        }
-        .task {
-            await appState.refreshSpotifyStatus()
-            await appState.refreshPostgresStatus()
-            await appState.refreshOllamaStatus()
-        }
-        .sheet(item: $activeConnection) { kind in
-            ConnectionSheet(appState: appState, kind: kind)
-                .environmentObject(toasts)
-        }
-    }
-
-    // MARK: Cards
-
-    private func connectionCard(_ kind: ConnectionKind) -> some View {
-        Button {
-            activeConnection = kind
-        } label: {
-            HStack(spacing: 16) {
-                connectionIcon(kind)
-
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(kind.title)
-                        .font(.system(size: 13))
-                        .foregroundStyle(NoirPalette.text)
-                    Text(description(for: kind))
-                        .font(.system(size: 11))
-                        .foregroundStyle(NoirPalette.muted)
-                }
-
-                Spacer(minLength: 8)
-
-                let status = status(for: kind)
-                NoirTag(text: status.text, kind: status.kind)
-
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(NoirPalette.muted)
-            }
-            .padding(21)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(NoirPalette.surface)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .strokeBorder(NoirPalette.line, lineWidth: 1)
-            )
-            .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-        }
-        .buttonStyle(ConnectionCardButtonStyle())
-    }
-
-    private func connectionIcon(_ kind: ConnectionKind) -> some View {
-        let color: Color
-        switch kind {
-        case .spotify:  color = NoirPalette.green
-        case .ollama:   color = NoirPalette.accent
-        case .postgres: color = NoirPalette.secondary
-        }
-        return ZStack {
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(Color.white.opacity(0.016))
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .strokeBorder(NoirPalette.line, lineWidth: 1)
-            Image(systemName: kind.icon)
-                .font(.system(size: 20))
-                .foregroundStyle(color)
-        }
-        .frame(width: 42, height: 42)
-    }
-
-    private func description(for kind: ConnectionKind) -> String {
-        switch kind {
-        case .spotify:  return "Native playback and local Spotify lookup."
-        case .ollama:   return "Local answers. On your own terms."
-        case .postgres: return "A home for your activity and insights."
-        }
-    }
-
-    private func status(for kind: ConnectionKind) -> (text: String, kind: NoirTag.Kind) {
-        switch kind {
-        case .spotify:
-            return appState.spotifyNativeAvailable ? ("App installed", .green) : ("Install Spotify", .amber)
-        case .ollama:
-            return appState.ollamaReachable ? ("Ready", .green) : ("Offline", .amber)
-        case .postgres:
-            if appState.postgresConfigured {
-                return appState.eventLoggingEnabled ? ("Logging on", .green) : ("Paused", .amber)
-            }
-            return ("Set up", .neutral)
-        }
-    }
-}
-
-private struct ConnectionCardButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .background(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(configuration.isPressed ? Color.white.opacity(0.015) : .clear)
-            )
-            .scaleEffect(configuration.isPressed ? 0.998 : 1)
-    }
-}
-
 // MARK: - Connection sheet
 
 struct ConnectionSheet: View {
@@ -175,17 +22,17 @@ struct ConnectionSheet: View {
                     RoundedRectangle(cornerRadius: 9, style: .continuous)
                         .strokeBorder(NoirPalette.line, lineWidth: 1)
                     Image(systemName: kind.icon)
-                        .font(.system(size: 15))
+                        .obsidianFont(size: 15)
                         .foregroundStyle(iconColor)
                 }
                 .frame(width: 34, height: 34)
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(kind.title)
-                        .font(.system(size: 15, weight: .medium))
+                        .obsidianFont(size: 15, weight: .medium)
                         .foregroundStyle(NoirPalette.text)
                     Text(headerSub)
-                        .font(.system(size: 11))
+                        .obsidianFont(size: 11)
                         .foregroundStyle(NoirPalette.muted)
                 }
 
@@ -213,7 +60,7 @@ struct ConnectionSheet: View {
             footer
         }
         .frame(width: 540)
-        .background(NoirPalette.base)
+        .background(GlassPanelBackground())
         .preferredColorScheme(.dark)
     }
 
@@ -238,9 +85,9 @@ struct ConnectionSheet: View {
     private var spotifyBody: some View {
         VStack(alignment: .leading, spacing: 18) {
             Text("Install Spotify and sign in there. Playback uses macOS Automation; named-song, playlist and Liked Songs lookup uses Spotify’s local interface and requires Accessibility permission. No API keys or browser authorization are needed.")
-                .font(.system(size: 11)).foregroundStyle(NoirPalette.muted)
+                .obsidianFont(size: 11).foregroundStyle(NoirPalette.muted)
                 .fixedSize(horizontal: false, vertical: true)
-            Text(appState.spotifyStatusText).font(.system(size: 11))
+            Text(appState.spotifyStatusText).obsidianFont(size: 11)
         }
     }
 
@@ -272,7 +119,7 @@ struct ConnectionSheet: View {
     private var postgresBody: some View {
         VStack(alignment: .leading, spacing: 18) {
             Text("Store command activity and usage statistics. Passwords live in the macOS Keychain.")
-                .font(.system(size: 11))
+                .obsidianFont(size: 11)
                 .lineSpacing(5)
                 .foregroundStyle(NoirPalette.muted)
 
@@ -390,7 +237,7 @@ struct ConnectionSheet: View {
     private func factRow(_ label: String, _ value: String) -> some View {
         NoirSettingRow(title: label) {
             Text(value)
-                .font(.system(size: 11, design: .monospaced))
+                .obsidianFont(size: 11, design: .monospaced)
                 .foregroundStyle(NoirPalette.secondary)
                 .lineLimit(1)
         }
@@ -398,7 +245,7 @@ struct ConnectionSheet: View {
 
     private func noticeCard(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 11))
+            .obsidianFont(size: 11)
             .lineSpacing(4)
             .foregroundStyle(NoirPalette.secondary)
             .fixedSize(horizontal: false, vertical: true)

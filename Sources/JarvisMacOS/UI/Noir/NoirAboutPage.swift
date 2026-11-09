@@ -10,7 +10,7 @@ struct NoirAboutPage: View {
     var body: some View {
         NoirPage(
             eyebrow: "Thoughtfully at your service",
-            title: "Made for your Mac.",
+            title: "About Jarvis",
             sub: "An assistant that fits into your workspace, and gets out of your way."
         ) {
             aboutMark
@@ -66,7 +66,7 @@ struct NoirAboutPage: View {
             NoirSectionHeading(title: "Diagnostics")
             NoirCard(padded: true) {
                 Text("Session logs and macOS crash reports stay on this Mac. Runtime logs can include dictated text and commands.")
-                    .font(.system(size: 11))
+                    .obsidianFont(size: 11)
                     .foregroundStyle(NoirPalette.secondary)
                 HStack(spacing: 12) {
                     Button("Open diagnostic logs") {
@@ -84,7 +84,7 @@ struct NoirAboutPage: View {
             NoirSectionHeading(title: "Command testing")
             NoirCard(padded: true) {
                 Text("Send text through the command pipeline without recording. The local runner shows plans, execution results, and your pass/fail notes. Live execution performs real actions on this Mac.")
-                    .font(.system(size: 11)).foregroundStyle(NoirPalette.secondary)
+                    .obsidianFont(size: 11).foregroundStyle(NoirPalette.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 10) {
                     Button(tests.isRunning ? "Open test runner" : "Start test runner") {
@@ -96,18 +96,18 @@ struct NoirAboutPage: View {
                             .buttonStyle(NoirButtonStyle(intent: .quiet, small: true))
                     }
                 }.padding(.top, 12)
-                Text(tests.message).font(.system(size: 10)).foregroundStyle(NoirPalette.muted).padding(.top, 8)
+                Text(tests.message).obsidianFont(size: 10).foregroundStyle(NoirPalette.muted).padding(.top, 8)
             }
 
             NoirSectionHeading(title: "Privacy")
             NoirCard(padded: true) {
                 Text("Speech is transcribed on your Mac. Your voice samples stay in a local speaker profile, and command history lives in the event storage you configure.")
-                    .font(.system(size: 11))
+                    .obsidianFont(size: 11)
                     .lineSpacing(5)
                     .foregroundStyle(NoirPalette.muted)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("Spotify and PostgreSQL talk only to the services you connect. Nothing is sent to a Jarvis account, because there isn’t one.")
-                    .font(.system(size: 11))
+                Text("Spotify is controlled natively on this Mac. PostgreSQL stores activity in your configured database. There is no Jarvis account.")
+                    .obsidianFont(size: 11)
                     .lineSpacing(5)
                     .foregroundStyle(NoirPalette.muted)
                     .fixedSize(horizontal: false, vertical: true)
@@ -120,11 +120,11 @@ struct NoirAboutPage: View {
         VStack(spacing: 17) {
             NoirBrandMark(size: 66)
             Text("JARVIS")
-                .font(.system(size: 21, weight: .medium))
+                .obsidianFont(size: 21, weight: .medium)
                 .tracking(4)
                 .foregroundStyle(NoirPalette.text)
             Text("A little more possible.")
-                .font(.system(size: 11))
+                .obsidianFont(size: 11)
                 .foregroundStyle(NoirPalette.muted)
         }
         .frame(maxWidth: .infinity)
@@ -135,7 +135,7 @@ struct NoirAboutPage: View {
     private func fact(_ title: String, _ value: String) -> some View {
         NoirSettingRow(title: title) {
             Text(value)
-                .font(.system(size: 11, design: .monospaced))
+                .obsidianFont(size: 11, design: .monospaced)
                 .foregroundStyle(NoirPalette.secondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
@@ -145,7 +145,7 @@ struct NoirAboutPage: View {
     private func shortcut(_ title: String, keys: String) -> some View {
         NoirSettingRow(title: title) {
             Text(keys)
-                .font(.system(size: 11))
+                .obsidianFont(size: 11)
                 .foregroundStyle(NoirPalette.secondary)
                 .padding(.horizontal, 5)
                 .padding(.vertical, 2)

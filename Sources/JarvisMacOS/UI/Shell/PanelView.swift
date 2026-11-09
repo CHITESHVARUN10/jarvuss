@@ -44,7 +44,7 @@ struct PanelView: View {
         case .insights:    return "Insights"
         case .routines:    return "Routines"
         case .system:      return "System"
-        case .connections: return "Connections"
+        case .appearance: return "Appearance"
         case .about:       return "About"
         }
     }
@@ -57,7 +57,7 @@ struct PanelView: View {
         case .insights:    return "Your usage, on device"
         case .routines:    return "Say a keyword, Jarvis handles the rest"
         case .system:      return "Display and safety"
-        case .connections: return "Your integrations"
+        case .appearance: return "Accent, orb, and glass"
         case .about:       return "Jarvis for macOS"
         }
     }
@@ -77,8 +77,8 @@ struct PanelView: View {
             RoutinesPane(appState: appState)
         case .system:
             SystemPane(appState: appState)
-        case .connections:
-            ConnectionsPane(appState: appState)
+        case .appearance:
+            ObsidianAppearancePage()
         case .about:
             AboutPane(appState: appState)
         }

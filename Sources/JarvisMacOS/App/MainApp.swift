@@ -42,6 +42,6 @@ struct MainApp: App {
 
         }
         .windowStyle(.hiddenTitleBar)
-        .defaultSize(width: 1360, height: 860)
+        .defaultSize(width: 1240, height: 820)
     }
 }

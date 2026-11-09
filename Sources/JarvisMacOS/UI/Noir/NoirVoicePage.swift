@@ -21,7 +21,7 @@ struct NoirVoicePage: View {
     var body: some View {
         NoirPage(
             eyebrow: "Recognition, made personal",
-            title: "A voice that’s yours.",
+            title: "Voice & speech",
             sub: "Teach Jarvis to recognize you before it carries out a command."
         ) {
             profileCard
@@ -30,7 +30,7 @@ struct NoirVoicePage: View {
                 title: "Voice samples",
                 trailing: AnyView(
                     Text("\(appState.enrollmentPhrases.count) phrases · \(appState.enrollmentRequiredMatchesPerPhrase) samples each")
-                        .font(.system(size: 11, design: .monospaced))
+                        .obsidianFont(size: 11, design: .monospaced)
                         .foregroundStyle(NoirPalette.muted)
                 )
             )
@@ -57,7 +57,7 @@ struct NoirVoicePage: View {
             if appState.enrollmentActive {
                 HStack(spacing: 8) {
                     Text("Say: “\(appState.currentEnrollmentPhrase)”")
-                        .font(.system(size: 11))
+                        .obsidianFont(size: 11)
                         .foregroundStyle(NoirPalette.secondary)
                     Spacer(minLength: 8)
                     Button("Stop") { appState.stopEnrollment() }
@@ -66,7 +66,7 @@ struct NoirVoicePage: View {
                 .padding(.top, 12)
             } else {
                 Text("Retraining replaces existing samples. Adding samples keeps your current profile.")
-                    .font(.system(size: 11))
+                    .obsidianFont(size: 11)
                     .foregroundStyle(NoirPalette.muted)
                     .padding(.top, 15)
             }
@@ -101,7 +101,7 @@ struct NoirVoicePage: View {
                         sub: "The minimum match required to execute."
                     ) {
                         Text(String(format: "%.2f", appState.voiceVerifyThreshold))
-                            .font(.system(size: 12, design: .monospaced))
+                            .obsidianFont(size: 12, design: .monospaced)
                             .foregroundStyle(NoirPalette.secondary)
                     }
                 }
@@ -140,7 +140,7 @@ struct NoirVoicePage: View {
 
                 VStack(alignment: .leading, spacing: 0) {
                     Text(profileTitle)
-                        .font(.system(size: 17, weight: .medium))
+                        .obsidianFont(size: 17, weight: .medium)
                         .foregroundStyle(NoirPalette.text)
 
                     NoirTag(
@@ -151,7 +151,7 @@ struct NoirVoicePage: View {
                     .padding(.top, 9)
 
                     Text(profileText)
-                        .font(.system(size: 11))
+                        .obsidianFont(size: 11)
                         .lineSpacing(4)
                         .foregroundStyle(NoirPalette.muted)
                         .fixedSize(horizontal: false, vertical: true)
@@ -159,7 +159,7 @@ struct NoirVoicePage: View {
 
                     if appState.lastVoiceSimilarity > 0 {
                         Text("Last match \(Int(appState.lastVoiceSimilarity * 100))%")
-                            .font(.system(size: 11, design: .monospaced))
+                            .obsidianFont(size: 11, design: .monospaced)
                             .foregroundStyle(NoirPalette.muted)
                             .padding(.top, 10)
                     }
@@ -181,10 +181,10 @@ struct NoirVoicePage: View {
                 .animation(.easeOut(duration: 0.7), value: progress)
             VStack(spacing: 4) {
                 Text("\(collected)")
-                    .font(.system(size: 26, weight: .regular))
+                    .obsidianFont(size: 26, weight: .regular)
                     .foregroundStyle(NoirPalette.text)
                 Text("of \(target) samples")
-                    .font(.system(size: 9))
+                    .obsidianFont(size: 9)
                     .tracking(0.4)
                     .textCase(.uppercase)
                     .foregroundStyle(NoirPalette.muted)
@@ -220,11 +220,11 @@ struct NoirVoicePage: View {
         let current = appState.enrollmentActive && index == appState.enrollmentIndex
         return HStack(spacing: 8) {
             Image(systemName: done ? "checkmark" : "mic")
-                .font(.system(size: 10, weight: .medium))
+                .obsidianFont(size: 10, weight: .medium)
                 .foregroundStyle(done ? NoirPalette.green : (current ? NoirPalette.accent : NoirPalette.muted))
                 .frame(width: 12)
             Text(phrase)
-                .font(.system(size: 11))
+                .obsidianFont(size: 11)
                 .foregroundStyle(current ? NoirPalette.text : NoirPalette.secondary)
                 .lineLimit(1)
             Spacer(minLength: 0)
