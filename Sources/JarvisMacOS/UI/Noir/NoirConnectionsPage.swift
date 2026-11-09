@@ -122,7 +122,7 @@ struct NoirConnectionsPage: View {
 
     private func description(for kind: ConnectionKind) -> String {
         switch kind {
-        case .spotify:  return "Native playback on this Mac. Optional library lookup."
+        case .spotify:  return "Native playback and local Spotify lookup."
         case .ollama:   return "Local answers. On your own terms."
         case .postgres: return "A home for your activity and insights."
         }
@@ -163,8 +163,6 @@ struct ConnectionSheet: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var toasts: ToastCenter
 
-    @State private var clientID = ""
-    @State private var clientSecret = ""
     @State private var busy = false
     @State private var notice: String?
 
@@ -239,29 +237,10 @@ struct ConnectionSheet: View {
 
     private var spotifyBody: some View {
         VStack(alignment: .leading, spacing: 18) {
-            Text("Play, pause, next, previous and shuffle control the Spotify app on this Mac without API keys. Install Spotify, sign in there, and allow Jarvis under Privacy & Security → Automation when asked. Named songs, playlists and Liked Songs still use optional Web API lookup; configure that below if needed.")
-                .font(.system(size: 11))
-                .lineSpacing(5)
-                .foregroundStyle(NoirPalette.muted)
+            Text("Install Spotify and sign in there. Playback uses macOS Automation; named-song, playlist and Liked Songs lookup uses Spotify’s local interface and requires Accessibility permission. No API keys or browser authorization are needed.")
+                .font(.system(size: 11)).foregroundStyle(NoirPalette.muted)
                 .fixedSize(horizontal: false, vertical: true)
-
-            Text("Native player: \(appState.spotifyNativeAvailable ? "Spotify installed" : "Install Spotify")")
-                .font(.system(size: 11))
-            Text("Optional library lookup: \(appState.spotifyStatusText)")
-                .font(.system(size: 11))
-                .foregroundStyle(NoirPalette.muted)
-
-            SecureField("Client ID", text: $clientID)
-                .noirField()
-                .noirFieldLabel("Client ID")
-
-            SecureField("Client secret", text: $clientSecret)
-                .noirField()
-                .noirFieldLabel("Client secret")
-
-            if let notice {
-                noticeCard(notice)
-            }
+            Text(appState.spotifyStatusText).font(.system(size: 11))
         }
     }
 
@@ -349,12 +328,8 @@ struct ConnectionSheet: View {
             case .spotify:
                 Button("Close") { dismiss() }
                     .buttonStyle(NoirButtonStyle(intent: .quiet))
-                Button(busy ? "Saving…" : "Save lookup keys") { saveSpotify() }
-                    .buttonStyle(NoirButtonStyle())
-                    .disabled(busy || clientID.isEmpty || clientSecret.isEmpty)
-                Button("Connect lookup") { connectSpotify() }
+                Button("Open Spotify") { NSWorkspace.shared.open(URL(string: "spotify:")!) }
                     .buttonStyle(NoirButtonStyle(intent: .primary))
-                    .disabled(busy)
 
             case .ollama:
                 Button {
@@ -390,51 +365,6 @@ struct ConnectionSheet: View {
     }
 
     // MARK: Actions
-
-    private func saveSpotify() {
-        busy = true
-        notice = nil
-        Task {
-            let backendReady = await BackendServiceManager.ensureRunningForFeature()
-            guard backendReady else {
-                notice = "Backend unavailable or turned off."
-                busy = false
-                return
-            }
-            do {
-                try await appState.spotifyClient.saveCredentials(
-                    clientID: clientID,
-                    clientSecret: clientSecret
-                )
-                clientID = ""
-                clientSecret = ""
-                await appState.refreshSpotifyStatus()
-                notice = "Keys saved. Connect to authorize in your browser."
-                toasts.show("Spotify keys saved.")
-            } catch {
-                notice = error.localizedDescription
-            }
-            busy = false
-        }
-    }
-
-    private func connectSpotify() {
-        notice = nil
-        Task {
-            let backendReady = await BackendServiceManager.ensureRunningForFeature()
-            guard backendReady else {
-                notice = "Backend unavailable or turned off."
-                return
-            }
-            do {
-                let url = try await appState.spotifyClient.connectURL()
-                NSWorkspace.shared.open(url)
-                notice = "Browser opened — approve Spotify access, then refresh."
-            } catch {
-                notice = error.localizedDescription
-            }
-        }
-    }
 
     private func savePostgres() {
         busy = true

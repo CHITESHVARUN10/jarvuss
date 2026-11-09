@@ -256,7 +256,7 @@ struct SetupPane: View {
             }
         case .backend:
             JRow(title: "Start local helper",
-                 sub: "For speaker verification and Spotify lookup. Starts the helper included with Jarvis.",
+                 sub: "For speaker verification and database connections. Starts the helper included with Jarvis.",
                  first: true) {
                 actionButton("Prepare") {
                     await HomebrewActions.prepareBackend { line in
@@ -265,27 +265,14 @@ struct SetupPane: View {
                 }
             }
         case .spotify:
-            JRow(title: "1. Create a Spotify app",
-                 sub: "Add redirect http://127.0.0.1:8000/spotify/callback",
-                 first: true) {
-                Button("Open dashboard") {
-                    if let url = URL(string: "https://developer.spotify.com/dashboard") {
-                        NSWorkspace.shared.open(url)
-                    }
-                }
-                .buttonStyle(.plain)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(JColor.accent)
+            JRow(title: "Open Spotify and sign in",
+                 sub: "Native playback needs Automation permission; song and library lookup needs Accessibility. No API keys.", first: true) {
+                Button("Open Spotify") { NSWorkspace.shared.open(URL(string: "spotify:")!) }
+                    .buttonStyle(.plain)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(JColor.accent)
             }
-            JRow(title: "2. Paste keys, then connect",
-                 sub: "The Connections pane has the fields and OAuth link") {
-                Button("Open Connections") {
-                    appState.activeSection = .connections
-                }
-                .buttonStyle(.plain)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(JColor.accent)
-            }
+
         }
 
         progressRow(kind)

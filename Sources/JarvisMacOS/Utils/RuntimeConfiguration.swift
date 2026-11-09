@@ -16,12 +16,11 @@ enum RuntimeConfiguration {
     static func mergedValues(defaults: [String: String] = DotEnvLoader.mergedEnv(),
                              settingsURL: URL? = nil,
                              secretReader: (String) -> String? = keychainValue) -> [String: String] {
-        var values = defaults
+        var values = defaults.filter { !$0.key.hasPrefix("SPOTIFY_") }
         let file = settingsURL ?? dataDirectory.appendingPathComponent("connection_settings.json")
         if let data = try? Data(contentsOf: file),
            let saved = try? JSONDecoder().decode([String: String].self, from: data) {
-            for (key, value) in saved where key != "PGPASSWORD"
-                && !["SPOTIFY_CLIENT_SECRET", "SPOTIFY_ACCESS_TOKEN", "SPOTIFY_REFRESH_TOKEN"].contains(key) {
+            for (key, value) in saved where !key.hasPrefix("SPOTIFY_") && key != "PGPASSWORD" {
                 values[key] = value
             }
         }

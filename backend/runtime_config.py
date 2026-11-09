@@ -17,9 +17,8 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 KEYCHAIN_SERVICE = "local.jarvis.credentials"
-SECRET_KEYS = frozenset({"PGPASSWORD", "SPOTIFY_CLIENT_SECRET", "SPOTIFY_ACCESS_TOKEN", "SPOTIFY_REFRESH_TOKEN"})
-CONNECTION_KEYS = SECRET_KEYS | {"PGHOST", "PGPORT", "PGDATABASE", "PGUSER",
-                                "SPOTIFY_CLIENT_ID", "SPOTIFY_REDIRECT_URI", "SPOTIFY_ACCESS_TOKEN_EXPIRES_AT"}
+SECRET_KEYS = frozenset({"PGPASSWORD"})
+CONNECTION_KEYS = SECRET_KEYS | {"PGHOST", "PGPORT", "PGDATABASE", "PGUSER"}
 
 
 def data_directory() -> Path:
@@ -196,7 +195,7 @@ class RuntimeConfig:
         values = json.loads(self.path.read_text(encoding="utf-8"))
         if not isinstance(values, dict) or any(not isinstance(v, str) for v in values.values()):
             raise ValueError("Invalid Jarvis connection settings")
-        return {k: v for k, v in values.items() if k not in SECRET_KEYS}
+        return {k: v for k, v in values.items() if k not in SECRET_KEYS and not k.startswith("SPOTIFY_")}
 
     def _signature(self):
         try:
@@ -216,7 +215,7 @@ class RuntimeConfig:
             raise ValueError("Unsupported credential")
         with self._lock:
             self._refresh_cache()
-            values = {**defaults, **self._settings()}
+            values = {k: v for k, v in {**defaults, **self._settings()}.items() if not k.startswith("SPOTIFY_")}
             missing = [key for key in secret_keys if key not in self._secrets]
             if missing:
                 fetched = self.keychain.get_many(missing) if hasattr(self.keychain, "get_many") else {
@@ -243,6 +242,7 @@ class RuntimeConfig:
             os.close(descriptor)
 
     def save(self, updates: dict[str, str]) -> None:
+        updates = {k: v for k, v in updates.items() if not k.startswith("SPOTIFY_")}
         with self._lock, self._write_lock():
             self._refresh_cache()
             settings = self._settings()

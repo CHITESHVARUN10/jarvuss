@@ -8,6 +8,27 @@
 use crate::text_policy::*;
 use crate::transcript::{collapse_repeated_phrases, repeated_phrase_loop};
 use regex::escape;
+use unicode_normalization::UnicodeNormalization;
+
+/// Formatting may change punctuation/case, not the dictated words or their
+/// order. Length alone cannot detect a similarly sized invented sentence.
+#[uniffi::export]
+pub fn polish_preserves_content(reference: String, candidate: String, directive: Option<String>) -> bool {
+    fn tokens(text: &str) -> Vec<String> {
+        let normalized: String = text.to_lowercase().nfc().collect();
+        rx(r"[\p{L}\p{M}\p{N}]+(?:['’][\p{L}\p{M}\p{N}]+)*")
+            .find_iter(&normalized).flatten().map(|m| m.as_str().replace('’', "'")).collect()
+    }
+    let mut expected = reference;
+    // Explicit spoken punctuation is the sole word-to-symbol transformation.
+    expected = replace(r"(?i)\b(?:question mark|exclamation point|full stop|semicolon|comma|period|colon)\b", &expected, " ");
+    let mut actual = candidate;
+    if directive.is_some() {
+        expected = replace(r"(?i)\b(?:first(?:ly)?|second(?:ly)?|third(?:ly)?|finally|lastly)(?:\s+point(?:\s+is)?)?\b|\bpoint\s+(?:one|two|three|\d+)(?:\s+is)?\b", &expected, " ");
+        actual = replace(r"(?m)^\s*\d+\.\s+", &actual, "");
+    }
+    tokens(&expected) == tokens(&actual)
+}
 
 #[derive(Clone, Debug, uniffi::Record)]
 pub struct FormattedTranscript {
@@ -736,6 +757,25 @@ pub fn sanitize_polished(raw: String, reference: String, max_drift: f64) -> Sani
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn polish_cannot_rewrite_or_invent_content() {
+        let reference = "I hope you can read the last handoff document provided. It gives an overview of the changes and what is fixed or needs work.";
+        let rewritten = "I hope you can read the latest handoff document provided. It will give you a full overview of the changes. I'm eager for your feedback and assistance in correcting any issues found.";
+        assert!(!polish_preserves_content(reference.into(), rewritten.into(), None));
+        assert!(!polish_preserves_content("Do not delete my files".into(), "Do delete my files.".into(), None));
+        assert!(!polish_preserves_content("Meet at five".into(), "Meet at nine.".into(), None));
+        assert!(!polish_preserves_content("open brave then chrome".into(), "Open Chrome, then Brave.".into(), None));
+    }
+
+    #[test]
+    fn polish_can_format_words_without_changing_them() {
+        assert!(polish_preserves_content("hello john how are you".into(), "Hello John, how are you?".into(), None));
+        assert!(polish_preserves_content("hi john comma call me period".into(), "Hi John, call me.".into(), None));
+        assert!(polish_preserves_content("things to buy first milk second eggs third bread".into(), "Things to buy:\n1. Milk\n2. Eggs\n3. Bread".into(), Some("numbered".into())));
+        assert!(!polish_preserves_content("things to buy first milk second eggs".into(), "Things to buy:\n1. Milk\n2. Eggs\n3. Bread".into(), Some("numbered".into())));
+        assert!(polish_preserves_content("cafe\u{301}".into(), "Café.".into(), None));
+    }
 
     fn formatted(raw: &str) -> String {
         format_transcript(raw.to_string()).text

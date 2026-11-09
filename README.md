@@ -82,11 +82,11 @@ before sharing. Stopping/cancelling cannot undo completed actions.
   local player-state readback. Play/pause/next/previous and standalone shuffle
   work without the helper or Spotify OAuth. Allow Jarvis under System Settings
   → Privacy & Security → Automation → Spotify when prompted.
-  Song/playlist names and Liked Songs still use the helper and OAuth for
-  read-only metadata lookup. Playlist shuffle chooses a random starting
-  position; Liked Songs chooses a starting track sampled across the library.
-  The local player receives the collection context rather than a 50-track
-  Web API queue. An unconfirmed action returns a failure with details.
+  Song/playlist names use exact links exposed by Spotify’s local search UI;
+  Liked Songs uses its specifically labelled native play control. These require
+  Accessibility permission and an English Spotify interface. Lookup failures do
+  not play a similar or unrelated result. No API keys, OAuth or helper are used.
+
 - Active-output volume: “increase the sound by twenty-five percent”, “volume
   down by 15”, “set volume to forty percent”, “mute”, “unmute”, and “what is
   the current volume level”. Amounts are percentage points; “increase volume
@@ -118,11 +118,11 @@ before sharing. Stopping/cancelling cannot undo completed actions.
 - **SafetyGuard**: blocks sudo, destructive operations, protected paths, and installs before anything runs.
 
 **The rest**
-- **Setup pane (first run)**: a checklist that detects what's missing and fixes it in-app — microphone and Accessibility grants, the Whisper model plus a custom model-folder picker, Ollama (install via brew / start / pull `qwen2.5:1.5b-instruct` with download status), PostgreSQL (install, start, **create the jarvis database with an editable user + password**, configure itself, enable logging), and a Spotify API-app guide. Reopen it anytime from the rail.
+- **Setup pane (first run)**: a checklist that detects what's missing and fixes it in-app — microphone and Accessibility grants, the Whisper model plus a custom model-folder picker, Ollama (install via brew / start / pull `qwen2.5:1.5b-instruct` with download status), PostgreSQL (install, start, **create the jarvis database with an editable user + password**, configure itself, enable logging), and native Spotify permissions. Reopen it anytime from the rail.
 - **Recording duration**: System → Dictation → *Maximum recording time* accepts 1–60 minutes (default 5). It applies to the next ⌘⇧D or ⌘⇧A recording; the floating panel shows elapsed audio time and the active limit. Capture stops and transcribes automatically at that limit, preserving the beginning and end. Long dictations bypass the optional small-model polish pass and retain the full rules-formatted transcript.
-- **On-demand local helper (default: Automatic)**: the bundled native helper serves voice verification, Spotify lookup and connection settings. It starts for those features and idles out after 5 minutes. Learned intent inference runs inside Jarvis without starting a helper. Assistant → Behaviour → *Backend* offers Automatic / Always running / Off; Off also disables learned parsing. Python is used only by development/training tools. See [native runtime migration and benchmarks](docs/native-runtime-migration.md).
+- **On-demand local helper (default: Automatic)**: the bundled native helper serves voice verification and database connection settings. It starts for those features and idles out after 2 minutes. Learned intent inference runs inside Jarvis without starting a helper. Assistant → Behaviour → *Backend* offers Automatic / Always running / Off; Off also disables learned parsing. Python is used only by development/training tools. See [native runtime migration and benchmarks](docs/native-runtime-migration.md).
 - **Insights**: local stats on dictation, commands, success rates, LLM usage.
-- **Connections**: Spotify (OAuth via local backend) and PostgreSQL (schema-browsing status/credentials/test).
+- **Connections**: Spotify (native macOS controls) and PostgreSQL (schema-browsing status/credentials/test).
 - **rail + panes shell**: Setup, Assistant, Voice, Routines, Connections, Insights, System, About.
 - **Start at login**: Assistant → Behaviour — macOS opens Jarvis for you when you log in (Login Items via `SMAppService`; no helper app).
 - **Memory guard**: if the app's footprint ever exceeds the limit (Assistant → Behaviour, default ~¼ of RAM), it writes the reason to `~/Library/Application Support/Jarvis/logs/memory.log` and terminates itself instead of dragging your Mac into swap.
@@ -350,7 +350,7 @@ the manual steps below become optional:
 - **Ollama** — Install (brew, else the download page), Start, and **Pull model** with download status.
 - **PostgreSQL (optional)** — Install & start, then **Create** the `jarvis_db` database + `jarvis_user` role. A blank new-role password generates a secure password and saves it to the Keychain. If the server requires authentication, supply its existing administrator name/password in the separate administrator fields; these credentials are used only during setup. Existing Jarvis role passwords are preserved and verified before setup reports success.
 - **Local helper (optional)** — Start the helper included with Jarvis. Voice models remain lazy-loaded; no Python installation is needed to use the packaged app.
-- **Spotify (optional)** — a two-step guide (create the API app with the right redirect, then paste keys in Connections).
+- **Spotify (optional)** — install and sign in to the desktop app; allow Automation and Accessibility for native controls.
 
 Nothing on this checklist blocks dictation: mic + Whisper are the only requirements, and the Whisper download starts automatically at launch. PostgreSQL setup preserves existing role passwords; use the existing password or configure an existing database in Connections.
 
@@ -405,7 +405,7 @@ After frontend changes, refresh an existing bundle without reinstalling backend 
 
 `--install` quits the running app, updates `/Applications/Jarvis.app`, verifies its binary ID/signature, and opens that copy. Omit it to refresh only `.build/Jarvis.app`. `swift build` alone updates the development executable, leaving both app bundles unchanged. About shows the source revision and binary ID so you can verify which build is running.
 
-Saved connection credentials stay encrypted in macOS Keychain. The signed Jarvis app handles Keychain access; its Python helper uses a private, authenticated local connection and cached values. Spotify requests do not read PostgreSQL credentials, and saved Setup edits invalidate the cache. Existing entries may ask you to authorize **Jarvis** during the first migration; choose **Always Allow** for a build you trust. Locked Keychains or a changed signing identity can still require authorization. Refreshing an app updates the Swift and Python code without reinstalling backend dependencies.
+Saved connection credentials stay encrypted in macOS Keychain. The signed Jarvis app handles Keychain access; its Python helper uses a private, authenticated local connection and cached values. Spotify never accesses backend credentials. Saved Setup edits invalidate the database credential cache. Existing entries may ask you to authorize **Jarvis** during the first migration; choose **Always Allow** for a build you trust. Locked Keychains or a changed signing identity can still require authorization. Refreshing an app updates the Swift and Python code without reinstalling backend dependencies.
 
 Crash diagnostics are enabled automatically. **About → Diagnostics** opens `~/Library/Application Support/Jarvis/logs/diagnostics` or copies a summary with the running binary ID and latest crash signature. Each session keeps `session.json`, durable `events.jsonl`, and `runtime.log` (Swift/Objective-C/Rust process output). On relaunch, Jarvis detects an unclean previous exit and copies available macOS `.ips` reports into `crashes/`; delayed reports are collected on subsequent checks. A forced kill can leave an unclean session without an Apple report. Recent sessions and reports are retained locally; runtime output rotates at 8 MB. Logs can include dictated text and commands, so review them before sharing.
 
@@ -466,7 +466,7 @@ bundle.** Replace the app and the friend's setup carries over:
 | Voice enrollment | `Application Support/Jarvis/embeddings.npy` + prefs | Yes |
 | Settings (toggles, backend mode, follow-up window, setup state) | `~/Library/Preferences/local.jarvis.macos.plist` | Yes (same bundle id) |
 | Microphone + Accessibility grants | macOS TCC, keyed to the signing identity | Yes — **sign every build with the same certificate**; an ad-hoc or different-cert build breaks the grants |
-| Spotify tokens / PG password | Keychain (`local.jarvis.credentials`) | Yes (same signing identity) |
+| PG password | Keychain (`local.jarvis.credentials`) | Yes (same signing identity) |
 | Downloaded intent model | `~/Library/Application Support/Jarvis/models/intent` | Yes; update independently in Setup |
 | Bundled intent fallback, STT core, app code | Inside the bundle | Replaced by the new build |
 
@@ -543,8 +543,8 @@ Jarvis explain quantum computing
 Requests require `X-Jarvis-Token`, read from the private
 `~/Library/Application Support/Jarvis/backend_auth.token` file (or `JARVIS_DATA_DIR`).
 The token rotates at each backend startup; app clients read it automatically.
-Run one backend worker. OAuth browser callbacks use expiring, single-use `state`
-instead of the header. `/spotify/token` reports presence/expiry, never token bytes.
+Run one backend worker. All routes require the header; legacy Spotify routes and
+unauthenticated OAuth callback exceptions have been removed.
 This protects API access from other OS users and unauthenticated browser requests;
 it does not isolate the app from processes that can read files as the same user.
 
@@ -556,11 +556,6 @@ it does not isolate the app from processes that can read files as the same user.
 | `/verify` | `POST` | Speaker verification → `{ similarity, confidence }` |
 | `/reset` | `POST` | Clear enrolled embeddings |
 | `/parse_intent` | `POST` | Learned intent router (t5-small int8 ONNX) → JSON plan |
-| `/spotify/login`, `/spotify/callback` | `GET` | Spotify OAuth |
-| `/spotify/status`, `/spotify/connect-url`, `/spotify/token` | `GET` | Connection state |
-| `/spotify/native-target` | `GET` | Read-only name/library lookup for native playback |
-| `/spotify/play`, `/pause`, `/next`, `/previous` | `POST` | Legacy Web API transport; unused by native commands |
-| `/spotify/play-song`, `/play-playlist`, `/play-liked` | `POST` | Play by name / liked songs |
 | `/postgres/status`, `/postgres/credentials`, `/postgres/test` | mixed | PostgreSQL connection management |
 
 ---
@@ -568,7 +563,7 @@ it does not isolate the app from processes that can read files as the same user.
 ## 🔒 Security & privacy
 
 - Speech (Whisper), the intent router, the planner LLM, and speaker verification
-  all run **locally**. Only Spotify's Web API needs the network.
+  all run **locally**. Spotify’s desktop app handles its own network connection.
 - **SafetyGuard** screens every plan pre-execution and each action: sudo and
   destructive operations, protected paths (system dirs), and install commands
   are blocked or previewed, never run.

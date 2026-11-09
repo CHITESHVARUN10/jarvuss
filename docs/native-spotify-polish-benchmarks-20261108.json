@@ -1,0 +1,66 @@
+{
+  "before": {
+    "bundle_bytes": 280567148,
+    "intent_median_ms": 98,
+    "model_median_ms": 97.0,
+    "plan_median_ms": 0,
+    "idle_rss_median_bytes": 122683392,
+    "loaded_rss_median_bytes": 843857920,
+    "loaded_rss_range_bytes": [
+      829538304,
+      1922662400
+    ],
+    "intent_per_launch_ms": [
+      98,
+      95,
+      98
+    ],
+    "files": [
+      "logs/runtime-installed-uncached-20261108.json",
+      "logs/runtime-installed-uncached-20261108-2.json",
+      "logs/runtime-installed-uncached-20261108-3.json"
+    ]
+  },
+  "after": {
+    "bundle_bytes": 280393532,
+    "intent_median_ms": 90,
+    "model_median_ms": 90.0,
+    "plan_median_ms": 0,
+    "idle_rss_median_bytes": 116178944,
+    "loaded_rss_median_bytes": 710098944,
+    "loaded_rss_range_bytes": [
+      683524096,
+      733790208
+    ],
+    "intent_per_launch_ms": [
+      90,
+      91,
+      90
+    ],
+    "files": [
+      "logs/runtime-final-20261108-1.json",
+      "logs/runtime-final-20261108-2.json",
+      "logs/runtime-final-20261108-3.json"
+    ]
+  },
+  "historical_python_bundle_bytes": 1300369374,
+  "plan_changes": 0,
+  "measured_requests_per_build": 360,
+  "unique_scenarios": 12,
+  "model_files_equal": 13,
+  "live_spotify_passed": 6,
+  "live_spotify_total": 6,
+  "old_identity": {
+    "JarvisBuildRevision": "125c1990481f+modified",
+    "JarvisBuildTimestamp": "2026-11-08T09:17:14Z",
+    "JarvisExecutableUUID": "E371984B-B2F0-3948-A40A-393FD4EEEBEF"
+  },
+  "new_identity": {
+    "JarvisBuildRevision": "9c74339494e7+modified",
+    "JarvisBuildTimestamp": "2026-11-08T14:05:43Z",
+    "JarvisExecutableUUID": "F553D6DD-AA43-3DFD-AA61-AE922B7C6F62"
+  },
+  "method": "3 launches/build; 12 scenarios x 5 rounds each intent and plan; cache disabled; same model files. App-reported integer milliseconds. RSS snapshots, not private/peak RAM. Historical Python size is earlier archived measurement, not a new run.",
+  "installed_uuid": "F553D6DD-AA43-3DFD-AA61-AE922B7C6F62",
+  "installation_signature_verified": true
+}

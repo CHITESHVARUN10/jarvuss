@@ -22,7 +22,7 @@ struct PostgresStatus {
 }
 
 /// Backend Postgres endpoints: GET /postgres/status, POST /postgres/credentials,
-/// POST /postgres/test. Mirrors the SpotifyClient shape.
+/// POST /postgres/test. Uses the authenticated local helper.
 final class PostgresClient {
     private let baseURL: URL
 

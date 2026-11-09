@@ -1,5 +1,18 @@
 //! Playlist/shuffle interpretation only; playback is delegated to the native adapter.
 use crate::text_policy::*;
+
+/// Preserve an explicitly named playlist instead of asking a generative model
+/// to reproduce its title. Compound commands stay on the full planner.
+#[uniffi::export]
+pub fn spotify_playlist_name(raw: String) -> Option<String> {
+    if has(r"(?i)\b(?:and|then|also)\s+(?:open|close|play|pause|set|search|find|launch|quit)\b", &raw) {
+        return None;
+    }
+    let caps = rx(r#"(?i)^play\s+(?:my\s+|the\s+)?(?:playlist\s+(?:(?:called|named)\s+)?(.+?)|(.+?)\s+playlist)(?:\s+(?:in|on)\s+spotify)?[.!?]*$"#)
+        .captures(raw.trim()).ok()??;
+    let name = caps.get(1).or_else(|| caps.get(2))?.as_str().trim().trim_matches('"').trim();
+    if name.is_empty() { None } else { Some(name.to_owned()) }
+}
 #[derive(Clone, Debug, PartialEq, uniffi::Enum)]
 pub enum ShuffleTarget {
     Current,

@@ -1,7 +1,7 @@
 import SwiftUI
 import AppKit
 
-/// Connections pane — the headline feature. Spotify / Ollama / PostgreSQL,
+/// Native Spotify, local Ollama, and PostgreSQL connection status.
 /// data-driven so future connections slot in as one row + one detail view.
 struct ConnectionsPane: View {
     @ObservedObject var appState: AppState
@@ -77,13 +77,7 @@ struct ConnectionsPane: View {
         switch kind {
         case .spotify:
             if appState.spotifyLinked { return AnyView(JChip(text: "Live", kind: .ok)) }
-            if appState.spotifyStatusText == "Backend unreachable" {
-                return AnyView(JChip(text: "Offline", kind: .neutral))
-            }
-            if appState.spotifyStatusText == "Keys missing" {
-                return AnyView(JChip(text: "Setup", kind: .neutral))
-            }
-            return AnyView(JChip(text: "Expired", kind: .warn))
+            return AnyView(JChip(text: "Install Spotify", kind: .warn))
         case .ollama:
             return AnyView(JChip(
                 text: appState.ollamaReachable ? "Ready" : "Offline",
@@ -144,94 +138,13 @@ enum ConnectionKind: String, CaseIterable, Identifiable {
 
 private struct SpotifyDetail: View {
     @ObservedObject var appState: AppState
-    @State private var clientID = ""
-    @State private var clientSecret = ""
-    @State private var isSaving = false
-    @State private var notice: String?
-
-    private var refreshButton: some View {
-        JRefreshButton(help: "Refresh Spotify status") {
-            Task { await appState.refreshSpotifyStatus() }
-        }
-    }
-
     var body: some View {
         JCard {
-            JCardHead(icon: "music.note", title: "Spotify", accessory: refreshButton)
-
-            Text("Paste your Spotify Developer keys, Save, then Connect to authorize. The client secret is stored in your macOS Keychain.")
-                .font(JType.rowSub)
-                .foregroundStyle(JColor.ink2)
-                .fixedSize(horizontal: false, vertical: true)
-
-            SecureField("Client ID", text: $clientID)
-                .jField()
-                .padding(.top, 9)
-
-            SecureField("Client Secret", text: $clientSecret)
-                .jField()
-                .padding(.top, 8)
-
-            if let notice {
-                Text(notice)
-                    .font(JType.rowSub)
-                    .foregroundStyle(JColor.ink2)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, 8)
-            }
-
-            HStack(spacing: 8) {
-                Button {
-                    Task { await save() }
-                } label: {
-                    Text(isSaving ? "Saving…" : "Save keys")
-                }
-                .disabled(isSaving || clientID.isEmpty || clientSecret.isEmpty)
-                .jButton(intent: .primary)
-
-                Button {
-                    Task { await connect() }
-                } label: {
-                    Text("Connect")
-                }
+            JCardHead(icon: "music.note", title: "Spotify")
+            Text("Install Spotify and sign in. Playback uses native macOS controls. Song and library lookup uses Spotify’s local interface and requires Accessibility permission. No API keys or browser authorization are needed.")
+                .font(JType.rowSub).foregroundStyle(JColor.ink2)
+            Button("Open Spotify") { NSWorkspace.shared.open(URL(string: "spotify:")!) }
                 .jButton()
-            }
-            .padding(.top, 9)
-        }
-    }
-
-    private func save() async {
-        isSaving = true
-        notice = nil
-        do {
-            guard await BackendServiceManager.ensureRunningForFeature() else {
-                notice = "Backend unavailable or turned off."
-                isSaving = false
-                return
-            }
-            try await appState.spotifyClient.saveCredentials(clientID: clientID, clientSecret: clientSecret)
-            clientID = ""
-            clientSecret = ""
-            await appState.refreshSpotifyStatus()
-            notice = "Keys saved. Hit Connect to authorize in your browser."
-        } catch {
-            notice = error.localizedDescription
-        }
-        isSaving = false
-    }
-
-    private func connect() async {
-        notice = nil
-        do {
-            guard await BackendServiceManager.ensureRunningForFeature() else {
-                notice = "Backend unavailable or turned off."
-                return
-            }
-            let url = try await appState.spotifyClient.connectURL()
-            NSWorkspace.shared.open(url)
-            notice = "Browser opened — approve Spotify access, then hit refresh."
-        } catch {
-            notice = error.localizedDescription
         }
     }
 }

@@ -128,26 +128,12 @@ class NativeBackendTests(unittest.TestCase):
         self.assertNotIn("fake-password", json.dumps(result))
         self.assertNotIn("fake-password", (self.data / "connection_settings.json").read_text())
 
-    def test_spotify_contract_state_and_secret_reset(self):
-        self.assertEqual(self.request("POST", "/spotify/credentials", {"client_id": "id", "client_secret": "synthetic"})[0], 200)
-        status, result = self.request("GET", "/spotify/status")
-        self.assertEqual(status, 200)
-        self.assertTrue(result["client_secret_present"])
-        self.assertFalse(result["access_token_present"])
-        self.assertNotIn("synthetic", json.dumps(result))
-        status, result = self.request("GET", "/spotify/connect-url")
-        self.assertEqual(status, 200)
-        from urllib.parse import urlparse, parse_qs
-        query = parse_qs(urlparse(result["url"]).query)
-        self.assertEqual(query["client_id"], ["id"])
-        # Missing code consumes state without ever contacting Spotify.
-        state = query["state"][0]
-        status, result = self.request("GET", "/spotify/callback?state=" + state, authenticated=False)
-        self.assertEqual(status, 400)
-        self.assertIn("missing code", result["detail"])
-        status, result = self.request("GET", "/callback?state=" + state, authenticated=False)
-        self.assertEqual(status, 400)
-        self.assertIn("Invalid or expired", result["detail"])
+    def test_removed_spotify_api_has_no_routes_or_unauthenticated_callbacks(self):
+        for path in ["/spotify/status", "/spotify/token", "/spotify/connect-url", "/spotify/native-target", "/spotify/callback", "/callback"]:
+            self.assertEqual(self.request("GET", path)[0], 404)
+            self.assertEqual(self.request("GET", path, authenticated=False)[0], 401)
+        self.assertEqual(self.request("POST", "/spotify/credentials", {"client_id": "unused"})[0], 404)
+        self.assertEqual(self.request("POST", "/spotify/play", {})[0], 404)
 
     def test_native_voice_does_not_rotate_public_token(self):
         status, result = self.request("GET", "/stats")

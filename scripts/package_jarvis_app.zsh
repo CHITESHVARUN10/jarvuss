@@ -47,8 +47,8 @@ fi
 
 swift build -c release --build-system native
 
-# The helper is a separate executable so existing authenticated clients and
-# OAuth redirect URLs keep their contract during the native transition.
+# The helper remains a separate authenticated process for voice verification
+# and database connection services. Spotify uses only native macOS controls.
 cargo build --locked --release --manifest-path "$ROOT_DIR/rust-core/Cargo.toml" --bin jarvis-backend
 
 NEW_BIN="$BUILD_DIR/jarvis"

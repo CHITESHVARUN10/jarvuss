@@ -3,29 +3,9 @@ import Foundation
 
 extension AppState {
     func refreshSpotifyStatus() async {
-        // Installed-app availability is independent of optional Web API lookup.
-        // Automation permission is checked by the first actual player command.
         spotifyNativeAvailable = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.spotify.client") != nil
-        BackendServiceManager.noteActivity()
-        guard await BackendServiceManager.ensureRunningForFeature() else {
-            spotifyLinked = false
-            spotifyStatusText = "Backend unavailable"
-            appendLog("[Spotify] Status check skipped: backend unavailable/off.")
-            return
-        }
-        do {
-            let st = try await spotifyClient.status()
-            spotifyExpired = st.expired
-            spotifyLinked = st.clientPresent && st.accessPresent && !st.expired
-            spotifyStatusText = !st.clientPresent ? "Keys missing"
-                : st.expired ? "Token expired — reconnect"
-                : !st.accessPresent ? "Library lookup not connected" : "Library lookup connected"
-            appendLog("[Spotify] Status: \(spotifyStatusText)")
-        } catch {
-            spotifyLinked = false
-            spotifyStatusText = "Backend unreachable"
-            appendLog("[Spotify] Status check failed: \(error.localizedDescription)")
-        }
+        spotifyLinked = spotifyNativeAvailable
+        spotifyStatusText = spotifyNativeAvailable ? "Native Spotify available" : "Install Spotify"
     }
 
     // MARK: - Connectors (PostgreSQL)

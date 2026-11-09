@@ -6,6 +6,34 @@ import XCTest
 /// a small model's turn-marker echoes are tolerated and stripped, while
 /// answer-shaped or drifted output still falls back to the rules text.
 final class DictationPolisherTests: XCTestCase {
+    func testRewrittenHandoffPromptFallsBackToRulesInsteadOfPastingNewIntent() async {
+        let rules = TranscriptFormatter.format("I hope you can read the handoff document. It explains what is fixed and what needs work.")
+        let rewritten = "I hope you can read the handoff document. I'm eager for your feedback and help with fixes."
+        XCTAssertNotNil(DictationPolisher.sanitize(rewritten, referenceText: rules.text, maxDrift: 0.18).text,
+                        "This rewrite passed the old length-only guard")
+        let result = await DictationPolisher.polish(rulesOutput: rules, directive: nil, generate: { _, _ in
+            rewritten
+        })
+        XCTAssertEqual(result.outcome, .rejected)
+        XCTAssertEqual(result.text, rules.text)
+    }
+
+    func testPunctuationOnlyPolishStillAccepted() async {
+        let rules = TranscriptFormatter.format("can you read the handoff document")
+        let result = await DictationPolisher.polish(rulesOutput: rules, directive: nil, generate: { _, _ in
+            "Can you read the handoff document?"
+        })
+        XCTAssertEqual(result.outcome, .accepted)
+        XCTAssertEqual(result.text, "Can you read the handoff document?")
+    }
+    func testContentGuardRejectsInventedFeedbackAndChangedNegation() {
+        XCTAssertFalse(corePolishPreservesContent(reference: "Read the handoff document.",
+            candidate: "Read the handoff document. I am eager for your feedback.", directive: nil))
+        XCTAssertFalse(corePolishPreservesContent(reference: "Do not change this project.",
+            candidate: "Do change this project.", directive: nil))
+        XCTAssertTrue(corePolishPreservesContent(reference: "can you read the handoff document",
+            candidate: "Can you read the handoff document?", directive: nil))
+    }
 
     private static let reference = "We should push the release to Wednesday."
 

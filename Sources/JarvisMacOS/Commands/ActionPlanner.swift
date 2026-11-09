@@ -125,6 +125,11 @@ final class ActionPlanner {
             logPlanEvent(branch: "rule", text: cleaned, requestID: requestID, actions: actions)
             return actions
         }
+        if let name = coreSpotifyPlaylistName(raw: cleaned) {
+            let actions = [PlannedAction.mediaControl(.playPlaylist(name))]
+            logPlanEvent(branch: "rule", text: cleaned, requestID: requestID, actions: actions)
+            return actions
+        }
 
         // 2. File-exploration questions ("how many folders do I have") are
         // answered from the filesystem by pure Swift rules. They must never

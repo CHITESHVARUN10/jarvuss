@@ -14,12 +14,7 @@ use std::{
     time::Duration,
 };
 
-pub const SECRETS: &[&str] = &[
-    "PGPASSWORD",
-    "SPOTIFY_CLIENT_SECRET",
-    "SPOTIFY_ACCESS_TOKEN",
-    "SPOTIFY_REFRESH_TOKEN",
-];
+pub const SECRETS: &[&str] = &["PGPASSWORD"];
 pub trait Credentials: Send + Sync {
     fn get(&self, keys: &[&str]) -> Result<HashMap<String, Option<String>>, String>;
     fn set(&self, values: &HashMap<String, String>) -> Result<(), String>;
@@ -97,7 +92,7 @@ impl Credentials for Broker {
         Ok(result)
     }
     fn set(&self, values: &HashMap<String, String>) -> Result<(), String> {
-        if !values.keys().all(|k| SECRETS.contains(&k.as_str())) {
+        if !values.keys().all(|k| SECRETS.contains(&k.as_str()) && !k.starts_with("SPOTIFY_")) {
             return Err("Unsupported credential".into());
         }
         self.request(json!({"operation":"set","values":values}))?;
@@ -159,11 +154,12 @@ impl<C: Credentials> Config<C> {
             &fs::read(path).map_err(|_| "Could not read connection settings")?,
         )
         .map_err(|_| "Invalid Jarvis connection settings")?;
-        values.retain(|k, _| !SECRETS.contains(&k.as_str()));
+        values.retain(|k, _| !SECRETS.contains(&k.as_str()) && !k.starts_with("SPOTIFY_"));
         Ok(values)
     }
     pub fn load(&self, keys: &[&str]) -> Result<HashMap<String, String>, String> {
         let mut values = self.defaults.clone();
+        values.retain(|k, _| !k.starts_with("SPOTIFY_"));
         values.extend(self.settings()?);
         let fetched = self.credentials.get(keys)?;
         for key in keys {
@@ -193,7 +189,7 @@ impl<C: Credentials> Config<C> {
         let mut settings = self.settings()?;
         let secrets = updates
             .iter()
-            .filter(|(k, _)| SECRETS.contains(&k.as_str()))
+            .filter(|(k, _)| SECRETS.contains(&k.as_str()) && !k.starts_with("SPOTIFY_"))
             .map(|(k, v)| (k.clone(), v.clone()))
             .collect::<HashMap<_, _>>();
         if !secrets.is_empty() {
@@ -202,7 +198,7 @@ impl<C: Credentials> Config<C> {
         settings.extend(
             updates
                 .into_iter()
-                .filter(|(k, _)| !SECRETS.contains(&k.as_str())),
+                .filter(|(k, _)| !SECRETS.contains(&k.as_str()) && !k.starts_with("SPOTIFY_")),
         );
         let mut temp = tempfile::NamedTempFile::new_in(&self.directory)
             .map_err(|_| "Could not save settings")?;
@@ -258,6 +254,7 @@ pub mod tests {
             .unwrap();
         let raw = fs::read_to_string(dir.path().join("connection_settings.json")).unwrap();
         assert!(!raw.contains("synthetic secret"));
+        assert!(!raw.contains("SPOTIFY_"));
         let v = config.load(&["PGPASSWORD"]).unwrap();
         assert_eq!(v["PGHOST"], "localhost");
         assert_eq!(v["PGPASSWORD"], "synthetic secret");

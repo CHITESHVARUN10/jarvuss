@@ -2,6 +2,16 @@ import XCTest
 @testable import JarvisMacOS
 
 final class SpotifyShuffleTests: XCTestCase {
+    func testNamedPlaylistRetainsTheRequestedTitleWithoutModelRewriting() async {
+        let planner = ActionPlanner(ollamaClient: NoShuffleLLM(), intentModelRouter: NoShuffleModel(), intentLog: IntentRouterLog(enabled: false))
+        for (command, name) in [("play Today's Top Hits playlist", "Today's Top Hits"),
+                                ("play playlist called Botanical Hours", "Botanical Hours"),
+                                ("play my Rock and Roll playlist", "Rock and Roll")] {
+            let plan = await planner.plan(from: command)
+            XCTAssertEqual(plan, [.mediaControl(.playPlaylist(name))])
+        }
+        XCTAssertNil(coreSpotifyPlaylistName(raw: "play my Gym playlist and open Safari"))
+    }
     func testExplicitShuffleOnAndOffPreservePlaylistName() {
         XCTAssertEqual(SpotifyShuffleParser.parse("play the Botanical Hours playlist with shuffle on"), .playPlaylistWithShuffle(name: "Botanical Hours", enabled: true))
         XCTAssertEqual(SpotifyShuffleParser.parse("play the Botanical Hours playlist with shuffle off"), .playPlaylistWithShuffle(name: "Botanical Hours", enabled: false))

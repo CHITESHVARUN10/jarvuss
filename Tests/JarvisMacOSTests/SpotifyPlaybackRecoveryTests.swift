@@ -15,14 +15,6 @@ final class SpotifyPlaybackRecoveryTests: XCTestCase {
         }
     }
 
-    func testSpotifyFailuresHaveReadableRecoveryInstructions() {
-        let noDevice = ActionExecutor.spotifyFailureMessage(status: 400, message: #"{"detail":"No active Spotify device"}"#)
-        XCTAssertTrue(noDevice.contains("device menu"))
-        XCTAssertFalse(noDevice.contains("{\""))
-        XCTAssertTrue(ActionExecutor.spotifyFailureMessage(status: 401, message: "unauthorized").contains("connect again"))
-        XCTAssertTrue(ActionExecutor.spotifyFailureMessage(status: 403, message: "Premium required").contains("Premium"))
-    }
-
     @MainActor
     func testRepeatedFailuresPublishDistinctMessagesAndRetainFailureState() {
         let action = PlannedAction.mediaControl(.play)

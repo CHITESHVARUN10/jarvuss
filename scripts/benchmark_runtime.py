@@ -26,6 +26,7 @@ import sys
 import tempfile
 import time
 import urllib.request
+import wave
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -176,13 +177,14 @@ class _NullHandle:
         pass
 
 
-def launch_app(app: Path, data_dir: Path, log: Path, mode: str = "direct"):
+def launch_app(app: Path, data_dir: Path, log: Path, mode: str = "direct", intent_cache: str = "off"):
     session = data_dir / "testing/session.json"
     session.unlink(missing_ok=True)
     if mode == "open":
-        subprocess.run(["launchctl", "setenv", "JARVIS_DATA_DIR", str(data_dir)], check=False)
-        subprocess.run(["launchctl", "setenv", "JARVIS_RUST_PIPELINE", "1"], check=False)
-        subprocess.run(["open", "-n", str(app), "--args", "--test-mode"], check=True)
+        subprocess.run(["open", "-n", "--env", f"JARVIS_DATA_DIR={data_dir}",
+                        "--env", "JARVIS_RUST_PIPELINE=1", "--env",
+                        f"JARVIS_INTENT_CACHE={'1' if intent_cache == 'on' else '0'}",
+                        str(app), "--args", "--test-mode"], check=True)
         deadline = time.monotonic() + 45
         while time.monotonic() < deadline:
             if session.exists():
@@ -196,7 +198,8 @@ def launch_app(app: Path, data_dir: Path, log: Path, mode: str = "direct"):
         raise RuntimeError("app did not expose its test session")
 
     executable = app / "Contents/MacOS/Jarvis"
-    env = dict(os.environ, JARVIS_DATA_DIR=str(data_dir), JARVIS_RUST_PIPELINE="1")
+    env = dict(os.environ, JARVIS_DATA_DIR=str(data_dir), JARVIS_RUST_PIPELINE="1",
+               JARVIS_INTENT_CACHE="1" if intent_cache == "on" else "0")
     handle = log.open("w")
     process = subprocess.Popen([str(executable), "--test-mode"], env=env,
                                stdout=handle, stderr=subprocess.STDOUT)
@@ -291,6 +294,8 @@ def measure_whisper() -> dict:
                     "Jarvis open Chrome and set the volume to forty percent."], check=True)
     subprocess.run(["afconvert", "-f", "WAVE", "-d", "LEI16@16000", "-c", "1",
                     str(aiff), str(wav)], check=True)
+    with wave.open(str(wav), "rb") as audio_file:
+        audio_seconds = audio_file.getnframes() / audio_file.getframerate()
     executable = ROOT / "stt-core/target/release/examples/transcribe_file"
     subprocess.run(["cargo", "build", "--release", "--example", "transcribe_file",
                     "--manifest-path", str(ROOT / "stt-core/Cargo.toml")], check=True)
@@ -311,7 +316,7 @@ def measure_whisper() -> dict:
         "wall_ms": round(wall, 1),
         "load_ms": int(values["LOAD_MS"]) if "LOAD_MS" in values else None,
         "transcribe_ms": int(values["TRANSCRIBE_MS"]) if "TRANSCRIBE_MS" in values else None,
-        "audio_seconds": round(51542 / 16000, 2),
+        "audio_seconds": round(audio_seconds, 3),
         "max_rss_bytes": int(maximum.group(1)) if maximum else None,
         "peak_footprint_bytes": int(peak.group(1)) if peak else None,
         "transcript": values.get("TRANSCRIPT", "").strip("'"),
@@ -412,6 +417,7 @@ def main() -> int:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--iterations", type=int, default=3)
     parser.add_argument("--launch-mode", choices=["direct", "open"], default="direct")
+    parser.add_argument("--intent-cache", choices=["off", "on"], default="off")
     parser.add_argument("--whisper", action="store_true")
     parser.add_argument("--ollama", action="store_true")
     parser.add_argument("--ollama-models", default="qwen2.5:1.5b-instruct")
@@ -423,6 +429,7 @@ def main() -> int:
     process = None
     handle = None
     report = {
+        "intent_cache": args.intent_cache,
         "label": args.label,
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "app": str(args.app),
@@ -448,7 +455,7 @@ def main() -> int:
         },
     }
     try:
-        process, session, handle = launch_app(args.app, data_dir, log, args.launch_mode)
+        process, session, handle = launch_app(args.app, data_dir, log, args.launch_mode, args.intent_cache)
         time.sleep(4)
         report["rss_idle"] = {"app": sample_rss(process.pid), "children": children_rss(process.pid)}
         runner = Runner(session)

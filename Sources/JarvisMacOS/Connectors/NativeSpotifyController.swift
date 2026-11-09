@@ -4,8 +4,8 @@ import Foundation
 /// Player writes go to Spotify's local scripting interface, never its Web API.
 struct NativeSpotifyController {
     typealias Runner = ([String]) async throws -> ProcessOutput
-    var resolve: (String, String, Bool) async throws -> SpotifyClient.NativeTarget = {
-        try await SpotifyClient().nativeTarget(kind: $0, name: $1, shuffle: $2)
+    var resolve: (String, String, Bool) async throws -> NativeSpotifyLookup.NativeTarget = {
+        try await NativeSpotifyLookup.nativeTarget(kind: $0, name: $1, shuffle: $2)
     }
     var run: Runner = { arguments in
         let process = Process()
@@ -37,7 +37,7 @@ struct NativeSpotifyController {
             case .playLikedSongs, .playLikedWithShuffle:
                 if case .playLikedWithShuffle(let enabled) = action { shuffle = String(enabled) }
                 let target = try await resolve("liked", "", shuffle == "true")
-                uri = target.uri; expectedTrack = target.trackURI ?? ""; command = "target"
+                uri = target.uri; expectedTrack = target.trackURI ?? ""; command = "liked"
             }
             // All text is passed as argv; names/URIs never become script source.
             if command == "target" {
@@ -46,7 +46,7 @@ struct NativeSpotifyController {
                 }
             }
             try Task.checkCancellation()
-            if command == "play" || command == "target" { try await prepare() }
+            if command == "play" || command == "target" || command == "liked" { try await prepare() }
             try Task.checkCancellation()
             let output = try await run([command, uri, expectedTrack, shuffle])
             guard output.status == 0, output.stdout == "confirmed" else {
@@ -66,7 +66,7 @@ struct NativeSpotifyController {
 
     @MainActor private static func launchSpotify() async throws {
         guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.spotify.client") else {
-            throw SpotifyClientError.saveFailed("Install Spotify on this Mac to control playback.")
+            throw NativeSpotifyError.unavailable("Install Spotify on this Mac to control playback.")
         }
         if NSRunningApplication.runningApplications(withBundleIdentifier: "com.spotify.client").isEmpty {
             let configuration = NSWorkspace.OpenConfiguration()
@@ -87,7 +87,10 @@ struct NativeSpotifyController {
             try
                 set oldTrack to id of current track
             end try
-            if operation is "play" then
+            if operation is "liked" then
+                -- Lookup pressed the specifically labelled Liked Songs control.
+                -- Only confirm it; never resume an unrelated previous context.
+            else if operation is "play" then
                 play
             else if operation is "target" then
                 if expectedTrack is not "" and targetURI is not expectedTrack then
@@ -122,7 +125,7 @@ struct NativeSpotifyController {
                     if expectedTrack is not "" then set ready to ready and currentID is expectedTrack
                 end if
                 if ready then
-                    if (operation is "play" or operation is "target") and sound volume is 0 then error "Spotify volume is zero. Raise its volume and try again."
+                    if (operation is "play" or operation is "target" or operation is "liked") and sound volume is 0 then error "Spotify volume is zero. Raise its volume and try again."
                     if shuffleMode is not "keep" then
                         if not shuffling enabled then error "Shuffle is unavailable in this Spotify context."
                         set shuffling to (shuffleMode is "true")

@@ -3,7 +3,7 @@ import XCTest
 
 final class CredentialBrokerTests: XCTestCase {
     func testAuthenticatedRequestsAreScopedCachedAndInvalidatedBySettingsEdits() throws {
-        var stored = ["SPOTIFY_CLIENT_SECRET": "synthetic-value"]
+        var stored = ["PGPASSWORD": "synthetic-value"]
         var reads: [String] = []
         var revision = "one"
         let broker = CredentialBroker(readSecret: { reads.append($0); return stored[$0] },
@@ -18,19 +18,20 @@ final class CredentialBrokerTests: XCTestCase {
         XCTAssertFalse(try XCTUnwrap(request(["operation": "get", "keys": ["PGPASSWORD"]], authenticated: false)["ok"] as? Bool))
         XCTAssertFalse(try XCTUnwrap(request(["operation": "get", "keys": ["arbitrary-key"]])["ok"] as? Bool))
         XCTAssertTrue(reads.isEmpty)
-        let query: [String: Any] = ["operation": "get", "keys": ["SPOTIFY_CLIENT_SECRET", "SPOTIFY_ACCESS_TOKEN"]]
+        XCTAssertFalse(try XCTUnwrap(request(["operation": "get", "keys": ["SPOTIFY_ACCESS_TOKEN"]])["ok"] as? Bool))
+        let query: [String: Any] = ["operation": "get", "keys": ["PGPASSWORD"]]
         for _ in 0..<6 {
             let response = try request(query)
-            XCTAssertEqual((response["values"] as? [String: Any])?["SPOTIFY_CLIENT_SECRET"] as? String, "synthetic-value")
+            XCTAssertEqual((response["values"] as? [String: Any])?["PGPASSWORD"] as? String, "synthetic-value")
         }
-        XCTAssertEqual(reads.sorted(), ["SPOTIFY_ACCESS_TOKEN", "SPOTIFY_CLIENT_SECRET"])
-        stored["SPOTIFY_CLIENT_SECRET"] = "updated-by-setup"
+        XCTAssertEqual(reads.sorted(), ["PGPASSWORD"])
+        stored["PGPASSWORD"] = "updated-by-setup"
         revision = "two"
-        XCTAssertEqual((try request(query)["values"] as? [String: Any])?["SPOTIFY_CLIENT_SECRET"] as? String, "updated-by-setup")
-        _ = try request(["operation": "set", "values": ["SPOTIFY_ACCESS_TOKEN": "refreshed"]])
-        XCTAssertEqual(stored["SPOTIFY_ACCESS_TOKEN"], "refreshed")
-        _ = try request(["operation": "set", "values": ["SPOTIFY_ACCESS_TOKEN": ""]])
-        XCTAssertEqual(stored["SPOTIFY_ACCESS_TOKEN"], "", "Token clearing must not mean keep the previous token")
+        XCTAssertEqual((try request(query)["values"] as? [String: Any])?["PGPASSWORD"] as? String, "updated-by-setup")
+        _ = try request(["operation": "set", "values": ["PGPASSWORD": "refreshed"]])
+        XCTAssertEqual(stored["PGPASSWORD"], "refreshed")
+        _ = try request(["operation": "set", "values": ["PGPASSWORD": ""]])
+        XCTAssertEqual(stored["PGPASSWORD"], "", "Explicit clearing must not mean keep the previous token")
         let permissions = try FileManager.default.attributesOfItem(atPath: env["JARVIS_CREDENTIAL_SOCKET"]!)
         XCTAssertEqual((permissions[.posixPermissions] as? NSNumber)?.intValue, 0o600)
         XCTAssertEqual(env["JARVIS_CREDENTIAL_OWNER_PID"], String(getpid()))
@@ -45,7 +46,7 @@ final class CredentialBrokerTests: XCTestCase {
         }, writeSecret: { _, _ in XCTFail("Denial must not overwrite credentials") }, settingsRevision: { revision })
         let env = try broker.environment()
         defer { broker.stop() }
-        let query = try JSONSerialization.data(withJSONObject: ["token": env["JARVIS_CREDENTIAL_TOKEN"]!, "operation": "get", "keys": ["SPOTIFY_CLIENT_SECRET"]])
+        let query = try JSONSerialization.data(withJSONObject: ["token": env["JARVIS_CREDENTIAL_TOKEN"]!, "operation": "get", "keys": ["PGPASSWORD"]])
         for _ in 0..<4 {
             let reply = broker.handle(query)
             XCTAssertFalse(String(decoding: reply, as: UTF8.self).contains("private synthetic"))
@@ -55,8 +56,8 @@ final class CredentialBrokerTests: XCTestCase {
         _ = broker.handle(query)
         XCTAssertEqual(reads, 2)
     }
-    func testPythonHelperUsesTheNativeSocketForReadsAndRefreshedTokenWrites() async throws {
-        var stored = ["SPOTIFY_CLIENT_SECRET": "synthetic-client-secret"]
+    func testPythonHelperUsesTheNativeSocketForReadsAndCredentialWrites() async throws {
+        var stored = ["PGPASSWORD": "synthetic-client-secret"]
         let broker = CredentialBroker(readSecret: { stored[$0] }, writeSecret: { stored[$0] = $1 }, settingsRevision: { "fixed" })
         let environment = try broker.environment()
         defer { broker.stop() }
@@ -73,9 +74,9 @@ final class CredentialBrokerTests: XCTestCase {
             raise AssertionError('Python must never open Keychain')
         config.Keychain = forbidden
         store = config.RuntimeConfig()
-        assert store.load({}, secret_keys={'SPOTIFY_CLIENT_SECRET'})['SPOTIFY_CLIENT_SECRET'] == 'synthetic-client-secret'
-        store.save({'SPOTIFY_ACCESS_TOKEN': 'synthetic-refreshed', 'SPOTIFY_ACCESS_TOKEN_EXPIRES_AT': '123'})
-        assert store.load({}, secret_keys={'SPOTIFY_ACCESS_TOKEN'})['SPOTIFY_ACCESS_TOKEN'] == 'synthetic-refreshed'
+        assert store.load({}, secret_keys={'PGPASSWORD'})['PGPASSWORD'] == 'synthetic-client-secret'
+        store.save({'PGPASSWORD': 'synthetic-refreshed', 'PGPORT': '5432'})
+        assert store.load({}, secret_keys={'PGPASSWORD'})['PGPASSWORD'] == 'synthetic-refreshed'
         bridge = config.AppCredentialStore(os.environ['JARVIS_CREDENTIAL_SOCKET'], 'wrong-token')
         try:
             bridge.get('PGPASSWORD')
@@ -90,7 +91,7 @@ final class CredentialBrokerTests: XCTestCase {
         process.environment = env
         let result = try await process.runCapturingOutputAsync(timeout: 15)
         XCTAssertEqual(result.status, 0, result.stderr)
-        XCTAssertEqual(stored["SPOTIFY_ACCESS_TOKEN"], "synthetic-refreshed")
+        XCTAssertEqual(stored["PGPASSWORD"], "synthetic-refreshed")
         let publicSettings = try String(contentsOf: directory.appendingPathComponent("connection_settings.json"), encoding: .utf8)
         XCTAssertFalse(publicSettings.contains("synthetic-"))
     }

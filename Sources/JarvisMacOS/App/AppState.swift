@@ -108,11 +108,9 @@ final class AppState: ObservableObject {
     @Published var backendStatus: String = "Not started"
     @Published var backendStartupError: String?
     // MARK: - Connectors (Spotify)
-    /// Presence-only Spotify link state — never holds secrets. Refreshed on
-    /// demand from GET /spotify/status.
+    /// Presence-only state for the installed native Spotify app; never holds secrets.
     @Published var spotifyNativeAvailable: Bool = false
     @Published var spotifyLinked: Bool = false
-    @Published var spotifyExpired: Bool = true
     @Published var spotifyStatusText: String = "Not connected"
     // MARK: - Connectors (PostgreSQL)
     /// True once GET /postgres/status reports a configured backend PG.
@@ -190,7 +188,6 @@ final class AppState: ObservableObject {
     let actionExecutor: PlanExecuting
     private let automationStore = AutomationStore()
     let voiceAuthClient: SpeakerVerifying
-    let spotifyClient = SpotifyClient()
     let postgresClient = PostgresClient()
     let actionPlanner: ActionPlanning
     let statsRecorder: StatsRecorder

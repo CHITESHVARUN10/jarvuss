@@ -14,7 +14,7 @@ enum ConnectionSettingsStore {
 
     /// Keys routed to the Keychain instead of the JSON file.
     static let secretKeys: Set<String> = [
-        "PGPASSWORD", "SPOTIFY_CLIENT_SECRET", "SPOTIFY_ACCESS_TOKEN", "SPOTIFY_REFRESH_TOKEN",
+        "PGPASSWORD",
     ]
 
     /// Persists a merged edit: non-secrets into the JSON store, secrets into
@@ -36,8 +36,8 @@ enum ConnectionSettingsStore {
             // Never silently replace a damaged settings file and lose other connections.
             existing = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: settingsURL))
         }
-        existing = existing.filter { !secretKeys.contains($0.key) }
-        for (key, value) in values {
+        existing = existing.filter { !secretKeys.contains($0.key) && !$0.key.hasPrefix("SPOTIFY_") }
+        for (key, value) in values where !key.hasPrefix("SPOTIFY_") {
             if secretKeys.contains(key) {
                 if !value.isEmpty { try keychainSet(account: key, value: value) }
             } else {
@@ -55,8 +55,7 @@ enum ConnectionSettingsStore {
     /// Import through the signed app, never the generic Python interpreter.
     /// Existing persisted settings/credentials take precedence over a .env.
     static func importLegacy(_ values: [String: String]) throws {
-        let allowed = secretKeys.union(["PGHOST", "PGPORT", "PGDATABASE", "PGUSER", "SPOTIFY_CLIENT_ID",
-                                        "SPOTIFY_REDIRECT_URI", "SPOTIFY_ACCESS_TOKEN_EXPIRES_AT"])
+        let allowed: Set<String> = ["PGPASSWORD", "PGHOST", "PGPORT", "PGDATABASE", "PGUSER"]
         let existing: [String: String] = FileManager.default.fileExists(atPath: settingsURL.path)
             ? try JSONDecoder().decode([String: String].self, from: Data(contentsOf: settingsURL)) : [:]
         var updates: [String: String] = [:]

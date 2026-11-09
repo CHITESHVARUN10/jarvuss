@@ -123,7 +123,8 @@ enum DictationPolisher {
     }
 
     static func polish(rulesOutput: TranscriptFormatter.Output,
-                       directive: TranscriptFormatter.ListDirective?, sessionID: String? = nil) async -> PolishResult {
+                       directive: TranscriptFormatter.ListDirective?, sessionID: String? = nil,
+                       generate: ((String, TimeInterval) async -> String)? = nil) async -> PolishResult {
         func record(fields: [String: String]) {
             var payload = fields
             if let sessionID { payload["session_id"] = sessionID }
@@ -155,7 +156,9 @@ enum DictationPolisher {
         let client = OllamaClient(model: model)
 
         // The client enforces this budget across queue waiting and HTTP work.
-        let raw = await client.generate(prompt: prompt, timeout: budget)
+        let raw: String
+        if let generate { raw = await generate(prompt, budget) }
+        else { raw = await client.generate(prompt: prompt, timeout: budget) }
 
         let elapsed = Date().timeIntervalSince(started)
 
@@ -213,7 +216,15 @@ enum DictationPolisher {
                                 elapsedMs: Int(elapsed * 1000))
         }
 
-        // The rules finish the job: the model solved meaning; casing and
+        guard corePolishPreservesContent(reference: rulesOutput.text, candidate: cleanText,
+                                        directive: directive?.rawValue) else {
+            record(fields: ["event": "rejected", "reasons": "content-changed",
+                            "words": String(words), "directive": directiveTag])
+            return PolishResult(text: rulesOutput.text, outcome: .rejected,
+                                elapsedMs: Int(elapsed * 1000))
+        }
+
+        // The rules finish the job; casing and
         // punctuation stay deterministic (it can both UP- and down-correct
         // them — qwen2.5:1.5b-instruct lowercased "So…" back to "so…").
         let finalText = TranscriptFormatter.recapitalize(cleanText)

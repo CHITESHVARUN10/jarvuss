@@ -41,7 +41,7 @@ struct AssistantPane: View {
 
             JCard {
                 JRow(title: "Backend",
-                     sub: "Controls voice authentication and Spotify lookup; the intent model runs locally",
+                     sub: "Controls voice authentication and database connections; the intent model runs locally",
                      first: true) {
                     Picker("", selection: $appState.backendMode) {
                         ForEach(BackendMode.allCases, id: \.self) { mode in

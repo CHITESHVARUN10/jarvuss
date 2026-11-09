@@ -462,18 +462,6 @@ final class ActionExecutor {
         return ActionResult(action: .mediaControl(action), success: result.success, message: result.message)
     }
 
-    static func spotifyFailureMessage(status: Int?, message: String) -> String {
-        let detail = (try? JSONSerialization.jsonObject(with: Data(message.utf8)) as? [String: Any])?["detail"] as? String ?? message
-        let lower = detail.lowercased()
-        if lower.contains("no active spotify device") || lower.contains("no active device") {
-            return "Spotify isn’t ready on a playback device. Open Spotify, sign in, select this Mac in its device menu, then try again."
-        }
-        if status == 401 || lower.contains("unauthorized") { return "Spotify needs reconnecting. Open Connections → Spotify and connect again." }
-        if status == 403 || lower.contains("premium") { return "Spotify couldn’t control this device. Check your Premium account and the selected playback device." }
-        if status == 429 { return "Spotify is receiving too many requests. Wait a moment, then try again." }
-        return detail.isEmpty ? "Spotify couldn’t complete the request. Please try again." : detail
-    }
-
     private func emitSpotify(_ message: String) {
         onLog?(message)
         NSLog("%@", message)

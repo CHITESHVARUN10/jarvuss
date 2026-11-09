@@ -1,12 +1,10 @@
-"""Loopback API authentication and single-use browser OAuth state.
+"""Loopback API authentication.
 
 The token rotates on backend startup. A same-user process able to read
 Application Support is outside this boundary; the API never returns the token.
 """
 import os
 import secrets
-import threading
-import time
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
@@ -35,24 +33,3 @@ def create_token(directory: Path) -> str:
 
 def authorized(expected: str | None, supplied: str | None) -> bool:
     return bool(expected and supplied and secrets.compare_digest(expected.encode(), supplied.encode()))
-
-
-class OAuthStates:
-    def __init__(self, now=time.monotonic):
-        self._now = now
-        self._lock = threading.Lock()
-        self._pending: dict[str, float] = {}
-
-    def issue(self) -> str:
-        with self._lock:
-            now = self._now()
-            self._pending = {key: expiry for key, expiry in self._pending.items() if expiry > now}
-            if len(self._pending) >= 32:
-                self._pending.pop(next(iter(self._pending)))
-            value = secrets.token_urlsafe(32)
-            self._pending[value] = now + 600
-            return value
-
-    def consume(self, value: str | None) -> bool:
-        with self._lock:
-            return self._pending.pop(value or "", 0) > self._now()

@@ -2,7 +2,7 @@
 //! lazily launched Python worker temporarily retains voice/legacy endpoints.
 use jarvis_core::{
     backend_config::{Broker, Config},
-    backend_services::{random_token, ApiError, HttpSpotify, Services},
+    backend_services::{random_token, ApiError, Services},
     native_intent,
 };
 use serde_json::{json, Value};
@@ -135,7 +135,7 @@ impl Drop for VoiceWorker {
     }
 }
 struct App {
-    services: Services<Broker, HttpSpotify>,
+    services: Services<Broker>,
     backend: PathBuf,
     data: PathBuf,
     token: String,
@@ -178,9 +178,7 @@ fn query(url: &str) -> (String, HashMap<String, String>) {
             .collect(),
     )
 }
-fn field<'a>(query: &'a HashMap<String, String>, key: &str) -> &'a str {
-    query.get(key).map(String::as_str).unwrap_or("")
-}
+
 impl App {
     fn native_voice_enabled(&self) -> bool {
         std::env::var("JARVIS_VOICE_RUNTIME")
@@ -230,7 +228,7 @@ impl App {
         &self,
         method: &str,
         path: &str,
-        q: &HashMap<String, String>,
+        _q: &HashMap<String, String>,
         body: Vec<u8>,
         content_type: &str,
         original: &str,
@@ -241,28 +239,6 @@ impl App {
         let value = match (method, path) {
             ("GET", "/health") => {
                 json!({"status":"ok","api_version":4,"credential_owner_pid":self.owner,"runtime":"rust"})
-            }
-            ("GET", "/spotify/status") => self.services.spotify_status()?,
-            ("POST", "/spotify/credentials") => self.services.spotify_save(&payload()?)?,
-            ("GET", "/spotify/connect-url") => self.services.connect_url()?,
-            ("GET", "/spotify/login") => {
-                let v = self.services.connect_url()?;
-                return Ok(Reply {
-                    status: 307,
-                    body: Vec::new(),
-                    location: v["url"].as_str().map(str::to_owned),
-                });
-            }
-            ("GET", "/spotify/callback" | "/callback") => self.services.callback(q)?,
-            ("GET", "/spotify/token") => self.services.token_status()?,
-            ("GET", "/spotify/native-target") => {
-                let shuffle = match field(q, "shuffle").to_lowercase().as_str() {
-                    "" | "0" | "false" | "off" | "no" => false,
-                    "1" | "true" | "on" | "yes" => true,
-                    _ => return Err(ApiError::new(422, "Invalid shuffle value")),
-                };
-                self.services
-                    .native_target(field(q, "kind"), field(q, "name"), shuffle)?
             }
             ("GET", "/postgres/status") => self.services.postgres_status()?,
             ("POST", "/postgres/credentials") => self.services.postgres_save(&payload()?)?,
@@ -341,14 +317,7 @@ impl App {
                 | "/verify"
                 | "/reset"
                 | "/parse_intent"
-                | "/spotify/play"
-                | "/spotify/play-song"
-                | "/spotify/play-playlist"
-                | "/spotify/play-liked"
-                | "/spotify/shuffle"
-                | "/spotify/pause"
-                | "/spotify/next"
-                | "/spotify/previous",
+,
             ) => return self.proxy(method, original, body, content_type),
             _ => return Err(ApiError::new(404, "Not Found")),
         };
@@ -363,16 +332,14 @@ impl App {
             .iter()
             .find(|h| h.field.equiv("X-Jarvis-Token"))
             .map(|h| h.value.as_str());
-        let callback =
-            method == "GET" && ["/spotify/callback", "/callback"].contains(&path.as_str());
-        if !callback && !authorized(&self.token, header) {
+        if !authorized(&self.token, header) {
             respond(
                 request,
                 Reply::error(ApiError::new(401, "Local authentication required")),
             );
             return;
         }
-        if !callback {
+        {
             if let Some(value) = request
                 .headers()
                 .iter()
@@ -475,8 +442,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .and_then(|s| s.parse().ok())
         .unwrap_or(0);
     let services = Services::new(
-        Config::from_environment(&backend, data.clone()),
-        HttpSpotify::new()?,
+        Config::from_environment(&backend, data.clone())
     );
     let client = reqwest::blocking::Client::builder()
         .redirect(reqwest::redirect::Policy::none())

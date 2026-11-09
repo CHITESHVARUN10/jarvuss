@@ -532,7 +532,7 @@ struct SetupDetailSheet: View {
             }
 
         case .backend:
-            Text("The helper supports voice authentication and Spotify lookup. The intent model runs inside Jarvis. It can run on demand, always, or remain off.")
+            Text("The helper supports voice authentication and database connections. The intent model runs inside Jarvis. It can run on demand, always, or remain off.")
                 .font(.system(size: 11))
                 .lineSpacing(5)
                 .foregroundStyle(NoirPalette.muted)
@@ -558,7 +558,7 @@ struct SetupDetailSheet: View {
                 .buttonStyle(NoirButtonStyle(intent: .primary))
 
         case .spotify:
-            Text("Install Spotify and sign in to control playback natively. API keys are only needed for named-song and library lookup; configure that optional feature in Connections.")
+            Text("Install Spotify and sign in to control playback natively. Allow Automation for playback and Accessibility for local song and library lookup. No API keys are required.")
                 .font(.system(size: 11))
                 .lineSpacing(5)
                 .foregroundStyle(NoirPalette.muted)

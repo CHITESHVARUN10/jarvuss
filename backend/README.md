@@ -1,7 +1,7 @@
 # Jarvis local services and Python reference
 
 The packaged app uses `JarvisBackend`, the native Rust helper. Voice enrollment,
-verification, Spotify metadata/OAuth, connection management and intent inference
+verification, database connection management and intent inference
 run without a Python interpreter. Native Spotify playback and macOS adapters
 remain in Swift. The app requires macOS 26.0 or later.
 

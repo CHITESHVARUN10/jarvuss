@@ -144,7 +144,7 @@ struct RailView: View {
         case .voice:
             return !appState.voiceProfileReady
         case .connections:
-            return appState.spotifyExpired || !appState.postgresConfigured
+            return !appState.spotifyNativeAvailable || !appState.postgresConfigured
         default:
             return false
         }
