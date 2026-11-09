@@ -238,6 +238,15 @@ class TrainingLabelTests(unittest.TestCase):
         self.assertEqual(len(pairs), 1)
         self.assertEqual(pairs[0]["source"], "model_hit")
 
+    def test_submitted_or_unverifiable_effect_is_not_automatic_training_gold(self):
+        for status in ["submitted", "unavailable", "failed"]:
+            events = self.events()
+            events[2]["verification"] = status
+            self.assertEqual(self.harvest(events), [], status)
+        events = self.events()
+        events[2]["verification"] = "verified"
+        self.assertEqual(len(self.harvest(events)), 1)
+
     def test_workspace_descriptions_require_authored_corrections(self):
         row = json.loads((ROOT / "dataset/train-072-workspace.jsonl").read_text().splitlines()[0])
         self.assertEqual(training.description_to_intent("Workspace: newWindow in brave"), row["intents"][0])

@@ -66,7 +66,15 @@ final class CommandQueueManager: ObservableObject {
             return false
         }
 
-        let cmd = QueuedCommand(text: text, priority: priority, deliveryID: deliveryID, handler: handler)
+        let trace = PipelineTrace.current ?? PipelineTrace(id: deliveryID, source: "command")
+        trace.event("queue_requested", fields: ["priority": String(priority.rawValue), "delivery_id": deliveryID.uuidString])
+        let cmd = QueuedCommand(text: text, priority: priority, deliveryID: deliveryID, handler: {
+            await PipelineTrace.$current.withValue(trace) {
+                trace.event("execution_started")
+                await handler()
+                trace.event(Task.isCancelled ? "execution_cancelled" : "execution_finished")
+            }
+        })
 
         // ── HIGH priority: cancel current AND clear queue ───────────────
         if priority == .high && text != currentCommandText {
@@ -78,6 +86,7 @@ final class CommandQueueManager: ObservableObject {
             cancelCurrent(reason: "superseded by high-priority '\(text)'")
             queue.append(cmd)
             recordDelivery(deliveryID)
+            trace.event("queue_admitted", fields: ["delivery_id": deliveryID.uuidString])
             log("[Queue] HIGH priority queued: '\(text)'")
             drainIfIdle()
             return true
@@ -90,12 +99,14 @@ final class CommandQueueManager: ObservableObject {
                 queue.remove(at: oldestLowIdx)
             } else {
                 log("[Queue] Buffer full (size \(Self.maxQueueSize)) — dropped: '\(text)'")
+                trace.event("queue_rejected", fields: ["reason": "full", "delivery_id": deliveryID.uuidString])
                 return false
             }
         }
 
         queue.append(cmd)
         recordDelivery(deliveryID)
+        trace.event("queue_admitted", fields: ["delivery_id": deliveryID.uuidString])
         log("[Queue] Enqueued (\(priority)): '\(text)' [queue size: \(queue.count)]")
         drainIfIdle()
         return true

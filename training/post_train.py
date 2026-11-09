@@ -422,7 +422,12 @@ def harvest(log_path: str, schema: dict) -> tuple[list[dict], dict]:
                 executed[request_id] = (row.get("success") is True
                                         and row.get("outcome", "success") == "success")
             if event == "execute_step" and request_id:
-                steps.setdefault(request_id, []).append(row.get("success") is True)
+                # New runtime events distinguish an accepted request from a
+                # read-back effect. Neither submissions nor unavailable
+                # readback are automatic positive training labels. Historical
+                # logs without this field retain their previous interpretation.
+                verified_effect = row.get("verification", "verified") == "verified"
+                steps.setdefault(request_id, []).append(row.get("success") is True and verified_effect)
 
     def verified(request_id, intents) -> bool:
         # No outcome means interrupted/incomplete work, never a gold label.

@@ -1,6 +1,6 @@
 //! Workspace interpretation only. Application IDs and OS execution stay in Swift.
 use crate::text_policy::*;
-#[derive(Clone, Debug, PartialEq, uniffi::Enum)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, uniffi::Enum)]
 pub enum WorkspaceApp {
     Brave,
     Chrome,
@@ -8,21 +8,21 @@ pub enum WorkspaceApp {
     Finder,
     Terminal,
 }
-#[derive(Clone, Debug, PartialEq, uniffi::Enum)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, uniffi::Enum)]
 pub enum WorkspaceOperation {
     NewWindow,
     NewTab,
     NewTerminalTab,
     OpenProject,
 }
-#[derive(Clone, Debug, PartialEq, uniffi::Record)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, uniffi::Record)]
 pub struct WorkspaceRequest {
     pub operation: WorkspaceOperation,
     pub app: WorkspaceApp,
     pub project: String,
     pub root: String,
 }
-#[derive(Clone, Debug, uniffi::Record)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, uniffi::Record)]
 pub struct WorkspacePart {
     pub text: String,
     pub request: Option<WorkspaceRequest>,

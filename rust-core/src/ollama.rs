@@ -454,6 +454,9 @@ fn media_spec(action: &MediaAction) -> String {
         MediaAction::PlayLikedSongs => "liked_songs".to_string(),
         MediaAction::PlaySong { name } => format!("play_song:{name}"),
         MediaAction::PlayPlaylist { name } => format!("play_playlist:{name}"),
+        MediaAction::SetShuffle { enabled } => format!("shuffle:{enabled}"),
+        MediaAction::PlayLikedWithShuffle { enabled } => format!("liked_shuffle:{enabled}"),
+        MediaAction::PlayPlaylistWithShuffle { name, enabled } => format!("playlist_shuffle:{name}:{enabled}"),
     }
 }
 

@@ -310,6 +310,8 @@ struct RoutineEditorSheet: View {
                   }
               }
             }
+            Toggle("Only run if the previous step succeeded", isOn: action.requiresPreviousSuccess)
+                .font(.system(size: 11))
             if !action.wrappedValue.type.guidance.isEmpty {
                 Text(action.wrappedValue.type.guidance)
                     .font(.system(size: 10))

@@ -7,6 +7,11 @@ struct ActionResult {
     let action: PlannedAction
     let success: Bool
     let message: String
+    let verification: EffectVerification
+    init(action: PlannedAction, success: Bool, message: String, verification: EffectVerification? = nil) {
+        self.action = action; self.success = success; self.message = message
+        self.verification = success ? (verification ?? .submitted) : .failed
+    }
 }
 
 enum CommandOutcome: String {
@@ -86,6 +91,8 @@ final class ActionExecutor {
             }
 
             await onStepStart(action)
+            let stepStarted = DispatchTime.now().uptimeNanoseconds
+            PipelineTrace.current?.event("step_started")
             guard !Task.isCancelled else { break }
             let result: ActionResult
             if let actionRunner {
@@ -95,6 +102,10 @@ final class ActionExecutor {
             }
             guard !Task.isCancelled else { break }
             results.append(result)
+            PipelineTrace.current?.event("step_finished", fields: [
+                "success": String(result.success), "verification": result.verification.rawValue,
+                "duration_ms": String((DispatchTime.now().uptimeNanoseconds - stepStarted) / 1_000_000)
+            ])
             await onStepComplete(result)
         }
         return results
@@ -107,11 +118,11 @@ final class ActionExecutor {
 
         case .workspace(let command):
             let result = await ProjectWorkspaceController.shared.execute(command)
-            return ActionResult(action: action, success: result.success, message: result.message)
+            return ActionResult(action: action, success: result.success, message: result.message, verification: result.verification)
         case .openApp(let name):
             let result = await appController.openAndWaitForLaunch(appName: name)
             return ActionResult(action: action, success: result.success,
-                                message: result.message)
+                                message: result.message, verification: result.verification)
 
         case .closeApp(let name):
             let result = appController.closeResult(appName: name)
@@ -143,7 +154,7 @@ final class ActionExecutor {
 
         case .volumeControl(let volumeAction):
             let result = await volumeController.perform(volumeAction)
-            return ActionResult(action: action, success: result.success, message: result.message)
+            return ActionResult(action: action, success: result.success, message: result.message, verification: result.verification)
 
         case .createFile(let name):
             let result = fileManager.createFileResult(named: name)
@@ -459,7 +470,7 @@ final class ActionExecutor {
         emitSpotify("[Spotify][Native] \(action.description)")
         let result = await NativeSpotifyController().execute(action)
         emitSpotify("[Spotify][Native] \(result.message)")
-        return ActionResult(action: .mediaControl(action), success: result.success, message: result.message)
+        return ActionResult(action: .mediaControl(action), success: result.success, message: result.message, verification: result.verification)
     }
 
     private func emitSpotify(_ message: String) {

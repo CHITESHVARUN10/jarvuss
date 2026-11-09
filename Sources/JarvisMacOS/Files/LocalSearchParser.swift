@@ -12,6 +12,9 @@ enum LocalSearchParser {
     static func clean(_ text: String) -> String { coreCleanSearchText(raw: text) }
     static func selection(_ text: String) -> FileResultSelection? {
         guard let value = coreParseFileSelection(raw: text) else { return nil }
+        return adapt(value)
+    }
+    static func adapt(_ value: CoreFileSelection) -> FileResultSelection {
         let operation: FileResultOperation
         switch value.operation {
         case .open: operation = .open
@@ -22,6 +25,9 @@ enum LocalSearchParser {
     }
     static func search(_ text: String) -> LocalSearchRequest? {
         guard let value = coreParseFileSearch(raw: text) else { return nil }
+        return adapt(value)
+    }
+    static func adapt(_ value: CoreSearchRequest) -> LocalSearchRequest {
         let kind: LocalSearchKind
         switch value.kind {
         case .any: kind = .any

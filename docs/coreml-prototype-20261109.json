@@ -1,0 +1,21 @@
+{
+  "synthetic_clips": 3,
+  "repeats_per_clip": 3,
+  "requests_per_provider": 9,
+  "request_median_ms": {
+    "cpu": 17.59,
+    "coreml": 44.78
+  },
+  "single_session_load_ms": {
+    "cpu": 95.48970800000001,
+    "coreml": 301.002708
+  },
+  "maximum_embedding_absolute_difference": 4.470348358154297e-08,
+  "production_provider": "cpu",
+  "limitations": [
+    "Synthetic clips, one process per provider, fixed CPU-then-CoreML order.",
+    "Requests include audio decoding and preprocessing; this is not isolated encoder-kernel time.",
+    "CoreML registration does not establish full Neural Engine placement.",
+    "No human-speaker false-accept/reject or comparative memory measurement."
+  ]
+}

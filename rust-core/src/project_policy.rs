@@ -380,3 +380,73 @@ mod tests {
         assert!(result.error.unwrap().contains("roots unavailable"));
     }
 }
+
+// A small bounded index avoids repeated traversal; native filesystem events and
+// volume changes invalidate it. TTL is a fallback when event delivery is lost.
+#[derive(Clone)]
+struct CachedIndex { key: String, built: Instant, entries: Vec<ProjectMatch> }
+static INDEX: std::sync::OnceLock<std::sync::Mutex<Vec<CachedIndex>>> = std::sync::OnceLock::new();
+static INDEX_GENERATION: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+#[uniffi::export]
+pub fn invalidate_project_index() { INDEX_GENERATION.fetch_add(1, std::sync::atomic::Ordering::SeqCst); }
+
+#[uniffi::export]
+pub fn find_indexed_projects(query: String, root: String, locations: Vec<ProjectLocationInput>, max_entries: u32, max_depth: u32, prefer_direct: bool) -> ProjectLookupResult {
+    if query.is_empty() || query.contains(['/', '\\', '\0']) || normalize(&query).is_empty() || (!root.is_empty() && normalize(&root).is_empty())
+        || locations.iter().any(|l| !l.is_root && normalize(&l.name) == normalize(&query)) {
+        return find_projects(query, root, locations, max_entries, max_depth, prefer_direct);
+    }
+    for l in locations.iter().filter(|l| l.is_root) {
+        if !is_directory(Path::new(&l.path)) {
+            invalidate_project_index();
+            return find_projects(query, root, locations, max_entries, max_depth, prefer_direct);
+        }
+    }
+    let generation = INDEX_GENERATION.load(std::sync::atomic::Ordering::SeqCst);
+    let key = format!("{generation}:{root}:{max_entries}:{max_depth}:{:?}", locations);
+    let cache = INDEX.get_or_init(Default::default);
+    let cached = cache.lock().ok().and_then(|c| c.iter().find(|c| c.key == key && c.built.elapsed() < Duration::from_secs(30)).cloned());
+    let entries = if let Some(cached) = cached { cached.entries }
+    else {
+        let result = find_projects(String::new(), root.clone(), locations.clone(), max_entries, max_depth, false);
+        if result.error.is_some() { return find_projects(query, root, locations, max_entries, max_depth, prefer_direct); }
+        if generation == INDEX_GENERATION.load(std::sync::atomic::Ordering::SeqCst) {
+            if let Ok(mut c) = cache.lock() {
+                if c.len() >= 4 { c.remove(0); }
+                c.push(CachedIndex { key, built: Instant::now(), entries: result.matches.clone() });
+            }
+        }
+        result.matches
+    };
+    let key = normalize(&query);
+    let mut matches: Vec<_> = entries.into_iter().filter(|m| Path::new(&m.path).file_name().is_some_and(|n| normalize(&n.to_string_lossy()) == key)).collect();
+    if matches.iter().any(|m| !is_directory(Path::new(&m.path))) {
+        invalidate_project_index();
+        return find_projects(query, root, locations, max_entries, max_depth, prefer_direct);
+    }
+    if prefer_direct && matches.iter().any(|m| locations.iter().any(|l| l.is_root && canonical(&l.path).is_some_and(|r| Path::new(&m.path).parent().is_some_and(|p| canonical(&p.to_string_lossy()) == Some(r))))) {
+        matches.retain(|m| locations.iter().any(|l| l.is_root && canonical(&l.path).is_some_and(|r| Path::new(&m.path).parent().is_some_and(|p| canonical(&p.to_string_lossy()) == Some(r)))));
+    }
+    ProjectLookupResult { matches: unique(matches), error: None }
+}
+
+#[cfg(test)]
+mod index_tests {
+    use super::*;
+    #[test]
+    fn invalidation_discovers_new_ambiguity_and_unavailable_roots_fail() {
+        let temp = tempfile::tempdir().unwrap();
+        fs::create_dir_all(temp.path().join("one/Portfolio")).unwrap();
+        let locations = vec![ProjectLocationInput { name: "Work".into(), path: temp.path().to_string_lossy().into(), is_root: true }];
+        let find = || find_indexed_projects("portfolio".into(), "".into(), locations.clone(), 100, 3, true);
+        assert_eq!(find().matches.len(), 1);
+        fs::create_dir_all(temp.path().join("two/Portfolio")).unwrap();
+        invalidate_project_index();
+        assert_eq!(find().matches.len(), 2);
+        fs::create_dir_all(temp.path().join("Portfolio")).unwrap();
+        invalidate_project_index();
+        assert_eq!(find().matches.len(), 1); // direct projects retain precedence
+        drop(temp);
+        assert!(find().error.is_some());
+    }
+}

@@ -13,6 +13,8 @@ struct NoirSystemPage: View {
     @State private var contrast: Double = 50
     @State private var editingBrightness = false
     @State private var editingContrast = false
+    @AppStorage("jarvis.liveSpeech.engine") private var liveSpeechEngine = "apple"
+    @AppStorage("jarvis.liveSpeech.locale") private var liveSpeechLocale = "en-IN"
 
     var body: some View {
         NoirPage(
@@ -79,7 +81,19 @@ struct NoirSystemPage: View {
 
             NoirSoundSection()
 
+            NoirSectionHeading(title: "Live speech")
+            NoirCard(padded: true) {
+                Picker("Recognizer", selection: $liveSpeechEngine) {
+                    Text("Apple · on device").tag("apple")
+                    Text("Whisper · local fallback").tag("whisper")
+                }
+                TextField("Speech language (for example en-IN or en-US)", text: $liveSpeechLocale)
+                Text("Applies when you restart listening. Apple downloads supported language assets through macOS. Shortcut dictation uses the existing Whisper model.")
+                    .font(.system(size: 11)).foregroundStyle(NoirPalette.secondary)
+            }
+
             NoirProjectPreferences()
+            CommandFeedbackView(initialCommand: appState.lastCommandForReview, requestID: appState.lastCommandTraceID)
             NoirFileSearchPreferences()
 
             NoirSectionHeading(title: "Display safety")
@@ -125,6 +139,10 @@ struct NoirSystemPage: View {
 
             NoirCard {
                 VStack(spacing: 0) {
+                    NoirSettingRow(title: "AI formatting", sub: "Optional local model pass. Off uses immediate rules formatting and preserves the spoken wording.") {
+                        NoirSwitch(isOn: $dictation.aiFormattingEnabled)
+                    }
+                    NoirDivider()
                     NoirSettingRow(
                         title: "Paste at the cursor",
                         sub: "Insert formatted text directly into your active application."

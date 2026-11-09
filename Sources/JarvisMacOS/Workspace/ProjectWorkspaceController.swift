@@ -19,7 +19,8 @@ final class ProjectWorkspaceController {
         do {
             try Task.checkCancellation()
             guard command.operation == .openProject else {
-                return ControllerResult(message: try await open(command, nil), success: true)
+                return ControllerResult(message: try await open(command, nil), success: true,
+                                        verification: command.operation == .newTerminalTab ? .submitted : .verified)
             }
             guard [.finder, .vscode, .terminal].contains(command.app) else {
                 return ControllerResult(message: "Projects can open in Finder, VS Code, or Terminal.", success: false)
@@ -35,7 +36,7 @@ final class ProjectWorkspaceController {
                 target = recent.url
             } else {
                 let task = Task.detached(priority: .userInitiated) {
-                    try ProjectDirectoryResolver.find(command.project, root: command.root, locations: locations)
+                    try ProjectDirectoryResolver.find(command.project, root: command.root, locations: locations, useIndex: true)
                 }
                 let matches = try await withTaskCancellationHandler { try await task.value } onCancel: { task.cancel() }
                 guard !matches.isEmpty else { return ControllerResult(message: "No project named ‘\(command.project)’ in your configured roots. Add a project alias or choose a narrower root in System → Project locations.", success: false) }
@@ -57,7 +58,7 @@ final class ProjectWorkspaceController {
             let message = try await open(command, target)
             try Task.checkCancellation()
             recent = (target, now(), locations)
-            return ControllerResult(message: message, success: true)
+            return ControllerResult(message: message, success: true, verification: command.app == .vscode ? .submitted : .verified)
         } catch is CancellationError { return ControllerResult(message: "Workspace command cancelled.", success: false) }
         catch { return ControllerResult(message: error.localizedDescription, success: false) }
     }

@@ -62,11 +62,11 @@ before sharing. Stopping/cancelling cannot undo completed actions.
 **Voice & dictation**
 - **Manual-start listening**: nothing is captured at launch. Tap the orb — or just press ⌘⇧D / ⌘⇧A; a hotkey press is itself the manual start. Shortcut recordings use their own native capture without starting the continuous VAD/wake-word engine.
 - **One-shot microphone lifecycle**: the second shortcut press ends recording and releases its microphone before transcription/polish completes. Pressing the shortcut on a result card closes it; during processing it cancels. Closing a pill cancels pending model/permission starts and discards late results. Live listening remains on only when explicitly started with the orb.
-- ⌘⇧D dictation with WISPR-style formatting: deterministic rules (fillers, stutters, self-corrections, punctuation, casing, `25%`, `3pm`) plus a small-model polish pass for messy or structured speech (lists get typeset).
+- ⌘⇧D dictation with WISPR-style formatting: deterministic rules (fillers, stutters, self-corrections, punctuation, casing, `25%`, `3pm`) with an optional small-model formatting pass (System → Dictation → AI formatting, off by default).
 - **Insert at cursor**: the formatted text is pasted into whatever app you were in — your clipboard is preserved. The card offers **Copy** (formatted), **Copy original** (raw STT, toggleable), and **Undo** (⌘Z in the target app); how long it stays is user-settable — System → Dictation → *Card stays visible* (1–10 s, default 10). With no Accessibility grant it silently copies instead and tells you.
 - **Last dictation is kept across restarts**: the System pane shows the latest original + polished pair — and only that pair. A new dictation immediately and unrecoverably replaces the previous one (no history by design).
 - **Dictation diagnostics (dev)**: Assistant → Behaviour → *Dictation diagnostics* writes one JSONL line per dictation — raw input, rules and final text, and the timing breakdown (wall, speech, STT, rules, polish, insert) to `~/Library/Application Support/Jarvis/logs/dictation_dev.jsonl`.
-- **"Jarvis" wake word**: wake-word command mode with a 0.7 s audio pre-roll so the wake word and the first syllables are never lost to VAD latency; "Jarvis" → pause → command works; continuous speech is segmented at 8 s with the tail re-armed, not dropped.
+- **Live speech**: Apple on-device streaming speech is the default for manual live listening, with partial results while speaking and utterance finalization after a pause. System → Live speech selects the language or the existing Whisper fallback. Hotkey dictation continues to use Whisper. Apple language assets are managed by macOS; no Moonshine model is installed. Wake-word and verification gates remain shared across both live recognizers.
 - **Display safety and rescue**: Jarvis clamps hardware brightness to at least 10%, external contrast to at least 20%, and software dimming to a nonzero floor. These guards apply to sliders, commands, and legacy combined dimming. They cannot prevent another app from blacking out a screen. With Jarvis running, **⌘⇧R** requests immediate display recovery without a microphone, model, backend, verification, or visible dialog. Alternatively press **⌘⇧A**, say **“Restore my display”** (or **“Screen rescue”**), then press **⌘⇧A** again. Only whole recovery phrases bypass verification; ⌘⇧D remains text-only. Recovery restores ColorSync gamma, requests 60% brightness and 50% external contrast on all detected displays, and asks a running BetterDisplay to remove software dimming and suspend software image adjustments. Re-enable those adjustments in BetterDisplay when ready. BetterDisplay is optional: Jarvis builds, launches, and uses native recovery without it. If BetterDisplay is absent or not running, its integration is skipped without launching it or waiting for a response. If you use BetterDisplay, its notification integration must be enabled (Settings → Application → Integration); timeouts/unsupported controls are reported rather than claimed successful. System → Display safety provides the same recovery button and shortcut status. Jarvis does not change display values automatically at launch.
 - **Speaker verification (optional, per mode)**: Resemblyzer voiceprint enrollment can gate execution to your voice — independently for ⌘⇧A commands and for live mode (Assistant → Privacy). With live-mode verification off, enrollment is not required and the wake word alone is the gate. When verification is required, unavailable or rejected verification never executes the command.
 
@@ -375,8 +375,7 @@ ollama pull qwen2.5:1.5b-instruct     # one model serves planner, answers, and t
 ollama serve
 ```
 
-Speech is offline Whisper (`large-v3-turbo`, via the Rust `stt-core`) and needs
-no extra setup — the model downloads at launch when missing. Partial downloads survive restarts and are published only after size, header and SHA-256 verification against the [pinned upstream revision](https://huggingface.co/ggerganov/whisper.cpp/blob/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-large-v3-turbo.bin).
+Live commands use Apple’s on-device `SpeechAnalyzer`/`SpeechTranscriber` by default; macOS installs the selected supported language assets when listening starts. System → Live speech selects the locale or Whisper fallback. Shortcut speech uses offline Whisper (`large-v3-turbo`, via Rust `stt-core`); its model downloads at launch when missing. Partial downloads survive restarts and are published only after size, header and SHA-256 verification against the [pinned upstream revision](https://huggingface.co/ggerganov/whisper.cpp/blob/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-large-v3-turbo.bin).
 
 ### 3) Native runtime and development tools
 
@@ -599,3 +598,21 @@ separate harness that opens/closes real apps and controls Spotify. See
 [GitHub Actions](.github/workflows/tests.yml) builds both native bridges and runs
 Swift, Rust, Python, and disposable PostgreSQL regression tests on macOS 26.
 Live microphone, hardware-control, and Keychain integration checks remain opt-in.
+
+
+### Pipeline diagnostics and reviewed corrections
+
+Correlated timing/status events are written to `logs/pipeline.jsonl` under the
+Jarvis data directory, with one rotated predecessor (about 4 MB total). These
+new events omit transcript text by default; older opt-in dictation diagnostics
+and existing command logs have their own content policies. Set
+`jarvis.diagnostics.includeText` only for intentional local debugging.
+System → Correct a command saves human-reviewed corrections locally without
+starting training or automatically adding them to a dataset.
+
+`python3 scripts/evaluate_pipeline.py RECORDS.jsonl --output REPORT.json`
+reports speech word errors, exact plans, verified effects and latency separately.
+`python3 training/calibrate_intent.py DEVELOPMENT_REPORT.json --output CURVES.json`
+inspects confidence risk/coverage without modifying serving thresholds or models.
+See [the architecture](docs/architecture.md) and
+[implementation evidence](docs/system-improvements-20261109.md).

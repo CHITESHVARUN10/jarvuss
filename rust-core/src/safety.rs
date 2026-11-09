@@ -102,6 +102,10 @@ pub fn validate_raw(command: &str) -> SafetyVerdict {
 pub fn validate_action(action: &crate::PlannedAction) -> SafetyVerdict {
     use crate::PlannedAction as A;
     match action {
+        A::Workspace { command } => run_checks(&command.project.to_lowercase(), &command.project),
+        A::OpenUrlInBrowser { url, .. } => validate_action(&A::OpenUrl { url: url.clone() }),
+        A::FileQuery { query } => check_path(&query.folder),
+        A::SearchFiles { .. } | A::FileResult { .. } | A::OpenSettings { .. } => SafetyVerdict::Allowed,
         A::OpenApp { name } | A::CloseApp { name } => run_checks(&name.to_lowercase(), name),
         A::SystemInfo { .. } | A::MediaControl { .. } | A::VolumeControl { .. } => {
             SafetyVerdict::Allowed

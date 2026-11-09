@@ -56,7 +56,16 @@ struct NativeSpotifyController {
                 }
                 return ControllerResult(message: detail.isEmpty ? "Spotify did not confirm the requested action. Open Spotify and try again." : "Spotify: \(detail)", success: false)
             }
-            return ControllerResult(message: "Spotify: \(action.description) confirmed on this Mac.", success: true)
+            let verification: EffectVerification
+            switch action {
+            case .playPlaylist, .playPlaylistWithShuffle: verification = .unavailable
+            default: verification = .verified
+            }
+            // Spotify exposes playback state but no playlist-context readback.
+            let message = verification == .unavailable
+                ? "Spotify playback started for \(action.description). Playlist identity could not be read back."
+                : "Spotify: \(action.description) confirmed on this Mac."
+            return ControllerResult(message: message, success: true, verification: verification)
         } catch is CancellationError {
             return ControllerResult(message: "Spotify command cancelled.", success: false)
         } catch {

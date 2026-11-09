@@ -48,6 +48,11 @@ final class ActionPlanner {
 
     func plan(from raw: String, requestID: UUID = UUID()) async -> [PlannedAction] {
         guard !Task.isCancelled else { return [] }
+        if case .allowed = SafetyGuard.validate(rawCommand: raw), let native = coreNativeCommand(raw: raw), !native.isEmpty {
+            let actions = RustPipeline.map(native)
+            logPlanEvent(branch: "native", text: raw, requestID: requestID, actions: actions)
+            return actions
+        }
         if let actions = WorkspaceCommandParser.plan(raw), case .allowed = SafetyGuard.validate(rawCommand: raw) {
             logPlanEvent(branch: "workspace", text: raw, requestID: requestID, actions: actions)
             return actions
@@ -213,85 +218,23 @@ final class ActionPlanner {
 
         guard !Task.isCancelled else { return [] }
 
-        // 2b. Post-model flow — fast-path router, then the strict priority
-        // rules. With the migration flag ON this whole block is decided by
-        // the Rust core; OFF keeps the Swift path and logs a shadow
-        // comparison so parity can be verified from real usage.
-        if JarvisFlags.useRustPipeline {
-            let rust = corePlanAfterModel(cleaned: cleaned)
-            if rust.needsOllama {
-                // Rust owns the Ollama planner fallback (tools prompt +
-                // Shape A parsing); unparseable output becomes a single
-                // aiQuery exactly like the Swift path.
-                // HTTP inference has one cancellable owner in both modes.
-                let actions = await ollamaFallback(cleaned)
-                guard !Task.isCancelled else { return [] }
-                logPlanEvent(branch: "qwen", text: cleaned, requestID: requestID, actions: actions)
-                return actions
-            }
-            let rustActions = RustPipeline.map(rust.actions)
-            NSLog("[Plan] Rust (%@): %@", rust.branch,
-                  rustActions.map(\.description).joined(separator: ", "))
-            logPlanEvent(branch: rust.branch, text: cleaned, requestID: requestID, actions: rustActions)
-            return rustActions
-        }
-
-        switch FastPathRouter.route(cleaned) {
-        case .execute(let actions):
-            if !actions.isEmpty {
-                NSLog("[Plan] Fast-path (no LLM): %@", actions.map(\.description).joined(separator: ", "))
-            } else {
-                NSLog("[Plan] Fast-path: dropped noise without model")
-            }
-            logPlanEvent(branch: "rule", text: cleaned, requestID: requestID, actions: actions)
-            RustPipeline.shadowCompare(cleaned: cleaned, swiftActions: actions,
-                                       swiftBranch: actions.isEmpty ? "drop" : "fastpath",
-                                       requestID: requestID)
-            return actions
-        case .needsModel:
-            NSLog("[Plan] Fast-path miss — full pipeline")
-            break
-        }
-
-        // 3. Strict priority router
-        // SYSTEM -> INFO -> MEDIA -> AI
-        if let actions = ruleBasedPlan(cleaned: cleaned, lower: lower) {
-            NSLog("[Plan] Rule-based: %@", actions.map(\.description).joined(separator: ", "))
-            logPlanEvent(branch: "rule", text: cleaned, requestID: requestID, actions: actions)
-            RustPipeline.shadowCompare(cleaned: cleaned, swiftActions: actions,
-                                       swiftBranch: "rule", requestID: requestID)
+        let decision = corePlanAfterModel(cleaned: cleaned)
+        if decision.needsOllama {
+            let actions = await ollamaFallback(cleaned)
+            guard !Task.isCancelled else { return [] }
+            logPlanEvent(branch: "qwen", text: cleaned, requestID: requestID, actions: actions)
             return actions
         }
-
-        // 5. Fallback to Ollama for complex/unrecognised input.
-        // Unmatched system-looking commands used to be DROPPED here — that is
-        // what turned "open spotify, open whatsapp and also open youtube and
-        // in spotify play a song" into "Invalid command skipped" with no
-        // explanation. A command the rules could not parse is exactly the case
-        // Qwen exists for, and `ollamaFallback` degrades to a spoken aiQuery
-        // answer by itself, so this branch can never end in silence.
-        let tokenCount = lower.split(separator: " ").count
-        if tokenCount < 4 {
-            NSLog("[Plan] Short unrecognised input (%d tokens) — treating as AI query without Ollama call", tokenCount)
-            let short = [PlannedAction.aiQuery(cleaned)]
-            RustPipeline.shadowCompare(cleaned: cleaned, swiftActions: short,
-                                       swiftBranch: "ai", requestID: requestID)
-            return short
-        }
-
-        NSLog("[Intent] AI: fallback")
-        NSLog("[Plan] → Routing to Ollama: '%@'", cleaned)
-        let qwenPlan = await ollamaFallback(cleaned)
-        RustPipeline.shadowCompare(cleaned: cleaned, swiftActions: qwenPlan,
-                                   swiftBranch: "qwen", requestID: requestID)
-        logPlanEvent(branch: "qwen", text: cleaned, requestID: requestID, actions: qwenPlan)
-        return qwenPlan
+        let actions = RustPipeline.map(decision.actions)
+        logPlanEvent(branch: decision.branch, text: cleaned, requestID: requestID, actions: actions)
+        return actions
     }
 
     /// One JSONL line per routing decision — the RL corpus pairs these with
     /// the model_hit/model_miss lines from IntentModelRouter and the
     /// execute_step lines from AppState runCommand (same request_id).
     private func logPlanEvent(branch: String, text: String, requestID: UUID, actions: [PlannedAction]) {
+        PipelineTrace.current?.event("route_selected", fields: ["branch": branch, "steps": String(actions.count)])
         intentLog.append([
             "event": "plan",
             "branch": branch,
@@ -320,80 +263,6 @@ final class ActionPlanner {
     }
 
     private func parseOllamaActions(_ raw: String) -> [PlannedAction]? {
-        guard let start  = raw.firstIndex(of: "["),
-              let end    = raw.lastIndex(of: "]") else { return nil }
-        let jsonStr = String(raw[start...end])
-
-        guard let data = jsonStr.data(using: .utf8),
-              let array = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
-            return nil
-        }
-
-        // Strict schema: a recognized type with a missing/invalid payload
-        // (e.g. `system_info` kind "weather") invalidates the whole plan —
-        // the caller then degrades to a single ai_query instead of executing
-        // a silently wrong action. Unknown types are skipped; an output with
-        // nothing usable still returns nil.
-        var actions: [PlannedAction] = []
-        for obj in array {
-            guard let type = obj["type"] as? String else { return nil }
-            switch type {
-            case "open_app":
-                guard let app = obj["app"] as? String else { return nil }
-                actions.append(.openApp(app))
-            case "close_app":
-                guard let app = obj["app"] as? String else { return nil }
-                actions.append(.closeApp(app))
-            case "open_url":
-                guard let url = obj["url"] as? String else { return nil }
-                actions.append(.openURL(url))
-            case "search_web":
-                guard let q = obj["query"] as? String else { return nil }
-                let engine = (obj["engine"] as? String) ?? "Google"
-                actions.append(.searchWeb(engine: engine, query: q))
-            case "open_folder":
-                guard let p = obj["path"] as? String else { return nil }
-                actions.append(.openFolder(p))
-            case "set_volume":
-                guard let level = clampedPercent(obj["level"]) else { return nil }
-                actions.append(.volumeControl(.setLevel(level)))
-            case "mute":
-                actions.append(.volumeControl(.mute))
-            case "set_brightness":
-                guard let level = clampedPercent(obj["level"]) else { return nil }
-                actions.append(.displayControl(.setBrightness(level)))
-            case "system_info":
-                guard let kind = obj["kind"] as? String,
-                      let info = SystemInfoAction(toolKind: kind) else { return nil }
-                actions.append(.systemInfo(info))
-            case "media":
-                guard let spec = obj["action"] as? String,
-                      let media = MediaAction(spec: spec) else { return nil }
-                actions.append(.mediaControl(media))
-            case "ai_query":
-                guard let q = obj["query"] as? String else { return nil }
-                actions.append(.aiQuery(q))
-            default:
-                continue
-            }
-        }
-        return actions.isEmpty ? nil : actions
-    }
-
-    /// JSON numbers arrive as NSNumber — accept Int/Double/numeric String and
-    /// clamp to a valid 0-100 percent.
-    private func clampedPercent(_ value: Any?) -> Int? {
-        let raw: Double?
-        if let i = value as? Int {
-            raw = Double(i)
-        } else if let d = value as? Double {
-            raw = d
-        } else if let s = value as? String {
-            raw = Double(s)
-        } else {
-            raw = nil
-        }
-        guard let n = raw else { return nil }
-        return min(100, max(0, Int(n.rounded())))
+        coreParseToolActions(raw: raw).map(RustPipeline.map)
     }
 }

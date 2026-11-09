@@ -253,7 +253,7 @@ struct ConnectionSheet: View {
                 NoirDivider()
                 factRow("Intent router", "t5-small · int8 ONNX")
                 NoirDivider()
-                factRow("Speech to text", "Whisper large-v3-turbo")
+                factRow("Speech to text", "Apple live speech · Whisper shortcuts")
                 NoirDivider()
                 factRow("Endpoint", "127.0.0.1:11434")
                 NoirDivider()

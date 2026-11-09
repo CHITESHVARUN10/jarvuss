@@ -17,6 +17,7 @@ final class WhisperCommandListener {
 
     private var utteranceActive = false
     private var preRollPending = false
+    private var trace: PipelineTrace?
     /// When the current utterance began (failsafe cap below).
     private var utteranceStartedAt: Date?
     /// True while a Rust recording is live — read by the AppState VAD tick to
@@ -88,6 +89,10 @@ final class WhisperCommandListener {
         utteranceActive = started
         utteranceStartedAt = utteranceActive ? Date() : nil
         preRollPending = started
+        if started {
+            trace = PipelineTrace(source: "whisper_live")
+            trace?.event("capture_requested", fields: ["engine": "whisper"])
+        }
         if utteranceActive {
             // The native capture-start callback primes once hardware is
             // ready, including words spoken during asynchronous startup.
@@ -111,6 +116,7 @@ final class WhisperCommandListener {
     func captureDidStart() {
         guard utteranceActive, STTRouter.shared.owner == .command,
               get_app_phase() == .Recording else { return }
+        trace?.event("capture_started")
         primeWithPreRollIfNeeded()
     }
 
@@ -149,6 +155,7 @@ final class WhisperCommandListener {
     /// asynchronously through BridgeCallbacks → STTRouter.
     func endUtterance() {
         guard utteranceActive else { return }
+        trace?.event("capture_stopped")
         // If Stop arrived while hardware was opening, queue pre-roll before
         // Stop so a short command retains speech from that startup interval.
         primeWithPreRollIfNeeded()
@@ -168,6 +175,7 @@ final class WhisperCommandListener {
     /// existed. The router calls cancel_recording() itself to finish the
     /// Rust-side audio and release the claim so the pill can start now.
     func cancelUtterance() {
+        trace?.event("capture_cancelled"); trace = nil
         preRollPending = false
         utteranceActive = false
         utteranceStartedAt = nil
@@ -177,6 +185,7 @@ final class WhisperCommandListener {
     /// inference and NO callback, then releases the claim. Use when the
     /// utterance must never produce a transcript (mic off, app exit).
     func reset() {
+        trace?.event("capture_cancelled"); trace = nil
         preRollPending = false
         if utteranceActive || STTRouter.shared.owner == .command {
             utteranceActive = false
@@ -184,5 +193,12 @@ final class WhisperCommandListener {
             cancel_recording()
         }
         STTRouter.shared.releaseFromCommand()
+    }
+
+    func takeTrace(for text: String) -> PipelineTrace {
+        let result = trace ?? PipelineTrace(source: "whisper_live")
+        trace = nil
+        result.event("transcript_final", fields: ["characters": String(text.count)], text: text)
+        return result
     }
 }

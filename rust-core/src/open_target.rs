@@ -93,6 +93,12 @@ pub fn canonical_browser(raw: String) -> Option<String> {
 
 #[uniffi::export]
 pub fn site_url(raw: String) -> Option<String> {
+    let original = raw.trim();
+    if original.to_ascii_lowercase().starts_with("http://") || original.to_ascii_lowercase().starts_with("https://") {
+        let parsed = url::Url::parse(original).ok()?;
+        if parsed.host_str().is_none() || !parsed.username().is_empty() || parsed.password().is_some() { return None; }
+        return Some(original.to_owned());
+    }
     let mut target = normalized(&raw);
     if target.is_empty() {
         return None;

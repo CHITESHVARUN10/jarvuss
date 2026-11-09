@@ -30,11 +30,26 @@ enum RustPipeline {
     // MARK: - Action mapping
 
     static func map(_ actions: [CorePlannedAction]) -> [PlannedAction] {
-        actions.compactMap(map)
+        var mapped: [PlannedAction] = []
+        for action in actions {
+            guard let value = map(action) else { return [] }
+            mapped.append(value)
+        }
+        return mapped
     }
 
     static func map(_ action: CorePlannedAction) -> PlannedAction? {
         switch action {
+        case .workspace(let command): return .workspace(WorkspaceCommandParser.adapt(command))
+        case .openUrlInBrowser(let url, let browser): return .openURLInBrowser(url: url, browser: browser)
+        case .fileQuery(let query):
+            guard let op = FileQueryOp(rawValue: query.op) else { return nil }
+            return .fileQuery(FileQuery(op: op, folder: query.folder, ext: query.ext))
+        case .searchFiles(let request): return .searchFiles(LocalSearchParser.adapt(request))
+        case .fileResult(let selection): return .fileResult(LocalSearchParser.adapt(selection))
+        case .openSettings(let pane):
+            guard let pane = SystemSettingsPane(rawValue: pane) else { return nil }
+            return .openSettings(pane)
         case .openApp(let name):
             return .openApp(name)
         case .closeApp(let name):
@@ -91,6 +106,9 @@ enum RustPipeline {
         case .previousTrack:        return .previousTrack
         case .playLikedSongs:       return .playLikedSongs
         case .playPlaylist(let name): return .playPlaylist(name)
+        case .setShuffle(let enabled): return .setShuffle(enabled)
+        case .playLikedWithShuffle(let enabled): return .playLikedWithShuffle(enabled)
+        case .playPlaylistWithShuffle(let name, let enabled): return .playPlaylistWithShuffle(name: name, enabled: enabled)
         }
     }
 

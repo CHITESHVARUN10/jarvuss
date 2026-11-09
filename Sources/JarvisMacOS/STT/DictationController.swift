@@ -55,6 +55,9 @@ final class DictationController: ObservableObject {
     // card shows, a failed insert carries the notice, and `insertedAtCursor`
     // is what makes the card offer Undo.
     @Published var formattingInProgress: Bool = false
+    @Published var aiFormattingEnabled: Bool {
+        didSet { settingsDefaults.set(aiFormattingEnabled, forKey: "jarvis.dictation.aiFormatting") }
+    }
     @Published var insertedAtCursor: Bool = false
     @Published var insertNotice: String = ""
 
@@ -134,6 +137,7 @@ final class DictationController: ObservableObject {
     private var lastFinalAt: Date?
     private var devTimeline: DevTimeline?
     private var diagnosticSessionID = UUID().uuidString
+    private var pipelineTrace: PipelineTrace?
 
     /// One dictation's captured diagnostics, as read at transcript-arrival
     /// time; the polish/insert halves are added when the text is final.
@@ -179,6 +183,7 @@ final class DictationController: ObservableObject {
          requestRestart: ((PillMode) -> Void)? = nil, now: @escaping () -> Date = Date.init) {
         self.capture = capture
         self.settingsDefaults = defaults
+        aiFormattingEnabled = defaults.bool(forKey: "jarvis.dictation.aiFormatting")
         recordingLimitMinutes = min(60, max(1,
             defaults.object(forKey: Self.recordingLimitDefaultsKey) as? Int ?? 5))
         self.now = now
@@ -483,6 +488,8 @@ final class DictationController: ObservableObject {
 
     private func startDictation() {
         diagnosticSessionID = UUID().uuidString
+        pipelineTrace = presentsUI ? PipelineTrace(id: UUID(uuidString: diagnosticSessionID)!, source: mode == .action ? "action_pill" : "dictation") : nil
+        pipelineTrace?.event("capture_requested", fields: ["engine": "whisper"])
         CrashDiagnostics.shared.record("capture_requested", fields: ["mode": String(describing: mode), "limit_minutes": String(recordingLimitMinutes)])
         shortcutPreparing = false
         captureStarting = true
@@ -518,7 +525,7 @@ final class DictationController: ObservableObject {
             // messy dictation of a session wins its race. Utility priority;
             // keep-alive unloads it again after 60 s if the dictation ends up
             // short and clean (rules-only).
-            if presentsUI { warmupTask = DictationPolisher.warmUp() }
+            if presentsUI && aiFormattingEnabled { warmupTask = DictationPolisher.warmUp() }
             // Optimistic mirror: the second press must see .Recording even
             // before the Rust callback round-trips, or it lands on
             // `ignored (core busy, owner: pill)` instead of the stop arm.
@@ -585,6 +592,7 @@ final class DictationController: ObservableObject {
     }
 
     private func stopDictation() {
+        pipelineTrace?.event("capture_stopped")
         CrashDiagnostics.shared.record("capture_stop_requested")
         NSLog("[Jarvis][STT] Recording stopped — starting inference")
         let speechSecs = capture.seconds()
@@ -653,7 +661,9 @@ final class DictationController: ObservableObject {
         hidePanel()
         defer { dismissTranscript() }
         CrashDiagnostics.shared.record("action_transcript_handoff", fields: ["characters": String(text.count)])
-        execute()
+        let trace = pipelineTrace ?? PipelineTrace(source: "action_pill")
+        trace.event("transcript_final", fields: ["characters": String(text.count)], text: text)
+        PipelineTrace.$current.withValue(trace) { execute() }
     }
 
     /// The ⌘⇧D entry point. Rules format first (sync, ~0 ms); the LLM polish
@@ -669,12 +679,13 @@ final class DictationController: ObservableObject {
         insertNotice = ""
         insertedAtCursor = false
         copied = false
-        diagnosticSessionID = UUID().uuidString
         originalTranscript = raw
+        pipelineTrace?.event("transcript_final", fields: ["characters": String(raw.count)], text: raw)
 
         let rulesStart = Date()
         let rules = TranscriptFormatter.format(raw)
         let rulesMs = Int(Date().timeIntervalSince(rulesStart) * 1000)
+        pipelineTrace?.event("rules_formatted", fields: ["duration_ms": String(rulesMs)])
         let listDirective = TranscriptFormatter.listDirective(for: raw)
         transcript = rules.text
         transcriptIsFormatted = true
@@ -716,7 +727,7 @@ final class DictationController: ObservableObject {
         phase = .TranscriptReady
         showPanel()
 
-        if TranscriptFormatter.shouldUseLLM(rules, directive: listDirective) {
+        if aiFormattingEnabled && TranscriptFormatter.shouldUseLLM(rules, directive: listDirective) {
             formattingInProgress = true
             resizePanelForCurrentState()
             positionPanelForCurrentState()
@@ -731,6 +742,7 @@ final class DictationController: ObservableObject {
             }, completion: { [weak self] result in
                 guard let self, STTRouter.shared.owner == .pill else { return }
                 self.formattingInProgress = false
+                self.pipelineTrace?.event("polish_finished", fields: ["outcome": result.outcome.rawValue, "duration_ms": String(result.elapsedMs)])
                 let finalText = result.text
                 // Paste before publishing the polished text. The popup update
                 // is UI work; the insertion should not wait behind it.
@@ -772,6 +784,7 @@ final class DictationController: ObservableObject {
         let canPost = has_event_posting_permission()
         let insertStart = Date()
         let ok = insert_text(text)
+        pipelineTrace?.event("insert_finished", fields: ["verification": ok ? "submitted" : "failed", "characters": String(text.count)])
         let insertMs = Int(Date().timeIntervalSince(insertStart) * 1000)
         NSLog("[Jarvis][Dictate] insert: %d (transcript→insert %.0f ms, insert call %d ms, %d chars, ax=%d cg=%d)",
               ok ? 1 : 0, elapsed * 1000, insertMs, text.count, trusted ? 1 : 0, canPost ? 1 : 0)
@@ -975,6 +988,8 @@ final class DictationController: ObservableObject {
     }
 
     func dismissTranscript() {
+        pipelineTrace?.event("dictation_closed")
+        pipelineTrace = nil
         CrashDiagnostics.shared.record("pill_dismissed")
         shortcutPreparing = false
         captureStarting = false

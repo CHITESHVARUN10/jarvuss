@@ -310,6 +310,7 @@ mod ffi {
         // Recording when the first use after an idle-unload pays the
         // load + warmup cost.
         fn is_model_loaded() -> bool;
+        fn release_idle_model() -> bool;
         fn get_transcript() -> String;
         fn copy_to_clipboard();
         fn paste_into_frontmost_app();
@@ -1314,6 +1315,17 @@ fn chunker_stop_tx_take() -> Option<mpsc::Sender<()>> {
 
 fn is_model_loaded() -> bool {
     MODEL_RESIDENT.load(Ordering::SeqCst)
+}
+
+/// Memory-pressure relief only. Never cancels a recording or inference; the
+/// worker rechecks can_idle_unload before releasing its resident context.
+fn release_idle_model() -> bool {
+    if !INITIALIZED.load(Ordering::SeqCst) || !MODEL_RESIDENT.load(Ordering::SeqCst)
+        || now_secs().saturating_sub(LAST_ACTIVITY.load(Ordering::SeqCst)) < 15 {
+        return false;
+    }
+    if !with_app(|app| app.can_idle_unload()) { return false; }
+    INFERENCE_TX.get().is_some_and(|tx| tx.send(InferenceJob::Unload).is_ok())
 }
 
 fn copy_to_clipboard() {

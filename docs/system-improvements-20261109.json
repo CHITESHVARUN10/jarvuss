@@ -1,0 +1,74 @@
+{
+  "source_revision": "bfb18db58a56d44c0ac81195b83a2031bfdb78ad",
+  "uncommitted": true,
+  "candidate_uuid": "F3F0764A-B339-3A76-B0DD-8100BEBE4BAC",
+  "installed_uuid": "F553D6DD-AA43-3DFD-AA61-AE922B7C6F62",
+  "installed_app_replaced": false,
+  "moonshine_installed": false,
+  "training_started": false,
+  "model_files_unchanged": 13,
+  "checks": {
+    "swift": 0,
+    "package": 0,
+    "runtime_smoke": 0
+  },
+  "tests": {
+    "swift_total": 414,
+    "swift_skipped": 14,
+    "rust_library_passed": 119,
+    "rust_helper_passed": 2,
+    "rust_integration_passed": 1,
+    "rust_ignored": 1,
+    "stt_passed": 37,
+    "stt_ignored": 1,
+    "python_total": 42,
+    "python_skipped": 1,
+    "packaging_api_checks": 6,
+    "apple_stream_integration_passed": true
+  },
+  "runtime_smoke": {
+    "unique_commands": 12,
+    "intent_requests": 36,
+    "planning_requests": 36,
+    "intent_outcome": "36 parsed",
+    "planning_outcome": "36 planned",
+    "intent_median_ms": 89,
+    "plan_median_ms": 0,
+    "executed_actions": 0,
+    "bundle_bytes": 280763168
+  },
+  "coreml": {
+    "synthetic_clips": 3,
+    "repeats_per_clip": 3,
+    "requests_per_provider": 9,
+    "request_median_ms": {
+      "cpu": 17.59,
+      "coreml": 44.78
+    },
+    "single_session_load_ms": {
+      "cpu": 95.48970800000001,
+      "coreml": 301.002708
+    },
+    "maximum_embedding_absolute_difference": 4.470348358154297e-08,
+    "production_provider": "cpu",
+    "limitations": [
+      "Synthetic clips, one process per provider, fixed CPU-then-CoreML order.",
+      "Requests include audio decoding and preprocessing; this is not isolated encoder-kernel time.",
+      "CoreML registration does not establish full Neural Engine placement.",
+      "No human-speaker false-accept/reject or comparative memory measurement."
+    ]
+  },
+  "synthetic_speech": {
+    "count": 1,
+    "speech_cases": 1,
+    "reference_words": 23,
+    "word_errors": 0,
+    "wer": 0.0,
+    "plan_cases": 0,
+    "exact_plans": 0,
+    "effect_cases": 0,
+    "verified_effects": 0,
+    "p50_ms": null,
+    "p95_ms": null
+  }
+}

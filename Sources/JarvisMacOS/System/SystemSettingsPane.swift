@@ -21,16 +21,7 @@ enum SystemSettingsPane: String, CaseIterable {
     }
 
     static func parse(_ text: String) -> Self? {
-        guard let match = LocalSearchParser.captures(#"^(?:open|show|go to|take me to) (?:me )?(?:the )?(.+?) (?:settings|preferences|pane)$"#, text) else { return nil }
-        let name = match[0].lowercased().replacingOccurrences(of: "wi-fi", with: "wifi")
-        switch name {
-        case "display", "brightness": return .displays
-        case "audio", "volume": return .sound
-        case "notification": return .notifications
-        case "privacy and security", "privacy & security", "security": return .privacy
-        case "software update", "updates": return .softwareUpdate
-        default: return Self(rawValue: name)
-        }
+        coreParseSettings(raw: text).flatMap(Self.init(rawValue:))
     }
 
     @MainActor func open() -> ControllerResult {

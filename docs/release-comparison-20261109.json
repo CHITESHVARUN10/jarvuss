@@ -1,0 +1,199 @@
+{
+  "created_utc": "2026-11-09T07:30:07.786763+00:00",
+  "method": "Fresh LaunchServices -F; same isolated setup; cache off; three launches/build; 12 commands x5 intent rounds + x3 planning rounds; libproc every20ms; CPU100%=one core.",
+  "cpu_units": {
+    "original": "Mach absolute ticks",
+    "numer": 125,
+    "denom": 3,
+    "normalized": "nanoseconds; seconds and percentages recomputed by the same factor"
+  },
+  "summary": {
+    "installed": {
+      "identity": {
+        "path": "/Applications/Jarvis.app",
+        "uuid": "F553D6DD-AA43-3DFD-AA61-AE922B7C6F62",
+        "bytes": 280393532,
+        "binary_sha256": "cf759cd33c4d52a04a0d6f18acde7aaf0a768e0347497182aab9b72d4a06849d",
+        "version": "1.0",
+        "build": "1",
+        "revision": "9c74339494e7+modified",
+        "built_utc": "2026-11-08T14:05:43Z"
+      },
+      "cold_ms": 369,
+      "warm_ms": 84.0,
+      "warm_p95_ms": 164,
+      "planning_ms": 0.0,
+      "planning_p95_ms": 165,
+      "idle_rss_mib": 110.265625,
+      "idle_footprint_mib": 42.65723419189453,
+      "loaded_rss_mib": 782.953125,
+      "loaded_footprint_mib": 701.2985458374023,
+      "peak_footprint_mib": 705.3922958374023,
+      "max_peak_footprint_mib": 721.3922958374023,
+      "peak_sampled_rss_mib": 787.25,
+      "idle_cpu": 19.14051793503029,
+      "loaded_idle_cpu": 17.720595776474624,
+      "inference_cpu": 414.8206567925048,
+      "cpu_ms_per_intent": 552.1765756944443,
+      "cpu_ms_per_plan": 192.85658564814815,
+      "after_unload_footprint_mib": 459.5639877319336,
+      "after_unload_rss_mib": 602.296875,
+      "reload_ms": 1547,
+      "bundle_mb": 280.393532,
+      "launches": [
+        {
+          "warm_ms": 83.0,
+          "loaded_footprint_mib": 699.7828979492188,
+          "peak_footprint_mib": 703.3297729492188
+        },
+        {
+          "warm_ms": 85.5,
+          "loaded_footprint_mib": 717.6422958374023,
+          "peak_footprint_mib": 721.3922958374023
+        },
+        {
+          "warm_ms": 84.0,
+          "loaded_footprint_mib": 701.2985458374023,
+          "peak_footprint_mib": 705.3922958374023
+        }
+      ]
+    },
+    "candidate": {
+      "identity": {
+        "path": "/Users/chiteshvarun/D-drive/jarvis_code/.build/Jarvis.app",
+        "uuid": "F3F0764A-B339-3A76-B0DD-8100BEBE4BAC",
+        "bytes": 280763168,
+        "binary_sha256": "70c9d57d998ffc7d22b55589c70a670cc97addf1f6762a43983ad2a134676f7e",
+        "version": "1.0",
+        "build": "1",
+        "revision": "bfb18db58a56+modified",
+        "built_utc": "2026-11-09T06:35:33Z"
+      },
+      "cold_ms": 371,
+      "warm_ms": 83.5,
+      "warm_p95_ms": 164,
+      "planning_ms": 0.0,
+      "planning_p95_ms": 166,
+      "idle_rss_mib": 109.140625,
+      "idle_footprint_mib": 42.21973419189453,
+      "loaded_rss_mib": 799.875,
+      "loaded_footprint_mib": 718.2360458374023,
+      "peak_footprint_mib": 722.2516479492188,
+      "max_peak_footprint_mib": 735.8453750610352,
+      "peak_sampled_rss_mib": 803.3125,
+      "idle_cpu": 17.258258777867823,
+      "loaded_idle_cpu": 17.0953240304884,
+      "inference_cpu": 408.39457862496937,
+      "cpu_ms_per_intent": 552.0762798611111,
+      "cpu_ms_per_plan": 150.74143287037037,
+      "after_unload_footprint_mib": 486.7827835083008,
+      "after_unload_rss_mib": 625.609375,
+      "reload_ms": 1579,
+      "bundle_mb": 280.763168,
+      "launches": [
+        {
+          "warm_ms": 83.5,
+          "loaded_footprint_mib": 718.2203750610352,
+          "peak_footprint_mib": 735.8453750610352
+        },
+        {
+          "warm_ms": 83.0,
+          "loaded_footprint_mib": 718.2516708374023,
+          "peak_footprint_mib": 721.7047958374023
+        },
+        {
+          "warm_ms": 84.0,
+          "loaded_footprint_mib": 719.0797729492188,
+          "peak_footprint_mib": 722.2516479492188
+        }
+      ]
+    }
+  },
+  "plan_requests_per_build": 108,
+  "intent_requests_per_build": 180,
+  "unique_commands": 12,
+  "planning_differences": [],
+  "behavior": [
+    {
+      "command": "create file CaseSensitive.TXT",
+      "installed": [
+        "Create file 'caseSensitive.TXT'"
+      ],
+      "candidate": [
+        "Create file 'CaseSensitive.TXT'"
+      ]
+    },
+    {
+      "command": "search Google for CaseSensitive_API",
+      "installed": [
+        "Search Google for 'caseSensitive_API'"
+      ],
+      "candidate": [
+        "Search Google for 'CaseSensitive_API'"
+      ]
+    },
+    {
+      "command": "open https://example.com/MyCase?q=AB in Brave",
+      "installed": [
+        "Open URL in Brave Browser: https://example.com/mycase?q=ab"
+      ],
+      "candidate": [
+        "Open URL in Brave Browser: https://example.com/MyCase?q=AB"
+      ]
+    },
+    {
+      "command": "play Z\u00e9phyr_42 by AB",
+      "installed": [
+        "Media: play song 'Z\u00e9phyr_42 by AB'"
+      ],
+      "candidate": [
+        "Media: play song 'Z\u00e9phyr_42 by AB'"
+      ]
+    },
+    {
+      "command": "open Chrome and set volume to 25",
+      "installed": [
+        "Open 'Google Chrome'",
+        "Volume: set to 25%"
+      ],
+      "candidate": [
+        "Open 'Google Chrome'",
+        "Volume: set to 25%"
+      ]
+    }
+  ],
+  "limits": [
+    "Main app process only; microphone, speech and speaker models are not exercised in the app A/B.",
+    "Memory measured before intent load, with intent resident, and after automatic intent unload.",
+    "Three launches per build. Idle-unload/reload checked once per build.",
+    "CPU percentages use 100% per logical core; this Mac has 10 logical CPUs.",
+    "Peak footprint is kernel lifetime high water; RSS peaks are sampled at 20ms.",
+    "Cache disabled. OS file cache not flushed; cold means a fresh model session.",
+    "Benchmark test mode in the candidate skips database setup/model updates; neither build executes actions.",
+    "Background system load and allocator residency affect small differences."
+  ],
+  "speech_component_probe": {
+    "audio_seconds": 3.221375,
+    "results": {
+      "whisper": {
+        "final_ms": 1300,
+        "samples_ms": [
+          1319,
+          1300,
+          1298
+        ],
+        "all_success": true
+      },
+      "apple": {
+        "final_ms": 76.792458,
+        "samples_ms": [
+          96.5685,
+          76.792458,
+          75.537125
+        ],
+        "all_success": true
+      }
+    },
+    "scope": "Separate synthetic file component experiment, not exact bundle A/B or live latency. Whisper uses the unchanged native engine; Apple models/services are OS-managed. RAM/CPU not compared because Apple work occurs outside the probe process."
+  }
+}

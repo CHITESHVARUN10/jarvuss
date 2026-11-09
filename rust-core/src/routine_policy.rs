@@ -100,3 +100,28 @@ mod tests {
         .is_some());
     }
 }
+
+/// Compile saved steps to the same action contract as spoken commands.
+#[uniffi::export]
+pub fn compile_routine_action(type_name: String, value: String) -> Option<crate::actions::PlannedAction> {
+    if validate_routine_action(type_name.clone(), value.clone()).is_some() { return None; }
+    use crate::actions::{MediaAction as M, PlannedAction as A};
+    let text = value.trim();
+    Some(match type_name.as_str() {
+        "open_website" => A::OpenUrl { url: routine_website(value)? },
+        "open_website_brave" | "open_website_chrome" => A::OpenUrlInBrowser { url: routine_website(value)?, browser: if type_name == "open_website_brave" { "Brave Browser" } else { "Google Chrome" }.into() },
+        "new_tab" | "new_window" => A::Workspace { command: workspace::WorkspaceRequest { operation: if type_name == "new_tab" { workspace::WorkspaceOperation::NewTab } else { workspace::WorkspaceOperation::NewWindow }, app: workspace::app(text)?, project: String::new(), root: String::new() } },
+        "workspace_command" => A::Workspace { command: workspace::parse(text)? },
+        "open_app" => A::OpenApp { name: text.into() }, "close_app" => A::CloseApp { name: text.into() },
+        "play_song" => A::MediaControl { action: M::PlaySong { name: text.into() } },
+        "play_playlist" => A::MediaControl { action: M::PlayPlaylist { name: text.into() } },
+        "play_liked" => A::MediaControl { action: M::PlayLikedSongs }, "pause" => A::MediaControl { action: M::Pause },
+        "next" => A::MediaControl { action: M::NextTrack }, "previous" => A::MediaControl { action: M::PreviousTrack },
+        "open_folder" => A::OpenFolder { path: text.into() },
+        "open_file" => {
+            let path = if let Some(tail) = text.strip_prefix("~/") { dirs::home_dir()?.join(tail) } else { std::path::PathBuf::from(text) };
+            A::OpenUrl { url: url::Url::from_file_path(path).ok()?.to_string() }
+        }
+        _ => return None,
+    })
+}

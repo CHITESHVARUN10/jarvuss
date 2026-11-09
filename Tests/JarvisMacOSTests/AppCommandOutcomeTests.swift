@@ -195,6 +195,17 @@ final class AppCommandOutcomeTests: XCTestCase {
         XCTAssertEqual(executor.plans, [plan])
     }
 
+    func testFailedRoutineStepSkipsOnlyDependentSteps() async {
+        let routine = VoiceAutomation(keyword: "work", actions: [
+            .init(type: .openApp, value: "Missing app"),
+            .init(type: .newTab, value: "Chrome", requiresPreviousSuccess: true),
+            .init(type: .playSong, value: "Independent song")
+        ])
+        let succeeded = await app.executeAutomation(routine, isOffVariant: false)
+        XCTAssertFalse(succeeded)
+        XCTAssertEqual(executor.plans, [[.openApp("Missing app")], [.mediaControl(.playSong("Independent song"))]])
+    }
+
     func testRoutineCommandsKeepSafetyAndInvalidStepsAreFailures() async {
         executor.succeed = true
         let routine = VoiceAutomation(keyword: "work mode", actions: [

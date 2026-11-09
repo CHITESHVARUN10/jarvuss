@@ -1,79 +1,119 @@
 # Runtime ownership
 
-`AppState` owns published UI state and service wiring. Its command, enrollment,
-verification, and connection extensions keep those flows separate. Planner
-models, fast paths, media parsing, device controls, and general rules are in
-separate files. Services can be injected without starting the microphone or
-backend by constructing `AppState` with `activateServices: false`.
+Swift owns SwiftUI/AppKit, Accessibility, Apple Events, permissions, Keychain,
+audio-device capture, security-scoped bookmarks, Spotlight and hardware adapters.
+Rust owns the portable command/action contract, parsing, model mapping,
+validation, literal arguments, routine compilation, indexing and native model
+inference. Offline training/export/evaluation tools remain Python; Python is not
+shipped. `AppState(activateServices: false)` keeps unit tests free of audio,
+Apple speech asset installation and service startup.
 
 ## Commands and inference
 
-- `CommandQueueManager` owns command admission and its watchdog. Preemption
-  and expiry cancel the active task and invalidate its UI generation.
-- `ActionExecutor` checks cancellation between actions and returns step results.
-  Main-actor callbacks are awaited. Opening an app waits for launch readiness;
-  other actions do not incur an arbitrary delay.
-- `CommandOutcome` distinguishes success, partial failure, failure and
-  cancellation. One terminal event supplies command metrics and training input.
-- `InferenceGate` serializes Ollama work in FIFO order. The wall-clock deadline
-  includes gate admission and HTTP generation. Both support cancellation.
-- The Swift HTTP client owns inference in both routing modes. Rust owns safety,
-  priority and instant information patterns; Swift adapts application types.
-  Remaining routing migration differences use the same JSON fixtures in Swift
-  and Rust (`Tests/JarvisMacOSTests/Fixtures/command_policy.json`).
+`ActionPlanner` coordinates asynchronous model calls. Its policy helpers and
+`FastPathRouter` are adapters to Rust, including post-model fallback selection
+and Ollama response parsing. Both former routing modes use this policy. Swift
+presentation enums adapt the generated Rust actions; an unadaptable action
+rejects the entire plan instead of dropping individual steps.
 
-Cancellation prevents subsequent actions. An operation already accepted by
-another application or a remote API may have completed before cancellation.
+Native parsing precedes model admission for explicit commands. The learned
+mapper re-parses supported families and obtains names from original clauses.
+Unfamiliar song/file names cannot be replaced with invented generated arguments.
+Exact URLs retain their path/query case. Quoted literals survive compound
+splitting, while explicit negated actions do not become positive actions.
+This is targeted deterministic interpretation, not universal natural-language
+understanding or a newly trained classifier.
 
-## Dictation
+`CommandQueueManager` owns bounded admission, delivery-ID deduplication,
+preemption and a watchdog. Native decoding has per-request cancellation checks
+between inference steps; an individual running native kernel cannot be
+interrupted by that flag. `InferenceBudget` limits concurrent intent, voice and
+LLM jobs, prioritizes interactive waiting jobs, and refuses optional formatting
+during speech or memory pressure. Ollama retains its cancellable single-flight
+gate and request deadline. These bounds do not measure or cap an OS speech
+service's or Ollama process's total memory.
 
-Each Rust recording has a monotonically increasing session ID. Cancelling a
-recording invalidates queued inference and callbacks. Swift checks that ID
-again after dispatching callbacks onto the main queue. Polishing has its own
-generation check and cancellable task, so dismissing one card and starting
-another cannot insert the earlier result.
+`MemoryGuard` observes both app footprint and system memory-pressure signals.
+Before its existing hard backstop, it suppresses optional work and requests
+unloading idle intent and Whisper contexts. Active capture/inference is not
+unloaded. Voice inference already runs in a bounded, separate Rust helper.
+Additional process isolation of intent/STT remains a conditional future change;
+there is no evidence here that another IPC hop improves normal performance.
 
-## Statistics
+## Live speech and dictation
 
-`StatsRecorder` serializes its state and persistence on one queue. Events are
-batched in memory for up to one second (or 64 events); shutdown flushes them
-immediately. Day rollover rotates snapshots without taking recursive locks.
+Live listening defaults to Apple `SpeechAnalyzer`/`SpeechTranscriber`, using a
+supported configured locale (default en-IN). macOS manages on-device language
+assets. Preparation and recognition have separate cancellation generations.
+`MicManager` supplies the existing tap: copied buffers go through a bounded
+serial format-conversion queue to a bounded analyzer stream. Unsupported audio
+layouts fail before entering Apple's trapping initializer. Pre-roll is queued
+before tap delivery. Partial results replace overlapping hypotheses. A pause
+(650 ms) ends an utterance; finalization drains accepted audio/results before
+one command handoff. Continuous speech is bounded at 45 seconds; failed or
+stuck sessions produce an error rather than partial command execution.
 
-Persisted batches have stable UUIDs. PostgreSQL accepts a UUID and adds its
-delta in one statement. Replaying the UUID does nothing. The outbox removes
-only acknowledged IDs, preserving events recorded during an upload. Failures
-and disabled logging leave data available for retry. A periodic retry also
-runs when no new usage events arrive. A corrupt outbox is retained and logged,
-rather than silently overwritten.
+System → Live speech selects Apple/Whisper and the locale; restart listening
+to apply it. The Whisper fallback keeps its existing VAD path. Shortcut
+recordings continue through Rust/Whisper, with `STTRouter` owning their separate
+dictation/action roles. A modal shortcut cancels any live Apple session first.
+No Moonshine runtime or weights were installed.
 
-## Configuration and Python workers
+Rules formatting is the dictation default. Optional AI formatting is explicitly
+enabled in System and passes the existing lexical preservation guard. Model
+formatting cannot silently alter content. Dismissing a session invalidates its
+pending formatting/insertion; no late result can paste into a later session.
 
-`backend/runtime_config.py` and Swift's `RuntimeConfiguration` share the
-`local.jarvis.credentials` Keychain service. Secrets never enter JSON settings,
-shell source files, or process arguments. Persisted settings override `.env`
-and inherited defaults. Legacy files are read as data and left untouched;
-packaging migrates existing local credentials and voice profiles before
-removing their generated copies from the bundle.
+## Effects and routines
 
-The voice encoder runs on one dedicated worker with bounded admission.
-Enrollment, verification and reset share that worker; slow CPU inference does
-not block the ASGI event loop. Voice-profile writes use atomic replacement in
-Application Support. Model inference tests use fakes; quality still needs
-evaluation with real audio.
+`ActionResult`/`ControllerResult` distinguish `verified`, `submitted`,
+`unavailable` and `failed`. Success still means the controller accepted/completed
+its supported operation; verification describes the available evidence.
+Browser creation, Finder/Terminal project checks and hardware volume use their
+existing readback. VS Code project submission and playlist identity are not
+represented as fully verified. Spotify remains entirely native, without OAuth.
 
-## Build compatibility
+Routine steps compile to the same Rust action contract as ordinary commands.
+`requiresPreviousSuccess` skips a step after a failed/skipped predecessor;
+independent steps still run. Old routines default to independent steps. There
+are no automatic retries or rollback of already completed external effects.
+New unverified execution events are excluded from automatic positive training
+pairs; historical logs retain their earlier interpretation. Reviewed corrections
+are separate and never automatically trained.
 
-The minimum OS is macOS 26.0 in SwiftPM, Info.plist, Cargo and native build
-scripts. `scripts/macos_toolchain.zsh` selects a matching Xcode compiler and SDK
-for native compilation. Rebuild both XCFrameworks after Rust or bridge changes.
+## Projects
 
-## Native app and project commands
+Swift resolves bookmarks and retains scoped access during lookup. Rust owns a
+bounded four-entry directory index with a 30-second fallback TTL. Filesystem
+(FSEvents), saved-location and volume events invalidate it. Root/selected-path
+availability is checked; direct-child and alias precedence are retained. First
+index construction is still a bounded traversal, and blocked filesystem calls
+cannot be interrupted by a user-space deadline.
 
-`WorkspaceCommandParser` owns exact app/operation/project/root fields before
-legacy generic app routing in both modes. Learned workspace families are
-argument-free and must match native re-parsing. `ProjectLocationStore` owns
-local root/alias bookmarks; `ProjectDirectoryResolver` performs bounded scoped
-lookup off the main actor. `ProjectWorkspaceController` owns ambiguity selection
-and expiring successful-project context. `NativeWorkspaceController` owns the
-allowlisted app adapters, process deadlines, and available native readback.
-Workspace actions use the normal executor, routine steps, and command-test logs.
+## Diagnostics, evaluation and updates
+
+`PipelineTrace` carries a request ID from Apple live speech or shortcut capture
+through verification, queued command work, planning and execution. New pipeline
+events contain metadata/timing by default and rotate to one predecessor.
+Existing command logs and opt-in dictation text diagnostics remain separate.
+System → Correct a command writes a private reviewed record with the associated
+request ID when available. Nothing uploads or starts training from this UI.
+
+`evaluate_pipeline.py` separates WER, exact plans, verified effects and p50/p95
+latency. `calibrate_intent.py` reads development predictions, reports confidence
+risk/coverage with sample-size bounds and never changes thresholds. Existing
+model integrity, audit evidence and rollback checks remain required. Run 6
+weights and the serving threshold are unchanged.
+
+Statistics retain their serialized persistence and UUID-deduplicated PostgreSQL
+outbox. The native helper retains local-token authentication, signed Keychain
+brokerage and atomic voice-profile storage. Stable signing and clean bundle
+verification remain packaging requirements.
+
+## Experimental acceleration
+
+`voice-probe MODEL_DIRECTORY ORT_LIBRARY [cpu|coreml]` can explicitly test Core
+ML. Compiled caches are keyed by encoder weight hash and ORT version; unavailable
+provider registration is an error. Production always selects the verified CPU
+path. The prototype was slower on the tested synthetic clips, so it is not
+promoted. See `system-improvements-20261109.md` for evidence and limitations.

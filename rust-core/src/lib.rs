@@ -10,6 +10,7 @@
 //! stay in Swift for Phase 1; this crate guarantees intent parity via tests.
 
 pub mod actions;
+pub mod command_policy;
 pub mod alias;
 pub mod automation;
 pub mod intent_mapper;
@@ -246,4 +247,20 @@ pub fn ollama_plan(cleaned: String) -> ollama::OllamaPlanResult {
 #[uniffi::export]
 pub fn ollama_normalize(cleaned: String) -> ollama::NormalizedCommand {
     ollama::normalize(&cleaned)
+}
+
+/// Per-request cancellation, checked before and between native decoding steps.
+#[derive(uniffi::Object, Default)]
+pub struct InferenceCancellation { cancelled: std::sync::atomic::AtomicBool }
+#[uniffi::export]
+impl InferenceCancellation {
+    #[uniffi::constructor]
+    pub fn new() -> std::sync::Arc<Self> { std::sync::Arc::new(Self::default()) }
+    pub fn cancel(&self) { self.cancelled.store(true, std::sync::atomic::Ordering::Release); }
+    pub fn is_cancelled(&self) -> bool { self.cancelled.load(std::sync::atomic::Ordering::Acquire) }
+}
+#[uniffi::export]
+pub fn native_intent_parse_cancellable(text: String, bundled_directory: String, data_directory: String, runtime_library: String, cancellation: std::sync::Arc<InferenceCancellation>) -> Result<String, NativeIntentError> {
+    native_intent::parse_cancellable(&text, std::path::Path::new(&bundled_directory), std::path::Path::new(&data_directory), std::path::Path::new(&runtime_library), Some(&cancellation))
+        .map_err(|message| NativeIntentError::Unavailable { message })
 }

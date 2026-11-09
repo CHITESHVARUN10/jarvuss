@@ -28,6 +28,8 @@
     <string>Jarvis saves files and folders you ask it to create in Documents/Jarvis.</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>Jarvis needs microphone access to detect speech and execute voice commands.</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>Jarvis uses Apple on-device speech recognition for live commands.</string>
     <key>NSAppleEventsUsageDescription</key>
     <string>Jarvis controls supported apps (for media and automation) using Apple Events.</string>
 </dict>

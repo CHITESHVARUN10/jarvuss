@@ -191,6 +191,10 @@ impl Engine {
         self.generate_until(text, None)
     }
     fn generate_until(&mut self, text: &str, deadline: Option<Instant>) -> Result<Generation> {
+        self.generate_cancellable(text, deadline, None)
+    }
+    fn generate_cancellable(&mut self, text: &str, deadline: Option<Instant>, cancellation: Option<&crate::InferenceCancellation>) -> Result<Generation> {
+        if cancellation.is_some_and(|c| c.is_cancelled()) { return Err("intent inference cancelled".into()); }
         let ids = self.encode(&format!("parse: {text}"))?;
         let len = ids.len();
         let mask = Tensor::from_array(([1, len], vec![1i64; len]))
@@ -223,6 +227,7 @@ impl Engine {
         let mut logprobs = Vec::new();
         let mut current = self.start;
         for step in 0..448 {
+            if cancellation.is_some_and(|c| c.is_cancelled()) { return Err("intent inference cancelled".into()); }
             if deadline.is_some_and(|t| Instant::now() >= t) {
                 return Err("intent inference timed out".into());
             }
@@ -434,6 +439,10 @@ impl State {
     }
 }
 pub fn parse(text: &str, bundled: &Path, data: &Path, library: &Path) -> Result<String> {
+    parse_cancellable(text, bundled, data, library, None)
+}
+pub fn parse_cancellable(text: &str, bundled: &Path, data: &Path, library: &Path, cancellation: Option<&crate::InferenceCancellation>) -> Result<String> {
+    if cancellation.is_some_and(|c| c.is_cancelled()) { return Err("intent inference cancelled".into()); }
     if text.chars().count() > 4096 {
         return Err("text exceeds 4096 characters".into());
     }
@@ -458,7 +467,7 @@ pub fn parse(text: &str, bundled: &Path, data: &Path, library: &Path) -> Result<
             }
         }
     }
-    let g=match state.engine.as_mut().ok_or("intent model unavailable")?.generate_until(text,Some(start+Duration::from_secs(2))){Ok(g)=>g,Err(e)if e=="input_too_long"=>return Ok(json!({"actions":null,"parse_ok":false,"confidence":0,"raw":"","latency_ms":0,"reason":e}).to_string()),Err(e)=>return Err(e)};
+    let g=match state.engine.as_mut().ok_or("intent model unavailable")?.generate_cancellable(text,Some(start+Duration::from_secs(2)),cancellation){Ok(g)=>g,Err(e)if e=="input_too_long"=>return Ok(json!({"actions":null,"parse_ok":false,"confidence":0,"raw":"","latency_ms":0,"reason":e}).to_string()),Err(e)=>return Err(e)};
     let actions: Option<Value> = serde_json::from_str::<Value>(&g.raw).ok().filter(|v| {
         v.as_array()
             .is_some_and(|a| !a.is_empty() && a.iter().all(Value::is_object))

@@ -19,11 +19,15 @@ final class DictationAppDelegate: NSObject, NSApplicationDelegate {
         NSApplication.shared.activate(ignoringOtherApps: true)
 
         DictationController.shared.launch()
+        // Service startup must not depend on a WindowGroup appearing (a
+        // second instance or restored windowless launch can have no scene).
+        Task { @MainActor in await AppState.shared?.bootstrap() }
         registerDictationHotkey()
         NSLog("[Jarvis] Dictation ready (⌘⇧D dictate · ⌘⇧A action)")
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        AppState.shared?.shutdown()
         CrashDiagnostics.shared.markExit()
         CredentialBroker.shared.stop()
         unregisterDictationHotkey()

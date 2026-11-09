@@ -116,7 +116,7 @@ src_path, dst_path = sys.argv[1], sys.argv[2]
 src = open(src_path).read()
 
 TYPES = [
-         "NativeIntentError",
+         "NativeIntentError", "InferenceCancellation", "InferenceCancellationProtocol",
          "VoiceSegment", "TranscriptBatch", "RoutineIssue", "SearchMode",
          "SearchKind", "SearchDate", "SearchRequest", "SelectionOperation",
          "FileSelection", "ShuffleTarget", "ShuffleRequest", "WorkspaceApp",
@@ -126,8 +126,8 @@ TYPES = [
          "NormalizedPriority", "OllamaGenerateOutcome", "OllamaPlanResult", "PlannedAction",
          "PlanResult", "SafetyVerdict", "SystemInfoAction", "VolumeAction",
          "FormattedTranscript", "SanitizeResult", "OpenTarget",
-         "ProjectLocationInput", "ProjectMatch", "ProjectLookupResult"]
-FUNCS = {"normalizeCompact": "coreNormalizeCompact",
+         "ProjectLocationInput", "ProjectMatch", "ProjectLookupResult", "FileQuery"]
+FUNCS = {"commandParts": "coreCommandParts", "commandVerbCount": "coreCommandVerbCount", "mediaContentWords": "coreMediaContentWords", "parseMediaCommand": "coreParseMediaCommand", "ruleCommand": "coreRuleCommand", "cleanCommand": "coreCleanCommand", "parseToolActions": "coreParseToolActions", "nativeIntentParseCancellable": "coreNativeIntentParseCancellable", "findIndexedProjects": "coreFindIndexedProjects", "invalidateProjectIndex": "coreInvalidateProjectIndex", "compileRoutineAction": "coreCompileRoutineAction", "mapIntentsWithSource": "coreMapIntentsWithSource", "nativeCommand": "coreNativeCommand", "fastCommand": "coreFastCommand", "parseFileQuery": "coreParseFileQuery", "parseSettings": "coreParseSettings", "normalizeCompact": "coreNormalizeCompact",
          "nativeIntentParse": "coreNativeIntentParse",
          "nativeIntentStatus": "coreNativeIntentStatus",
          "nativeIntentUnloadIfIdle": "coreNativeIntentUnloadIfIdle",

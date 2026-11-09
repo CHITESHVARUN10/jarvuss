@@ -4,7 +4,7 @@
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, uniffi::Enum)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, uniffi::Enum)]
 pub enum SystemInfoAction {
     CurrentTime,
     CurrentDate,
@@ -37,7 +37,7 @@ impl SystemInfoAction {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, uniffi::Enum)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, uniffi::Enum)]
 pub enum MediaAction {
     Play,
     PlaySong { name: String },
@@ -45,6 +45,9 @@ pub enum MediaAction {
     NextTrack,
     PreviousTrack,
     PlayLikedSongs,
+    SetShuffle { enabled: bool },
+    PlayLikedWithShuffle { enabled: bool },
+    PlayPlaylistWithShuffle { name: String, enabled: bool },
     PlayPlaylist { name: String },
 }
 
@@ -57,12 +60,15 @@ impl MediaAction {
             Self::NextTrack => "next track".to_string(),
             Self::PreviousTrack => "previous track".to_string(),
             Self::PlayLikedSongs => "play liked songs".to_string(),
+            Self::SetShuffle { enabled } => format!("shuffle {}", if *enabled { "on" } else { "off" }),
+            Self::PlayLikedWithShuffle { enabled } => format!("shuffle liked songs {}", if *enabled { "on" } else { "off" }),
+            Self::PlayPlaylistWithShuffle { name, enabled } => format!("shuffle playlist '{name}' {}", if *enabled { "on" } else { "off" }),
             Self::PlayPlaylist { name } => format!("play playlist '{name}'"),
         }
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, uniffi::Enum)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, uniffi::Enum)]
 pub enum VolumeAction {
     Increase { by: i32 },
     Decrease { by: i32 },
@@ -128,6 +134,12 @@ impl DisplayAction {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, uniffi::Enum)]
 pub enum PlannedAction {
+    Workspace { command: crate::workspace::WorkspaceRequest },
+    OpenUrlInBrowser { url: String, browser: String },
+    FileQuery { query: crate::command_policy::FileQuery },
+    SearchFiles { request: crate::local_search::SearchRequest },
+    FileResult { selection: crate::local_search::FileSelection },
+    OpenSettings { pane: String },
     OpenApp { name: String },
     CloseApp { name: String },
     SystemInfo { info: SystemInfoAction },
@@ -147,6 +159,12 @@ pub enum PlannedAction {
 impl PlannedAction {
     pub fn description(&self) -> String {
         match self {
+            Self::Workspace { command } => format!("Workspace: {:?} in {:?} project '{}'", command.operation, command.app, command.project),
+            Self::OpenUrlInBrowser { url, browser } => format!("Open URL in {browser}: {url}"),
+            Self::FileQuery { query } => format!("Files: {} in '{}' [{}]", query.op, query.folder, query.ext),
+            Self::SearchFiles { request } => format!("File search: {}", request.query),
+            Self::FileResult { selection } => format!("File result: {:?} {}", selection.operation, selection.index),
+            Self::OpenSettings { pane } => format!("Settings: {pane}"),
             Self::OpenApp { name } => format!("Open '{name}'"),
             Self::CloseApp { name } => format!("Close '{name}'"),
             Self::SystemInfo { info } => format!("Info: {}", info.description()),

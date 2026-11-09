@@ -30,10 +30,17 @@ enum NativeIntentRuntime {
         let library = resources?.appendingPathComponent("native/libonnxruntime.1.31.0.dylib")
             ?? root.appendingPathComponent(".build/native/libonnxruntime.1.31.0.dylib")
         let dataDirectory = RuntimeConfiguration.dataDirectory.path
-        let result: Result<String, Error> = await RustPipeline.runBlocking {
-            Result { try coreNativeIntentParse(text: text, bundledDirectory: model.path,
-                                              dataDirectory: dataDirectory, runtimeLibrary: library.path) }
+        let cancellation = CoreInferenceCancellation()
+        PipelineTrace.current?.event("intent_started")
+        let result: Result<String, Error> = try await InferenceBudget.shared.run {
+            await withTaskCancellationHandler {
+                await RustPipeline.runBlocking {
+                    Result { try coreNativeIntentParseCancellable(text: text, bundledDirectory: model.path,
+                        dataDirectory: dataDirectory, runtimeLibrary: library.path, cancellation: cancellation) }
+                }
+            } onCancel: { cancellation.cancel() }
         }
+        PipelineTrace.current?.event("intent_finished")
         try Task.checkCancellation()
         return try result.get()
     }

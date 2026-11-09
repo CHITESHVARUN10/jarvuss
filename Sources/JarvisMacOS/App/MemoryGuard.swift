@@ -18,6 +18,8 @@ final class MemoryGuard {
 
     private let queue = DispatchQueue(label: "jarvis.memory-guard", qos: .utility)
     private var timer: DispatchSourceTimer?
+    private var pressureSource: DispatchSourceMemoryPressure?
+    private var systemPressure = false
     private var terminating = false
 
     // MARK: - Pure helpers (unit-tested)
@@ -50,7 +52,9 @@ final class MemoryGuard {
         guard let gb = Double(envValue.trimmingCharacters(in: .whitespaces).lowercased()) else {
             return nil
         }
-        return gb <= 0 ? nil : UInt64(gb * 1024 * 1024 * 1024)
+        let bytes = gb * 1024 * 1024 * 1024
+        guard bytes.isFinite, bytes > 0, bytes < Double(UInt64.max) else { return nil }
+        return UInt64(bytes)
     }
 
     static func shouldTerminate(footprintBytes: UInt64, limitBytes: UInt64) -> Bool {
@@ -75,6 +79,14 @@ final class MemoryGuard {
 
     func start() {
         guard timer == nil else { return }
+        let pressure = DispatchSource.makeMemoryPressureSource(eventMask: [.normal, .warning, .critical], queue: queue)
+        pressure.setEventHandler { [weak self] in
+            guard let self, let pressure = self.pressureSource else { return }
+            self.systemPressure = !pressure.data.contains(.normal)
+            self.check()
+        }
+        pressureSource = pressure
+        pressure.resume()
         let timer = DispatchSource.makeTimerSource(queue: queue)
         timer.schedule(deadline: .now() + Self.checkIntervalSeconds,
                        repeating: Self.checkIntervalSeconds)
@@ -85,8 +97,20 @@ final class MemoryGuard {
     }
 
     private func check() {
-        guard let limit = Self.configuredLimitBytes else { return }
+        guard let limit = Self.configuredLimitBytes else {
+            let pressure = systemPressure
+            Task { await InferenceBudget.shared.setPressure(pressure) }
+            return
+        }
         let footprint = Self.footprintBytes()
+        let pressured = systemPressure || footprint >= limit / 5 * 4
+        Task { await InferenceBudget.shared.setPressure(pressured) }
+        if pressured {
+            // Nonblocking native unload refuses while an inference owns the
+            // engine. Optional jobs are refused before the hard backstop.
+            _ = coreNativeIntentUnloadIfIdle(seconds: 15)
+            _ = release_idle_model()
+        }
         guard footprint > 0,
               Self.shouldTerminate(footprintBytes: footprint, limitBytes: limit) else { return }
         terminate(footprint: footprint, limit: limit)

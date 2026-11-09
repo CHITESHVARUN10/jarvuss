@@ -3,38 +3,9 @@ import Foundation
 
 extension AppState {
     func matchedAutomation(for command: String) -> (automation: VoiceAutomation, isOffVariant: Bool)? {
-        // Migration cut-over: Rust core owns the matching decision.
-        if JarvisFlags.useRustPipeline {
-            let keywords = automations.map {
-                CoreAutomationKeywords(keyword: $0.keyword, offKeyword: $0.offKeyword)
-            }
-            if let match = coreMatchAutomation(text: command, keywords: keywords),
-               Int(match.index) < automations.count {
-                return (automations[Int(match.index)], match.isOffVariant)
-            }
-            return nil
-        }
-
-        let lower = command.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !lower.isEmpty else { return nil }
-
-        for automation in automations {
-            let keyword = automation.keyword.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !keyword.isEmpty else { continue }
-
-            let offKeyword = automation.offKeyword?.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-                ?? "\(keyword) off"
-
-            if !offKeyword.isEmpty, lower.contains(offKeyword) {
-                return (automation, true)
-            }
-
-            if lower.contains(keyword) {
-                return (automation, false)
-            }
-        }
-
-        return nil
+        let keywords = automations.map { CoreAutomationKeywords(keyword: $0.keyword, offKeyword: $0.offKeyword) }
+        guard let match = coreMatchAutomation(text: command, keywords: keywords), Int(match.index) < automations.count else { return nil }
+        return (automations[Int(match.index)], match.isOffVariant)
     }
 
     func executeAutomation(_ automation: VoiceAutomation, isOffVariant: Bool) async -> Bool {
@@ -46,8 +17,16 @@ extension AppState {
         appendLog("[Automation] Executing \(automation.actions.count) actions for '\(automation.keyword)'")
         assistantState = .executing
         var allSucceeded = !automation.actions.isEmpty
+        var previousSucceeded = true
         for action in automation.actions {
             guard !Task.isCancelled else { return false }
+            if action.requiresPreviousSuccess && !previousSucceeded {
+                appendLog("[Automation] Skipped dependent step after a failed or skipped step.")
+                PipelineTrace.current?.event("routine_step_skipped", fields: ["step_id": action.id.uuidString])
+                allSucceeded = false; previousSucceeded = false
+                continue
+            }
+            previousSucceeded = false
             if let error = action.validationMessage {
                 appendLog("[Automation][ERROR] \(error)")
                 allSucceeded = false
@@ -61,7 +40,7 @@ extension AppState {
                     continue
                 }
                 // Use the shared planner directly; saved routine keywords must not recurse.
-                plan = await actionPlanner.plan(from: action.value, requestID: UUID())
+                plan = await actionPlanner.plan(from: action.value, requestID: PipelineTrace.current?.id ?? UUID())
             } else {
                 plan = plannedAction(for: action).map { [$0] } ?? []
             }
@@ -78,7 +57,8 @@ extension AppState {
                         self?.appendLog("[Automation] \(result.success ? "✓" : "✗") \(result.message)")
                     }
                 )
-                allSucceeded = allSucceeded && results.count == plan.count && results.allSatisfy(\.success)
+                previousSucceeded = results.count == plan.count && results.allSatisfy(\.success)
+                allSucceeded = allSucceeded && previousSucceeded
             } else {
                 appendLog("[Automation][ERROR] Skipped \(action.type.rawValue) — no value configured")
                 allSucceeded = false
@@ -92,51 +72,7 @@ extension AppState {
     }
 
     func plannedAction(for action: AutomationAction) -> PlannedAction? {
-        let value = action.value.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        switch action.type {
-        case .command:
-            return nil // Asynchronously planned through the full command pipeline.
-        case .openWebsite, .openWebsiteBrave, .openWebsiteChrome:
-            guard let url = action.websiteURL else { return nil }
-            if action.type == .openWebsiteBrave { return .openURLInBrowser(url: url, browser: "Brave Browser") }
-            if action.type == .openWebsiteChrome { return .openURLInBrowser(url: url, browser: "Google Chrome") }
-            return .openURL(url)
-        case .newTab, .newWindow:
-            guard let app = WorkspaceApp.parse(value) else { return nil }
-            return .workspace(.init(operation: action.type == .newTab ? .newTab : .newWindow, app: app))
-        case .openFile:
-            guard action.validationMessage == nil else { return nil }
-            return .openURL(URL(fileURLWithPath: (value as NSString).expandingTildeInPath).absoluteString)
-        case .workspaceCommand:
-            guard let plan = WorkspaceCommandParser.plan(value), plan.count == 1, case .workspace = plan[0] else { return nil }
-            return plan[0]
-        case .openApp:
-            guard !value.isEmpty else { return nil }
-            return .openApp(value)
-        case .closeApp:
-            guard !value.isEmpty else { return nil }
-            return .closeApp(value)
-        case .playSong:
-            guard !value.isEmpty else { return nil }
-            return .mediaControl(.playSong(value))
-        case .playPlaylist:
-            guard !value.isEmpty else { return nil }
-            return .mediaControl(.playPlaylist(value))
-        case .playLiked:
-            return .mediaControl(.playLikedSongs)
-        case .pause:
-            return .mediaControl(.pause)
-        case .next:
-            return .mediaControl(.nextTrack)
-        case .previous:
-            return .mediaControl(.previousTrack)
-        case .openFolder:
-            guard !value.isEmpty else { return nil }
-            return .openFolder(value)
-        case .timer, .stopwatch:
-            return nil
-        }
+        coreCompileRoutineAction(typeName: action.type.rawValue, value: action.value).flatMap(RustPipeline.map)
     }
 
     func invalidateActiveCommand() {
@@ -152,17 +88,23 @@ extension AppState {
         defer {
             if activeCommandRunToken == token { invalidateActiveCommand() }
         }
-        await runCommandBody(command, runToken: token, testTrace: testTrace)
+        let trace = PipelineTrace.current ?? PipelineTrace(id: testTrace?.requestID ?? UUID(), source: "command")
+        await PipelineTrace.$current.withValue(trace) {
+            await runCommandBody(command, runToken: token, testTrace: testTrace)
+        }
     }
 
     func runCommandBody(_ command: String, runToken: UUID, testTrace: CommandTestTrace? = nil) async {
         if testTrace == nil { trackRecentCommand(command) }
         var outcome = CommandOutcome.failure
-        let requestID = testTrace?.requestID ?? UUID()
+        let requestID = testTrace?.requestID ?? PipelineTrace.current?.id ?? UUID()
+        lastCommandForReview = command
+        lastCommandTraceID = requestID
         defer {
             if Task.isCancelled || activeCommandRunToken != runToken { outcome = .cancelled }
             testTrace?.outcome = outcome.rawValue
             testTrace?.record("finished", outcome.rawValue)
+            PipelineTrace.current?.event("command_finished", fields: ["outcome": outcome.rawValue])
             if testTrace == nil { statsRecorder.recordCommand(success: outcome == .success) }
             intentLog.append([
                 "event": testTrace == nil ? "execute_command" : "test_execute_command",
@@ -222,6 +164,7 @@ extension AppState {
         lastRecognizedSpeech = command
         appendLog("[Plan] Planning: '\(command)'")
         let plan = await actionPlanner.plan(from: command, requestID: requestID)
+        PipelineTrace.current?.event("plan_ready", fields: ["steps": String(plan.count)])
         testTrace?.plan = plan.map(\.description)
         testTrace?.record("planned", "\(plan.count) actions")
         guard !Task.isCancelled, activeCommandRunToken == runToken else { return }
@@ -236,12 +179,13 @@ extension AppState {
             },
             onStepComplete: { [weak self] result in
                 guard let self, self.activeCommandRunToken == runToken, !Task.isCancelled else { return }
-                testTrace?.steps.append(CommandTestStep(action: result.action.description, success: result.success, message: result.message))
+                testTrace?.steps.append(CommandTestStep(action: result.action.description, success: result.success, message: result.message, verification: result.verification.rawValue))
                 self.appendLog("  \(result.success ? "✓" : "✗") \(result.message)")
                 intentLog.append([
                     "event": testTrace == nil ? "execute_step" : "test_execute_step", "request_id": requestID.uuidString,
                     "text": command, "action": result.action.description,
                     "success": result.success, "message": result.message,
+                    "verification": result.verification.rawValue,
                 ])
                 ResponseEngine.shared.respond(action: result.action, result: result, speak: speakResponses)
                 if plan.count == 1, result.success, case .systemInfo = result.action {

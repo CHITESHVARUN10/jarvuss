@@ -91,7 +91,7 @@ final class OllamaClient {
     /// One wall-clock budget includes admission, model load and generation.
     /// Both branches cooperate with cancellation; no unstructured inference
     /// task can keep the task-group scope alive after its deadline.
-    func generate(prompt: String, timeout: TimeInterval) async -> String {
+    func generate(prompt: String, timeout: TimeInterval, kind: InferenceBudget.Kind = .interactive) async -> String {
         guard timeout > 0 else { return Self.timeoutMessage }
         do {
             return try await withThrowingTaskGroup(of: String.self) { group in
@@ -99,7 +99,9 @@ final class OllamaClient {
                     try await gate.acquire()
                     do {
                         try Task.checkCancellation()
-                        let text = try await runGenerate(prompt: prompt, timeout: timeout)
+                        let text = try await InferenceBudget.shared.run(kind) {
+                            try await self.runGenerate(prompt: prompt, timeout: timeout)
+                        }
                         await gate.release()
                         return text
                     } catch {

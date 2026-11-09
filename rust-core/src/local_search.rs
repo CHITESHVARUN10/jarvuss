@@ -1,11 +1,11 @@
 //! File-search text interpretation. No filesystem access, predicates or execution.
 use crate::text_policy::*;
-#[derive(Clone, Debug, PartialEq, uniffi::Enum)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, uniffi::Enum)]
 pub enum SearchMode {
     Name,
     Content,
 }
-#[derive(Clone, Debug, PartialEq, uniffi::Enum)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, uniffi::Enum)]
 pub enum SearchKind {
     Any,
     Folder,
@@ -19,7 +19,7 @@ pub enum SearchKind {
     Mail,
     Note,
 }
-#[derive(Clone, Debug, PartialEq, uniffi::Enum)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, uniffi::Enum)]
 pub enum SearchDate {
     Any,
     Today,
@@ -31,7 +31,7 @@ pub enum SearchDate {
     Last7Days,
     Last30Days,
 }
-#[derive(Clone, Debug, PartialEq, uniffi::Record)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, uniffi::Record)]
 pub struct SearchRequest {
     pub query: String,
     pub mode: SearchMode,
@@ -41,13 +41,13 @@ pub struct SearchRequest {
     pub minimum_bytes: i64,
     pub maximum_bytes: i64,
 }
-#[derive(Clone, Debug, PartialEq, uniffi::Enum)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, uniffi::Enum)]
 pub enum SelectionOperation {
     Open,
     Preview,
     Reveal,
 }
-#[derive(Clone, Debug, PartialEq, uniffi::Record)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, uniffi::Record)]
 pub struct FileSelection {
     pub operation: SelectionOperation,
     pub index: u32,

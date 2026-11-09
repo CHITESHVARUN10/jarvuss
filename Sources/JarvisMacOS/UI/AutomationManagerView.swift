@@ -53,6 +53,7 @@ struct AutomationManagerView: View {
                             }
                             .frame(width: 200)
 
+                            Toggle("Requires previous step to succeed", isOn: $action.requiresPreviousSuccess)
                             if action.type.requiresValue {
                                 TextField(action.type.placeholder, text: $action.value)
                                     .quietField()

@@ -130,11 +130,14 @@ pub fn answer_local_state_query(_cleaned: &str, lower: &str) -> Option<Vec<Plann
 // ── Fast-path router (no-model gate) ────────────────────────────────
 
 /// Port of Swift `FastPathRouter.route`. `None` == `.needsModel`.
-fn fast_path_route(cleaned: &str) -> Option<Vec<PlannedAction>> {
+pub fn fast_path_route(cleaned: &str) -> Option<Vec<PlannedAction>> {
+    if crate::command_policy::negated_action(cleaned) { return Some(vec![PlannedAction::AiQuery { query: cleaned.to_owned() }]); }
     let lower = cleaned.trim().to_lowercase();
     if lower.is_empty() {
         return Some(vec![]);
     }
+
+    if let Some(native) = crate::command_policy::native_command(cleaned.to_owned()) { return Some(native); }
 
     if let Some(shortcut) = single_app_shortcut(&lower) {
         return Some(vec![PlannedAction::OpenApp {
@@ -148,7 +151,7 @@ fn fast_path_route(cleaned: &str) -> Option<Vec<PlannedAction>> {
         }
     }
 
-    if let Some(url) = fast_known_website(&lower) {
+    if let Some(url) = crate::open_target::site_url(lower.strip_prefix("open ").unwrap_or(&lower).to_owned()) {
         return Some(vec![PlannedAction::OpenUrl {
             url: url.to_string(),
         }]);
@@ -205,9 +208,9 @@ fn fast_single_app_command(lower: &str) -> Option<PlannedAction> {
             if target.is_empty() || target.split(' ').count() > 4 {
                 return None;
             }
-            if let Some(url) = known_website_url(target) {
+            if let Some(url) = crate::open_target::site_url(target.to_owned()) {
                 return Some(PlannedAction::OpenUrl {
-                    url: url.to_string(),
+                    url,
                 });
             }
             let resolved = alias::resolve(target);
@@ -216,21 +219,6 @@ fn fast_single_app_command(lower: &str) -> Option<PlannedAction> {
             } else {
                 PlannedAction::OpenApp { name: resolved }
             });
-        }
-    }
-    None
-}
-
-fn fast_known_website(lower: &str) -> Option<&'static str> {
-    const SITES: &[(&str, &str)] = &[
-        ("youtube", "https://www.youtube.com"),
-        ("google", "https://www.google.com"),
-        ("netflix", "https://www.netflix.com"),
-        ("github", "https://github.com"),
-    ];
-    for (name, url) in SITES {
-        if lower == *name || lower == format!("open {name}") {
-            return Some(url);
         }
     }
     None
@@ -348,19 +336,26 @@ fn contains_system_keyword(words: &[&str]) -> bool {
 
 // ── Rule-based planner ──────────────────────────────────────────────
 
-fn rule_based_plan(cleaned: &str, lower: &str) -> Option<Vec<PlannedAction>> {
+pub fn rule_based_plan(cleaned: &str, lower: &str) -> Option<Vec<PlannedAction>> {
+    if crate::command_policy::negated_action(cleaned) { return Some(vec![PlannedAction::AiQuery { query: cleaned.to_owned() }]); }
     // Compound commands FIRST — a multi-clause utterance must never be parsed
     // as one giant target ("open notes and increase the volume by 20 percent"
     // used to become OpenApp{name: "notes and increase the volume by 20
     // percent"}). Mirrors Swift `ActionPlanner.ruleBasedPlan`.
-    let conjuncts = split_by_conjunction(lower);
+    if let Some(native) = crate::command_policy::native_command(cleaned.to_owned()) { return Some(native); }
+    let conjuncts = split_by_conjunction(cleaned);
     if conjuncts.len() > 1 {
         let mut actions: Vec<PlannedAction> = vec![];
         for part in &conjuncts {
-            let part = part.trim().to_string();
+            let original_part = part.trim().to_string();
+            let part = original_part.to_lowercase();
             if part.is_empty() {
                 continue;
             }
+            if crate::command_policy::negated_action(&original_part) {
+                actions.push(PlannedAction::AiQuery { query: original_part }); continue;
+            }
+            if let Some(native) = crate::command_policy::native_single(&original_part) { actions.push(native); continue; }
             if let Some(vol) = parse_volume_command(&part) {
                 actions.push(vol);
                 continue;
@@ -901,7 +896,7 @@ fn contains_any_word(text: &str, words: &[&str]) -> bool {
     words.iter().any(|w| set.contains(*w))
 }
 
-fn parse_media_command(lower: &str) -> Option<PlannedAction> {
+pub fn parse_media_command(lower: &str) -> Option<PlannedAction> {
     let compact = lower.trim();
     if compact.is_empty() {
         return None;
@@ -970,10 +965,27 @@ fn parse_media_command(lower: &str) -> Option<PlannedAction> {
             action: MediaAction::PlayPlaylist { name },
         });
     }
-    let song = extract_song_name(&normalized);
+    if media_content_tokens(compact).is_empty() { return Some(PlannedAction::MediaControl { action: MediaAction::Play }); }
+    let song = clean_song_title(&extract_song_name(&normalized));
+    if song.is_empty() { return Some(PlannedAction::MediaControl { action: MediaAction::Play }); }
     Some(PlannedAction::MediaControl {
         action: MediaAction::PlaySong { name: song },
     })
+}
+
+pub fn media_content_tokens(text: &str) -> Vec<String> {
+    const NON_TITLE: &[&str] = &["from","play","plays","playing","song","songs","music","track","tracks","playlist","playlists","tune","tunes","some","any","something","anything","one","it","that","this","these","those","a","an","the","in","on","to","at","for","me","us","my","your","could","would","can","will","please","kindly","just","now","again","aloud","jarvis","spotify","app","application","player","like","want","wanna","need","let","have","got","get","give","put","start","starting","hear","listen","listening","back","do","does","did","is","are","was","were","be","you","i"];
+    text.split_whitespace().map(|t| t.trim_matches(|c: char| !c.is_alphanumeric()).to_lowercase()).filter(|t| !t.is_empty() && !NON_TITLE.contains(&t.as_str())).collect()
+}
+
+fn clean_song_title(raw: &str) -> String {
+    let mut words: Vec<_> = raw.split_whitespace().map(|w| w.trim_matches(|c: char| !c.is_alphanumeric()).to_owned()).filter(|w| !w.is_empty()).collect();
+    while words.first().is_some_and(|w| ["a","an","the","my","some","that","this","please"].contains(&w.to_lowercase().as_str())) { words.remove(0); }
+    while words.last().is_some_and(|w| ["spotify","app","player","music","song","track","please"].contains(&w.to_lowercase().as_str())) {
+        words.pop();
+        if words.last().is_some_and(|w| ["on","in","from"].contains(&w.to_lowercase().as_str())) { words.pop(); }
+    }
+    words.join(" ")
 }
 
 fn normalize_media_intent(text: &str) -> String {
@@ -1181,45 +1193,53 @@ fn parse_search_query(lower: &str) -> Option<Vec<PlannedAction>> {
 
 // ── Conjunction splitter ────────────────────────────────────────────
 
-fn split_by_conjunction(lower: &str) -> Vec<String> {
-    let norm = lower
-        .replace(", and ", " && ")
-        .replace(" and then ", " && ")
-        .replace(", then ", " && ")
-        .replace(" then ", " && ")
-        .replace(" and ", " && ");
-    let mut parts: Vec<String> = norm
-        .split(" && ")
-        .map(|p| p.trim().to_string())
-        .filter(|p| !p.is_empty())
-        .collect();
-    if parts.len() <= 1 {
-        return parts;
+pub const ACTION_VERBS: &[&str] = &["open","close","launch","quit","play","pause","resume","stop","next","previous","prev","skip","search","google","find","list","count","show","tell","create","run","start","increase","decrease","set","turn","mute","unmute","make","check","calculate"];
+
+pub fn outside_quotes(text: &str, byte: usize) -> bool {
+    let mut quoted = false;
+    let mut escaped = false;
+    for c in text[..byte].chars() {
+        if c == '\\' && !escaped { escaped = true; continue; }
+        if !escaped && (c == '"' || c == '“' || c == '”') { quoted = !quoted; }
+        escaped = false;
     }
-    const VERBS: &[&str] = &[
-        "open ", "close ", "launch ", "play ", "search ", "create ", "run ", "start ",
-    ];
-    let first_verb = VERBS.iter().find(|v| parts[0].starts_with(**v)).copied();
+    !quoted
+}
+fn action_token(t: &str) -> bool { ACTION_VERBS.contains(&t.trim_matches(|c: char| !c.is_alphanumeric()).to_lowercase().as_str()) }
+pub fn action_verb_count(text: &str) -> u32 {
+    crate::text_policy::rx(r"\S+").find_iter(text).flatten().filter(|m| outside_quotes(text, m.start()) && action_token(m.as_str())).count() as u32
+}
+fn has_action(text: &str) -> bool { text.split_whitespace().any(action_token) }
+fn drop_connectors(text: &str) -> String {
+    let mut result = text.trim().to_owned();
+    loop {
+        let lower = result.to_lowercase();
+        let Some(prefix) = ["and also ","and then ","and ","also ","plus ","then ","please "].iter().find(|p| lower.starts_with(**p)) else { break; };
+        result = result[prefix.len()..].to_owned();
+    }
+    if !crate::command_policy::negated_action(&result) && !result.split_whitespace().next().is_some_and(action_token) {
+        let re = crate::text_policy::rx(r"\S+");
+        if let Some(m) = re.find_iter(&result).flatten().find(|m| action_token(m.as_str())) { result = result[m.start()..].to_owned(); }
+    }
+    result.trim().to_owned()
+}
+pub fn split_by_conjunction(text: &str) -> Vec<String> {
+    let verbs = ACTION_VERBS.join("|");
+    let pattern = format!(r"(?i),\s*(?=(?:also\s+|plus\s+|then\s+)?(?:{verbs})\b)|,?\s+(?:and then|and|then)\s+");
+    let regex = crate::text_policy::rx(&pattern);
+    let mut parts = Vec::new(); let mut start = 0;
+    for m in regex.find_iter(text).flatten() {
+        if !outside_quotes(text, m.start()) { continue; }
+        parts.push(drop_connectors(&text[start..m.start()])); start = m.end();
+    }
+    parts.push(drop_connectors(&text[start..]));
+    parts.retain(|p| !p.is_empty());
+    if parts.len() <= 1 { return parts; }
+    let first_verb = ["open ","close ","launch ","play ","search ","create ","run ","start "].iter().find(|v| parts[0].to_lowercase().starts_with(**v)).copied();
     if let Some(verb) = first_verb {
-        parts = parts
-            .iter()
-            .map(|p| {
-                if VERBS.iter().any(|v| p.starts_with(v)) {
-                    p.clone()
-                } else {
-                    format!("{verb}{p}")
-                }
-            })
-            .collect();
+        parts = parts.into_iter().map(|p| if has_action(&p) || crate::command_policy::file_query(&p).is_some() { p } else { format!("{verb}{p}") }).collect();
     }
-    // STRICT validation: every part needs an action verb or exact media token.
-    const EXACT: &[&str] = &[
-        "play", "pause", "next", "previous", "prev", "skip", "resume", "mute", "unmute",
-    ];
-    parts
-        .into_iter()
-        .filter(|p| VERBS.iter().any(|v| p.starts_with(v)) || EXACT.contains(&p.as_str()))
-        .collect()
+    parts.into_iter().filter(|p| has_action(p) || crate::command_policy::file_query(p).is_some()).collect()
 }
 
 // ── Single-phrase parser ────────────────────────────────────────────
@@ -1420,7 +1440,7 @@ fn squash_ws_static_re() -> &'static Regex {
     RE.get_or_init(|| Regex::new(r"\s{2,}").expect("ws regex"))
 }
 
-fn strip_wake_word(text: &str) -> String {
+pub fn strip_wake_word(text: &str) -> String {
     let mut result = text.trim().to_string();
     if let Some(m) = prefix_re().find(&result.clone()) {
         result = result[m.end()..].trim().to_string();
@@ -1434,7 +1454,7 @@ fn strip_wake_word(text: &str) -> String {
         .to_string()
 }
 
-fn strip_trailing_noise(text: &str) -> String {
+pub fn strip_trailing_noise(text: &str) -> String {
     const NOISE: &[&str] = &["jarvis", "okay", "ok", "please", "now", "hey", "right"];
     let mut tokens: Vec<String> = text.split_whitespace().map(|t| t.to_string()).collect();
     loop {

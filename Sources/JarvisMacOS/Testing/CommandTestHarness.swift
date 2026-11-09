@@ -111,7 +111,7 @@ final class CommandTestHarness: ObservableObject {
         if run.mode == "dictation" {
             let rules = TranscriptFormatter.format(run.command)
             let directive = TranscriptFormatter.listDirective(for: run.command)
-            if TranscriptFormatter.shouldUseLLM(rules, directive: directive) {
+            if DictationController.shared.aiFormattingEnabled && TranscriptFormatter.shouldUseLLM(rules, directive: directive) {
                 let polished = await DictationPolisher.polish(rulesOutput: rules, directive: directive)
                 result.output = polished.text
                 result.events.append(CommandTestEvent(stage: "polish", message: polished.outcome.rawValue))

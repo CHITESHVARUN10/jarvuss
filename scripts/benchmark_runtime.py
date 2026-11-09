@@ -454,6 +454,7 @@ def main() -> int:
             "voice_encoder": (args.app / "Contents/Resources/native/voice/speaker_encoder.onnx").stat().st_size,
         },
     }
+    completed = False
     try:
         process, session, handle = launch_app(args.app, data_dir, log, args.launch_mode, args.intent_cache)
         time.sleep(4)
@@ -462,11 +463,14 @@ def main() -> int:
         report["runner"] = measure_runner(runner, process.pid, args.iterations)
         report["rss_loaded"] = {"app": sample_rss(process.pid), "children": children_rss(process.pid)}
         report["test_state"] = runner.request("/api/state")
+        completed = True
     finally:
         if process is not None:
             stop_app(process, handle)
-        if not args.keep_data:
+        if completed and not args.keep_data:
             shutil.rmtree(data_dir, ignore_errors=True)
+        elif not completed:
+            print(f"Benchmark diagnostics retained at {data_dir}", file=sys.stderr)
 
     if args.whisper:
         report["whisper"] = measure_whisper()

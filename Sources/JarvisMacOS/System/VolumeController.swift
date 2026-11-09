@@ -78,10 +78,10 @@ final class VolumeController: @unchecked Sendable {
                 try requireSameOutput(device)
                 let muted = mute.contains { $0.value > 0 }
                 if let level = levels?.map(\.value).max() {
-                    return ControllerResult(message: "\(device.name): \(percent(level))%\(muted ? " (muted)" : "")", success: true)
+                    return ControllerResult(message: "\(device.name): \(percent(level))%\(muted ? " (muted)" : "")", success: true, verification: .verified)
                 }
                 if !mute.isEmpty {
-                    return ControllerResult(message: "\(device.name): \(muted ? "muted" : "not muted"); volume reading unavailable.", success: true)
+                    return ControllerResult(message: "\(device.name): \(muted ? "muted" : "not muted"); volume reading unavailable.", success: true, verification: .verified)
                 }
                 throw unsupported(device)
             }
@@ -112,7 +112,7 @@ final class VolumeController: @unchecked Sendable {
                     }
                 }
                 try requireSameOutput(device)
-                return ControllerResult(message: "\(shouldMute ? "Muted" : "Unmuted") \(device.name).", success: true)
+                return ControllerResult(message: "\(shouldMute ? "Muted" : "Unmuted") \(device.name).", success: true, verification: .verified)
 
             case .increase(let amount), .decrease(let amount), .setLevel(let amount):
                 guard (0...100).contains(amount) else {
@@ -145,7 +145,7 @@ final class VolumeController: @unchecked Sendable {
                 }
                 let actual = try volumeControls(device, writable: true).map(\.value).max() ?? 0
                 try requireSameOutput(device)
-                return ControllerResult(message: "\(device.name): volume \(percent(actual))%.", success: true)
+                return ControllerResult(message: "\(device.name): volume \(percent(actual))%.", success: true, verification: .verified)
             }
         } catch {
             let partial = wrote ? " Some audio controls may have changed; check the output before retrying." : ""

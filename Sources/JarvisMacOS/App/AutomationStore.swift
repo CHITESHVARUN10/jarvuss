@@ -91,6 +91,7 @@ struct AutomationAction: Codable, Identifiable, Equatable {
     var id: UUID = UUID()
     var type: AutomationActionType
     var value: String
+    var requiresPreviousSuccess: Bool = false
 
     var validationMessage: String? {
         guard let issue = coreValidateRoutineAction(typeName: type.rawValue, value: value) else { return nil }
@@ -110,10 +111,19 @@ struct AutomationAction: Codable, Identifiable, Equatable {
         coreRoutineWebsite(value: value).flatMap { URL(string: $0)?.absoluteString }
     }
 
-    init(id: UUID = UUID(), type: AutomationActionType, value: String = "") {
+    private enum CodingKeys: String, CodingKey { case id, type, value, requiresPreviousSuccess }
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        id = try values.decode(UUID.self, forKey: .id)
+        type = try values.decode(AutomationActionType.self, forKey: .type)
+        value = try values.decode(String.self, forKey: .value)
+        requiresPreviousSuccess = try values.decodeIfPresent(Bool.self, forKey: .requiresPreviousSuccess) ?? false
+    }
+    init(id: UUID = UUID(), type: AutomationActionType, value: String = "", requiresPreviousSuccess: Bool = false) {
         self.id = id
         self.type = type
         self.value = value
+        self.requiresPreviousSuccess = requiresPreviousSuccess
     }
 }
 

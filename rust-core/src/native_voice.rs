@@ -28,6 +28,10 @@ pub struct VoiceEngine {
 }
 impl VoiceEngine {
     pub fn load(model: &Path, runtime: &Path) -> Result<Self> {
+        Self::load_with_provider(model, runtime, "cpu")
+    }
+    /// Explicit offline experiment only. Production remains on verified CPU.
+    pub fn load_with_provider(model: &Path, runtime: &Path, provider: &str) -> Result<Self> {
         let frontend: Frontend =
             serde_json::from_slice(&fs::read(model.join("audio_frontend.json")).map_err(err)?)
                 .map_err(err)?;
@@ -37,16 +41,25 @@ impl VoiceEngine {
         {
             return Err("invalid frontend coefficients".into());
         }
-        let session = Session::builder(environment(runtime)?)
-            .map_err(err)?
-            .with_auto_device(AutoDevicePolicy::PreferCPU)
-            .map_err(err)?
-            .with_optimization_level(GraphOptimizationLevel::All)
-            .map_err(err)?
-            .with_intra_threads(5)
-            .map_err(err)?
-            .commit_from_file(model.join("speaker_encoder.onnx"))
-            .map_err(err)?;
+        let builder = Session::builder(environment(runtime)?).map_err(err)?
+            .with_auto_device(AutoDevicePolicy::PreferCPU).map_err(err)?
+            .with_optimization_level(GraphOptimizationLevel::All).map_err(err)?
+            .with_intra_threads(5).map_err(err)?;
+        let mut builder = match provider {
+            "cpu" => builder,
+            "coreml" => {
+                use sha2::{Digest, Sha256};
+                let hash = format!("{:x}", Sha256::digest(fs::read(model.join("speaker_encoder.onnx")).map_err(err)?));
+                let cache = dirs::cache_dir().ok_or("cache directory unavailable")?.join("Jarvis/coreml/ort-1.31").join(hash);
+                fs::create_dir_all(&cache).map_err(err)?;
+                builder.with_execution_providers([ort::ep::CoreML::default()
+                    .with_model_format(ort::ep::coreml::ModelFormat::MLProgram)
+                    .with_model_cache_dir(cache.to_string_lossy().as_ref())
+                    .build().error_on_failure()]).map_err(err)?
+            }
+            _ => return Err("unsupported voice execution provider".into()),
+        };
+        let session = builder.commit_from_file(model.join("speaker_encoder.onnx")).map_err(err)?;
         Ok(Self {
             session,
             frontend,

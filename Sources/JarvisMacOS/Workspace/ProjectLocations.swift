@@ -19,14 +19,16 @@ struct ProjectLocation: Codable, Identifiable, Equatable {
 final class ProjectLocationStore: ObservableObject {
     static let shared = ProjectLocationStore()
     @Published var locations: [ProjectLocation] {
-        didSet { save() }
+        didSet { save(); indexObserver.watch(locations.filter(\.isRoot).map { $0.url().path }) }
     }
     @Published private(set) var error: String?
     private let defaults: UserDefaults
+    private let indexObserver = ProjectIndexObserver()
     private static let key = "jarvis.workspace.projectLocations"
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         locations = defaults.data(forKey: Self.key).flatMap { try? JSONDecoder().decode([ProjectLocation].self, from: $0) } ?? []
+        indexObserver.watch(locations.filter(\.isRoot).map { $0.url().path })
     }
     private func save() {
         do { defaults.set(try JSONEncoder().encode(locations), forKey: Self.key); error = nil }
@@ -62,7 +64,7 @@ enum ProjectResolutionError: LocalizedError {
 }
 
 enum ProjectDirectoryResolver {
-    static func find(_ query: String, root: String = "", locations: [ProjectLocation], maxEntries: Int = 10_000, maxDepth: Int = 3, preferDirect: Bool = true) throws -> [ProjectMatch] {
+    static func find(_ query: String, root: String = "", locations: [ProjectLocation], maxEntries: Int = 10_000, maxDepth: Int = 3, preferDirect: Bool = true, useIndex: Bool = false) throws -> [ProjectMatch] {
         try Task.checkCancellation()
         let inputs = locations.map {
             CoreProjectLocationInput(name: $0.name, path: $0.url().path, isRoot: $0.isRoot)
@@ -76,13 +78,9 @@ enum ProjectDirectoryResolver {
                 url.stopAccessingSecurityScopedResource()
             }
         }
-        let result = coreFindProjects(
-            query: query,
-            root: root,
-            locations: inputs,
-            maxEntries: UInt32(clamping: maxEntries),
-            maxDepth: UInt32(clamping: maxDepth),
-            preferDirect: preferDirect
+        let lookup = useIndex ? coreFindIndexedProjects : coreFindProjects
+        let result = lookup(
+            query, root, inputs, UInt32(clamping: maxEntries), UInt32(clamping: maxDepth), preferDirect
         )
         try Task.checkCancellation()
         if let message = result.error {

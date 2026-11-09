@@ -4,14 +4,14 @@ import AppKit
 final class AppController {
     /// Wait for the launched app itself, rather than sleeping after every
     /// action in a plan. Already-running apps return immediately.
-    func openAndWaitForLaunch(appName: String) async -> (message: String, success: Bool) {
-        guard !Task.isCancelled else { return ("App launch cancelled.", false) }
+    func openAndWaitForLaunch(appName: String) async -> ControllerResult {
+        guard !Task.isCancelled else { return ControllerResult(message: "App launch cancelled.", success: false) }
         let result = openResult(appName: appName)
-        guard result.success else { return result }
+        guard result.success else { return ControllerResult(message: result.message, success: false) }
         let name = AppAliasResolver.resolveSpoken(appName)
         let deadline = ContinuousClock.now + .seconds(10)
         while ContinuousClock.now < deadline {
-            guard !Task.isCancelled else { return ("App launch cancelled.", false) }
+            guard !Task.isCancelled else { return ControllerResult(message: "App launch cancelled.", success: false) }
             let ready: Bool? = await MainActor.run {
                 let app = NSWorkspace.shared.runningApplications.first { app in
                     let names = [app.localizedName, app.bundleURL?.deletingPathExtension().lastPathComponent]
@@ -25,11 +25,12 @@ final class AppController {
             // localized/process name. Preserve its successful acknowledgement
             // when no exact process can be identified, rather than inventing
             // a ten-second launch failure for a working app.
-            if ready != false { return result }
+            if ready == true { return ControllerResult(message: result.message, success: true, verification: .verified) }
+            if ready == nil { return ControllerResult(message: "Sent an open request for \(name); its launch could not be read back.", success: true, verification: .unavailable) }
             do { try await Task.sleep(for: .milliseconds(50)) }
-            catch { return ("App launch cancelled.", false) }
+            catch { return ControllerResult(message: "App launch cancelled.", success: false) }
         }
-        return ("Opened \(name), but it did not finish launching within 10 seconds.", false)
+        return ControllerResult(message: "Opened \(name), but it did not finish launching within 10 seconds.", success: false)
     }
     /// Structured result: success comes from the process exit, not from
     /// sniffing the message text (an app named "ErrorLog" must not read

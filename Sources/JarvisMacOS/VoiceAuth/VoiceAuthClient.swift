@@ -161,6 +161,14 @@ final class VoiceAuthClient {
     }
 
     private func sendMultipartAudio(endpoint: String, audioFileURL: URL) async throws -> Data {
+        try await InferenceBudget.shared.run {
+            try await self.sendAdmittedAudio(endpoint: endpoint, audioFileURL: audioFileURL)
+        }
+    }
+
+    private func sendAdmittedAudio(endpoint: String, audioFileURL: URL) async throws -> Data {
+        PipelineTrace.current?.event("voice_\(endpoint)_started")
+        defer { PipelineTrace.current?.event("voice_\(endpoint)_finished") }
         var request = URLRequest(url: baseURL.appendingPathComponent(endpoint))
         request.httpMethod = "POST"
         request.timeoutInterval = 60

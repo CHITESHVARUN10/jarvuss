@@ -4,6 +4,7 @@ struct CommandTestStep: Codable {
     let action: String
     let success: Bool
     let message: String
+    var verification: String? = nil
 }
 
 struct CommandTestEvent: Codable {

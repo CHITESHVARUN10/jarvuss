@@ -104,6 +104,7 @@ final class STTRouter {
     /// Pill wants to start. Returns true when ownership was granted.
     func claimForPill() -> Bool {
         guard owner == .none else { return false }
+        AppleStreamingRecognizer.shared.cancel()
         owner = .pill
         return true
     }
@@ -126,6 +127,7 @@ final class STTRouter {
     /// Action pill wants to start. Returns true when ownership was granted.
     func claimForAction() -> Bool {
         guard owner == .none else { return false }
+        AppleStreamingRecognizer.shared.cancel()
         owner = .action
         return true
     }

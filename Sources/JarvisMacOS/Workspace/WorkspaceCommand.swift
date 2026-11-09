@@ -72,7 +72,7 @@ enum WorkspaceCommandParser {
     static func parse(_ raw: String) -> WorkspaceCommand? {
         coreParseWorkspace(raw: raw).map(adapt)
     }
-    private static func adapt(_ value: CoreWorkspaceRequest) -> WorkspaceCommand {
+    static func adapt(_ value: CoreWorkspaceRequest) -> WorkspaceCommand {
         let operation: WorkspaceCommand.Operation
         switch value.operation {
         case .newWindow: operation = .newWindow

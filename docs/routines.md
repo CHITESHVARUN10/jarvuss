@@ -32,3 +32,10 @@ Steps run in sequence and use the same success/failure reporting as ordinary
 commands. A routine with failed steps is reported as having failed steps, even
 if other steps succeed. An off phrase acknowledges the routine as off; it does
 not undo actions that have already completed.
+
+Each saved step can enable **Only run if the previous step succeeded**. A failed
+or skipped predecessor skips dependent steps; an independent step can still
+run. Existing routines retain their original independent-step behavior.
+Execution logs distinguish submitted actions from verified effects. Commands
+are never automatically retried, so tabs and relative volume changes cannot
+be duplicated by a generic retry policy.

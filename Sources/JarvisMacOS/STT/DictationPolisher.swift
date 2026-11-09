@@ -158,7 +158,7 @@ enum DictationPolisher {
         // The client enforces this budget across queue waiting and HTTP work.
         let raw: String
         if let generate { raw = await generate(prompt, budget) }
-        else { raw = await client.generate(prompt: prompt, timeout: budget) }
+        else { raw = await client.generate(prompt: prompt, timeout: budget, kind: .optional) }
 
         let elapsed = Date().timeIntervalSince(started)
 
@@ -293,7 +293,7 @@ enum DictationPolisher {
     static func warmUp() -> Task<Void, Never> {
         Task(priority: .utility) {
             _ = await OllamaClient(model: model).generate(
-                prompt: promptText(for: "warm up", directive: nil))
+                prompt: promptText(for: "warm up", directive: nil), timeout: minimumTimeoutSeconds, kind: .optional)
         }
     }
 

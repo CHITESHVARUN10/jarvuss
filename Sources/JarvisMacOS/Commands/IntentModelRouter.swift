@@ -44,6 +44,7 @@ final class IntentModelRouter {
                         raw: response.raw, confidence: response.confidence, elapsedMs: elapsedMs)
                 return nil
             }
+            PipelineTrace.current?.event("intent_decoded", fields: ["score": String(response.confidence), "decoder_ms": String(response.latencyMs)])
             guard let actions = IntentActionMapper.map(response.actions, sourceText: text) else {
                 logMiss(text: text, requestID: requestID, reason: "unmappable",
                         raw: response.raw, confidence: response.confidence, elapsedMs: elapsedMs)
@@ -74,6 +75,7 @@ final class IntentModelRouter {
 
     private func logMiss(text: String, requestID: UUID, reason: String,
                          raw: String, confidence: Double, elapsedMs: Int) {
+        PipelineTrace.current?.event("intent_rejected", fields: ["reason": reason, "score": String(confidence), "duration_ms": String(elapsedMs)])
         IntentRouterLog.shared.append([
             "event": "model_miss",
             "request_id": requestID.uuidString,

@@ -46,6 +46,8 @@ final class AppState: ObservableObject {
     @Published var audioLevelNormalized: Double = 0.0
     @Published var lastRecognizedSpeech = ""
     @Published var currentCommand = ""
+    @Published var lastCommandForReview = ""
+    @Published var lastCommandTraceID: UUID?
     @Published var logs: [String] = []
     @Published var commandInput = ""
     @Published var voiceModeEnabled = false
@@ -328,7 +330,8 @@ final class AppState: ObservableObject {
             MainActor.assumeIsolated {
                 guard let self, self.isLiveListening, !self.isStoppingMicrophone else { return }
                 self.appendLog("[Speech][Whisper] FINAL: '\(text)'")
-                self.handleTranscript(text, isFinal: true)
+                let trace = WhisperCommandListener.shared.takeTrace(for: text)
+                PipelineTrace.$current.withValue(trace) { self.handleTranscript(text, isFinal: true) }
             }
         }
         // Action pill (⌘⇧A): the press is the intent — no wake word, no
@@ -349,6 +352,22 @@ final class AppState: ObservableObject {
         }
         STTRouter.shared.onLog = { [weak self] msg in
             Task { @MainActor in self?.appendLog(msg) }
+        }
+        AppleStreamingRecognizer.shared.onPartial = { [weak self] text in
+            guard let self, self.isLiveListening, !self.isStoppingMicrophone,
+                  !STTRouter.shared.pillSuppressesCommandVAD else { return }
+            self.handleTranscript(text, isFinal: false)
+        }
+        AppleStreamingRecognizer.shared.onFinal = { [weak self] text, trace in
+            guard let self, self.isLiveListening, !self.isStoppingMicrophone,
+                  !STTRouter.shared.pillSuppressesCommandVAD else { return }
+            PipelineTrace.$current.withValue(trace) { self.handleTranscript(text, isFinal: true) }
+        }
+        AppleStreamingRecognizer.shared.onError = { [weak self] message in
+            guard let self else { return }
+            self.stopMicrophone(cancelPill: false)
+            self.appendLog("[Speech][Apple] \(message)")
+            self.microphoneError = message
         }
         // Wire TTS echo suppression: track every text we speak so the mic
         // ignores transcripts that mirror our own output.
@@ -476,9 +495,21 @@ final class AppState: ObservableObject {
         appendLog("[Voice] Pipeline state hard-reset.")
     }
 
+    private var bootstrapTask: Task<Void, Never>?
     func bootstrap() async {
+        if let bootstrapTask { await bootstrapTask.value; return }
+        let task = Task<Void, Never> { @MainActor [weak self] in
+            guard let self else { return }
+            await self.bootstrapServices()
+        }
+        bootstrapTask = task
+        await task.value
+    }
+
+    private func bootstrapServices() async {
         if presentsUI, CommandLine.arguments.contains("--test-mode") {
             await CommandTestHarness.shared.start(app: self, openBrowser: false)
+            return // Isolated tests never configure databases or auto-update models.
         }
         if presentsUI { IntentModelSetup.shared.startAutomaticSetup() }
         BackendServiceManager.statusChangeHandler = { [weak self] status in
@@ -508,11 +539,11 @@ final class AppState: ObservableObject {
 
     /// Backend lifecycle at launch. `.always` starts the process; the other
     /// modes probe and report only — no helper is spawned until a
-    /// feature needs it (verification, enrollment, Spotify, Connections).
+    /// feature needs it (verification, enrollment or database connections).
     private func applyBackendModeAtLaunch(_ mode: BackendMode) async {
         guard mode != .off else {
             backendStatus = "Backend off"
-            appendLog("[Backend] Mode is Off — voice auth, Spotify and the intent model are unavailable.")
+            appendLog("[Backend] Mode is Off — speaker verification and intent inference are disabled.")
             return
         }
 
@@ -541,7 +572,7 @@ final class AppState: ObservableObject {
                 Task { @MainActor in self?.appendLog(message) }
             }
             backendStatus = "Backend off"
-            appendLog("[Backend] Mode set to Off — voice auth, Spotify and the intent model are unavailable.")
+            appendLog("[Backend] Mode set to Off — speaker verification and intent inference are disabled.")
         case .always:
             await startBundledBackendIfNeeded()
         case .automatic:
@@ -573,6 +604,7 @@ final class AppState: ObservableObject {
     }
 
     func shutdown() {
+        bootstrapTask?.cancel()
         CommandTestHarness.shared.stop()
         stopEnrollment()
         statsRecorder.flush()
@@ -629,7 +661,14 @@ final class AppState: ObservableObject {
             // no Speech permission needed, mic permission only.
             resetVoicePipelineState()
             WhisperCommandListener.shared.reset()
+            AppleStreamingRecognizer.shared.cancel()
             micManager.stopListening()
+
+            if presentsUI && AppleStreamingRecognizer.preferred {
+                appendLog("Preparing Apple on-device speech…")
+                try await AppleStreamingRecognizer.shared.prepare()
+                guard microphoneSessionID == sessionID, !Task.isCancelled else { return }
+            }
 
             try await micManager.startListeningWithPermission(
                 onLevelUpdate: { [weak self] level in
@@ -643,6 +682,7 @@ final class AppState: ObservableObject {
                     // Acoustic wake-word engine (inert without SDK + key):
                     // tap-thread ingest, internally locked.
                     WakeWordDetector.shared.ingest(buffer: buffer)
+                    AppleSpeechAudioBridge.shared.ingest(buffer)
                 }
             )
 
@@ -665,7 +705,7 @@ final class AppState: ObservableObject {
 
             micActive = true
             assistantState = .listening
-            appendLog("Microphone + Whisper recognizer started.")
+            appendLog(AppleStreamingRecognizer.preferred ? "Microphone + Apple on-device streaming speech started." : "Microphone + Whisper recognizer started.")
             // Surface the auto-paste grant in the app's own log: a stale
             // grant (toggle ON, binary replaced by a rebuild) reads as
             // "paste does nothing" with no other clue.
@@ -697,6 +737,7 @@ final class AppState: ObservableObject {
         micTransientAutoStart = false
         pendingWakeWordDetected = false
         WhisperCommandListener.shared.reset()
+        AppleStreamingRecognizer.shared.cancel()
         micManager.stopListening()
         micActive = false
         assistantState = .idle
@@ -882,6 +923,7 @@ final class AppState: ObservableObject {
         // asked for visible speech→text while talking). Command execution
         // still waits for the final below.
         guard isFinal else { return }
+        PipelineTrace.current?.event("transcript_received", fields: ["characters": String(transcript.count)], text: transcript)
         if !enrollmentActive && recoverDisplayIfRequested(transcript) { return }
 
         if voiceModeEnabled && TranscriptSanitizer.containsWakeWord(transcript) {
@@ -1147,6 +1189,29 @@ final class AppState: ObservableObject {
         }
 
         let now = Date()
+
+        if AppleStreamingRecognizer.preferred, AppleStreamingRecognizer.shared.available {
+            let voice = smoothedAudioLevelDB > (previousVoiceDetected ? voiceContinueThresholdDB : voiceStartThresholdDB)
+            if voice {
+                lastVoiceTimestamp = now
+                if !previousVoiceDetected {
+                    previousVoiceDetected = true; recordingStartedAt = now
+                    assistantState = .recording
+                }
+                AppleStreamingRecognizer.shared.begin()
+            } else if previousVoiceDetected, now.timeIntervalSince(lastVoiceTimestamp) >= 0.65 {
+                previousVoiceDetected = false
+                AppleStreamingRecognizer.shared.end()
+                if assistantState != .executing { assistantState = .listening }
+            }
+            // Streaming sessions retain context during uninterrupted speech.
+            // A bounded 45-second segment avoids an unlimited command buffer.
+            if previousVoiceDetected, now.timeIntervalSince(recordingStartedAt) >= 45 {
+                previousVoiceDetected = false
+                AppleStreamingRecognizer.shared.end()
+            }
+            return
+        }
 
         // Whisper STT processes the utterance only when VAD sees silence.
         // Continuous speech NEVER ends the utterance on its own — the end
