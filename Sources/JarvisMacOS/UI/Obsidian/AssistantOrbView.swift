@@ -9,8 +9,26 @@ struct AssistantOrbView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
         let appearance = AppAppearance.shared
-        OrbWebHost(style: appearance.orbStyle, accent: appearance.accent, animated: appearance.animateOrb && !reduceMotion)
-            .accessibilityHidden(true)
+        ZStack {
+            OrbWebHost(style: appearance.orbStyle, accent: appearance.accent, animated: appearance.animateOrb && !reduceMotion)
+            if isListening {
+                GeometryReader { geometry in
+                    let diameter = min(geometry.size.width, geometry.size.height) * 0.82
+                    ZStack(alignment: .bottom) {
+                        Circle().strokeBorder(appearance.accent.color.opacity(0.85), lineWidth: 1.5)
+                            .shadow(color: appearance.accent.color.opacity(0.45), radius: 12)
+                        Circle().strokeBorder(appearance.accent.color.opacity(0.13), lineWidth: 7).padding(-5)
+                        HStack(spacing: 5) {
+                            Image(systemName: "mic.fill").font(.system(size: 10))
+                            Text("LIVE").font(.system(size: 9, weight: .semibold)).tracking(0.8)
+                        }.foregroundStyle(NoirPalette.onAccent).padding(.horizontal, 9).padding(.vertical, 6)
+                            .background(Capsule().fill(appearance.accent.color))
+                            .overlay(Capsule().strokeBorder(NoirPalette.base, lineWidth: 2)).offset(y: 10)
+                    }.frame(width: diameter, height: diameter)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }.allowsHitTesting(false)
+            }
+        }.accessibilityHidden(true)
     }
 }
 

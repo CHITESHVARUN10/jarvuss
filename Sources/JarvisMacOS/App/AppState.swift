@@ -83,6 +83,8 @@ final class AppState: ObservableObject {
     /// (Setup → Connections). Assistant is the workspace entry point; the
     /// first-run checklist lives under Preferences and keeps its own badge.
     @Published var activeSection: RailSection = .assistant
+    @Published var expandedSettingsGroup: GeneralSettingsGroup?
+    @Published var voiceSettingsTab: VoiceSettingsTab = .recognition
     /// Swift → Rust migration flag: command understanding routed through the
     /// Rust core (validator, safety, app aliases, fast-path + rules). OFF keeps
     /// the Swift pipeline and logs shadow-parity lines for comparison.
@@ -167,7 +169,15 @@ final class AppState: ObservableObject {
         "Jarvis next song"
     ]
     @Published var enrollmentIndex = 0
-    var enrollmentPreparing = false
+    @Published var enrollmentPreparing = false
+    @Published var enrollmentPaused = false
+    @Published var enrollmentAwaitingNextPhrase = false
+    @Published var enrollmentSavingSample = false
+    @Published var enrollmentMessage = ""
+    @Published var voiceProfileResetting = false
+    @Published var voiceProfileError: String?
+    var enrollmentSessionID = UUID()
+    var enrollmentSampleTask: Task<Void, Never>?
     var enrollmentPreparationTask: Task<Void, Never>?
     @Published var enrollmentActive = false
     @Published var enrollmentCompleted = false
@@ -190,6 +200,7 @@ final class AppState: ObservableObject {
     let actionExecutor: PlanExecuting
     private let automationStore = AutomationStore()
     let voiceAuthClient: SpeakerVerifying
+    let prepareVoiceBackend: @MainActor () async -> Bool
     let postgresClient = PostgresClient()
     let actionPlanner: ActionPlanning
     let statsRecorder: StatsRecorder
@@ -220,8 +231,6 @@ final class AppState: ObservableObject {
     private var pendingWakeWordDetectedAt = Date.distantPast
     private var isStoppingMicrophone = false
     var lastEnrollmentAcceptedAt = Date.distantPast
-    var lastEnrollmentAcceptedTranscript = ""
-    var lastEnrollmentAttemptAt = Date.distantPast
 
     private let voiceStartThresholdDB: Float = -42.0
     private let voiceContinueThresholdDB: Float = -50.0
@@ -233,7 +242,6 @@ final class AppState: ObservableObject {
     /// segment carries a live partial before the split fires.
     private static let maxContinuousSpeechSeconds: TimeInterval = 8.0
     let enrollmentAcceptCooldown: TimeInterval = 1.4
-    let enrollmentAttemptThrottle: TimeInterval = 0.30
     let voiceVerificationThreshold = 0.70
     /// How long after hearing "Jarvis" a follow-up without the wake word is
     /// still accepted as its command ("Jarvis" … pause … "open Spotify").
@@ -287,7 +295,8 @@ final class AppState: ObservableObject {
         statsRecorder: StatsRecorder = .shared,
         intentLog: IntentRouterLog = .shared,
         activateServices: Bool = true,
-        emergencyDisplayRecovery: (@MainActor () -> Void)? = nil
+        emergencyDisplayRecovery: (@MainActor () -> Void)? = nil,
+        prepareVoiceBackend: @escaping @MainActor () async -> Bool = { await BackendServiceManager.ensureRunningForFeature() }
     ) {
         self.micManager = micManager
         self.logger = logger
@@ -295,6 +304,7 @@ final class AppState: ObservableObject {
         self.actionPlanner = actionPlanner
         self.actionExecutor = actionExecutor
         self.voiceAuthClient = voiceAuthClient
+        self.prepareVoiceBackend = prepareVoiceBackend
         self.statsRecorder = statsRecorder
         self.intentLog = intentLog
         self.presentsUI = activateServices
@@ -740,6 +750,7 @@ final class AppState: ObservableObject {
         AppleStreamingRecognizer.shared.cancel()
         micManager.stopListening()
         micActive = false
+        if enrollmentActive { stopEnrollment() }
         assistantState = .idle
         appendLog("Microphone stopped.")
     }

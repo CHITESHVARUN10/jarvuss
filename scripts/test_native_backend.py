@@ -10,6 +10,7 @@ from pathlib import Path
 import re
 import shutil
 import signal
+import struct
 import socketserver
 import subprocess
 import sys
@@ -32,6 +33,12 @@ class NativeBackendTests(unittest.TestCase):
         cls.data.mkdir()
         cls.backend = cls.root / "backend"
         cls.backend.mkdir()
+        # A clone or old bundle may contain somebody else's 63-sample profile.
+        # A clean user directory must never adopt it, even read-only.
+        header = "{'descr': '<f4', 'fortran_order': False, 'shape': (63, 256), }"
+        header += " " * ((64 - (10 + len(header) + 1) % 64) % 64) + "\n"
+        (cls.backend / "embeddings.npy").write_bytes(b"\x93NUMPY\x01\x00" + struct.pack("<H", len(header))
+            + header.encode() + struct.pack("<" + "f" * (63 * 256), *([0.1] * (63 * 256))))
         for path in (ROOT / "backend").glob("*.py"):
             shutil.copy2(path, cls.backend / path.name)
         # Share dependencies read-only; all mutable data stays in the temp root.
@@ -91,6 +98,11 @@ class NativeBackendTests(unittest.TestCase):
         cls.broker.shutdown()
         cls.broker.server_close()
         cls.tmp.cleanup()
+
+    def test_00_clean_install_ignores_bundled_voice_profile(self):
+        self.assertTrue((self.backend / "embeddings.npy").exists())
+        self.assertFalse((self.data / "embeddings.npy").exists())
+        self.assertEqual(self.request("GET", "/stats"), (200, {"enrolled_count": 0}))
 
     def request(self, method, path, payload=None, authenticated=True):
         connection = http.client.HTTPConnection("127.0.0.1", self.port, timeout=30)

@@ -29,6 +29,7 @@ struct AssistantWorkspace: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(appState.isLiveListening ? "Stop listening" : "Start listening")
+                .accessibilityValue(appState.isLiveListening ? "Live listening" : "Standby, microphone off")
                 VStack(alignment: .center, spacing: 9) {
                     Text(appState.isLiveListening ? "Listening for a command." : "Ready for a command.")
                         .obsidianFont(size: 19, weight: .medium).foregroundStyle(NoirPalette.text)
@@ -119,7 +120,7 @@ struct AssistantWorkspace: View {
                         .obsidianFont(size: 9).foregroundStyle(succeeded ? NoirPalette.green : NoirPalette.orange)
                 }
                 if !user, item.id == feed.items.last?.id {
-                    Button("Review latest command") { appState.activeSection = .system }.obsidianFont(size: 9).buttonStyle(.plain).foregroundStyle(NoirPalette.muted)
+                    Button("Review latest command") { appState.expandedSettingsGroup = .advanced; appState.activeSection = .system }.obsidianFont(size: 9).buttonStyle(.plain).foregroundStyle(NoirPalette.muted)
                 }
             }
         }

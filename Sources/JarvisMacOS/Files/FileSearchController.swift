@@ -156,6 +156,8 @@ final class FileSearchController: NSObject, ObservableObject, NSWindowDelegate {
         }
         guard let window = previewPanel, let screen = panel?.screen ?? NSScreen.main ?? NSScreen.screens.first else { return }
         window.title = "Jarvis · Preview"
+        window.titlebarAppearsTransparent = true
+        window.backgroundColor = NSColor(NoirPalette.base)
         let frame = FileSearchWindowLayout.centeredPreview(in: screen.visibleFrame, preferred: preferred)
         window.contentMinSize = NSSize(width: min(480, frame.width), height: min(360, frame.height))
         window.contentView = NSHostingView(rootView: FileSearchPreviewView(target: preview, onClose: { [weak self] in
@@ -176,6 +178,8 @@ final class FileSearchController: NSObject, ObservableObject, NSWindowDelegate {
             let window = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 800, height: 560),
                 styleMask: [.titled, .closable, .resizable, .nonactivatingPanel], backing: .buffered, defer: false)
             window.title = "Jarvis · File search"
+            window.titlebarAppearsTransparent = true
+            window.backgroundColor = NSColor(NoirPalette.base)
             window.contentMinSize = NSSize(width: 660, height: 420)
             window.isReleasedWhenClosed = false; window.hidesOnDeactivate = false
             window.becomesKeyOnlyIfNeeded = true

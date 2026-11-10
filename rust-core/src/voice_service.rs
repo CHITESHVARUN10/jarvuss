@@ -18,7 +18,6 @@ pub struct VoiceService {
     model: PathBuf,
     runtime: PathBuf,
     profile: PathBuf,
-    legacy: PathBuf,
     loaded: Mutex<Loaded>,
     admitted: AtomicUsize,
 }
@@ -29,12 +28,11 @@ impl Drop for Admission<'_> {
     }
 }
 impl VoiceService {
-    pub fn new(model: PathBuf, runtime: PathBuf, profile: PathBuf, legacy: PathBuf) -> Self {
+    pub fn new(model: PathBuf, runtime: PathBuf, profile: PathBuf) -> Self {
         Self {
             model,
             runtime,
             profile,
-            legacy,
             loaded: Mutex::new(Loaded {
                 engine: None,
                 last_activity: Instant::now(),
@@ -43,7 +41,7 @@ impl VoiceService {
         }
     }
     pub fn stats(&self) -> Result<Value, ApiError> {
-        let profiles = voice_profiles::load(&self.profile, &self.legacy)
+        let profiles = voice_profiles::load(&self.profile)
             .map_err(|_| ApiError::new(500, "Invalid voice profile"))?;
         Ok(json!({"enrolled_count":profiles.len()}))
     }
@@ -68,7 +66,7 @@ impl VoiceService {
                 .map_err(|_| ApiError::new(500, "Could not reset voice profile"))?;
             return Ok(json!({"enrolled_count":0}));
         }
-        let mut profiles = voice_profiles::load(&self.profile, &self.legacy)
+        let mut profiles = voice_profiles::load(&self.profile)
             .map_err(|_| ApiError::new(500, "Invalid voice profile"))?;
         if operation == "verify" && profiles.is_empty() {
             return Ok(voice_profiles::score(&[]));
@@ -131,7 +129,6 @@ mod tests {
             "missing".into(),
             "missing".into(),
             dir.path().join("voice.npy"),
-            dir.path().join("legacy.npy"),
         );
         let lock = service.loaded.lock().unwrap();
         std::thread::scope(|scope| {
@@ -156,7 +153,6 @@ mod tests {
             "missing".into(),
             "missing".into(),
             dir.path().join("voice.npy"),
-            dir.path().join("legacy.npy"),
         );
         assert_eq!(service.stats().unwrap()["enrolled_count"], 0);
         assert_eq!(

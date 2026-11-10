@@ -225,139 +225,65 @@ struct DictationTranscriptOverlayView: View {
     var body: some View {
         DictationCard {
             VStack(alignment: .leading, spacing: 0) {
-                header
-                    .padding(.bottom, 12)
+                HStack(spacing: 8) {
+                    Image(systemName: "text.alignleft").font(.system(size: 12)).foregroundStyle(DictationCardPalette.accent)
+                    Text(showRaw ? "Original transcript" : formatting ? "Formatting dictation…" : inserted ? "Pasted at your cursor" : "Dictation ready")
+                        .font(.system(size: 11, weight: .medium)).foregroundStyle(DictationCardPalette.text)
+                    Spacer(minLength: 6)
+                    Text("\(wordCount) words").font(.system(size: 10)).foregroundStyle(DictationCardPalette.secondary)
+                    Button(action: onClose) {
+                        Image(systemName: "xmark").font(.system(size: 10)).foregroundStyle(DictationCardPalette.secondary)
+                            .frame(width: 24, height: 24).contentShape(Rectangle())
+                    }.buttonStyle(.plain).accessibilityLabel("Close dictation result")
+                }.frame(height: 24).padding(.bottom, 18)
 
                 ScrollView(.vertical, showsIndicators: true) {
-                    Text(displayText)
-                        .font(.system(size: 13))
-                        .lineSpacing(5)
+                    Text(displayText).font(.system(size: 14)).lineSpacing(6)
                         .foregroundStyle(DictationCardPalette.text)
                         .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled)
                 }
-                .frame(height: DictationHUDLayout.textHeight(transcript: transcript, original: original,
-                    showsOriginal: canToggleOriginal))
+                .frame(height: DictationHUDLayout.textHeight(transcript: transcript, original: original, showsOriginal: canToggleOriginal))
 
-                Rectangle()
-                    .fill(Color.white.opacity(0.08))
-                    .frame(height: 1)
-                    .padding(.top, 14)
-                    .padding(.bottom, 12)
-
-                HStack(spacing: 8) {
+                Rectangle().fill(Color.white.opacity(0.08)).frame(height: 1).padding(.top, 20).padding(.bottom, 12)
+                HStack(spacing: 14) {
                     Button {
                         if showRaw { onCopyOriginal() } else { onCopy() }
                         copiedFlash = true
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
-                            copiedFlash = false
-                        }
                     } label: {
                         Label(copiedFlash ? "Copied" : "Copy text", systemImage: copiedFlash ? "checkmark" : "doc.on.doc")
-                    }
-                    .buttonStyle(DictationControlStyle(primary: true))
-
+                    }.buttonStyle(DictationControlStyle(primary: true))
                     if canToggleOriginal {
-                        Button { showRaw.toggle() } label: {
-                            Label(showRaw ? "Polished" : "Original", systemImage: "clock.arrow.circlepath")
-                        }
-                        .buttonStyle(DictationControlStyle())
-                        .help(showRaw ? "Show the polished text" : "Show the original transcript")
+                        Button(showRaw ? "Show formatted" : "View original") { showRaw.toggle(); copiedFlash = false }
+                            .font(.system(size: 11)).foregroundStyle(DictationCardPalette.secondary).buttonStyle(.plain)
                     }
-
                     Spacer(minLength: 0)
-
                     if inserted {
-                        Button {
-                            undoRequested = true
-                            onUndo()
-                        } label: {
+                        Button { undoRequested = true; onUndo() } label: {
                             Label("Undo paste", systemImage: "arrow.uturn.backward")
-                        }
-                        .buttonStyle(DictationControlStyle())
-                        .help("Undo the paste in the destination app; keep this transcript")
+                        }.buttonStyle(.plain).font(.system(size: 11)).foregroundStyle(DictationCardPalette.secondary)
+                    } else {
+                        Text(undoRequested ? "Paste undone" : copiedFlash || copied ? "Copied" : "Ready to paste")
+                            .font(.system(size: 10)).foregroundStyle(DictationCardPalette.secondary)
                     }
-                }
-                .frame(height: 32)
-
-                HStack(spacing: 5) {
-                    Image(systemName: statusIcon)
-                        .font(.system(size: 9))
-                    Text(statusText)
-                        .font(.system(size: 10))
-                }
-                .foregroundStyle(DictationCardPalette.secondary)
-                .frame(height: 14, alignment: .leading)
-                .padding(.top, 10)
-
+                }.frame(height: 32)
                 if !insertNotice.isEmpty {
                     HStack(alignment: .top, spacing: 8) {
-                        Image(systemName: "info.circle")
-                            .font(.system(size: 10))
-                            .padding(.top, 2)
-                        Text(insertNotice)
-                            .font(.system(size: 10.5))
-                            .lineSpacing(2)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        Button("Grant", action: onGrantAccessibility)
-                            .buttonStyle(.plain)
-                            .font(.system(size: 10.5, weight: .medium))
-                            .foregroundStyle(DictationCardPalette.accent)
-                            .help("Open macOS Accessibility settings")
-                    }
-                    .foregroundStyle(DictationCardPalette.secondary)
-                    .frame(height: DictationHUDLayout.noticeHeight(insertNotice), alignment: .topLeading)
-                    .padding(.top, 10)
+                        Text(insertNotice).font(.system(size: 10.5)).lineSpacing(2)
+                            .foregroundStyle(DictationCardPalette.secondary)
+                            .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+                        if insertNotice.localizedCaseInsensitiveContains("Accessibility") {
+                            Button("Review access", action: onGrantAccessibility)
+                                .font(.system(size: 10.5)).foregroundStyle(DictationCardPalette.accent).buttonStyle(.plain)
+                                .help("Open macOS Accessibility settings")
+                        }
+                    }.frame(height: DictationHUDLayout.noticeHeight(insertNotice), alignment: .topLeading).padding(.top, 12)
                 }
             }
         }
         .frame(width: cardSize.width, height: cardSize.height, alignment: .topLeading)
     }
 
-    private var header: some View {
-        HStack(spacing: 7) {
-            Circle()
-                .fill(DictationCardPalette.accent)
-                .frame(width: 5, height: 5)
-            Text(showRaw ? "ORIGINAL · DICTATION" : "READY · DICTATION")
-                .font(.system(size: 10, weight: .semibold))
-                .tracking(0.5)
-                .foregroundStyle(DictationCardPalette.accent)
-            Spacer(minLength: 8)
-            Text("\(wordCount) word\(wordCount == 1 ? "" : "s")")
-                .font(.system(size: 10, design: .monospaced))
-                .foregroundStyle(DictationCardPalette.secondary)
-            Button(action: onClose) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(DictationCardPalette.secondary)
-                    .frame(width: 22, height: 22)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Close dictation result")
-            .help("Close")
-        }
-        .frame(height: 22)
-    }
-
-    private var statusIcon: String {
-        if formatting { return "ellipsis" }
-        if undoRequested && !inserted { return "arrow.uturn.backward" }
-        if copiedFlash || copied { return "doc.on.clipboard" }
-        return inserted ? "checkmark" : "text.cursor"
-    }
-
-    private var statusText: String {
-        if formatting { return "Polishing your transcript…" }
-        if undoRequested && !inserted { return "Paste undone. Text is still available here." }
-        if copiedFlash { return "Copied to the clipboard." }
-        if inserted { return "Pasted at your cursor." }
-        if copied { return "Copied to the clipboard. Ready to paste." }
-        return "Ready to copy and paste where you need it."
-    }
 }
 
 // MARK: - Compact HUD controls
@@ -369,7 +295,7 @@ private struct DictationControlStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 11, weight: .medium))
-            .foregroundStyle(primary ? Color(hex: 0x22212E) : DictationCardPalette.secondary)
+            .foregroundStyle(primary ? NoirPalette.onAccent : DictationCardPalette.secondary)
             .padding(.horizontal, 10)
             .frame(height: 32)
             .background(RoundedRectangle(cornerRadius: 7, style: .continuous)

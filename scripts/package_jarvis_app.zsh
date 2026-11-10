@@ -74,23 +74,9 @@ if [[ -d "$BACKEND_SRC/models" ]]; then
   rsync -a --delete "$BACKEND_SRC/models/" "$BACKEND_DEST/models/"
 fi
 
-if (( ! REFRESH_FRONTEND )); then
-# Native configuration import runs after signing, below. Python never reads
-# Keychain during packaging. Keep legacy bundle files until import succeeds.
-RUNTIME_DATA_DIR="${JARVIS_DATA_DIR:-$HOME/Library/Application Support/Jarvis}"
-case "$RUNTIME_DATA_DIR" in "~/"*) RUNTIME_DATA_DIR="$HOME/${RUNTIME_DATA_DIR:2}" ;; esac
-mkdir -p "$RUNTIME_DATA_DIR"
-if [[ ! -f "$RUNTIME_DATA_DIR/embeddings.npy" ]]; then
-  if [[ -f "$BACKEND_DEST/embeddings.npy" ]]; then
-    cp "$BACKEND_DEST/embeddings.npy" "$RUNTIME_DATA_DIR/embeddings.npy"
-  elif [[ -f "$BACKEND_SRC/embeddings.npy" ]]; then
-    cp "$BACKEND_SRC/embeddings.npy" "$RUNTIME_DATA_DIR/embeddings.npy"
-  fi
-fi
-# Remove legacy generated bundle copies after migration.
-# Legacy files are removed after the signed app imports them below.
-
-fi # full configuration/profile migration
+# Never seed a new installation with a developer's voice profile. Existing
+# enrollments already live in the user's Application Support directory.
+rm -f "$BACKEND_DEST/embeddings.npy" "$BACKEND_DEST/voice_profiles.npy" "$BACKEND_DEST/voice_profiles.lock"
 
 # Ship only native inference/audio libraries, verified voice assets and models.
 # The old development Python environment was retained outside the bundle by
@@ -168,6 +154,7 @@ else
 fi
 
 }
+python3 "$ROOT_DIR/scripts/check_private_artifacts.py" --bundle "$APP_BUNDLE"
 sign_app
 
 if (( ! REFRESH_FRONTEND )); then

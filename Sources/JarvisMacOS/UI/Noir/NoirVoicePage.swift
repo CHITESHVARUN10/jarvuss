@@ -1,167 +1,87 @@
 import SwiftUI
 
-// MARK: - Voice profile
-
 struct NoirVoicePage: View {
     @ObservedObject var appState: AppState
     @EnvironmentObject private var toasts: ToastCenter
-
-    @State private var showPreferences = false
+    @State private var showEnrollment = false
     @State private var confirmRetrain = false
     @State private var confirmClear = false
-
-    private var collected: Int { appState.backendEnrollmentSampleCount }
-    private var target: Int { appState.voiceEnrollmentSampleTarget }
-    private var ready: Bool { appState.voiceProfileReady }
-    private var progress: Double {
-        guard target > 0 else { return 0 }
-        return min(1, Double(collected) / Double(target))
-    }
+    @AppStorage("jarvis.liveSpeech.engine") private var liveSpeechEngine = "apple"
+    @AppStorage("jarvis.liveSpeech.locale") private var liveSpeechLocale = "en-IN"
 
     var body: some View {
-        NoirPage(
-            eyebrow: "Recognition, made personal",
-            title: "Voice & speech",
-            sub: "Teach Jarvis to recognize you before it carries out a command."
-        ) {
+        NoirPage(eyebrow: "Preferences", title: "Voice & speech",
+                 sub: "Your voice profile, recognition, and dictation in one place.") {
             profileCard
-
-            NoirSectionHeading(
-                title: "Voice samples",
-                trailing: AnyView(
-                    Text("\(appState.enrollmentPhrases.count) phrases · \(appState.enrollmentRequiredMatchesPerPhrase) samples each")
-                        .obsidianFont(size: 11, design: .monospaced)
-                        .foregroundStyle(NoirPalette.muted)
-                )
-            )
-
-            NoirCard(padded: true) {
-                LazyVGrid(
-                    columns: [
-                        GridItem(.flexible(), spacing: 20, alignment: .leading),
-                        GridItem(.flexible(), spacing: 20, alignment: .leading)
-                    ],
-                    spacing: 0
-                ) {
-                    ForEach(Array(appState.enrollmentPhrases.enumerated()), id: \.offset) { index, phrase in
-                        phraseRow(phrase: phrase, index: index)
-                    }
+            HStack(spacing: 24) {
+                ForEach(VoiceSettingsTab.allCases, id: \.self) { tab in
+                    Button { appState.voiceSettingsTab = tab } label: {
+                        Text(tab.rawValue).obsidianFont(size: 12, weight: .medium)
+                            .foregroundStyle(appState.voiceSettingsTab == tab ? NoirPalette.text : NoirPalette.muted)
+                            .frame(height: 44)
+                            .overlay(alignment: .bottom) {
+                                if appState.voiceSettingsTab == tab { Rectangle().fill(NoirPalette.accent).frame(height: 2) }
+                            }
+                    }.buttonStyle(.plain)
+                        .accessibilityAddTraits(appState.voiceSettingsTab == tab ? .isSelected : [])
                 }
-            }
+                Spacer(minLength: 0)
+            }.overlay(alignment: .bottom) { Rectangle().fill(NoirPalette.line).frame(height: 1) }
+                .padding(.top, 22)
 
-            HStack(spacing: 8) {
-                enrollmentButtons
-            }
-            .padding(.top, 20)
-
-            if appState.enrollmentActive {
-                HStack(spacing: 8) {
-                    Text("Say: “\(appState.currentEnrollmentPhrase)”")
-                        .obsidianFont(size: 11)
-                        .foregroundStyle(NoirPalette.secondary)
-                    Spacer(minLength: 8)
-                    Button("Stop") { appState.stopEnrollment() }
-                        .buttonStyle(NoirButtonStyle(intent: .danger, small: true))
-                }
-                .padding(.top, 12)
+            if appState.voiceSettingsTab == .dictation {
+                ObsidianDictationPreferences()
             } else {
-                Text("Retraining replaces existing samples. Adding samples keeps your current profile.")
-                    .obsidianFont(size: 11)
-                    .foregroundStyle(NoirPalette.muted)
-                    .padding(.top, 15)
-            }
-
-            NoirSectionHeading(
-                title: "Verification",
-                trailing: AnyView(
-                    NoirIconButton(icon: "slider.horizontal.3", help: "Open preferences") {
-                        showPreferences = true
-                    }
-                )
-            )
-
-            NoirCard {
-                VStack(spacing: 0) {
-                    NoirSettingRow(
-                        title: "Verify action commands",
-                        sub: "Require a voice match when using ⌘⇧A."
-                    ) {
-                        NoirSwitch(isOn: $appState.actionPillRequiresVerify)
-                    }
-                    NoirDivider()
-                    NoirSettingRow(
-                        title: "Verify live mode",
-                        sub: "Require a voice match after the wake word."
-                    ) {
-                        NoirSwitch(isOn: $appState.voiceModeRequiresVerify)
-                    }
-                    NoirDivider()
-                    NoirSettingRow(
-                        title: "Similarity threshold",
-                        sub: "The minimum match required to execute."
-                    ) {
-                        Text(String(format: "%.2f", appState.voiceVerifyThreshold))
-                            .obsidianFont(size: 12, design: .monospaced)
-                            .foregroundStyle(NoirPalette.secondary)
-                    }
-                }
+                recognitionSettings
             }
         }
-        .sheet(isPresented: $showPreferences) {
-            AssistantPreferencesSheet(appState: appState)
-                .environmentObject(toasts)
+        .sheet(isPresented: $showEnrollment, onDismiss: {
+            if appState.enrollmentActive { appState.stopEnrollment() }
+        }) {
+            ObsidianEnrollmentSheet(appState: appState)
+                .presentationBackground(.clear)
+                .interactiveDismissDisabled()
         }
+        .onAppear { if appState.enrollmentActive { showEnrollment = true } }
+        .onChange(of: appState.enrollmentActive) { _, active in if active { showEnrollment = true } }
         .alert("Retrain your voice?", isPresented: $confirmRetrain) {
             Button("Cancel", role: .cancel) {}
-            Button("Retrain", role: .destructive) {
-                appState.retrainVoiceProfile()
-                toasts.show("Fresh enrollment started — old samples will be replaced.")
-            }
+            Button("Start fresh", role: .destructive) { appState.retrainVoiceProfile(); showEnrollment = true }
         } message: {
-            Text("Your existing samples will be replaced with a fresh enrollment.")
+            Text("Your existing samples will be replaced with a new guided session. You’ll read one phrase at a time, three times each.")
         }
         .alert("Clear your voice profile?", isPresented: $confirmClear) {
             Button("Cancel", role: .cancel) {}
-            Button("Clear profile", role: .destructive) {
-                appState.resetVoiceProfile()
-                toasts.show("Voice profile cleared.")
-            }
+            Button("Clear profile", role: .destructive) { appState.resetVoiceProfile() }
         } message: {
-            Text("Your stored voice samples will be removed and hands-free mode will turn off.")
+            Text("Your voice profile and unfinished enrollment will be removed. Hands-free mode will turn off.")
         }
     }
 
-    // MARK: Profile card
-
     private var profileCard: some View {
         NoirCard(padded: true) {
-            HStack(spacing: 26) {
-                ring
-
+            HStack(alignment: .top, spacing: 18) {
+                Image(systemName: appState.voiceProfileReady ? "checkmark" : "waveform")
+                    .obsidianFont(size: 20).foregroundStyle(appState.voiceProfileReady ? NoirPalette.green : NoirPalette.accent)
+                    .frame(width: 44, height: 44).background(RoundedRectangle(cornerRadius: 12).fill(NoirPalette.accentSoft))
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(profileTitle)
-                        .obsidianFont(size: 17, weight: .medium)
-                        .foregroundStyle(NoirPalette.text)
-
-                    NoirTag(
-                        text: profileTag,
-                        kind: ready ? .green : (appState.enrollmentActive ? .amber : .accent),
-                        icon: ready ? "checkmark" : "mic"
-                    )
-                    .padding(.top, 9)
-
-                    Text(profileText)
-                        .obsidianFont(size: 11)
-                        .lineSpacing(4)
-                        .foregroundStyle(NoirPalette.muted)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, 10)
-
-                    if appState.lastVoiceSimilarity > 0 {
-                        Text("Last match \(Int(appState.lastVoiceSimilarity * 100))%")
-                            .obsidianFont(size: 11, design: .monospaced)
-                            .foregroundStyle(NoirPalette.muted)
-                            .padding(.top, 10)
+                    Text(appState.voiceProfileReady ? "Your voice, recognized." : "Make Jarvis familiar with your voice.")
+                        .obsidianFont(size: 16, weight: .medium).foregroundStyle(NoirPalette.text)
+                    NoirTag(text: profileStatus, kind: appState.voiceProfileReady ? .green : .accent)
+                        .padding(.top, 9)
+                    Text(appState.voiceProfileReady
+                         ? "Your profile is ready for verified commands. Retrain whenever your voice or microphone changes."
+                         : "A guided session, one phrase at a time. Read each phrase three times; Jarvis takes you through the rest.")
+                        .obsidianFont(size: 12).foregroundStyle(NoirPalette.muted).lineSpacing(4).padding(.top, 12)
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: 12) { profileActions }
+                        VStack(alignment: .leading, spacing: 12) { profileActions }
+                    }.padding(.top, 20).disabled(appState.voiceProfileResetting)
+                    if appState.voiceProfileResetting {
+                        Text("Clearing voice profile…").obsidianFont(size: 11).foregroundStyle(NoirPalette.muted).padding(.top, 12)
+                    }
+                    if let error = appState.voiceProfileError {
+                        Text(error).obsidianFont(size: 11).foregroundStyle(NoirPalette.orange).padding(.top, 12)
                     }
                 }
                 Spacer(minLength: 0)
@@ -169,115 +89,68 @@ struct NoirVoicePage: View {
         }
     }
 
-    private var ring: some View {
-        ZStack {
-            Circle()
-                .stroke(Color.white.opacity(0.043), lineWidth: 5)
-            Circle()
-                .trim(from: 0, to: progress)
-                .stroke(ready ? NoirPalette.green : NoirPalette.accent,
-                        style: StrokeStyle(lineWidth: 5, lineCap: .round))
-                .rotationEffect(.degrees(-90))
-                .animation(.easeOut(duration: 0.7), value: progress)
-            VStack(spacing: 4) {
-                Text("\(collected)")
-                    .obsidianFont(size: 26, weight: .regular)
-                    .foregroundStyle(NoirPalette.text)
-                Text("of \(target) samples")
-                    .obsidianFont(size: 9)
-                    .tracking(0.4)
-                    .textCase(.uppercase)
-                    .foregroundStyle(NoirPalette.muted)
+    private var profileStatus: String {
+        if appState.enrollmentActive { return "Enrollment in progress" }
+        if appState.enrollmentPaused { return "Enrollment paused" }
+        if appState.voiceProfileReady { return "Voice profile ready" }
+        return "No voice profile yet"
+    }
+
+    @ViewBuilder private var profileActions: some View {
+        Button(appState.enrollmentActive ? "Continue enrollment" : appState.enrollmentPaused ? "Resume enrollment" : "Start enrollment") {
+            if appState.enrollmentPaused { appState.resumeEnrollment() }
+            else if !appState.enrollmentActive { appState.startEnrollment() }
+            showEnrollment = true
+        }.buttonStyle(NoirButtonStyle(intent: .primary))
+            .disabled(appState.voiceProfileReady && !appState.enrollmentActive)
+            .help(appState.voiceProfileReady ? "Your profile is ready. Use Retrain profile to replace its samples." : "Start the guided voice session")
+        Button("Retrain profile") { confirmRetrain = true }
+            .buttonStyle(NoirButtonStyle()).disabled(appState.enrollmentActive || appState.backendEnrollmentSampleCount == 0)
+        Button("Clear profile") { confirmClear = true }
+            .buttonStyle(NoirButtonStyle(intent: .quiet))
+            .disabled(appState.enrollmentActive || (appState.backendEnrollmentSampleCount == 0 && !appState.enrollmentPaused))
+    }
+
+    private var recognitionSettings: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            NoirSectionHeading(title: "Recognition")
+            NoirCard {
+                VStack(spacing: 0) {
+                    NoirSettingRow(title: "Live speech", sub: "Applies when you restart listening.") {
+                        Picker("Live speech recognizer", selection: $liveSpeechEngine) {
+                            Text("Apple · on device").tag("apple")
+                            Text("Whisper · local fallback").tag("whisper")
+                        }.labelsHidden().frame(width: 215)
+                    }
+                    NoirDivider()
+                    NoirSettingRow(title: "Language", sub: "For example en-IN, en-US, or en-GB.") {
+                        TextField("Speech language", text: $liveSpeechLocale).textFieldStyle(.roundedBorder).frame(width: 120)
+                    }
+                    NoirDivider()
+                    NoirSettingRow(title: "Shortcut dictation", sub: "Speech recognition runs on this Mac.") {
+                        Text("Whisper Turbo").obsidianFont(size: 11).foregroundStyle(NoirPalette.secondary)
+                    }
+                }
             }
-        }
-        .frame(width: 112, height: 112)
-    }
-
-    private var profileTitle: String {
-        if appState.enrollmentActive { return "Getting to know your voice" }
-        return ready ? "Uniquely you." : "Let’s get to know you."
-    }
-
-    private var profileTag: String {
-        if appState.enrollmentActive { return "Enrollment active" }
-        return ready ? "Voice profile ready" : "Not enrolled"
-    }
-
-    private var profileText: String {
-        if appState.enrollmentActive {
-            return "Keep reading the phrases. Jarvis stores a speaker embedding on this Mac — never the recording."
-        }
-        if ready {
-            return "Your voice profile is ready for verified commands and hands-free follow-ups."
-        }
-        return "Read \(appState.enrollmentPhrases.count) phrases, with \(appState.enrollmentRequiredMatchesPerPhrase) samples per phrase, to build your voice profile."
-    }
-
-    // MARK: Phrase rows
-
-    private func phraseRow(phrase: String, index: Int) -> some View {
-        let done = collected >= (index + 1) * appState.enrollmentRequiredMatchesPerPhrase
-        let current = appState.enrollmentActive && index == appState.enrollmentIndex
-        return HStack(spacing: 8) {
-            Image(systemName: done ? "checkmark" : "mic")
-                .obsidianFont(size: 10, weight: .medium)
-                .foregroundStyle(done ? NoirPalette.green : (current ? NoirPalette.accent : NoirPalette.muted))
-                .frame(width: 12)
-            Text(phrase)
-                .obsidianFont(size: 11)
-                .foregroundStyle(current ? NoirPalette.text : NoirPalette.secondary)
-                .lineLimit(1)
-            Spacer(minLength: 0)
-        }
-        .padding(.vertical, 11)
-        .overlay(alignment: .bottom) {
-            Rectangle().fill(NoirPalette.line).frame(height: 1)
-        }
-    }
-
-    // MARK: Actions
-
-    @ViewBuilder
-    private var enrollmentButtons: some View {
-        if appState.enrollmentActive {
-            Button {
-                appState.stopEnrollment()
-            } label: {
-                Label("Stop enrollment", systemImage: "stop.fill")
+            NoirSectionHeading(title: "Voice verification")
+            NoirCard {
+                VStack(spacing: 0) {
+                    NoirSettingRow(title: "Action commands", sub: "Verify your voice before carrying out a command with ⌘⇧A.") {
+                        NoirSwitch(isOn: $appState.actionPillRequiresVerify)
+                    }
+                    NoirDivider()
+                    NoirSettingRow(title: "Live mode", sub: "Verify your voice after the wake word.") {
+                        NoirSwitch(isOn: $appState.voiceModeRequiresVerify)
+                    }
+                    NoirDivider()
+                    NoirSettingRow(title: "Similarity threshold", sub: "The minimum voice match required to execute.") {
+                        Text(String(format: "%.2f", appState.voiceVerifyThreshold)).obsidianFont(size: 12, design: .monospaced)
+                            .foregroundStyle(NoirPalette.secondary)
+                    }
+                }
             }
-            .buttonStyle(NoirButtonStyle(intent: .danger))
-        } else if ready {
-            Button {
-                appState.startEnrollment(resetStore: false)
-                toasts.show("Listening for new samples.")
-            } label: {
-                Label("Add samples", systemImage: "mic")
-            }
-            .buttonStyle(NoirButtonStyle(intent: .primary))
-        } else {
-            Button {
-                appState.startEnrollment()
-                toasts.show("Enrollment started.")
-            } label: {
-                Label("Start enrollment", systemImage: "mic")
-            }
-            .buttonStyle(NoirButtonStyle(intent: .primary))
+            Label("Your voice profile stays on this Mac.", systemImage: "lock")
+                .obsidianFont(size: 11).foregroundStyle(NoirPalette.muted).padding(.top, 15)
         }
-
-        Button {
-            confirmRetrain = true
-        } label: {
-            Label("Retrain profile", systemImage: "arrow.clockwise")
-        }
-        .buttonStyle(NoirButtonStyle())
-
-        Button {
-            confirmClear = true
-        } label: {
-            Label("Clear profile", systemImage: "trash")
-        }
-        .buttonStyle(NoirButtonStyle(intent: .quiet))
-
-        Spacer(minLength: 0)
     }
 }

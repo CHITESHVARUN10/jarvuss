@@ -63,3 +63,46 @@ were inspected, and the installed text-size menu exposes all five options.
 
 README.md is now a 73-line project overview. The detailed reference moved to
 [user-guide.md](user-guide.md); local documentation links were checked.
+
+
+## Guided speech and focused settings
+
+General now groups display/sound, projects, local services, and advanced controls
+behind separate disclosures. Startup and assistant behavior remain visible. The
+intent model updater is also available directly in General, sharing Setup’s
+verified download, refresh, cancellation, and recovery pipeline.
+
+Voice & speech groups Recognition and Dictation. The latest transcript lives
+beside dictation preferences; the original and recording details are collapsed.
+Voice enrollment shows one phrase at a time, three confirmed saved samples per
+phrase, and an explicit Next phrase step. It supports pause/resume, confirmed
+retraining/clearing, and a compact completed profile. Repeated final utterances
+are allowed; failed or stale sample saves do not advance the visible progress.
+
+The idle orb keeps its existing renderer. Live listening adds an accent ring
+and LIVE microphone badge, including when animations are disabled. Shortcut
+recording does not activate that state. File search keeps its native list,
+keyboard actions, Quick Look, and Finder/Open actions with a simpler filter
+header and glass surfaces. Quick answers share a fixed 400×170 glass card;
+padding stays inside the borderless panel to avoid clipping/layout loops.
+
+Personal voice embeddings are excluded from source and bundles. Both runtimes
+load only the user data profile, never a repository/bundle fallback. Packaging
+never seeds enrollment from developer files and checks for private artifacts.
+The tracked 63-sample profile was removed from the working tree and preserved
+in a private Application Support backup. Previously published Git history is
+not rewritten by this change.
+
+
+Latest installed refinement: source `18fb12981bb9+modified`, UUID
+`96755C88-195A-335A-B44F-EAB96E601D0B`, built `2026-11-10T04:57:25Z`.
+Executable SHA-256 `257eed9e5d35f41dec9f6ad0fa3f52af8cf9e92607438b4161070047698c2a2b`. Previous app: `/Users/chiteshvarun/.Trash/Jarvis-previous-20261110-102809.app`.
+
+Verification: 430 Swift tests (14 skipped, zero failures); 123 Rust tests
+passed (one ignored); 42 Python tests (one skipped, zero failures); seven
+isolated native helper tests passed, including the foreign 63-sample profile
+fixture. Source and bundle profile guards passed. All 13 intent model files
+match the previous installed application. Native sample-data screenshots of
+Settings, Voice, enrollment, dictation, file search, and the answer card were
+inspected; the temporary render harness was removed. No microphone, model
+training, or real file actions were used for the UI checks. No commit made.

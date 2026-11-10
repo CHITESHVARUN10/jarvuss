@@ -36,3 +36,9 @@ Sources/JarvisMacOS/Bridge/
 /rag_documents/
 /rag_index/
 __pycache__/
+
+# Personal speaker profiles belong only in the user data directory.
+embeddings.npy
+voice_profiles.npy
+speaker_embeddings.npy
+voice_profiles.lock

@@ -56,6 +56,12 @@ final class IntentModelSetup: ObservableObject {
         }
     }
     func checkForUpdates() { start { await self.refreshLocal(); try await self.check() } }
+    /// Inspect local installation without downloading or contacting the release server.
+    func refreshInstallation() async {
+        guard !isBusy else { return }
+        await refreshLocal()
+        await refreshRuntimeStatus()
+    }
     func installLatest(force: Bool = false) {
         start {
             await self.refreshLocal()

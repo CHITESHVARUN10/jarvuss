@@ -310,6 +310,7 @@ struct NoirSwitch: View {
 // MARK: - Buttons
 
 struct NoirButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
     enum Intent { case standard, primary, quiet, danger }
 
     var intent: Intent = .standard
@@ -331,6 +332,7 @@ struct NoirButtonStyle: ButtonStyle {
                     .strokeBorder(border, lineWidth: 1)
             )
             .contentShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+            .opacity(isEnabled ? 1 : 0.45)
     }
 
     private var foreground: Color {

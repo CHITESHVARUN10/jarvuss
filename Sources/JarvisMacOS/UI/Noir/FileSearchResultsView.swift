@@ -6,6 +6,7 @@ import UniformTypeIdentifiers
 struct FileSearchResultsView: View {
     @ObservedObject var model: FileSearchController
     @ObservedObject private var locations = FileSearchLocationStore.shared
+    @State private var filtersExpanded = false
     @FocusState private var queryFocused: Bool
 
     private var selected: FileSearchResult? { model.results.first { $0.id == model.selectedID } }
@@ -28,6 +29,7 @@ struct FileSearchResultsView: View {
                             .tag(item.id)
                             .listRowInsets(EdgeInsets(top: 2, leading: 10, bottom: 2, trailing: 10))
                             .listRowSeparator(.hidden)
+                            .listRowBackground(model.selectedID == item.id ? NoirPalette.accentSoft : Color.clear)
                             .simultaneousGesture(TapGesture(count: 2).onEnded { act(.open, index: index + 1) })
                             .contextMenu {
                                 Button("Open") { act(.open, index: index + 1) }
@@ -45,7 +47,7 @@ struct FileSearchResultsView: View {
             footer
         }
         .foregroundStyle(NoirPalette.text)
-        .background(NoirPalette.base)
+        .background(GlassPanelBackground())
         .onExitCommand { model.close() }
         .onKeyPress(keys: ["f"], phases: .down) { press in
             guard press.modifiers.contains(.command) else { return .ignored }
@@ -57,7 +59,7 @@ struct FileSearchResultsView: View {
     private var searchHeader: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Text("File search").obsidianFont(size: 14, weight: .medium)
+                Label("File search", systemImage: "doc.text.magnifyingglass").obsidianFont(size: 16, weight: .medium)
                 Spacer()
                 Text(model.searching ? "Searching…" : "\(model.results.count) \(model.results.count == 1 ? "result" : "results")")
                     .obsidianFont(size: 11).monospacedDigit().foregroundStyle(NoirPalette.muted)
@@ -89,15 +91,25 @@ struct FileSearchResultsView: View {
                     Text("Contents").tag(LocalSearchRequest.Mode.content)
                 }.pickerStyle(.segmented).labelsHidden().frame(width: 134)
                     .accessibilityLabel("Match file names or document contents")
-                Picker("File type", selection: $model.draft.kind) {
-                    ForEach(LocalSearchKind.allCases, id: \.self) { kind in Text(kind.label).tag(kind) }
-                }.labelsHidden().frame(width: 139).accessibilityLabel("File type")
-                Picker("Modified", selection: $model.draft.date) {
-                    ForEach(LocalSearchDate.allCases, id: \.self) { date in Text(date.label).tag(date) }
-                }.labelsHidden().frame(width: 130).accessibilityLabel("Modification date")
                 scopeMenu
                 Spacer(minLength: 0)
+                Button {
+                    filtersExpanded.toggle()
+                } label: { Label("Filters", systemImage: "line.3.horizontal.decrease") }
+                    .buttonStyle(NoirButtonStyle(intent: .quiet, small: true))
+                    .accessibilityValue(filtersExpanded ? "Expanded" : "Collapsed")
             }.controlSize(.small)
+            if filtersExpanded || model.draft.kind != .any || model.draft.date != .any {
+                HStack(spacing: 14) {
+                    Picker("File type", selection: $model.draft.kind) {
+                        ForEach(LocalSearchKind.allCases, id: \.self) { kind in Text(kind.label).tag(kind) }
+                    }.frame(width: 210)
+                    Picker("Modified", selection: $model.draft.date) {
+                        ForEach(LocalSearchDate.allCases, id: \.self) { date in Text(date.label).tag(date) }
+                    }.frame(width: 210)
+                    Spacer(minLength: 0)
+                }.controlSize(.small)
+            }
             if model.draft.minimumBytes > 0 || model.draft.maximumBytes > 0 {
                 HStack(spacing: 8) {
                     Image(systemName: "line.3.horizontal.decrease").obsidianFont(size: 10)
@@ -200,7 +212,7 @@ struct FileSearchResultsView: View {
                 .frame(width: 68, alignment: .trailing)
         }
         .obsidianFont(size: 10.5).foregroundStyle(NoirPalette.secondary)
-        .padding(.horizontal, 12).padding(.vertical, 12)
+        .padding(.horizontal, 12).padding(.vertical, 14)
         .foregroundStyle(NoirPalette.text)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
@@ -237,7 +249,7 @@ struct FileSearchPreviewView: View {
             FileQuickLookView(url: target.url)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .foregroundStyle(NoirPalette.text).background(NoirPalette.base)
+        .foregroundStyle(NoirPalette.text).background(GlassPanelBackground())
         .onExitCommand(perform: onClose)
     }
 }

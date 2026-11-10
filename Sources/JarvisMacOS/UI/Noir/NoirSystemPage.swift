@@ -1,250 +1,194 @@
 import SwiftUI
 import AppKit
 
-// MARK: - System & dictation
-
 struct NoirSystemPage: View {
     @ObservedObject var appState: AppState
-    @ObservedObject private var dictation = DictationController.shared
     @ObservedObject private var recovery = DisplayRecovery.shared
+    @StateObject private var launchAtLogin = LaunchAtLoginController()
     @EnvironmentObject private var toasts: ToastCenter
     @Environment(\.obsidianWindowWidth) private var windowWidth
-
     @State private var assistantPreferencesOpen = false
     @State private var brightness: Double = 65
     @State private var contrast: Double = 50
     @State private var editingBrightness = false
     @State private var editingContrast = false
-    @AppStorage("jarvis.liveSpeech.engine") private var liveSpeechEngine = "apple"
-    @AppStorage("jarvis.liveSpeech.locale") private var liveSpeechLocale = "en-IN"
 
     var body: some View {
-        NoirPage(
-            eyebrow: "The details that make it yours",
-            title: "General",
-            sub: "Fine-tune your display, sound, dictation, and command safeguards."
-        ) {
-            let columns = windowWidth < 1100
-                ? AnyLayout(VStackLayout(alignment: .leading, spacing: 18))
-                : AnyLayout(HStackLayout(alignment: .top, spacing: 18))
+        NoirPage(eyebrow: "Preferences", title: "General",
+                 sub: "The essentials up front. Everything else, when you need it.") {
+            let columns = windowWidth >= 1500
+                ? AnyLayout(HStackLayout(alignment: .top, spacing: 26))
+                : AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
             columns {
-                VStack(alignment: .leading, spacing: 0) {
-                    NoirSectionHeading(
-                        title: "Display",
-                        trailing: AnyView(
-                            NoirIconButton(icon: "arrow.clockwise", help: "Refresh display values") {
-                                appState.refreshBrightness()
-                                appState.refreshContrast()
-                                syncDisplayValues()
-                            }
-                        ),
-                        minHeight: 30
-                    )
-
-                    NoirCard {
-                        VStack(spacing: 0) {
-                            NoirSettingRow(title: "Brightness") {
-                                displayControl(value: $brightness, editing: $editingBrightness) {
-                                    appState.setBrightnessUI(Int(brightness.rounded()))
-                                }
-                            }
-                            NoirDivider()
-                            NoirSettingRow(title: "Contrast", sub: "External displays only.") {
-                                displayControl(value: $contrast, editing: $editingContrast) {
-                                    appState.setContrastUI(Int(contrast.rounded()))
-                                }
-                            }
-                            NoirDivider()
-                            NoirSettingRow(title: "Display profile") {
-                                Text(appState.displayProfileName)
-                                    .obsidianFont(size: 11, design: .monospaced)
-                                    .foregroundStyle(NoirPalette.secondary)
-                            }
-                        }
-                    }
-                }
-
-                VStack(alignment: .leading, spacing: 0) {
-                    NoirSectionHeading(title: "Command safeguards", minHeight: 30)
-                    NoirCard {
-                        VStack(spacing: 0) {
-                            NoirSettingRow(title: "Destructive actions", sub: "Always blocked.") {
-                                NoirTag(text: "Locked", kind: .red, icon: "lock")
-                            }
-                            NoirDivider()
-                            NoirSettingRow(title: "Privileged commands", sub: "sudo is never permitted.") {
-                                NoirTag(text: "Locked", kind: .red, icon: "lock")
-                            }
-                            NoirDivider()
-                            NoirSettingRow(title: "Package installs", sub: "Installation is never executed.") {
-                                NoirTag(text: "Preview only", kind: .amber)
-                            }
-                        }
-                    }
-                }
+                everyday.frame(maxWidth: .infinity, alignment: .topLeading)
+                moreSettings.frame(maxWidth: .infinity, alignment: .topLeading)
             }
-
-            NoirSectionHeading(title: "Assistant behavior")
-            NoirCard {
-                NoirSettingRow(title: "Startup, verification, and responses", sub: "Helper lifecycle, memory limit, voice mode, and dictation diagnostics.") {
-                    Button("Configure") { assistantPreferencesOpen = true }.buttonStyle(NoirButtonStyle(intent: .quiet, small: true))
-                }
-            }
-            ObsidianCoreServices(appState: appState)
-            NoirSoundSection()
-
-            NoirSectionHeading(title: "Live speech")
-            NoirCard(padded: true) {
-                Picker("Recognizer", selection: $liveSpeechEngine) {
-                    Text("Apple · on device").tag("apple")
-                    Text("Whisper · local fallback").tag("whisper")
-                }
-                TextField("Speech language (for example en-IN or en-US)", text: $liveSpeechLocale)
-                Text("Applies when you restart listening. Apple downloads supported language assets through macOS. Shortcut dictation uses the existing Whisper model.")
-                    .obsidianFont(size: 11).foregroundStyle(NoirPalette.secondary)
-            }
-
-            NoirProjectPreferences()
-            CommandFeedbackView(initialCommand: appState.lastCommandForReview, requestID: appState.lastCommandTraceID)
-            NoirFileSearchPreferences()
-
-            NoirSectionHeading(title: "Display safety")
-            NoirCard(padded: true) {
-                Text("Jarvis keeps brightness at 10% or higher, contrast at 20% or higher, and software dimming above zero.")
-                    .obsidianFont(size: 12)
-                    .foregroundStyle(NoirPalette.secondary)
-                Text("If the screen becomes unreadable, press ⌘⇧R. Or press ⌘⇧A, say ‘Restore my display’, then press ⌘⇧A again to finish. Recovery bypasses verification only for this exact, safe action.")
-                    .obsidianFont(size: 11)
-                    .foregroundStyle(NoirPalette.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, 8)
-                Text("Requests 60% brightness, 50% external contrast and normal software brightness using macOS and supported display controls. BetterDisplay is optional. If you use it, keep its notification integration enabled to release its dimming; software image adjustments are suspended until you re-enable them in BetterDisplay. Jarvis must be running.")
-                    .obsidianFont(size: 11)
-                    .foregroundStyle(NoirPalette.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, 8)
-                Button(recovery.isRestoring ? "Restoring…" : "Restore display visibility") { recovery.restore() }
-                    .buttonStyle(NoirButtonStyle(intent: .quiet, small: true))
-                    .disabled(recovery.isRestoring)
-                    .padding(.top, 12)
-                if !recovery.shortcutRegistered {
-                    Text("⌘⇧R is unavailable. Another app may already use it; the button and voice phrase still work.")
-                        .obsidianFont(size: 11).foregroundStyle(NoirPalette.orange).padding(.top, 8)
-                }
-                if !recovery.status.isEmpty {
-                    Text(recovery.status).obsidianFont(size: 11).foregroundStyle(NoirPalette.secondary).padding(.top, 8)
-                }
-            }
-
-            NoirSectionHeading(
-                title: "Dictation",
-                trailing: AnyView(
-                    Button {
-                        PillShortcutCoordinator.shared.press(.dictate)
-                        toasts.show("Dictation is opening.")
-                    } label: {
-                        Label("Try dictation", systemImage: "mic")
-                    }
-                    .buttonStyle(NoirButtonStyle(intent: .quiet, small: true))
-                )
-            )
-
-            NoirCard {
-                VStack(spacing: 0) {
-                    NoirSettingRow(title: "AI formatting", sub: "Optional local model pass. Off uses immediate rules formatting and preserves the spoken wording.") {
-                        NoirSwitch(isOn: $dictation.aiFormattingEnabled)
-                    }
-                    NoirDivider()
-                    NoirSettingRow(
-                        title: "Paste at the cursor",
-                        sub: "Insert formatted text directly into your active application."
-                    ) {
-                        NoirSwitch(isOn: $dictation.insertAtCursorEnabled)
-                    }
-                    NoirDivider()
-                    NoirSettingRow(
-                        title: "Keep the original",
-                        sub: "Offer the unformatted transcript alongside the polished result."
-                    ) {
-                        NoirSwitch(isOn: $dictation.copyOriginalEnabled)
-                    }
-                    NoirDivider()
-                    NoirSettingRow(
-                        title: "Maximum recording time",
-                        sub: "1–60 minutes for dictation and shortcut commands. Applies to the next recording."
-                    ) {
-                        Stepper(value: $dictation.recordingLimitMinutes, in: 1...60) {
-                            Text("\(dictation.recordingLimitMinutes) min")
-                                .obsidianFont(size: 12, design: .monospaced)
-                        }
-                        .frame(width: 126)
-                        .accessibilityLabel("Maximum recording time in minutes")
-                    }
-                    NoirDivider()
-                    NoirSettingRow(
-                        title: "Card stays visible",
-                        sub: "How long the floating card stays after transcription."
-                    ) {
-                        NoirSelect(
-                            options: (1...10).map { ($0, "\($0) s") },
-                            selection: $dictation.cardDismissSeconds,
-                            width: 90
-                        )
-                    }
-                }
-            }
-
-            NoirSectionHeading(
-                title: "Last dictation",
-                trailing: AnyView(
-                    Text("Latest only")
-                        .obsidianFont(size: 11, design: .monospaced)
-                        .foregroundStyle(NoirPalette.muted)
-                )
-            )
-
-            NoirCard(padded: true) {
-                if dictation.lastPolished.isEmpty && dictation.lastOriginal.isEmpty {
-                    Text("No dictation yet. Try the button above.")
-                        .obsidianFont(size: 12)
-                        .foregroundStyle(NoirPalette.muted)
-                        .padding(.vertical, 6)
-                } else {
-                    dictationBlock(
-                        label: "Polished",
-                        text: dictation.lastPolished.isEmpty ? "—" : dictation.lastPolished
-                    )
-
-                    if dictation.copyOriginalEnabled {
-                        NoirDivider().padding(.vertical, 16)
-                        dictationBlock(
-                            label: "Original",
-                            text: dictation.lastOriginal.isEmpty ? "—" : dictation.lastOriginal,
-                            muted: true
-                        )
-                    }
-                }
-            }
-
-            Text("Each new dictation replaces the previous one.")
-                .obsidianFont(size: 11)
-                .foregroundStyle(NoirPalette.muted)
-                .padding(.top, 14)
         }
         .sheet(isPresented: $assistantPreferencesOpen) {
             AssistantPreferencesSheet(appState: appState).environmentObject(toasts).presentationBackground(.clear)
         }
-        .onAppear {
-            syncDisplayValues()
-        }
-        .onChange(of: appState.currentBrightness) { _, value in
-            if !editingBrightness { brightness = Double(value) }
-        }
-        .onChange(of: appState.currentContrast) { _, value in
-            if !editingContrast { contrast = Double(value) }
+        .onAppear { syncDisplayValues(); launchAtLogin.refresh() }
+        .onChange(of: appState.currentBrightness) { _, value in if !editingBrightness { brightness = Double(value) } }
+        .onChange(of: appState.currentContrast) { _, value in if !editingContrast { contrast = Double(value) } }
+    }
+
+    private var everyday: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            NoirSectionHeading(title: "Everyday", minHeight: 30)
+            NoirCard {
+                VStack(spacing: 0) {
+                    NoirSettingRow(title: "Start at login", sub: "Ready when you sign in.") {
+                        NoirSwitch(isOn: Binding(get: { launchAtLogin.isEnabled }, set: { launchAtLogin.setEnabled($0) }))
+                    }
+                    NoirDivider()
+                    NoirSettingRow(title: "Assistant behavior", sub: "Responses, session behavior, and memory.") {
+                        Button("Configure") { assistantPreferencesOpen = true }.buttonStyle(NoirButtonStyle(intent: .quiet, small: true))
+                    }
+                }
+            }
+            if launchAtLogin.requiresApproval {
+                Button("Allow Jarvis in Login Items…") { launchAtLogin.openLoginItemsSettings() }
+                    .buttonStyle(NoirButtonStyle(intent: .quiet, small: true)).padding(.top, 12)
+            }
+            if let error = launchAtLogin.errorText {
+                Text(error).obsidianFont(size: 11).foregroundStyle(NoirPalette.red).padding(.top, 10)
+            }
+            HStack(alignment: .top, spacing: 16) {
+                Text("Speech and dictation have a home of their own.").obsidianFont(size: 11).foregroundStyle(NoirPalette.muted)
+                Spacer(minLength: 0)
+                Button("Voice & speech ↗") {
+                    appState.voiceSettingsTab = .dictation
+                    appState.activeSection = .voice
+                }.buttonStyle(.plain).obsidianFont(size: 11).foregroundStyle(NoirPalette.accent)
+            }
+            .padding(.vertical, 18)
+            ObsidianModelUpdates(model: IntentModelSetup.shared)
         }
     }
 
+    private var moreSettings: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            NoirSectionHeading(title: "More settings", minHeight: 30)
+            NoirCard {
+                VStack(spacing: 0) {
+                    settingsGroup(.display, title: "Display & sound", sub: "Brightness, volume, and display recovery.", icon: "display") {
+                        displaySettings
+                        NoirSoundSection()
+                        NoirSectionHeading(title: "Display safety")
+                        recoverySettings
+                    }
+                    NoirDivider()
+                    settingsGroup(.projects, title: "Files & projects", sub: "Project roots, aliases, and search.", icon: "folder") {
+                        NoirProjectPreferences()
+                        NoirFileSearchPreferences()
+                    }
+                    NoirDivider()
+                    settingsGroup(.services, title: "Local services", sub: "Ollama, native helper, and storage.", icon: "server.rack") {
+                        ObsidianCoreServices(appState: appState)
+                    }
+                    NoirDivider()
+                    settingsGroup(.advanced, title: "Advanced & safeguards", sub: "Command limits, review, and diagnostics.", icon: "lock") {
+                        NoirSectionHeading(title: "Command safeguards")
+                        safeguardsSettings
+                        CommandFeedbackView(initialCommand: appState.lastCommandForReview, requestID: appState.lastCommandTraceID)
+                    }
+                }
+            }
+        }
+    }
+
+    private func settingsGroup<Content: View>(_ group: GeneralSettingsGroup, title: String, sub: String, icon: String,
+                                               @ViewBuilder content: () -> Content) -> some View {
+        VStack(spacing: 0) {
+            Button {
+                appState.expandedSettingsGroup = appState.expandedSettingsGroup == group ? nil : group
+            } label: {
+                HStack(spacing: 13) {
+                    Image(systemName: icon).obsidianFont(size: 15).foregroundStyle(NoirPalette.muted).frame(width: 20)
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(title).obsidianFont(size: 12, weight: .medium).foregroundStyle(NoirPalette.text)
+                        Text(sub).obsidianFont(size: 11).foregroundStyle(NoirPalette.muted)
+                    }
+                    Spacer(minLength: 6)
+                    Image(systemName: "chevron.right").obsidianFont(size: 10).foregroundStyle(NoirPalette.muted)
+                        .rotationEffect(.degrees(appState.expandedSettingsGroup == group ? 90 : 0))
+                }.padding(18).frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
+            }.buttonStyle(.plain).accessibilityLabel(title)
+                .accessibilityValue(appState.expandedSettingsGroup == group ? "Expanded" : "Collapsed")
+            if appState.expandedSettingsGroup == group {
+                VStack(alignment: .leading, spacing: 0) { content() }.padding(.horizontal, 18).padding(.bottom, 18)
+            }
+        }
+    }
+
+    private var displaySettings: some View {
+        NoirCard {
+            VStack(spacing: 0) {
+                NoirSettingRow(title: "Brightness") {
+                    displayControl(value: $brightness, editing: $editingBrightness) {
+                        appState.setBrightnessUI(Int(brightness.rounded()))
+                    }
+                }
+                NoirDivider()
+                NoirSettingRow(title: "Contrast", sub: "External displays only.") {
+                    displayControl(value: $contrast, editing: $editingContrast) {
+                        appState.setContrastUI(Int(contrast.rounded()))
+                    }
+                }
+                NoirDivider()
+                NoirSettingRow(title: "Display profile") {
+                    Text(appState.displayProfileName)
+                        .obsidianFont(size: 11, design: .monospaced)
+                        .foregroundStyle(NoirPalette.secondary)
+                }
+            }
+        }
+    }
+    private var safeguardsSettings: some View {
+        NoirCard {
+            VStack(spacing: 0) {
+                NoirSettingRow(title: "Destructive actions", sub: "Always blocked.") {
+                    NoirTag(text: "Locked", kind: .red, icon: "lock")
+                }
+                NoirDivider()
+                NoirSettingRow(title: "Privileged commands", sub: "sudo is never permitted.") {
+                    NoirTag(text: "Locked", kind: .red, icon: "lock")
+                }
+                NoirDivider()
+                NoirSettingRow(title: "Package installs", sub: "Installation is never executed.") {
+                    NoirTag(text: "Preview only", kind: .amber)
+                }
+            }
+        }
+    }
+    private var recoverySettings: some View {
+        NoirCard(padded: true) {
+            Text("Jarvis keeps brightness at 10% or higher, contrast at 20% or higher, and software dimming above zero.")
+                .obsidianFont(size: 12)
+                .foregroundStyle(NoirPalette.secondary)
+            Text("If the screen becomes unreadable, press ⌘⇧R. Or press ⌘⇧A, say ‘Restore my display’, then press ⌘⇧A again to finish. Recovery bypasses verification only for this exact, safe action.")
+                .obsidianFont(size: 11)
+                .foregroundStyle(NoirPalette.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 8)
+            Text("Requests 60% brightness, 50% external contrast and normal software brightness using macOS and supported display controls. BetterDisplay is optional. If you use it, keep its notification integration enabled to release its dimming; software image adjustments are suspended until you re-enable them in BetterDisplay. Jarvis must be running.")
+                .obsidianFont(size: 11)
+                .foregroundStyle(NoirPalette.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 8)
+            Button(recovery.isRestoring ? "Restoring…" : "Restore display visibility") { recovery.restore() }
+                .buttonStyle(NoirButtonStyle(intent: .quiet, small: true))
+                .disabled(recovery.isRestoring)
+                .padding(.top, 12)
+            if !recovery.shortcutRegistered {
+                Text("⌘⇧R is unavailable. Another app may already use it; the button and voice phrase still work.")
+                    .obsidianFont(size: 11).foregroundStyle(NoirPalette.orange).padding(.top, 8)
+            }
+            if !recovery.status.isEmpty {
+                Text(recovery.status).obsidianFont(size: 11).foregroundStyle(NoirPalette.secondary).padding(.top, 8)
+            }
+        }
+    }
     private func displayControl(
         value: Binding<Double>,
         editing: Binding<Bool>,
@@ -318,27 +262,4 @@ struct NoirSystemPage: View {
         }
     }
 
-    private func dictationBlock(label: String, text: String, muted: Bool = false) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Text(label.uppercased())
-                    .obsidianFont(size: 9, weight: .medium)
-                    .tracking(1.6)
-                    .foregroundStyle(NoirPalette.muted)
-                Spacer(minLength: 8)
-                NoirIconButton(icon: "doc.on.doc", help: "Copy \(label.lowercased()) text") {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(text, forType: .string)
-                    toasts.show("Copied \(label.lowercased()) text.")
-                }
-            }
-            Text(text)
-                .obsidianFont(size: 12)
-                .lineSpacing(5)
-                .foregroundStyle(muted ? NoirPalette.muted : NoirPalette.secondary)
-                .textSelection(.enabled)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 12)
-        }
-    }
 }

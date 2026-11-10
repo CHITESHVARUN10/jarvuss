@@ -15,7 +15,7 @@ enum FloatPanel {
     static func show(text: String, icon: String, duration: TimeInterval = 3.0) {
         DispatchQueue.main.async {
             dismissWork?.cancel()
-            let size = NSSize(width: 340, height: 150)
+            let size = ObsidianAnswerCard.size
             let p: NSPanel
             if let existing = panel {
                 p = existing
@@ -25,7 +25,7 @@ enum FloatPanel {
                 // Constraints passes than views" when a borderless NSPanel
                 // hosting SwiftUI is resized while its content also has an
                 // intrinsic size — the 2026-09-29 SIGABRT). Content is a
-                // fixed 340×150 view; only the hosted rootView swaps.
+                // fixed-size view; only the hosted rootView swaps.
                 p = NSPanel(
                     contentRect: NSRect(x: 0, y: 0, width: size.width, height: size.height),
                     styleMask: [.borderless, .nonactivatingPanel],
@@ -48,7 +48,7 @@ enum FloatPanel {
                 p.contentView?.wantsLayer = true
                 p.contentView?.layer?.backgroundColor = NSColor.clear.cgColor
             }
-            let host = NSHostingView(rootView: FloatResultView(message: text, icon: icon))
+            let host = NSHostingView(rootView: ObsidianAnswerCard(message: text, icon: icon))
             host.frame = NSRect(origin: .zero, size: size)
             host.autoresizingMask = []
             // Swap the hosted subview WITHOUT touching the window frame:
@@ -68,31 +68,28 @@ enum FloatPanel {
     }
 }
 
-private struct FloatResultView: View {
+/// Fixed geometry shared by both answer surfaces. Padding stays inside the
+/// panel bounds, avoiding clipping and borderless-window layout loops.
+struct ObsidianAnswerCard: View {
+    static let size = NSSize(width: 400, height: 170)
     let message: String
     let icon: String
-
     var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 34, weight: .light))
-                .foregroundStyle(JarvisColor.textSecondary)
-            Text(message)
-                .font(.system(size: 26, weight: .regular))
-                .foregroundStyle(JarvisColor.textPrimary)
-                .multilineTextAlignment(.center)
-                .lineLimit(3)
-                .padding(.horizontal, 8)
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 8) {
+                Image(systemName: icon).font(.system(size: 13)).foregroundStyle(NoirPalette.accent)
+                Text("Jarvis").font(.system(size: 11, weight: .medium)).foregroundStyle(NoirPalette.secondary)
+                Spacer()
+                Text("QUICK ANSWER").font(.system(size: 8, weight: .medium)).tracking(1).foregroundStyle(NoirPalette.muted)
+            }
+            Text(message).font(.system(size: 23, weight: .medium)).foregroundStyle(NoirPalette.text)
+                .lineSpacing(3).lineLimit(4).minimumScaleFactor(0.7)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         }
-        // Fixed 340×150 content: matches the panel's fixed frame so
-        // Auto Layout never has to reconcile window vs content size
-        // (the constraint-loop SIGABRT came from that fight).
-        .frame(width: 340, height: 150)
-        .padding(.horizontal, 40)
-        .padding(.vertical, 30)
-        .background(GlassPanelBackground().clipShape(RoundedRectangle(cornerRadius: 16)))
-        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(NoirPalette.lineStrong, lineWidth: 1))
-        .shadow(color: Color.black.opacity(0.35), radius: 40, x: 0, y: 10)
+        .padding(20).frame(width: Self.size.width, height: Self.size.height)
+        .background(GlassPanelBackground().clipShape(RoundedRectangle(cornerRadius: 13)))
+        .overlay(RoundedRectangle(cornerRadius: 13).strokeBorder(NoirPalette.lineStrong, lineWidth: 1))
+        .preferredColorScheme(.dark)
     }
 }
 

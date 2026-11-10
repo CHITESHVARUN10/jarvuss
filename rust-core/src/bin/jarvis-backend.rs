@@ -453,7 +453,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         native_dir.join("voice"),
         native_dir.join("libonnxruntime.1.31.0.dylib"),
         data.join("embeddings.npy"),
-        backend.join("embeddings.npy"),
     );
     let app = Arc::new(App {
         services,

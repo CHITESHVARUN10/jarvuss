@@ -91,9 +91,6 @@ def _load_embeddings() -> np.ndarray:
     with _embeddings_lock:
         path = EMBEDDINGS_FILE
         if not path.exists():
-            # Read-only migration source for existing installations.
-            path = BASE_DIR / "embeddings.npy"
-        if not path.exists():
             return np.empty((0, 256), dtype=np.float32)
         embeddings = np.load(path, allow_pickle=False)
         if embeddings.ndim == 1:

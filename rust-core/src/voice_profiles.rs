@@ -12,8 +12,7 @@ type Result<T> = std::result::Result<T, String>;
 fn err(e: impl std::fmt::Display) -> String {
     e.to_string()
 }
-pub fn load(path: &Path, legacy: &Path) -> Result<Vec<Vec<f32>>> {
-    let path = if path.exists() { path } else { legacy };
+pub fn load(path: &Path) -> Result<Vec<Vec<f32>>> {
     if !path.exists() {
         return Ok(Vec::new());
     }
@@ -153,7 +152,7 @@ mod tests {
         }
         writer.finish().unwrap();
         fs::write(&path, &bytes).unwrap();
-        let loaded = load(&path, &path).unwrap();
+        let loaded = load(&path).unwrap();
         assert_eq!(loaded, vec![vec![0.1f32; 256], vec![0.2f32; 256]]);
         let mut bytes = Vec::new();
         let mut writer = npyz::WriteOptions::new()
@@ -167,7 +166,7 @@ mod tests {
         }
         writer.finish().unwrap();
         fs::write(&path, bytes).unwrap();
-        assert_eq!(load(&path, &path).unwrap(), vec![vec![0.3f32; 256]]);
+        assert_eq!(load(&path).unwrap(), vec![vec![0.3f32; 256]]);
     }
     #[test]
     fn atomic_numpy_roundtrip_preserves_profile_shape() {
@@ -175,9 +174,18 @@ mod tests {
         let p = dir.path().join("embeddings.npy");
         let v = vec![vec![0.1f32; 256], vec![0.2f32; 256]];
         save(&p, &v).unwrap();
-        assert_eq!(load(&p, &p).unwrap(), v);
+        assert_eq!(load(&p).unwrap(), v);
         save(&p, &[]).unwrap();
-        assert!(load(&p, &p).unwrap().is_empty());
+        assert!(load(&p).unwrap().is_empty());
+    }
+    #[test]
+    fn missing_user_profile_never_adopts_a_neighboring_source_profile() {
+        let dir = tempfile::tempdir().unwrap();
+        let source = dir.path().join("backend/embeddings.npy");
+        save(&source, &vec![vec![0.1f32; 256]; 63]).unwrap();
+        let user = dir.path().join("user/embeddings.npy");
+        assert!(load(&user).unwrap().is_empty());
+        assert_eq!(load(&source).unwrap().len(), 63);
     }
     #[test]
     fn scoring_retains_thresholds_and_weighting() {

@@ -432,7 +432,7 @@ struct SetupDetailSheet: View {
             NoirIntentModelDetail(model: intentModel)
 
         case .whisper:
-            Text("Shortcut dictation uses Whisper large-v3-turbo (approximately 1.5 GB). Live commands use Apple on-device speech by default; choose its language or the Whisper fallback in System → Live speech.")
+            Text("Shortcut dictation uses Whisper large-v3-turbo (approximately 1.5 GB). Live commands use Apple on-device speech by default; choose its language or the Whisper fallback in Voice & speech → Recognition.")
                 .obsidianFont(size: 11)
                 .lineSpacing(5)
                 .foregroundStyle(NoirPalette.muted)

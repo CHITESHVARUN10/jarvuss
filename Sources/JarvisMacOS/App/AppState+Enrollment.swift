@@ -3,15 +3,20 @@ import Foundation
 
 extension AppState {
     func startEnrollment(resetStore: Bool = true) {
-        guard !enrollmentActive, !enrollmentPreparing else { return }
+        guard !enrollmentActive, !enrollmentPreparing, !voiceProfileResetting else { return }
+        voiceProfileError = nil
+        enrollmentSessionID = UUID()
+        enrollmentPaused = false
+        enrollmentMessage = "Preparing microphone and voice storage…"
         enrollmentPreparing = true
         enrollmentActive = true
         voiceVerificationStatus = "Preparing Voice Enrollment…"
         enrollmentPreparationTask = Task {
-            guard await BackendServiceManager.ensureRunningForFeature(), !Task.isCancelled else {
+            guard await prepareVoiceBackend(), !Task.isCancelled else {
                 if !Task.isCancelled {
                     enrollmentPreparing = false
                     enrollmentActive = false
+                    enrollmentMessage = "Voice storage is unavailable. Check the native helper in Settings → Local services, then try again."
                     voiceVerificationStatus = "Backend unavailable"
                     appendLog("[Voice] Enrollment not started — backend unavailable/off. Existing profile preserved.")
                 }
@@ -30,23 +35,29 @@ extension AppState {
                 guard !Task.isCancelled else { return }
                 enrollmentPreparing = false
                 enrollmentActive = false
+                enrollmentMessage = "Enrollment could not start: \(error.localizedDescription)"
                 voiceVerificationStatus = "Enrollment could not start"
                 appendLog("[Voice] Enrollment aborted: \(error.localizedDescription)")
             }
         }
     }
 
-    private func beginEnrollmentCapture() {
-        enrollmentIndex = 0
-        enrollmentMatchedCount = 0
-        enrollmentAttemptCount = 0
-        enrollmentCurrentPhraseMatchCount = 0
+    private func beginEnrollmentCapture(resetProgress: Bool = true) {
+        if resetProgress {
+            enrollmentIndex = 0
+            enrollmentMatchedCount = 0
+            enrollmentAttemptCount = 0
+            enrollmentCurrentPhraseMatchCount = 0
+            enrollmentAwaitingNextPhrase = false
+        }
+        enrollmentPaused = false
+        enrollmentMessage = enrollmentAwaitingNextPhrase
+            ? "All three samples captured. Continue when you’re ready."
+            : "Read this phrase, then pause briefly between repetitions."
         latestEnrollmentScore = 0
         voiceModeEnabled = false
         voiceVerificationStatus = "Building Voice Profile..."
         lastEnrollmentAcceptedAt = .distantPast
-        lastEnrollmentAcceptedTranscript = ""
-        lastEnrollmentAttemptAt = .distantPast
         enrollmentActive = true
         enrollmentCompleted = false
         persistEnrollmentCompleted(false)
@@ -86,9 +97,13 @@ extension AppState {
     }
 
     func resetVoiceProfile() {
-        guard !enrollmentActive else { return }
+        guard !enrollmentActive, !voiceProfileResetting else { return }
+        voiceProfileResetting = true
+        voiceProfileError = nil
         Task {
-            guard await BackendServiceManager.ensureRunningForFeature() else {
+            defer { voiceProfileResetting = false }
+            guard await prepareVoiceBackend() else {
+                voiceProfileError = "Profile was not cleared: voice storage is unavailable."
                 appendLog("[Voice] Profile clear skipped — backend unavailable/off.")
                 return
             }
@@ -96,21 +111,64 @@ extension AppState {
                 try await voiceAuthClient.reset()
                 backendEnrollmentSampleCount = 0
                 persistBackendSampleCount(0)
+                enrollmentCompleted = false
+                persistEnrollmentCompleted(false)
+                enrollmentPaused = false
+                enrollmentIndex = 0
+                enrollmentMatchedCount = 0
+                enrollmentCurrentPhraseMatchCount = 0
+                enrollmentAwaitingNextPhrase = false
+                voiceModeEnabled = false
                 voiceVerificationStatus = "No Voice Profile ❌"
                 appendLog("Voice profile cleared (0/\(voiceEnrollmentSampleTarget)). Re-enroll to rebuild.")
             } catch {
+                voiceProfileError = "Profile was not cleared: \(error.localizedDescription)"
                 appendLog("[Voice] Profile reset failed: \(error.localizedDescription)")
             }
         }
     }
 
     func stopEnrollment() {
+        let canResume = enrollmentActive && !enrollmentPreparing && enrollmentIndex < enrollmentPhrases.count
+        enrollmentSessionID = UUID()
+        enrollmentSampleTask?.cancel()
+        enrollmentSampleTask = nil
+        enrollmentSavingSample = false
         enrollmentPreparationTask?.cancel()
         enrollmentPreparationTask = nil
         enrollmentPreparing = false
         enrollmentActive = false
+        if canResume { enrollmentPaused = true }
         releaseEnrollmentMicIfNeeded()
-        appendLog("Voice enrollment stopped.")
+        appendLog("Voice enrollment paused.")
+    }
+
+    func resumeEnrollment() {
+        guard enrollmentPaused, !enrollmentActive, !enrollmentPreparing, !voiceProfileResetting else { return }
+        enrollmentSessionID = UUID()
+        enrollmentPreparing = true
+        enrollmentActive = true
+        enrollmentPreparationTask = Task {
+            guard await prepareVoiceBackend(), !Task.isCancelled else {
+                if !Task.isCancelled {
+                    enrollmentPreparing = false
+                    enrollmentActive = false
+                    enrollmentMessage = "Voice storage is unavailable. Check the native helper in Settings → Local services, then resume."
+                }
+                return
+            }
+            enrollmentPreparing = false
+            beginEnrollmentCapture(resetProgress: false)
+        }
+    }
+
+    func advanceEnrollmentPhrase() {
+        guard enrollmentActive, enrollmentAwaitingNextPhrase, !enrollmentSavingSample,
+              enrollmentIndex + 1 < enrollmentPhrases.count else { return }
+        enrollmentIndex += 1
+        enrollmentCurrentPhraseMatchCount = 0
+        enrollmentAwaitingNextPhrase = false
+        enrollmentMessage = "Read this phrase, then pause briefly between repetitions."
     }
 
     /// True when enrollment started the mic itself (Enroll/Retrain pressed
@@ -127,16 +185,13 @@ extension AppState {
     }
 
     func handleEnrollmentTranscript(_ transcript: String, isFinal: Bool) {
-        guard enrollmentActive, !enrollmentPreparing else { return }
+        guard enrollmentActive, !enrollmentPreparing, !enrollmentSavingSample,
+              !enrollmentAwaitingNextPhrase, isFinal else { return }
         let cleanedTranscript = normalizeEnrollmentTranscript(transcript)
         guard !cleanedTranscript.isEmpty else { return }
         guard enrollmentPhrases.indices.contains(enrollmentIndex) else { return }
 
         let now = Date()
-        if !isFinal && now.timeIntervalSince(lastEnrollmentAttemptAt) < enrollmentAttemptThrottle {
-            return
-        }
-        lastEnrollmentAttemptAt = now
 
         enrollmentAttemptCount += 1
 
@@ -149,7 +204,7 @@ extension AppState {
         let requiredTokenHits = requiredTokens.filter { recognizedTokenSet.contains($0) }.count
         let requiredTokenRatio: Double = requiredTokens.isEmpty ? 0 : Double(requiredTokenHits) / Double(requiredTokens.count)
 
-        let requiredScore = isFinal ? 0.48 : 0.58
+        let requiredScore = 0.48
         let keywordGate = requiredTokens.count <= 2 ? requiredTokenHits >= 1 : requiredTokenRatio >= 0.60
         let matched = keywordGate && score >= requiredScore
 
@@ -173,81 +228,61 @@ extension AppState {
                 return
             }
 
-            let currentNormalized = TranscriptSanitizer.normalizeCompact(cleanedTranscript)
-            let previousNormalized = TranscriptSanitizer.normalizeCompact(lastEnrollmentAcceptedTranscript)
-            if !previousNormalized.isEmpty {
-                let duplicateDistance = StringDistance.levenshtein(currentNormalized, previousNormalized)
-                let maxLen = max(currentNormalized.count, previousNormalized.count)
-                if maxLen > 0 {
-                    let duplicateSimilarity = 1.0 - (Double(duplicateDistance) / Double(maxLen))
-                    if duplicateSimilarity > 0.96 {
-                        return
+            // A separate final utterance may legitimately repeat exactly the
+            // same phrase. The cooldown and in-flight gate prevent duplicate
+            // events; comparing text would reject repetitions two and three.
+            lastEnrollmentAcceptedAt = now
+            let phraseNumber = enrollmentIndex + 1
+            let repetition = enrollmentCurrentPhraseMatchCount + 1
+            let sessionID = enrollmentSessionID
+            enrollmentSavingSample = true
+            enrollmentMessage = "Saving sample \(repetition) of \(enrollmentRequiredMatchesPerPhrase)…"
+            enrollmentSampleTask = Task {
+                defer {
+                    if enrollmentSessionID == sessionID {
+                        enrollmentSavingSample = false
+                        enrollmentSampleTask = nil
                     }
                 }
-            }
-
-            lastEnrollmentAcceptedAt = now
-            lastEnrollmentAcceptedTranscript = cleanedTranscript
-            enrollmentMatchedCount += 1
-            enrollmentCurrentPhraseMatchCount += 1
-
-            let phraseNumber = enrollmentIndex + 1
-            let phraseRepetition = enrollmentCurrentPhraseMatchCount
-            appendLog(
-                "Phrase \(enrollmentIndex + 1) matched " +
-                "(\(enrollmentCurrentPhraseMatchCount)/\(enrollmentRequiredMatchesPerPhrase), score: \(String(format: "%.2f", score)), token-hit: \(requiredTokenHits)/\(requiredTokens.count))."
-            )
-
-            Task {
-                await enrollMatchedVoiceSample(
-                    phraseNumber: phraseNumber,
-                    repetition: phraseRepetition,
-                    transcript: cleanedTranscript
-                )
-            }
-
-            if enrollmentCurrentPhraseMatchCount >= enrollmentRequiredMatchesPerPhrase {
-                enrollmentIndex += 1
-                enrollmentCurrentPhraseMatchCount = 0
-                appendLog("Phrase \(enrollmentIndex) completed. Moving to next phrase.")
-            }
-
-            dbManager.saveEvent(
-                eventType: "enrollment_match",
-                transcript: cleanedTranscript,
-                targetPhrase: target,
-                score: score,
-                matched: true,
-                phraseIndex: enrollmentIndex,
-                metadata: [
-                    "match_count_total": String(enrollmentMatchedCount),
-                    "match_count_phrase": String(enrollmentCurrentPhraseMatchCount)
-                ]
-            )
-
-            if enrollmentIndex >= enrollmentPhrases.count {
-                enrollmentActive = false
-                enrollmentCompleted = true
-                persistEnrollmentCompleted(true)
-
-                if backendEnrollmentSampleCount >= voiceEnrollmentSampleTarget {
-                    voiceVerificationStatus = "Voice Enrolled ✅"
-                    appendLog("Voice enrollment completed. Voice profile ready (\(backendEnrollmentSampleCount)/\(voiceEnrollmentSampleTarget) samples).")
-                } else {
-                    voiceVerificationStatus = "Finalizing Voice Profile..."
-                    appendLog("Voice phrases completed. Waiting for final backend voice samples (\(backendEnrollmentSampleCount)/\(voiceEnrollmentSampleTarget)).")
+                do {
+                    let count = try await enrollMatchedVoiceSample(phraseNumber: phraseNumber,
+                        repetition: repetition, transcript: cleanedTranscript)
+                    guard !Task.isCancelled, enrollmentSessionID == sessionID, enrollmentActive else { return }
+                    guard count > backendEnrollmentSampleCount else { throw URLError(.badServerResponse) }
+                    backendEnrollmentSampleCount = count
+                    persistBackendSampleCount(count)
+                    enrollmentMatchedCount += 1
+                    enrollmentCurrentPhraseMatchCount += 1
+                    dbManager.saveEvent(eventType: "enrollment_match", transcript: cleanedTranscript,
+                        targetPhrase: enrollmentPhrases[enrollmentIndex], score: score, matched: true,
+                        phraseIndex: phraseNumber, metadata: ["match_count_total": String(enrollmentMatchedCount),
+                            "match_count_phrase": String(enrollmentCurrentPhraseMatchCount)])
+                    enrollmentMessage = "Sample saved. Repeat this same phrase."
+                    if enrollmentCurrentPhraseMatchCount >= enrollmentRequiredMatchesPerPhrase {
+                        if enrollmentIndex + 1 == enrollmentPhrases.count {
+                            enrollmentActive = false
+                            enrollmentPaused = false
+                            enrollmentCompleted = true
+                            persistEnrollmentCompleted(true)
+                            voiceVerificationStatus = voiceProfileReady ? "Voice Enrolled ✅" : "Voice Profile Incomplete ⚠️"
+                            enrollmentMessage = voiceProfileReady ? "Your voice profile is ready." : "Some samples are missing. Please retrain your profile."
+                            releaseEnrollmentMicIfNeeded()
+                            dbManager.saveEvent(eventType: "enrollment_completed", transcript: cleanedTranscript,
+                                matched: voiceProfileReady, phraseIndex: enrollmentPhrases.count)
+                        } else {
+                            enrollmentAwaitingNextPhrase = true
+                            enrollmentMessage = "All three samples captured. Continue when you’re ready."
+                        }
+                    }
+                } catch {
+                    guard !Task.isCancelled, enrollmentSessionID == sessionID else { return }
+                    enrollmentMessage = "Sample could not be saved. Please repeat this phrase."
+                    appendLog("[Voice] Sample not saved: \(error.localizedDescription)")
                 }
-
-                releaseEnrollmentMicIfNeeded()
-
-                dbManager.saveEvent(
-                    eventType: "enrollment_completed",
-                    transcript: lastRecognizedSpeech,
-                    matched: true,
-                    phraseIndex: enrollmentPhrases.count
-                )
             }
+
         } else {
+            enrollmentMessage = "That didn’t match. Please repeat the phrase shown above."
             appendLog("Phrase mismatch (score: \(String(format: "%.2f", score)), token-hit: \(requiredTokenHits)/\(requiredTokens.count)). Please repeat phrase \(enrollmentIndex + 1).")
         }
     }
@@ -340,65 +375,16 @@ extension AppState {
         return (0.6 * tokenScore) + (0.4 * max(0.0, charScore))
     }
 
-    func enrollMatchedVoiceSample(
-        phraseNumber: Int,
-        repetition: Int,
-        transcript: String
-    ) async {
-        do {
-            // Snapshot this utterance before a cold backend can replace it
-            // with silence or a subsequent phrase in the rolling buffer.
-            let sampleURL = try micManager.exportRecentAudioSample(
-                durationSeconds: Self.enrollAudioSeconds,
-                targetSampleRate: Self.voiceSampleRate
-            )
-            defer { try? FileManager.default.removeItem(at: sampleURL) }
-            guard await BackendServiceManager.ensureRunningForFeature() else {
-                appendLog("[Voice] Enrollment stopped — backend unavailable/off.")
-                stopEnrollment()
-                return
-            }
-            try Task.checkCancellation()
-            let enrolledCount = try await voiceAuthClient.enroll(audioFileURL: sampleURL)
-            backendEnrollmentSampleCount = enrolledCount
-            persistBackendSampleCount(enrolledCount)
-
-            appendLog(
-                "Voice sample stored for phrase \(phraseNumber) rep \(repetition) " +
-                "(backend: \(enrolledCount)/\(voiceEnrollmentSampleTarget))."
-            )
-
-            dbManager.saveEvent(
-                eventType: "voice_enroll_sample",
-                transcript: transcript,
-                matched: true,
-                phraseIndex: phraseNumber,
-                metadata: [
-                    "repetition": String(repetition),
-                    "backend_count": String(enrolledCount),
-                    "sample_target": String(voiceEnrollmentSampleTarget)
-                ]
-            )
-
-            if enrollmentCompleted && enrolledCount >= voiceEnrollmentSampleTarget {
-                voiceVerificationStatus = "Voice Enrolled ✅"
-                appendLog("Voice profile finalized (\(enrolledCount)/\(voiceEnrollmentSampleTarget)). Voice mode is ready.")
-            } else if enrollmentCompleted {
-                voiceVerificationStatus = "Finalizing Voice Profile..."
-            }
-        } catch {
-            appendLog("Voice sample capture failed for phrase \(phraseNumber) rep \(repetition): \(error.localizedDescription)")
-            dbManager.saveEvent(
-                eventType: "voice_enroll_error",
-                transcript: transcript,
-                matched: false,
-                phraseIndex: phraseNumber,
-                metadata: [
-                    "repetition": String(repetition),
-                    "error": error.localizedDescription
-                ]
-            )
-        }
+    func enrollMatchedVoiceSample(phraseNumber: Int, repetition: Int, transcript: String) async throws -> Int {
+        let sampleURL = try micManager.exportRecentAudioSample(
+            durationSeconds: Self.enrollAudioSeconds, targetSampleRate: Self.voiceSampleRate)
+        defer { try? FileManager.default.removeItem(at: sampleURL) }
+        try Task.checkCancellation()
+        let count = try await voiceAuthClient.enroll(audioFileURL: sampleURL)
+        appendLog("Voice sample stored for phrase \(phraseNumber) rep \(repetition) (backend: \(count)/\(voiceEnrollmentSampleTarget)).")
+        dbManager.saveEvent(eventType: "voice_enroll_sample", transcript: transcript, matched: true,
+            phraseIndex: phraseNumber, metadata: ["repetition": String(repetition), "backend_count": String(count)])
+        return count
     }
 
     /// Floating result panel: shows a short answer (time, date, brightness)

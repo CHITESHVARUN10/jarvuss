@@ -366,7 +366,8 @@ class VoiceStorageTests(unittest.TestCase):
             original = (legacy / "embeddings.npy").read_bytes()
             with patch.object(service, "BASE_DIR", legacy), patch.object(service, "EMBEDDINGS_FILE", root / "runtime/embeddings.npy"), \
                  patch.object(service, "_embedding_from_audio_bytes", return_value=np.ones(256, dtype=np.float32)):
-                self.assertEqual(service._enroll_audio(b"audio", ".wav")["enrolled_count"], 2)
+                self.assertEqual(service._load_embeddings().shape, (0, 256))
+                self.assertEqual(service._enroll_audio(b"audio", ".wav")["enrolled_count"], 1)
                 service._reset_profile()
                 self.assertEqual(service._load_embeddings().shape, (0, 256))
             self.assertEqual((legacy / "embeddings.npy").read_bytes(), original)

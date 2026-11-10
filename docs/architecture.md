@@ -53,7 +53,7 @@ before tap delivery. Partial results replace overlapping hypotheses. A pause
 one command handoff. Continuous speech is bounded at 45 seconds; failed or
 stuck sessions produce an error rather than partial command execution.
 
-System → Live speech selects Apple/Whisper and the locale; restart listening
+Voice & speech → Recognition selects Apple/Whisper and the locale; restart listening
 to apply it. The Whisper fallback keeps its existing VAD path. Shortcut
 recordings continue through Rust/Whisper, with `STTRouter` owning their separate
 dictation/action roles. A modal shortcut cancels any live Apple session first.
@@ -96,7 +96,7 @@ cannot be interrupted by a user-space deadline.
 through verification, queued command work, planning and execution. New pipeline
 events contain metadata/timing by default and rotate to one predecessor.
 Existing command logs and opt-in dictation text diagnostics remain separate.
-System → Correct a command writes a private reviewed record with the associated
+Settings → General → Advanced & safeguards → Correct a command writes a private reviewed record with the associated
 request ID when available. Nothing uploads or starts training from this UI.
 
 `evaluate_pipeline.py` separates WER, exact plans, verified effects and p50/p95
