@@ -88,6 +88,7 @@ pub fn native_single(raw: &str) -> Option<A> {
     // Transport directions ("play the next song") must precede the generic
     // play-title rule, which would otherwise treat "next song" as a song name.
     if let Some(transport) = crate::planner::transport_action(raw) { return Some(transport); }
+    if let Some(liked) = crate::planner::liked_songs_action(raw) { return Some(liked); }
     for (pattern, engine) in [
         (r"(?i)^search (?:on )?youtube for (.+)$", "YouTube"), (r"(?i)^youtube search for (.+)$", "YouTube"),
         (r"(?i)^search google for (.+)$", "Google"), (r"(?i)^google (.+)$", "Google"),
@@ -147,6 +148,11 @@ pub fn intent_name(a: &A) -> &str {
         A::SearchFiles { .. } => "files.search", A::FileResult { .. } => "files.result", A::OpenSettings { .. } => "settings.open",
         A::MediaControl { action: MediaAction::PlaySong { .. } } => "media.play_song",
         A::MediaControl { action: MediaAction::PlayPlaylist { .. } } => "media.play_playlist",
+        A::MediaControl { action: MediaAction::PlayLikedSongs } => "media.play_liked",
+        A::MediaControl { action: MediaAction::Play } => "media.play",
+        A::MediaControl { action: MediaAction::Pause } => "media.pause",
+        A::MediaControl { action: MediaAction::NextTrack } => "media.next",
+        A::MediaControl { action: MediaAction::PreviousTrack } => "media.previous",
         A::MediaControl { action: MediaAction::SetShuffle { .. } | MediaAction::PlayLikedWithShuffle { .. } | MediaAction::PlayPlaylistWithShuffle { .. } } => "media.shuffle",
         A::CreateFile { .. } => "file.create", A::CreateFolder { .. } => "folder.create", A::OpenFolder { .. } => "folder.open",
         A::OpenUrl { .. } => "url.open", A::OpenUrlInBrowser { .. } => "url.open_in",
@@ -182,6 +188,16 @@ mod tests {
         // Titles that merely contain a direction word keep the literal name.
         assert_eq!(native_single("play Next to Me"), Some(A::MediaControl { action: MediaAction::PlaySong { name: "Next to Me".into() } }));
         assert_eq!(native_single("play \"next song\""), Some(A::MediaControl { action: MediaAction::PlaySong { name: "next song".into() } }));
+    }
+    #[test] fn liked_song_phrasings_route_to_the_collection() {
+        for raw in [
+            "play my liked songs", "play my like songs", "play songs I like",
+            "play songs that I like", "play my liked music",
+            "play songs from my liked songs", "play my saved songs",
+        ] {
+            assert_eq!(native_single(raw), Some(A::MediaControl { action: MediaAction::PlayLikedSongs }), "{raw}");
+        }
+        assert_eq!(native_single("play Like a Prayer"), Some(A::MediaControl { action: MediaAction::PlaySong { name: "Like a Prayer".into() } }));
     }
 }
 

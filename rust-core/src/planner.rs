@@ -1199,6 +1199,7 @@ fn is_playlist_query(text: &str) -> bool {
 
 fn is_liked_songs_query(text: &str) -> bool {
     let lower = text.to_lowercase();
+    let lower = lower.trim_matches(|c: char| c.is_whitespace() || matches!(c, '.' | '!' | '?' | ',' | ';' | ':'));
     [
         "liked songs",
         "my liked songs",
@@ -1208,9 +1209,23 @@ fn is_liked_songs_query(text: &str) -> bool {
         "my saved songs",
         "favorites",
         "my favorites",
+        // Common ASR slips and natural phrasings for the same collection.
+        "like songs",
+        "my like songs",
+        "songs i like",
+        "songs that i like",
+        "music i like",
+        "liked music",
+        "my liked music",
     ]
     .iter()
     .any(|k| lower == *k || lower.starts_with(&format!("{k} ")) || lower.ends_with(&format!(" {k}")))
+}
+
+pub fn liked_songs_action(raw: &str) -> Option<PlannedAction> {
+    is_liked_songs_query(raw).then(|| PlannedAction::MediaControl {
+        action: MediaAction::PlayLikedSongs,
+    })
 }
 
 // ── Search commands ─────────────────────────────────────────────────
@@ -1620,6 +1635,12 @@ mod tests {
                     name: "Spotify".to_string()
                 }
             ]
+        );
+        assert_eq!(
+            plan("play my like songs"),
+            vec![PlannedAction::MediaControl {
+                action: MediaAction::PlayLikedSongs
+            }]
         );
     }
 

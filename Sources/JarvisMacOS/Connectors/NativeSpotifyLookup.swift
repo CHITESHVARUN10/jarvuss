@@ -116,7 +116,7 @@ enum NativeSpotifyLookup {
         AXUIElementSetAttributeValue(app, "AXEnhancedUserInterface" as CFString, kCFBooleanTrue)
         var pending = attribute(app, kAXWindowsAttribute as CFString) as? [AXUIElement] ?? []
         var cursor = 0, links: [SearchLink] = []
-        var visited = Set<CFHashCode>()
+        var visited: [CFHashCode: [AXUIElement]] = [:]
         var diagnostic: [[String: String]] = []
         let diagnosticsEnabled = ProcessInfo.processInfo.environment["JARVIS_SPOTIFY_DIAGNOSTICS"] == "1"
         defer {
@@ -131,7 +131,11 @@ enum NativeSpotifyLookup {
         let deadline = Date().addingTimeInterval(0.6)
         while cursor < pending.count && cursor < 4000 && Date() < deadline {
             let element = pending[cursor]; cursor += 1
-            guard visited.insert(CFHash(element)).inserted else { continue }
+            // CFHash alone collides for distinct Chromium AX elements, which
+            // silently skipped the Play Liked Songs control. Compare identity.
+            let hash = CFHash(element)
+            if visited[hash, default: []].contains(where: { CFEqual($0, element) }) { continue }
+            visited[hash, default: []].append(element)
             let title = attribute(element, kAXTitleAttribute as CFString) as? String ?? ""
             let description = attribute(element, kAXDescriptionAttribute as CFString) as? String ?? ""
             let role = attribute(element, kAXRoleAttribute as CFString) as? String ?? ""

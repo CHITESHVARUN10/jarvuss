@@ -270,6 +270,43 @@ mod tests {
                 action: MediaAction::NextTrack
             }]
         );
+        let generic = map_intents_with_source(
+            json!([{"name": "media.play", "args": {}}]).to_string(),
+            Some("play the next song".into()),
+        )
+        .unwrap();
+        assert_eq!(
+            generic,
+            vec![PlannedAction::MediaControl {
+                action: MediaAction::NextTrack
+            }]
+        );
+    }
+
+    #[test]
+    fn liked_source_overrides_generic_play() {
+        let mapped = map_intents_with_source(
+            json!([{"name": "media.play_song", "args": {"title": "like songs"}}]).to_string(),
+            Some("Play my like songs.".into()),
+        )
+        .unwrap();
+        assert_eq!(
+            mapped,
+            vec![PlannedAction::MediaControl {
+                action: MediaAction::PlayLikedSongs
+            }]
+        );
+        let generic = map_intents_with_source(
+            json!([{"name": "media.play", "args": {}}]).to_string(),
+            Some("play my like songs".into()),
+        )
+        .unwrap();
+        assert_eq!(
+            generic,
+            vec![PlannedAction::MediaControl {
+                action: MediaAction::PlayLikedSongs
+            }]
+        );
     }
 }
 
@@ -322,9 +359,10 @@ pub fn map_intents_with_source(json: String, source: Option<String>) -> Option<V
         let mut action = map_single(name, args)?;
         if let Some(source_raw) = source.as_deref() {
             let clause = if aligned { clauses[index].as_str() } else { source_raw };
-            if matches!(action, PlannedAction::MediaControl { action: MediaAction::PlaySong { .. } }) {
-                if let Some(transport) = crate::planner::transport_action(clause) {
-                    mapped.push(transport);
+            if matches!(action, PlannedAction::MediaControl { .. }) {
+                if let Some(native) = crate::planner::transport_action(clause)
+                    .or_else(|| crate::planner::liked_songs_action(clause)) {
+                    mapped.push(native);
                     continue;
                 }
             }
