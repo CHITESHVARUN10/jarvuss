@@ -85,6 +85,9 @@ pub fn native_single(raw: &str) -> Option<A> {
     if let Some(shuffle) = shuffle_action(raw) { return Some(shuffle); }
     if let Some(name) = shuffle::spotify_playlist_name(raw.to_owned()) { return Some(A::MediaControl { action: MediaAction::PlayPlaylist { name } }); }
     if compound(raw) { return None; }
+    // Transport directions ("play the next song") must precede the generic
+    // play-title rule, which would otherwise treat "next song" as a song name.
+    if let Some(transport) = crate::planner::transport_action(raw) { return Some(transport); }
     for (pattern, engine) in [
         (r"(?i)^search (?:on )?youtube for (.+)$", "YouTube"), (r"(?i)^youtube search for (.+)$", "YouTube"),
         (r"(?i)^search google for (.+)$", "Google"), (r"(?i)^google (.+)$", "Google"),
@@ -162,6 +165,23 @@ mod tests {
     #[test] fn preserves_compound_operations() {
         assert!(native_single("play Memories and open Chrome").is_none());
         assert_eq!(native_command("open a new tab in Chrome and open Spotify".into()).unwrap().len(), 2);
+    }
+    #[test] fn transport_directions_keep_their_meaning() {
+        for raw in [
+            "play the next song", "Play next song.", "play next track",
+            "play the next one", "play the next song on Spotify",
+            "can you play the next track", "skip to the next song",
+            "go to the next song", "play the following track", "start the next tune",
+        ] {
+            assert_eq!(native_single(raw), Some(A::MediaControl { action: MediaAction::NextTrack }), "{raw}");
+        }
+        for raw in ["play the previous song", "play previous track", "go to the previous song", "play prev"] {
+            assert_eq!(native_single(raw), Some(A::MediaControl { action: MediaAction::PreviousTrack }), "{raw}");
+        }
+        assert_eq!(native_single("skip this song"), Some(A::MediaControl { action: MediaAction::NextTrack }));
+        // Titles that merely contain a direction word keep the literal name.
+        assert_eq!(native_single("play Next to Me"), Some(A::MediaControl { action: MediaAction::PlaySong { name: "Next to Me".into() } }));
+        assert_eq!(native_single("play \"next song\""), Some(A::MediaControl { action: MediaAction::PlaySong { name: "next song".into() } }));
     }
 }
 

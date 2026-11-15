@@ -896,6 +896,81 @@ fn contains_any_word(text: &str, words: &[&str]) -> bool {
     words.iter().any(|w| set.contains(*w))
 }
 
+/// Playback transport phrases name a direction, not a title. Without this,
+/// "play the next song" matched the generic play rule and searched Spotify for
+/// a track called "next song". Extra words ("play Next to Me") and quoted
+/// input stay literal song titles.
+pub fn transport_action(raw: &str) -> Option<PlannedAction> {
+    if raw.contains('"') {
+        return None;
+    }
+    let cleaned = strip_wake_word(&strip_trailing_noise(raw));
+    let mut tokens: Vec<String> = cleaned
+        .split_whitespace()
+        .map(|t| t.trim_matches(|c: char| !c.is_alphanumeric()).to_lowercase())
+        .filter(|t| !t.is_empty())
+        .collect();
+    if matches!(tokens.first().map(String::as_str), Some("can" | "could" | "would" | "will"))
+        && tokens.get(1).map(String::as_str) == Some("you")
+    {
+        tokens.drain(0..2);
+    }
+    while matches!(tokens.first().map(String::as_str), Some("please" | "just" | "now")) {
+        tokens.remove(0);
+    }
+    let verb = tokens.first().cloned().unwrap_or_default();
+    match verb.as_str() {
+        "play" | "skip" | "start" | "go" | "move" | "jump" | "switch" => {
+            tokens.remove(0);
+        }
+        _ => {}
+    }
+    while matches!(
+        tokens.first().map(String::as_str),
+        Some("to" | "me" | "us" | "the" | "this" | "that" | "a" | "an" | "playing")
+    ) {
+        tokens.remove(0);
+    }
+    loop {
+        let n = tokens.len();
+        if n >= 2
+            && matches!(tokens[n - 2].as_str(), "on" | "in" | "from")
+            && tokens[n - 1] == "spotify"
+        {
+            tokens.truncate(n - 2);
+            continue;
+        }
+        if n >= 2 && tokens[n - 2] == "for" && matches!(tokens[n - 1].as_str(), "me" | "us") {
+            tokens.truncate(n - 2);
+            continue;
+        }
+        if n >= 1 && matches!(tokens[n - 1].as_str(), "now" | "please") {
+            tokens.truncate(n - 1);
+            continue;
+        }
+        break;
+    }
+    let (action, rest) = match tokens.first().map(String::as_str) {
+        Some("next" | "following") => (MediaAction::NextTrack, &tokens[1..]),
+        Some("previous" | "prev") => (MediaAction::PreviousTrack, &tokens[1..]),
+        Some("back") if verb == "go" || verb == "skip" => {
+            (MediaAction::PreviousTrack, &tokens[1..])
+        }
+        _ if verb == "skip" => (MediaAction::NextTrack, &tokens[..]),
+        _ => return None,
+    };
+    const REST: &[&str] = &["song", "track", "tune", "one", "it", "ahead"];
+    let rest: Vec<&str> = rest
+        .iter()
+        .map(String::as_str)
+        .filter(|t| !matches!(*t, "a" | "an" | "the" | "me" | "us"))
+        .collect();
+    if rest.len() > 1 || rest.iter().any(|t| !REST.contains(t)) {
+        return None;
+    }
+    Some(PlannedAction::MediaControl { action })
+}
+
 pub fn parse_media_command(lower: &str) -> Option<PlannedAction> {
     let compact = lower.trim();
     if compact.is_empty() {
@@ -1521,6 +1596,31 @@ mod tests {
             plan("next song")[0],
             PlannedAction::MediaControl { .. }
         ));
+        // A direction is not a title: this used to plan a song called
+        // "next song" and search Spotify for it.
+        assert_eq!(
+            plan("Play next song."),
+            vec![PlannedAction::MediaControl {
+                action: MediaAction::NextTrack
+            }]
+        );
+        assert_eq!(
+            plan("play the previous track"),
+            vec![PlannedAction::MediaControl {
+                action: MediaAction::PreviousTrack
+            }]
+        );
+        assert_eq!(
+            plan("play the next song and open Spotify"),
+            vec![
+                PlannedAction::MediaControl {
+                    action: MediaAction::NextTrack
+                },
+                PlannedAction::OpenApp {
+                    name: "Spotify".to_string()
+                }
+            ]
+        );
     }
 
     #[test]

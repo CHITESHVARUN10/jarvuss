@@ -256,6 +256,21 @@ mod tests {
     fn empty_list_is_a_miss() {
         assert!(map_intents(&json!([])).is_none());
     }
+
+    #[test]
+    fn transport_source_overrides_song_title() {
+        let mapped = map_intents_with_source(
+            json!([{"name": "media.play_song", "args": {"title": "next song"}}]).to_string(),
+            Some("Play next song.".into()),
+        )
+        .unwrap();
+        assert_eq!(
+            mapped,
+            vec![PlannedAction::MediaControl {
+                action: MediaAction::NextTrack
+            }]
+        );
+    }
 }
 
 /// Serving mapping shares native fields and validates learned family selection.
@@ -305,6 +320,15 @@ pub fn map_intents_with_source(json: String, source: Option<String>) -> Option<V
             }
         }
         let mut action = map_single(name, args)?;
+        if let Some(source_raw) = source.as_deref() {
+            let clause = if aligned { clauses[index].as_str() } else { source_raw };
+            if matches!(action, PlannedAction::MediaControl { action: MediaAction::PlaySong { .. } }) {
+                if let Some(transport) = crate::planner::transport_action(clause) {
+                    mapped.push(transport);
+                    continue;
+                }
+            }
+        }
         if let Some(raw) = source.as_deref() {
             let copy = |value: &mut String| -> Option<()> {
                 let regex = regex::Regex::new(&format!("(?i){}", regex::escape(value))).ok()?;
