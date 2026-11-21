@@ -1,0 +1,921 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:">
+<title>Jarvis</title>
+<link rel="stylesheet" href="interface.css">
+<link rel="stylesheet" href="desktop.css">
+
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- =======================================================================
+       UNIFIED 48px macOS TOOLBAR
+       ======================================================================= -->
+  <header class="titlebar">
+    <div class="titlebar-left">
+      <div class="traffic-lights" aria-hidden="true">
+
+      </div>
+      <button class="toolbar-btn" id="toggleSidebarBtn" aria-expanded="true" title="Toggle Sidebar">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="3" y="4" width="18" height="16" rx="2"/><line x1="9" y1="4" x2="9" y2="20"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="titlebar-center">
+      <strong>Jarvis</strong>
+      <span>/</span>
+      <span id="toolbarViewTitle">Assistant</span>
+    </div>
+
+    <div class="titlebar-right">
+      <button class="toolbar-btn" id="openFileSearchBtn" title="Spotlight File Search (⌘K)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.65" y2="16.65"/>
+        </svg>
+        <span>Search</span>
+        <span class="kbd">⌘K</span>
+      </button>
+      <span class="pill-status"><span class="dot"></span>On device</span>
+      <button class="toolbar-btn active" id="toggleInspectorBtn" aria-expanded="true" title="Toggle Session Inspector">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="3" y="4" width="18" height="16" rx="2"/><line x1="15" y1="4" x2="15" y2="20"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="workspace">
+
+    <!-- =====================================================================
+         COLLAPSIBLE NATIVE SOURCE-LIST SIDEBAR (216px)
+         ===================================================================== -->
+    <aside class="sidebar" id="sidebar">
+      <button class="sidebar-search-btn" id="sidebarSearchBtn">
+        <span>Search files…</span>
+        <span class="kbd">⌘K</span>
+      </button>
+
+      <div class="nav-group-label">Workspace</div>
+      <nav class="nav-list" aria-label="Workspace">
+        <button class="nav-item active" data-view="assistant" aria-label="Assistant" title="Assistant" aria-current="page">
+          <span class="nav-item-left">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.5"/></svg>
+            Assistant
+          </span>
+          <span class="kbd">⌘1</span>
+        </button>
+        <button class="nav-item" data-view="voice" aria-label="Voice & Speech" title="Voice & Speech">
+          <span class="nav-item-left">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1"/><line x1="12" y1="18" x2="12" y2="21"/></svg>
+            Voice &amp; Speech
+          </span>
+          <span class="kbd">⌘2</span>
+        </button>
+        <button class="nav-item" data-view="routines" aria-label="Routines" title="Routines">
+          <span class="nav-item-left">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Routines
+          </span>
+          <span class="kbd">⌘3</span>
+        </button>
+        <button class="nav-item" data-view="activity" aria-label="Activity" title="Activity">
+          <span class="nav-item-left">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>
+            Activity
+          </span>
+          <span class="kbd">⌘4</span>
+        </button>
+      </nav>
+
+      <div class="nav-group-label">System</div>
+      <nav class="nav-list" aria-label="System">
+        <button class="nav-item" data-view="appearance" aria-label="Appearance" title="Appearance">
+          <span class="nav-item-left">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor" opacity="0.2"/></svg>
+            Appearance
+          </span>
+          <span class="kbd">⌘5</span>
+        </button>
+        <button class="nav-item" data-view="settings" aria-label="Settings" title="Settings">
+          <span class="nav-item-left">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.6.85 1 1.51 1H21a2 2 0 1 1 0 4h-.09c-.66 0-1.25.4-1.51 1z"/></svg>
+            Settings
+          </span>
+          <span class="kbd">⌘6</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="engine-chip">
+          <span>Speech</span>
+          <strong>Whisper Turbo</strong>
+        </div>
+        <div class="engine-chip">
+          <span>Intent</span>
+          <strong>t5-small · Rust</strong>
+        </div>
+      </div>
+    </aside>
+
+    <!-- =====================================================================
+         MAIN STAGE
+         ===================================================================== -->
+    <main class="main-stage">
+
+      <!-- ===================================================================
+           VIEW 1: ASSISTANT COMMAND CENTER
+           =================================================================== -->
+      <section class="view active" id="view-assistant">
+        <div class="assistant-layout">
+          <div class="assistant-main">
+
+            <!-- Compact High-Craft Presence Header -->
+            <div class="presence-bar">
+              <div class="presence-left">
+                <button class="orb-trigger" id="orbListenBtn" type="button" aria-pressed="false" title="Toggle live listening" aria-label="Start live listening">
+                  <span class="orb-pulse-ring" aria-hidden="true"></span>
+                  <span id="orbMain" class="orb-optic" data-style="liquid" aria-hidden="true"><span class="orb-art"></span></span>
+                </button>
+                <div class="presence-text">
+                  <h2>
+                    <span id="presenceTitle">Ready for a command</span>
+                    <span class="live-wave" id="presenceWave" aria-hidden="true">
+                      <span></span><span></span><span></span><span></span>
+                    </span>
+                  </h2>
+                  <p id="presenceSubtitle">Run a command, find a file, or dictate at your cursor.</p>
+                </div>
+              </div>
+              <button class="btn btn-sm" id="newSessionBtn">+ New session</button>
+            </div>
+
+            <!-- Structured Command Execution Stream -->
+            <div class="command-stream" id="commandStream" role="log" aria-label="Command stream">
+              <div class="empty-session-msg">No commands in this session.</div>
+            </div>
+
+            <!-- Interactive Command / Dictation Composer -->
+            <div class="composer-wrap">
+              <div class="composer-box">
+                <div class="composer-top">
+                  <input type="text" class="composer-input" id="commandInput" placeholder="Type a command or ask Jarvis…" aria-label="Command input" />
+                  <button class="btn btn-primary btn-sm" id="sendCommandBtn">Run ↵</button>
+                </div>
+                <div class="composer-bottom">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <div class="segmented" id="composerModeSeg">
+                      <button class="seg-btn active" data-mode="command">Command</button>
+                      <button class="seg-btn" data-mode="dictation">Dictation</button>
+                    </div>
+                    <button class="btn btn-sm" id="recordHudBtn">Record</button>
+                  </div>
+                  <div class="composer-shortcuts" style="font-size:11px; color:var(--text-tertiary);">
+                    <span class="kbd">⌘⇧A</span> command &nbsp;·&nbsp; <span class="kbd">⌘⇧D</span> dictation
+                  </div>
+                </div>
+              </div>
+              <div class="composer-chips">
+                <button class="chip" onclick="openSettingsSub('files')">Open project</button>
+                <button class="chip" onclick="runCommand('New tab in Brave')">New tab in Brave</button>
+                <button class="chip" onclick="prefill('Play song ')">Play a song</button>
+                <button class="chip" onclick="runCommand('List files in downloads')">List files in downloads</button>
+                <button class="chip" onclick="runCommand('What\'s the time?')">What's the time?</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Collapsible Right-Hand Session Inspector (264px) -->
+          <aside class="inspector" id="sessionInspector">
+            <div class="inspector-head">
+              <span>Session</span>
+            </div>
+
+            <div class="inspector-sec">
+              <div class="inspector-sec-title">Input</div>
+              <div class="inspector-row">
+                <span>Live listening</span>
+                <label class="switch"><input type="checkbox" id="liveListenToggle" aria-label="Live listening"><span class="switch-track"></span></label>
+              </div>
+              <div class="row-desc mono" style="font-size:11px;">Microphone level</div>
+              <div class="input-meter" id="inputLevelMeter" aria-hidden="true"></div>
+            </div>
+
+            <div class="inspector-sec">
+              <div class="inspector-sec-title">Quick Controls</div>
+              <div class="inspector-row">
+                <span>Output volume</span>
+                <span class="mono tabular" id="volLabel" style="font-size:11.5px;">—</span>
+              </div>
+              <input type="range" min="0" max="100" value="0" id="volSlider" disabled aria-label="Output volume" />
+              <div class="inspector-row" style="margin-top:4px;">
+                <span>Verify commands</span>
+                <label class="switch"><input type="checkbox" id="verifyCmdToggle"><span class="switch-track"></span></label>
+              </div>
+              <div class="inspector-row">
+                <span>Spoken replies</span>
+                <label class="switch"><input type="checkbox" id="spokenReplyToggle" checked><span class="switch-track"></span></label>
+              </div>
+            </div>
+
+            <div class="inspector-sec">
+              <div class="inspector-sec-title">Workspace Folder</div>
+              <div class="folder-picker-list" id="workspaceFolders">
+              </div>
+            </div>
+
+            <div class="inspector-sec">
+              <div class="inspector-sec-title">Voice &amp; Behavior</div>
+              <div class="inspector-row">
+                <span>Voice profile</span>
+                <span class="status-badge" id="inspectorVoiceBadge">Not set</span>
+              </div>
+              <button class="stream-action-link" style="text-align:left;" onclick="switchView('voice')">Manage voice profile →</button>
+              <button class="stream-action-link" style="text-align:left;" onclick="openSettingsSub('behavior')">Assistant preferences →</button>
+            </div>
+
+            <div class="inspector-sec">
+              <div class="inspector-sec-title">Recent Commands</div>
+              <div id="recentCmdList" style="display:flex; flex-direction:column; gap:5px;"></div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           VIEW 2: VOICE & SPEECH
+           =================================================================== -->
+      <section class="view" id="view-voice">
+        <div class="view-scroll">
+          <div class="view-header">
+            <div>
+              <h1 class="view-title">Voice &amp; Speech</h1>
+              <p class="view-subtitle">Your local voice profile, recognition engine, and dictation preferences.</p>
+            </div>
+            <div class="segmented" id="voiceTabSeg">
+              <button class="seg-btn active" data-tab="recognition">Recognition</button>
+              <button class="seg-btn" data-tab="dictation">Dictation</button>
+            </div>
+          </div>
+
+          <!-- Recognition Tab -->
+          <div id="voice-tab-recognition">
+          <!-- Interactive Voice Enrollment Card -->
+          <div class="group-card" style="margin-bottom:20px;">
+            <div class="row" style="flex-wrap:wrap;">
+              <div class="row-info">
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                  <span class="row-title">Make Jarvis familiar with your voice</span>
+                  <span class="status-badge" id="voiceProfileBadge">No voice profile yet</span>
+                </div>
+                <span class="row-desc">One phrase at a time, with three samples per phrase.</span>
+              </div>
+              <div style="display:flex; gap:8px; flex-shrink:0;">
+                <button class="btn btn-primary btn-sm" id="startEnrollBtn" onclick="startEnrollment()">Start enrollment</button>
+                <button class="btn btn-sm" id="retrainVoiceBtn" disabled onclick="startEnrollment(true)">Retrain profile</button>
+                <button class="btn btn-ghost btn-sm" id="clearVoiceBtn" disabled onclick="clearEnrollment()">Clear profile</button>
+              </div>
+            </div>
+
+            <p class="row-desc hidden" id="enrollmentStatus" role="status"></p>
+            <section class="enroll-flow hidden" id="enrollFlow" aria-label="Voice enrollment">
+              <div class="enrollment-head">
+                <strong id="enrollStepHeader"></strong>
+                <button class="btn btn-ghost btn-sm" type="button" onclick="cancelEnrollment()">Pause</button>
+              </div>
+              <div class="progress-track" id="enrollProgress" role="progressbar" aria-label="Voice samples" aria-valuemin="0" aria-valuemax="42" aria-valuenow="0">
+                <div class="progress-fill" id="enrollProgressFill"></div>
+              </div>
+              <p class="enrollment-phrase" id="enrollPhrase"></p>
+              <div class="enrollment-head">
+                <span class="row-desc" id="enrollHint" role="status"></span>
+                <button class="btn btn-primary btn-sm" id="capturePhraseBtn" type="button" onclick="native('nextPhrase')">Next phrase</button>
+              </div>
+            </section>
+          </div>
+
+            <div class="section-label">Recognition</div>
+            <div class="group-card">
+              <div class="row">
+                <div class="row-info">
+                  <span class="row-title">Live speech</span>
+                  <span class="row-desc">Applies when you restart live listening.</span>
+                </div>
+                <select class="select" id="speechEngine" aria-label="Live speech engine">
+                  <option value="apple">Apple · on device</option>
+                  <option value="whisper">Whisper Turbo · local</option>
+                </select>
+              </div>
+              <div class="row">
+                <div class="row-info">
+                  <span class="row-title">Language</span>
+                  <span class="row-desc">BCP-47 locale, e.g. en-IN, en-US, or en-GB.</span>
+                </div>
+                <input type="text" class="input mono" value="en-IN" style="width:96px; text-align:right;" id="speechLanguage" aria-label="Recognition language" />
+              </div>
+              <div class="row">
+                <div class="row-info">
+                  <span class="row-title">Shortcut dictation</span>
+                  <span class="row-desc">Speech recognition runs locally on this Mac.</span>
+                </div>
+                <span class="row-meta">Whisper Turbo</span>
+              </div>
+            </div>
+
+            <div class="section-label">Voice Verification</div>
+            <div class="group-card">
+              <div class="row">
+                <div class="row-info">
+                  <span class="row-title">Action commands</span>
+                  <span class="row-desc">Verify your voice before carrying out a command with ⌘⇧A.</span>
+                </div>
+                <label class="switch"><input type="checkbox" id="verifyActionToggle"><span class="switch-track"></span></label>
+              </div>
+              <div class="row">
+                <div class="row-info">
+                  <span class="row-title">Live mode</span>
+                  <span class="row-desc">Verify your voice after the wake word.</span>
+                </div>
+                <label class="switch"><input type="checkbox" id="verifyLiveToggle"><span class="switch-track"></span></label>
+              </div>
+              <div class="row">
+                <div class="row-info">
+                  <span class="row-title">Similarity threshold</span>
+                  <span class="row-desc">Minimum speaker embedding match required to execute.</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <span class="row-meta tabular" id="simThreshVal">0.78</span>
+                  <input type="range" min="0.50" max="0.95" step="0.01" value="0.78" id="simThreshSlider" disabled aria-label="Similarity threshold" />
+                </div>
+              </div>
+            </div>
+            <p style="font-size:11.5px; color:var(--text-tertiary); margin-top:10px;">Your voice profile stays on this Mac.</p>
+          </div>
+
+          <!-- Dictation Tab -->
+          <div id="voice-tab-dictation" class="hidden">
+            <div class="grid-2 dictation-layout">
+              <div>
+                <div class="section-label" style="display:flex; justify-content:space-between; align-items:center;">
+                  <span>Dictation preferences</span>
+                  <button class="btn btn-sm" onclick="startOrFinishHud('dictation')">Try dictation</button>
+                </div>
+                <div class="group-card">
+                  <div class="row">
+                    <div class="row-info">
+                      <span class="row-title">AI formatting</span>
+                      <span class="row-desc">Optional local punctuation &amp; cleanup after transcription.</span>
+                    </div>
+                    <label class="switch"><input type="checkbox" id="formatToggle"><span class="switch-track"></span></label>
+                  </div>
+                  <div class="row">
+                    <div class="row-info">
+                      <span class="row-title">Paste at the cursor</span>
+                      <span class="row-desc">Insert text directly into your active macOS application.</span>
+                    </div>
+                    <label class="switch"><input type="checkbox" id="pasteToggle"><span class="switch-track"></span></label>
+                  </div>
+                  <div class="row">
+                    <div class="row-info">
+                      <span class="row-title">Keep the original</span>
+                      <span class="row-desc">Retain the raw transcript alongside the formatted result.</span>
+                    </div>
+                    <label class="switch"><input type="checkbox" id="originalToggle"><span class="switch-track"></span></label>
+                  </div>
+                  <details class="row trace-details">
+                    <summary>Recording &amp; result panel</summary>
+                    <div class="row"><label for="recordLimit">Maximum recording time (min)</label><input class="input" id="recordLimit" type="number" min="1" max="60"></div>
+                    <div class="row"><label for="resultDuration">Result stays visible (sec)</label><input class="input" id="resultDuration" type="number" min="1" max="10"></div>
+                  </details>
+                </div>
+              </div>
+
+              <div>
+                <div class="section-label" style="display:flex; justify-content:space-between; align-items:center;">
+                  <span id="dictationResultTitle">Last dictation</span>
+                  <span class="mono tabular" id="dictWordCount" style="text-transform:none; font-weight:400;"></span>
+                </div>
+                <div class="group-card dictation-result">
+                  <div class="dictation-tools">
+                    <div class="segmented" id="dictViewSeg">
+                      <button class="seg-btn active" data-mode="formatted">Formatted</button>
+                      <button class="seg-btn" data-mode="original">Original</button>
+                    </div>
+                    <button class="btn btn-sm" id="copyDictBtn" onclick="copyLastDictation()">Copy</button>
+                  </div>
+                  <p class="hud-transcript" id="lastDictText"></p>
+                  <div class="copy-status" id="copyDictStatus" role="status"></div>
+                  <div style="margin-top:12px; padding-top:10px; border-top:1px solid var(--border); font-size:11.5px; color:var(--text-tertiary);">
+                    Each new dictation replaces the previous one.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           VIEW 3: ROUTINES
+           =================================================================== -->
+      <section class="view" id="view-routines">
+        <div class="view-scroll">
+          <div class="view-header">
+            <div>
+              <h1 class="view-title">Routines</h1>
+              <p class="view-subtitle">Chain local macOS actions together and trigger them with a single phrase.</p>
+            </div>
+            <button class="btn btn-primary" onclick="openRoutineModal()">+ New routine</button>
+          </div>
+
+          <div class="group-card" id="routinesList"></div>
+
+          <div class="section-label">How routines work</div>
+          <div class="group-card">
+            <div class="row">
+              <div class="row-info">
+                <span class="row-title">Built around your words</span>
+                <span class="row-desc">Open apps, folders, URLs, or play music in order. All routines are stored locally on this Mac and execute through the Rust command layer.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           VIEW 4: ACTIVITY (INSIGHTS)
+           =================================================================== -->
+      <section class="view" id="view-activity">
+        <div class="view-scroll">
+          <div class="view-header">
+            <div>
+              <h1 class="view-title">Activity</h1>
+              <p class="view-subtitle">Usage and recent commands on this Mac.</p>
+            </div>
+            <div class="segmented" id="activityRangeSeg">
+              <button class="seg-btn" data-range="day">Day</button>
+              <button class="seg-btn active" data-range="week">Week</button>
+              <button class="seg-btn" data-range="year">Year</button>
+              <button class="seg-btn" data-range="lifetime">Lifetime</button>
+            </div>
+          </div>
+
+          <div class="grid-4">
+            <div class="kpi-card">
+              <div class="kpi-label">Time Talking</div>
+              <div class="kpi-val tabular" id="kpiTime"></div>
+              <div class="kpi-sub">spoken naturally</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Sessions</div>
+              <div class="kpi-val tabular" id="kpiSessions"></div>
+              <div class="kpi-sub">conversations started</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Commands</div>
+              <div class="kpi-val tabular" id="kpiCommands"></div>
+              <div class="kpi-sub">actions requested</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Success Rate</div>
+              <div class="kpi-val tabular" id="kpiSuccess"></div>
+              <div class="kpi-sub">completed successfully</div>
+            </div>
+          </div>
+
+          <!-- Interactive 7-Day Flat Bar Chart with Hover Tooltip -->
+          <div class="chart-card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:12.5px; font-weight:600;">Daily Activity · Time spent speaking</span>
+              <span class="status-badge" id="chartDefaultBadge">Hover a bar to inspect</span>
+            </div>
+            <div class="chart-tooltip tabular" id="chartTooltip"></div>
+            <div class="chart-bars" id="activityBars"></div>
+          </div>
+
+          <div class="grid-2">
+            <div>
+              <div class="section-label">In a few words</div>
+              <div class="group-card">
+                <div class="row"><span class="row-title">Words spoken</span><span class="row-meta tabular" id="statWords"></span></div>
+                <div class="row"><span class="row-title">Copies</span><span class="row-meta tabular" id="statCopies"></span></div>
+                <div class="row"><span class="row-title">Failed commands</span><span class="row-meta tabular" id="statFailed"></span></div>
+              </div>
+            </div>
+            <div>
+              <div class="section-label">Behind the scenes</div>
+              <div class="group-card">
+                <div class="row"><span class="row-title">Prompt tokens</span><span class="row-meta tabular" id="statPromptTokens"></span></div>
+                <div class="row"><span class="row-title">Completion tokens</span><span class="row-meta tabular" id="statCompletionTokens"></span></div>
+                <div class="row">
+                  <div class="row-info">
+                    <span class="row-title">Time saved</span>
+                    <span class="row-desc">Compared with typing at 40 wpm</span>
+                  </div>
+                  <span class="row-meta tabular" id="statSaved"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-label">Recent Activity Log</div>
+          <div class="group-card" id="activityLogList">
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           VIEW 5: APPEARANCE
+           =================================================================== -->
+      <section class="view" id="view-appearance">
+        <div class="view-scroll">
+          <div class="view-header">
+            <div>
+              <h1 class="view-title">Appearance</h1>
+              <p class="view-subtitle">Choose an accent, orb, and glass finish.</p>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:6px;">
+              <button class="btn btn-sm btn-ghost" onclick="resetAppearance()">Reset</button>
+              <button class="btn btn-sm" id="jumpToGlass">Preview panels</button>
+            </div>
+          </div>
+
+          <div class="section-label">Accent Color</div>
+          <div class="swatch-grid" id="accentSwatches">
+            <button class="swatch-btn active" data-accent="#8ca5ff" data-rgb="140, 165, 255"><span class="swatch-dot" style="background:#8ca5ff"></span>Cobalt</button>
+            <button class="swatch-btn" data-accent="#a58bff" data-rgb="165, 139, 255"><span class="swatch-dot" style="background:#a58bff"></span>Violet</button>
+            <button class="swatch-btn" data-accent="#3ecf8e" data-rgb="62, 207, 142"><span class="swatch-dot" style="background:#3ecf8e"></span>Mint</button>
+            <button class="swatch-btn" data-accent="#f27983" data-rgb="242, 121, 131"><span class="swatch-dot" style="background:#f27983"></span>Coral</button>
+            <button class="swatch-btn" data-accent="#e5a93b" data-rgb="229, 169, 59"><span class="swatch-dot" style="background:#e5a93b"></span>Amber</button>
+            <button class="swatch-btn" data-accent="#c8ccd6" data-rgb="200, 204, 214"><span class="swatch-dot" style="background:#c8ccd6"></span>Silver</button>
+          </div>
+
+          <div class="section-label">Assistant Orb</div>
+          <div class="group-card">
+            <div class="row" style="flex-wrap:wrap;">
+              <div class="row-info">
+                <span class="row-title">Orb style</span>
+                <span class="row-desc">Shown in the main app, never in recording overlays.</span>
+              </div>
+              <select id="orbStyleSelect" class="select" aria-label="Assistant orb style">
+                <option value="liquid">Liquid</option>
+                <option value="halo">Halo</option>
+                <option value="aurora">Aurora</option>
+                <option value="lattice">Lattice</option>
+                <option value="prism">Prism</option>
+              </select>
+            </div>
+            <div class="orb-preview-box">
+              <div id="orbPreview" class="orb-optic" data-style="liquid" aria-hidden="true"><span class="orb-art"></span></div>
+              <div>
+                <div id="orbPreviewName" style="font-weight:600; font-size:14px;">Liquid</div>
+                <div id="orbPreviewDesc" style="font-size:12.5px; color:var(--text-secondary); margin-top:3px;">Reflective chrome</div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="row-info">
+                <span class="row-title">Animate orb</span>
+                <span class="row-desc">Respects Reduce Motion and pauses when the window is hidden.</span>
+              </div>
+              <label class="switch"><input type="checkbox" id="animateOrbToggle" checked><span class="switch-track"></span></label>
+            </div>
+          </div>
+
+          <div class="section-label" id="interfaceHeading">Interface</div>
+          <div class="group-card">
+            <div class="row">
+              <div class="row-info">
+                <span class="row-title">Interface text</span>
+                <span class="row-desc">Choose Extra Small through Extra Large. Changes apply immediately.</span>
+              </div>
+              <select class="select" id="textScaleSelect" aria-label="Interface text scale">
+                <option value="0.86">Extra Small</option>
+                <option value="0.93">Small</option>
+                <option value="1" selected>Default</option>
+                <option value="1.08">Large</option>
+                <option value="1.16">Extra Large</option>
+              </select>
+            </div>
+            <div class="row">
+              <div class="row-info">
+                <span class="row-title">Glass opacity</span>
+                <span class="row-desc">Lower values reveal more behind dialogs and recording panels.</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span class="row-meta tabular" id="glassOpacityVal">78%</span>
+                <input type="range" min="40" max="96" value="78" id="glassOpacitySlider" aria-label="Glass opacity" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="row-info">
+                <span class="row-title">Border contrast</span>
+                <span class="row-desc">Separation between controls and matte surfaces.</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span class="row-meta tabular" id="borderContrastVal">100%</span>
+                <input type="range" min="50" max="180" value="100" id="borderContrastSlider" aria-label="Border contrast" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Recording Overlay Preview Stage -->
+          <div class="section-label hud-preview-label" id="appearancePanelHeading" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <span>Recording panel</span>
+            <div style="display:flex; gap:8px;">
+              <select class="select" id="previewHudMode" aria-label="Preview mode">
+                <option value="dictation">Dictation</option>
+                <option value="command">Command</option>
+              </select>
+              <select class="select" id="previewHudPhase" aria-label="Preview phase">
+                <option value="recording">Recording</option>
+                <option value="processing">Transcribing</option>
+                <option value="result">Result</option>
+              </select>
+            </div>
+          </div>
+          <div class="overlay-preview-stage" aria-labelledby="appearancePanelHeading">
+            <div class="desktop-wireframe" aria-hidden="true">
+              <div class="wire-bar"><span class="wire-dot"></span><span class="wire-dot"></span><span class="wire-dot"></span></div>
+              <div class="wire-body">
+                <div class="wire-side">
+                  <div class="wire-line" style="width:72%;"></div>
+                  <div class="wire-line" style="width:54%;"></div>
+                  <div class="wire-line" style="width:82%;"></div>
+                </div>
+                <div class="wire-content">
+                  <div class="wire-line" style="width:45%; height:10px;"></div>
+                  <div class="wire-line" style="width:88%;"></div>
+                  <div class="wire-line" style="width:76%;"></div>
+                  <div class="wire-line" style="width:62%;"></div>
+                </div>
+              </div>
+            </div>
+            <div class="hud-card" id="inlinePreviewHud" style="position:relative; z-index:2;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           VIEW 6: SETTINGS (General + Sub-views | Setup | About)
+           =================================================================== -->
+      <section class="view" id="view-settings">
+        <div class="view-scroll">
+          <div class="view-header">
+            <div>
+              <h1 class="view-title">Settings</h1>
+              <p class="view-subtitle">Essentials, local setup checklist, and Rust engine diagnostics.</p>
+            </div>
+            <div class="segmented" id="settingsTabSeg">
+              <button class="seg-btn active" data-tab="general">General</button>
+              <button class="seg-btn" data-tab="setup">Setup</button>
+              <button class="seg-btn" data-tab="about">About</button>
+            </div>
+          </div>
+
+          <!-- GENERAL TAB -->
+          <div id="settings-tab-general">
+            <div id="settingsGeneralMain">
+              <div class="grid-2">
+                <div>
+                  <div class="section-label">Everyday</div>
+                  <div class="group-card">
+                    <div class="row">
+                      <div class="row-info">
+                        <span class="row-title">Start at login</span>
+                        <span class="row-desc">Ready when you sign in to macOS.</span>
+                      </div>
+                      <label class="switch"><input type="checkbox" id="loginToggle"><span class="switch-track"></span></label>
+                    </div>
+                    <div class="row">
+                      <div class="row-info">
+                        <span class="row-title">Assistant behavior</span>
+                        <span class="row-desc">Responses, session memory, and tone.</span>
+                      </div>
+                      <button class="btn btn-sm" onclick="openSettingsSub('behavior')">Configure</button>
+                    </div>
+                  </div>
+
+                  <div class="section-label">Model Updates</div>
+                  <div class="group-card">
+                    <div class="row">
+                      <div class="row-info">
+                        <span class="row-title">Intent command model</span>
+                        <span class="row-desc" id="modelUpdateDesc">Checking local installation…</span>
+                      </div>
+                      <div class="settings-actions"><button class="btn btn-sm" id="checkModelBtn" onclick="native('checkModel')">Check for updates</button><button class="btn btn-primary btn-sm hidden" id="installModelBtn" onclick="native('installModel')">Install update</button><button class="btn btn-sm hidden" id="cancelModelBtn" onclick="native('cancelModel')">Cancel</button></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="section-label">More Settings</div>
+                  <div class="group-card">
+                    <button type="button" class="row row-clickable" onclick="openSettingsSub('display')"><div class="row-info"><span class="row-title">Display &amp; sound</span><span class="row-desc">Brightness, volume, and display recovery.</span></div><span class="row-meta">›</span></button>
+                    <button type="button" class="row row-clickable" onclick="openSettingsSub('files')"><div class="row-info"><span class="row-title">Files &amp; projects</span><span class="row-desc">Project roots, aliases, and Spotlight search.</span></div><span class="row-meta">›</span></button>
+                    <button type="button" class="row row-clickable" onclick="openSettingsSub('services')"><div class="row-info"><span class="row-title">Local services</span><span class="row-desc">Ollama, native helper, and PostgreSQL storage.</span></div><span class="row-meta">›</span></button>
+                    <button type="button" class="row row-clickable" onclick="openSettingsSub('safeguards')"><div class="row-info"><span class="row-title">Advanced &amp; safeguards</span><span class="row-desc">Command limits, review prompts, and diagnostics.</span></div><span class="row-meta">›</span></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Interactive Sub-View Container -->
+            <div id="settingsGeneralSub" class="hidden">
+              <button class="breadcrumb-btn" onclick="closeSettingsSub()">‹ General</button>
+              <div id="settingsSubContent"></div>
+            </div>
+          </div>
+
+          <!-- SETUP TAB -->
+          <div id="settings-tab-setup" class="hidden">
+            <div class="group-card" style="padding:16px; margin-bottom:18px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="row-title" id="setupTitle">Set up Jarvis</span>
+                <span class="status-badge" id="setupReady">Checking…</span>
+              </div>
+              <div class="progress-track" style="margin:10px 0 8px;"><div class="progress-fill" id="setupProgress" style="width:0%;"></div></div>
+              <span class="row-desc">Microphone, accessibility, and the speech model are the only required steps.</span>
+            </div>
+
+            <div class="section-label">Setup Checklist</div>
+            <div class="group-card">
+              <div class="row"><div class="row-info"><span class="row-title">Microphone</span><span class="row-desc">For dictation and voice commands.</span></div><button class="btn btn-sm" id="setup-microphone" onclick="native('setupDetails', {topic:'microphone'})">Details</button></div>
+              <div class="row"><div class="row-info"><span class="row-title">Accessibility</span><span class="row-desc">For inserting text at your cursor.</span></div><button class="btn btn-sm" id="setup-accessibility" onclick="native('setupDetails', {topic:'accessibility'})">Details</button></div>
+              <div class="row"><div class="row-info"><span class="row-title">Whisper speech model</span><span class="row-desc">On-device transcription · approximately 1.5 GB.</span></div><button class="btn btn-sm" id="setup-whisper" onclick="native('setupDetails', {topic:'whisper'})">Details</button></div>
+              <div class="row">
+                <div class="row-info"><span class="row-title">Intent command model</span><span class="row-desc">On-device command understanding · approximately 206 MB.</span></div>
+                <button class="btn btn-sm" id="setupIntentBtn" onclick="native('installModel')">Update</button>
+              </div>
+              <div class="row">
+                <div class="row-info"><span class="row-title">Ollama + AI model</span><span class="row-desc">For AI answers and multi-step command planning.</span></div>
+                <button class="btn btn-sm" id="setup-ollama" onclick="native('setupDetails', {topic:'ollama'})">Start it</button>
+              </div>
+              <div class="row"><div class="row-info"><span class="row-title">PostgreSQL</span><span class="row-desc">For activity history and usage insights.</span></div><button class="btn btn-sm" id="setup-postgres" onclick="native('setupDetails', {topic:'postgres'})">Details</button></div>
+              <div class="row"><div class="row-info"><span class="row-title">Local helper</span><span class="row-desc">For voice authentication and native integrations.</span></div><button class="btn btn-sm" id="setup-helper" onclick="native('setupDetails', {topic:'helper'})">Details</button></div>
+              <div class="row"><div class="row-info"><span class="row-title">Spotify</span><span class="row-desc">For voice-controlled music playback.</span></div><button class="btn btn-sm" id="setup-spotify" onclick="native('setupDetails', {topic:'spotify'})">Details</button></div>
+            </div>
+          </div>
+
+          <!-- ABOUT TAB -->
+          <div id="settings-tab-about" class="hidden">
+            <div class="grid-2">
+              <div>
+                <div class="section-label">Application</div>
+                <div class="group-card">
+                  <div class="row"><span class="row-title">Version</span><span class="row-meta" id="buildVersion">—</span></div>
+                  <div class="row"><span class="row-title">Source build</span><span class="row-meta" id="buildRevision">—</span></div>
+                  <div class="row"><span class="row-title">Binary ID</span><span class="row-meta" id="buildBinary">—</span></div>
+                  <div class="row"><span class="row-title">Architecture</span><span class="row-meta" id="buildArchitecture">—</span></div>
+                  <div class="row"><span class="row-title">Speech engine</span><span class="row-meta">Whisper large-v3-turbo</span></div>
+                  <div class="row"><span class="row-title">Intent router</span><span class="row-meta">t5-small</span></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="section-label">Keyboard Shortcuts</div>
+                <div class="group-card">
+                  <div class="row"><span class="row-title">Dictate anywhere</span><span class="kbd">⌘⇧D</span></div>
+                  <div class="row"><span class="row-title">Run a voice command</span><span class="kbd">⌘⇧A</span></div>
+                  <div class="row"><span class="row-title">Spotlight file search</span><span class="kbd">⌘K</span></div>
+                  <div class="row"><span class="row-title">Restore display visibility</span><span class="kbd">⌘⇧R</span></div>
+                  <div class="row"><span class="row-title">Toggle verification</span><span class="kbd">⌘O</span></div>
+                  <div class="row"><span class="row-title">Submit typed command</span><span class="kbd">Return</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-label">Engine &amp; Diagnostics</div>
+            <div class="group-card">
+              <div class="row">
+                <div class="row-info">
+                  <span class="row-title">Rust pipeline</span>
+                  <span class="row-desc">Use the native Rust core for command understanding.</span>
+                </div>
+                <label class="switch"><input type="checkbox" id="rustPipelineToggle" checked><span class="switch-track"></span></label>
+              </div>
+              <div class="row">
+                <div class="row-info">
+                  <span class="row-title">Diagnostics</span>
+                  <span class="row-desc">Session logs and macOS crash reports stay on this Mac.</span>
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                  <button class="btn btn-sm" onclick="native('openLogs')">Open diagnostic logs</button>
+                  <button class="btn btn-sm" onclick="native('copyDiagnostics')">Copy crash summary</button>
+                </div>
+              </div>
+              <div class="row">
+                <div class="row-info">
+                  <span class="row-title">Command testing</span>
+                  <span class="row-desc">Inspect the Rust intent router plan and latency without recording.</span>
+                </div>
+                <div class="settings-actions"><button class="btn btn-primary btn-sm" id="testRunnerToggleBtn" onclick="toggleTestRunner()">Start test runner</button><button class="btn btn-sm" onclick="native('openRunner')">Open full runner</button><button class="btn btn-sm hidden" id="stopRunnerBtn" onclick="native('stopRunner')">Stop test mode</button></div>
+              </div>
+
+              <!-- Interactive Rust Command Test Runner -->
+              <div class="test-runner-panel hidden" id="testRunnerPanel">
+                <div style="display:flex; gap:8px;">
+                  <input type="text" class="input mono" id="testRunnerInput" placeholder="e.g. open spotify and play liked songs" style="flex:1; height:32px;" />
+                  <button class="btn btn-primary btn-sm" style="height:32px;" onclick="runIntentTest()">Evaluate</button>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span class="status-badge ok tabular" id="testRunnerStatus"></span>
+                  <span class="row-desc mono" style="font-size:11px;">dry_run=true</span>
+                </div>
+                <pre class="json-output" id="testRunnerJson"></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- =======================================================================
+       BOTTOM 28px STATUS BAR
+       ======================================================================= -->
+  <footer class="statusbar">
+    <div class="tabular">Activity · <span id="statusActivityCount"></span></div>
+    <div class="statusbar-center">
+      <span class="dot standby" id="micStatusDot"></span>
+      <span id="micStatusText">Standby · microphone off</span>
+    </div>
+    <div>Local processing</div>
+  </footer>
+
+<!-- =========================================================================
+     MODAL: NEW / EDIT ROUTINE (MULTI-STEP ACTION BUILDER)
+     ========================================================================= -->
+<div class="modal-backdrop" id="routineModal">
+  <div class="modal-sheet" role="dialog" aria-modal="true" aria-label="Routine editor">
+    <div class="modal-head">
+      <strong id="routineModalTitle">New routine</strong>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('routineModal')" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div>
+        <label class="field-label" for="routineTriggerInput">Trigger phrase</label>
+        <input type="text" class="input" id="routineTriggerInput" placeholder="e.g. Focus time" style="width:100%; height:34px;" />
+      </div>
+      <div>
+        <label class="field-label" for="routineOffInput">Off phrase · optional</label>
+        <input type="text" class="input" id="routineOffInput" placeholder="e.g. End focus" style="width:100%; height:34px;" />
+      </div>
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <label class="field-label" style="margin:0;">Actions, in order</label>
+          <button class="btn btn-sm" type="button" onclick="appendRoutineActionRow()">+ Add action</button>
+        </div>
+        <div id="routineActionsContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
+        <label style="display:flex; align-items:center; gap:8px; margin-top:12px; font-size:12px; color:var(--text-secondary); cursor:pointer;">
+          <input type="checkbox" id="routineConditionalCheck" /> Require success for all following steps
+        </label>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <span style="font-size:11.5px; color:var(--text-tertiary);">Stored locally on this Mac</span>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-sm" onclick="closeModal('routineModal')">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="saveRoutineBtn" onclick="saveRoutine()">Create routine</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================================
+     MODAL: SPOTLIGHT-STYLE FILE SEARCH (⌘K)
+     ========================================================================= -->
+<div id="searchMount"></div>
+
+<!-- =========================================================================
+     FLOATING DICTATION / COMMAND HUD OVERLAY
+     ========================================================================= -->
+
+
+<!-- =========================================================================
+     QUICK ANSWER POPOVER
+     ========================================================================= -->
+<div class="quick-answer hidden" id="quickAnswerPopover" role="status" aria-live="polite">
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <span style="font-size:11.5px; font-weight:600; color:var(--text-secondary);" id="qaLabel">Quick Answer</span>
+    <button class="btn btn-ghost btn-sm" style="height:22px; padding:0 6px;" onclick="closeQuickAnswer()">✕</button>
+  </div>
+  <div class="quick-answer-val" id="qaValue"></div>
+  <div style="font-size:11.5px; color:var(--text-tertiary);" id="qaMeta"></div>
+</div>
+
+<!-- Subtle Toast -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+</div>
+<script src="bridge.js"></script>
+<script src="three.min.js"></script>
+<script src="materials.js"></script>
+<script src="search.js"></script>
+<script src="interface.js"></script>
+<script src="desktop.js"></script>
+</body>
+</html>

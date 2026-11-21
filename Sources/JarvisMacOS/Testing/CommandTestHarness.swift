@@ -105,8 +105,17 @@ final class CommandTestHarness: ObservableObject {
         try append(runs[index], event: "review")
     }
 
-    private func perform(_ run: CommandTestRun) async throws -> CommandTestRun {
-        guard let app else { throw TestError("Jarvis is unavailable") }
+    func evaluateIntent(command: String, app: AppState) async throws -> [String: Any] {
+        let run = CommandTestRun(id: UUID(), command: command, mode: "intent", startedAt: Date(),
+                                 revision: DiagnosticBuild.current.revision, rustPipeline: JarvisFlags.useRustPipeline)
+        var result = try await perform(run, app: app)
+        result.elapsedMs = Int(Date().timeIntervalSince(run.startedAt) * 1000)
+        result.state = "finished"
+        return (try JSONSerialization.jsonObject(with: Self.encode(result))) as? [String: Any] ?? [:]
+    }
+
+    private func perform(_ run: CommandTestRun, app override: AppState? = nil) async throws -> CommandTestRun {
+        guard let app = override ?? self.app else { throw TestError("Jarvis is unavailable") }
         var result = run
         if run.mode == "dictation" {
             let rules = TranscriptFormatter.format(run.command)

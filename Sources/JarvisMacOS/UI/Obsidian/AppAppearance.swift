@@ -9,11 +9,11 @@ enum AccentTheme: String, CaseIterable, Identifiable {
     var hex: UInt32 {
         switch self {
         case .cobalt: return 0x8CA5FF
-        case .violet: return 0xB7A1FF
-        case .mint: return 0x7CD8BD
-        case .coral: return 0xF399A5
-        case .amber: return 0xEAC18B
-        case .silver: return 0xD3D9E6
+        case .violet: return 0xA58BFF
+        case .mint: return 0x3ECF8E
+        case .coral: return 0xF27983
+        case .amber: return 0xE5A93B
+        case .silver: return 0xC8CCD6
         }
     }
     var foregroundHex: UInt32 {
@@ -62,14 +62,14 @@ enum AssistantOrbStyle: String, CaseIterable, Identifiable {
     var glassOpacity: Double {
         get { storedGlassOpacity }
         set {
-            storedGlassOpacity = Self.clamped(newValue, to: 0.35...1, fallback: 0.74)
+            storedGlassOpacity = Self.clamped(newValue, to: 0.35...1, fallback: 0.78)
             defaults.set(storedGlassOpacity, forKey: "jarvis.appearance.glass")
         }
     }
     var borderContrast: Double {
         get { storedBorderContrast }
         set {
-            storedBorderContrast = Self.clamped(newValue, to: 0.75...1.5, fallback: 1)
+            storedBorderContrast = Self.clamped(newValue, to: 0.5...1.8, fallback: 1)
             defaults.set(storedBorderContrast, forKey: "jarvis.appearance.contrast")
         }
     }
@@ -80,12 +80,12 @@ enum AssistantOrbStyle: String, CaseIterable, Identifiable {
         accent = AccentTheme(rawValue: defaults.string(forKey: "jarvis.appearance.accent") ?? "") ?? .cobalt
         textSize = InterfaceTextSize(rawValue: defaults.string(forKey: "jarvis.appearance.textSize") ?? "") ?? .standard
         orbStyle = AssistantOrbStyle(rawValue: defaults.string(forKey: "jarvis.appearance.orb") ?? "") ?? .liquid
-        storedGlassOpacity = Self.clamped((defaults.object(forKey: "jarvis.appearance.glass") as? NSNumber)?.doubleValue ?? 0.74, to: 0.35...1, fallback: 0.74)
-        storedBorderContrast = Self.clamped((defaults.object(forKey: "jarvis.appearance.contrast") as? NSNumber)?.doubleValue ?? 1, to: 0.75...1.5, fallback: 1)
+        storedGlassOpacity = Self.clamped((defaults.object(forKey: "jarvis.appearance.glass") as? NSNumber)?.doubleValue ?? 0.78, to: 0.35...1, fallback: 0.78)
+        storedBorderContrast = Self.clamped((defaults.object(forKey: "jarvis.appearance.contrast") as? NSNumber)?.doubleValue ?? 1, to: 0.5...1.8, fallback: 1)
         animateOrb = (defaults.object(forKey: "jarvis.appearance.motion") as? NSNumber)?.boolValue ?? true
     }
     func reset() {
-        accent = .cobalt; orbStyle = .liquid; textSize = .standard; glassOpacity = 0.74; borderContrast = 1; animateOrb = true
+        accent = .cobalt; orbStyle = .liquid; textSize = .standard; glassOpacity = 0.78; borderContrast = 1; animateOrb = true
     }
     private static func clamped(_ value: Double, to range: ClosedRange<Double>, fallback: Double) -> Double {
         value.isFinite ? min(range.upperBound, max(range.lowerBound, value)) : fallback

@@ -132,6 +132,7 @@ struct VoiceAutomation: Codable, Identifiable, Equatable {
     var keyword: String
     var offKeyword: String?
     var actions: [AutomationAction]
+    var isDisabled: Bool? = nil
 
     init(id: UUID = UUID(), keyword: String, offKeyword: String? = nil, actions: [AutomationAction]) {
         self.id = id

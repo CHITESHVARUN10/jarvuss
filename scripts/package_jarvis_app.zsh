@@ -59,6 +59,10 @@ NEW_BIN="$BUILD_DIR/jarvis"
 # old errors like "Missing NSMicrophoneUsageDescription".
 mkdir -p "$APP_MACOS" "$BACKEND_DEST"
 cp "$NEW_BIN" "$APP_MACOS/Jarvis"
+DESKTOP_ASSETS="$BUILD_DIR/JarvisMacOS_JarvisMacOS.bundle"
+[[ -s "$DESKTOP_ASSETS/Assets/index.html" ]] || { echo "Desktop interface assets are missing." >&2; exit 1; }
+mkdir -p "$APP_RESOURCES/JarvisMacOS_JarvisMacOS.bundle"
+rsync -a --delete "$DESKTOP_ASSETS/" "$APP_RESOURCES/JarvisMacOS_JarvisMacOS.bundle/"
 cp "$ROOT_DIR/rust-core/target/release/jarvis-backend" "$APP_MACOS/JarvisBackend"
 chmod +x "$APP_MACOS/JarvisBackend"
 chmod +x "$APP_MACOS/Jarvis"

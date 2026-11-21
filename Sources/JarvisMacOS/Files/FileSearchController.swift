@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -30,6 +31,10 @@ final class FileSearchController: NSObject, ObservableObject, NSWindowDelegate {
     private var task: Task<FileSearchSnapshot, Error>?
     private var panel: NSPanel?
     private var previewPanel: NSPanel?
+    var presentResultsInDesktop: (() -> Bool)?
+    private var fileWindowObserver: AnyCancellable?
+    private var fileWebView: DesktopWebView?
+    private var fileWindowReady = false
 
     init(engine: FileSearching? = nil, locations: FileSearchLocationStore? = nil,
          presentsUI: Bool = true, openFile: ((URL) -> Bool)? = nil,
@@ -50,7 +55,7 @@ final class FileSearchController: NSObject, ObservableObject, NSWindowDelegate {
         draft = request; results = []; selectedID = nil; preview = nil
         hasContext = true; contextDate = nil; searching = true
         status = "Searching your files…"
-        present()
+        presentResults()
         defer { if generation == id { searching = false; task = nil } }
         do {
             let roots = try locations.resolve(request.scopes)
@@ -109,7 +114,7 @@ final class FileSearchController: NSObject, ObservableObject, NSWindowDelegate {
             close()
             status = "Opened \(target.name)."
         case .preview:
-            present()
+            presentResults()
             preview = FilePreviewTarget(url: target.url)
             status = "Previewing \(target.name)."
         case .reveal:
@@ -172,6 +177,12 @@ final class FileSearchController: NSObject, ObservableObject, NSWindowDelegate {
         return ControllerResult(message: message, success: false)
     }
 
+    private func presentResults() {
+        guard presentsUI else { return }
+        if presentResultsInDesktop?() == true { panel?.orderOut(nil) }
+        else { present() }
+    }
+
     private func present() {
         guard presentsUI else { return }
         if panel == nil {
@@ -185,10 +196,40 @@ final class FileSearchController: NSObject, ObservableObject, NSWindowDelegate {
             window.becomesKeyOnlyIfNeeded = true
             window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
             window.delegate = self
-            window.contentView = NSHostingView(rootView: FileSearchResultsView(model: self).preferredColorScheme(.dark))
+            let web = DesktopWebView(document: "search-panel")
+            web.handle = { [weak self] action, args in
+                try await self?.handleDesktopSearch(action, args)
+            }
+            web.onLoad = { [weak self] in
+                guard let self else { return }
+                self.fileWindowReady = true
+                self.initializeFilePanel()
+            }
+            window.contentView = web
             window.center()
             panel = window
+            fileWebView = web
+            fileWindowObserver = objectWillChange.debounce(for: .milliseconds(35), scheduler: DispatchQueue.main)
+                .sink { [weak self] in
+                    guard let self, self.fileWindowReady, self.panel?.isVisible == true else { return }
+                    self.fileWebView?.deliver("search", self.desktopSearchValues)
+                }
         }
+        let visible = panel?.isVisible == true
         panel?.orderFrontRegardless()
+        if fileWindowReady {
+            if visible { fileWebView?.deliver("request", desktopDraft) }
+            else { initializeFilePanel() }
+        }
+    }
+
+    private func initializeFilePanel() {
+        guard panel?.isVisible == true else { return }
+        let standard = ["Downloads", "Desktop", "Documents"].map { ["name": $0, "path": $0] }
+        let custom = locations.locations.map { ["name": $0.name, "path": $0.path] }
+            + ProjectLocationStore.shared.locations.map { ["name": $0.name, "path": $0.url().path] }
+        fileWebView?.deliver("appearance", AppAppearance.shared.desktopValues)
+        fileWebView?.deliver("begin", ["request": desktopDraft, "result": desktopSearchValues,
+                                      "controls": Self.desktopSearchControls, "scopes": standard + custom])
     }
 }

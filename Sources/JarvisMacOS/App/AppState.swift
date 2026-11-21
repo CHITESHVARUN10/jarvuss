@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import Combine
 import SwiftUI
 
 @MainActor
@@ -141,6 +142,7 @@ final class AppState: ObservableObject {
     }
     /// Recent commands ring (last 5) for the Assistant pane.
     @Published var recentCommands: [String] = []
+    let commandResults = PassthroughSubject<DesktopCommandResult, Never>()
     /// When true, Jarvis speaks its responses aloud via AVSpeechSynthesizer.
     @Published var voiceResponseEnabled: Bool = false
     /// Current display brightness level (0-100) for UI display and controls.
@@ -857,10 +859,28 @@ final class AppState: ObservableObject {
 
         appendLog("[Typed] Received: '\(command)'")
 
+        enqueueTypedCommand(command)
+    }
+
+    func enqueueTypedCommand(_ command: String, routine: VoiceAutomation? = nil) {
         let priority = CommandPriority.classify(command)
         commandQueue.enqueue(text: command, priority: priority) { [weak self] in
-            await self?.runCommand(command)
+            guard let self else { return }
+            if let routine, !self.automations.contains(where: { $0.id == routine.id && $0.isDisabled != true }) { return }
+            await self.runCommand(command, routine: routine)
         }
+    }
+
+    func resetDesktopSession() {
+        recentCommands = []
+        transitionToSessionState(.idle, reason: "New session")
+        sessionExpiresAt = nil
+        FileSearchController.shared.close()
+    }
+
+    func replaceAutomations(_ updated: [VoiceAutomation]) throws {
+        try automationStore.save(updated)
+        automations = updated
     }
 
     func clearEventLog() {

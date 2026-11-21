@@ -2,94 +2,68 @@ import AppKit
 import Foundation
 import SwiftUI
 
-/// Global floating result panel — shows a short answer above ALL apps.
-///
-/// The in-window PopupView only renders when Jarvis is frontmost, so
-/// background ⌘⇧A answers (time, date, brightness) were invisible. This
-/// NSPanel floats at .statusBar level on all Spaces, never activates the
-/// app, and auto-dismisses after 3 s. One panel is reused across calls.
+/// The in-window and global answer use the same layout, with the global
+/// fallback remaining visible when a shortcut was used in another app.
+@MainActor
 enum FloatPanel {
+    static var presentInDesktop: (([String: Any]) -> Bool)?
     private static var panel: NSPanel?
-    private static var dismissWork: DispatchWorkItem?
+    private static var surface: DesktopPanelSurface?
+    private static var dismissTask: Task<Void, Never>?
 
     static func show(text: String, icon: String, duration: TimeInterval = 3.0) {
-        DispatchQueue.main.async {
-            dismissWork?.cancel()
-            let size = ObsidianAnswerCard.size
-            let p: NSPanel
-            if let existing = panel {
-                p = existing
-            } else {
-                // Fixed-size panel: the window frame NEVER changes after
-                // creation (AppKit throws NSGenericException "more Update
-                // Constraints passes than views" when a borderless NSPanel
-                // hosting SwiftUI is resized while its content also has an
-                // intrinsic size — the 2026-09-29 SIGABRT). Content is a
-                // fixed-size view; only the hosted rootView swaps.
-                p = NSPanel(
-                    contentRect: NSRect(x: 0, y: 0, width: size.width, height: size.height),
-                    styleMask: [.borderless, .nonactivatingPanel],
-                    backing: .buffered,
-                    defer: false
-                )
-                p.isFloatingPanel = true
-                p.level = .statusBar + 1
-                p.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient, .stationary]
-                p.isOpaque = false
-                p.backgroundColor = .clear
-                p.hasShadow = false
-                p.hidesOnDeactivate = false
-                p.ignoresMouseEvents = true
-                p.becomesKeyOnlyIfNeeded = true
-                panel = p
-            }
-            if p.contentView == nil {
-                p.contentView = NSView(frame: NSRect(origin: .zero, size: size))
-                p.contentView?.wantsLayer = true
-                p.contentView?.layer?.backgroundColor = NSColor.clear.cgColor
-            }
-            let host = NSHostingView(rootView: ObsidianAnswerCard(message: text, icon: icon))
-            host.frame = NSRect(origin: .zero, size: size)
-            host.autoresizingMask = []
-            // Swap the hosted subview WITHOUT touching the window frame:
-            // setFrame on a borderless panel re-triggers the constraint
-            // solver that crashed (NSPanel 165×151 in the 21:24 report).
-            p.contentView?.subviews.forEach { $0.removeFromSuperview() }
-            p.contentView?.addSubview(host)
-            if let screen = NSScreen.main ?? NSScreen.screens.first {
-                let v = screen.visibleFrame
-                p.setFrameOrigin(NSPoint(x: v.midX - size.width / 2, y: v.midY - size.height / 2))
-            }
-            p.orderFrontRegardless()
-            let work = DispatchWorkItem { panel?.orderOut(nil) }
-            dismissWork = work
-            DispatchQueue.main.asyncAfter(deadline: .now() + duration, execute: work)
+        let clock = icon.hasPrefix("clock")
+        let calendar = icon.hasPrefix("calendar")
+        let values: [String: Any] = [
+            "title": "Quick Answer", "text": text,
+            "meta": clock ? "Local system clock" : calendar ? "Local calendar" : "System information",
+            "duration": duration * 1000
+        ]
+        dismissTask?.cancel()
+        if presentInDesktop?(values) == true {
+            panel?.orderOut(nil)
+            return
+        }
+        if panel == nil { prepare() }
+        surface?.present("answer", state: values)
+        position()
+        panel?.orderFrontRegardless()
+        dismissTask = Task {
+            try? await Task.sleep(for: .seconds(duration))
+            if !Task.isCancelled { panel?.orderOut(nil) }
         }
     }
-}
 
-/// Fixed geometry shared by both answer surfaces. Padding stays inside the
-/// panel bounds, avoiding clipping and borderless-window layout loops.
-struct ObsidianAnswerCard: View {
-    static let size = NSSize(width: 400, height: 170)
-    let message: String
-    let icon: String
-    var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 8) {
-                Image(systemName: icon).font(.system(size: 13)).foregroundStyle(NoirPalette.accent)
-                Text("Jarvis").font(.system(size: 11, weight: .medium)).foregroundStyle(NoirPalette.secondary)
-                Spacer()
-                Text("QUICK ANSWER").font(.system(size: 8, weight: .medium)).tracking(1).foregroundStyle(NoirPalette.muted)
-            }
-            Text(message).font(.system(size: 23, weight: .medium)).foregroundStyle(NoirPalette.text)
-                .lineSpacing(3).lineLimit(4).minimumScaleFactor(0.7)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+    private static func prepare() {
+        let window = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 300, height: 122),
+                             styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+        let surface = DesktopPanelSurface(frame: .zero)
+        window.isFloatingPanel = true
+        window.level = .statusBar + 1
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient, .stationary]
+        window.isOpaque = false
+        window.backgroundColor = .clear
+        window.hasShadow = true
+        window.hidesOnDeactivate = false
+        window.becomesKeyOnlyIfNeeded = true
+        window.contentView = surface
+        surface.onResize = { [weak window] height in
+            guard let window, window.isVisible else { return }
+            let size = NSSize(width: 300, height: min(300, max(75, height)))
+            if window.frame.size != size { window.setContentSize(size); position() }
         }
-        .padding(20).frame(width: Self.size.width, height: Self.size.height)
-        .background(GlassPanelBackground().clipShape(RoundedRectangle(cornerRadius: 13)))
-        .overlay(RoundedRectangle(cornerRadius: 13).strokeBorder(NoirPalette.lineStrong, lineWidth: 1))
-        .preferredColorScheme(.dark)
+        surface.onAction = { [weak window] action in
+            if action == "close" { window?.orderOut(nil) }
+            return nil
+        }
+        self.surface = surface
+        panel = window
+    }
+
+    private static func position() {
+        guard let panel, let screen = NSScreen.main ?? NSScreen.screens.first else { return }
+        let visible = screen.visibleFrame
+        panel.setFrameOrigin(NSPoint(x: visible.maxX - panel.frame.width - 17, y: visible.maxY - panel.frame.height - 17))
     }
 }
 

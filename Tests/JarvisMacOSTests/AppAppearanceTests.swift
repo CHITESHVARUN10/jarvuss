@@ -34,10 +34,10 @@ final class AppAppearanceTests: XCTestCase {
             XCTAssertEqual(settings.orbStyle, .liquid)
             XCTAssertEqual(settings.textSize, .standard)
             XCTAssertEqual(settings.glassOpacity, 0.35)
-            XCTAssertEqual(settings.borderContrast, 1.5)
+            XCTAssertEqual(settings.borderContrast, 1.8)
             settings.glassOpacity = .nan
             settings.borderContrast = .infinity
-            XCTAssertEqual(settings.glassOpacity, 0.74)
+            XCTAssertEqual(settings.glassOpacity, 0.78)
             XCTAssertEqual(settings.borderContrast, 1)
         }
     }
@@ -51,7 +51,7 @@ final class AppAppearanceTests: XCTestCase {
             XCTAssertEqual(settings.accent, .cobalt)
             XCTAssertEqual(settings.orbStyle, .liquid)
             XCTAssertEqual(settings.textSize, .standard)
-            XCTAssertEqual(settings.glassOpacity, 0.74)
+            XCTAssertEqual(settings.glassOpacity, 0.78)
             XCTAssertEqual(defaults.string(forKey: "jarvis.intent.release"), "existing-release")
             XCTAssertTrue(defaults.bool(forKey: "jarvis.actionPillRequiresVerify"))
         }

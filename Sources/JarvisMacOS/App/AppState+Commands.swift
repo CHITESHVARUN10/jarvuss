@@ -3,9 +3,10 @@ import Foundation
 
 extension AppState {
     func matchedAutomation(for command: String) -> (automation: VoiceAutomation, isOffVariant: Bool)? {
-        let keywords = automations.map { CoreAutomationKeywords(keyword: $0.keyword, offKeyword: $0.offKeyword) }
-        guard let match = coreMatchAutomation(text: command, keywords: keywords), Int(match.index) < automations.count else { return nil }
-        return (automations[Int(match.index)], match.isOffVariant)
+        let enabled = automations.filter { $0.isDisabled != true }
+        let keywords = enabled.map { CoreAutomationKeywords(keyword: $0.keyword, offKeyword: $0.offKeyword) }
+        guard let match = coreMatchAutomation(text: command, keywords: keywords), Int(match.index) < enabled.count else { return nil }
+        return (enabled[Int(match.index)], match.isOffVariant)
     }
 
     func executeAutomation(_ automation: VoiceAutomation, isOffVariant: Bool) async -> Bool {
@@ -81,7 +82,7 @@ extension AppState {
         assistantState = micActive ? .listening : .idle
     }
 
-    func runCommand(_ command: String, testTrace: CommandTestTrace? = nil) async {
+    func runCommand(_ command: String, testTrace: CommandTestTrace? = nil, routine: VoiceAutomation? = nil) async {
         guard !Task.isCancelled, !command.isEmpty else { return }
         let token = UUID()
         activeCommandRunToken = token
@@ -90,13 +91,16 @@ extension AppState {
         }
         let trace = PipelineTrace.current ?? PipelineTrace(id: testTrace?.requestID ?? UUID(), source: "command")
         await PipelineTrace.$current.withValue(trace) {
-            await runCommandBody(command, runToken: token, testTrace: testTrace)
+            await runCommandBody(command, runToken: token, testTrace: testTrace, routine: routine)
         }
     }
 
-    func runCommandBody(_ command: String, runToken: UUID, testTrace: CommandTestTrace? = nil) async {
+    func runCommandBody(_ command: String, runToken: UUID, testTrace: CommandTestTrace? = nil, routine: VoiceAutomation? = nil) async {
         if testTrace == nil { trackRecentCommand(command) }
         var outcome = CommandOutcome.failure
+        let startedAt = ContinuousClock.now
+        var resultMessage = "No actions completed."
+        var resultSteps: [String] = []
         let requestID = testTrace?.requestID ?? PipelineTrace.current?.id ?? UUID()
         lastCommandForReview = command
         lastCommandTraceID = requestID
@@ -105,7 +109,13 @@ extension AppState {
             testTrace?.outcome = outcome.rawValue
             testTrace?.record("finished", outcome.rawValue)
             PipelineTrace.current?.event("command_finished", fields: ["outcome": outcome.rawValue])
-            if testTrace == nil { statsRecorder.recordCommand(success: outcome == .success) }
+            if testTrace == nil {
+                statsRecorder.recordCommand(success: outcome == .success)
+                let elapsed = startedAt.duration(to: .now).components
+                commandResults.send(DesktopCommandResult(command: command, outcome: outcome.rawValue,
+                    message: outcome == .cancelled ? "Command cancelled." : resultMessage, steps: resultSteps,
+                    milliseconds: Int(elapsed.seconds * 1000 + elapsed.attoseconds / 1_000_000_000_000_000)))
+            }
             intentLog.append([
                 "event": testTrace == nil ? "execute_command" : "test_execute_command",
                 "request_id": requestID.uuidString,
@@ -115,15 +125,25 @@ extension AppState {
             ])
         }
 
+        if let routine {
+            let success = await executeAutomation(routine, isOffVariant: false)
+            resultMessage = ResponseEngine.shared.lastResponse
+            resultSteps = routine.actions.map(\.type.displayName)
+            outcome = success ? .success : .failure
+            return
+        }
+
         let lower = command.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
         if ["stop", "cancel", "abort", "cancel that", "stop that"].contains(lower) {
             ResponseEngine.shared.stopSpeaking()
+            resultMessage = "Stopped speaking."
             outcome = .success
             return
         }
 
         switch SafetyGuard.validate(rawCommand: command) {
         case .blocked(let reason):
+            resultMessage = reason
             testTrace?.record("safety", reason)
             appendLog("⛔ Safety blocked: \(reason)")
             if testTrace == nil {
@@ -132,6 +152,7 @@ extension AppState {
             }
             return
         case .installPreview(let cmd, let source):
+            resultMessage = "Installation requires review. Open the source directly to continue."
             testTrace?.record("safety", "Install preview only: \(cmd). \(source)")
             appendLog("🔒 Install preview (not executed): '\(cmd)'. \(source)")
             if testTrace == nil {
@@ -150,11 +171,14 @@ extension AppState {
            let match = matchedAutomation(for: command) {
             testTrace?.record("routine", match.automation.keyword)
             let success = await executeAutomation(match.automation, isOffVariant: match.isOffVariant)
+            resultMessage = ResponseEngine.shared.lastResponse
+            resultSteps = match.isOffVariant ? [] : match.automation.actions.map(\.type.displayName)
             outcome = success ? .success : .failure
             return
         }
         if tryHandleQuickInfoCommand(command) {
-            testTrace?.record("local_info", ResponseEngine.shared.lastResponse)
+            resultMessage = ResponseEngine.shared.lastResponse
+            testTrace?.record("local_info", resultMessage)
             outcome = .success
             return
         }
@@ -165,7 +189,8 @@ extension AppState {
         appendLog("[Plan] Planning: '\(command)'")
         let plan = await actionPlanner.plan(from: command, requestID: requestID)
         PipelineTrace.current?.event("plan_ready", fields: ["steps": String(plan.count)])
-        testTrace?.plan = plan.map(\.description)
+        resultSteps = plan.map(\.description)
+        testTrace?.plan = resultSteps
         testTrace?.record("planned", "\(plan.count) actions")
         guard !Task.isCancelled, activeCommandRunToken == runToken else { return }
         appendLog("[Plan] \(plan.count) step(s): \(plan.map(\.description).joined(separator: ", "))")
@@ -195,6 +220,7 @@ extension AppState {
         )
         guard !Task.isCancelled, activeCommandRunToken == runToken else { return }
         outcome = CommandOutcome.evaluate(results, expectedCount: plan.count, cancelled: false)
+        if !results.isEmpty { resultMessage = results.map(\.message).joined(separator: "\n") }
         if testTrace == nil {
             dbManager.saveEvent(eventType: "multi_action_executed", transcript: command,
                                 matched: outcome == .success,

@@ -158,7 +158,8 @@ final class DictationController: ObservableObject {
 
     private var panel: NSPanel?
     private var panelVisible = false
-    private var panelHost: NSHostingView<DictationHUDView>?
+    private var panelHost: DesktopRecordingSurface?
+    private var measuredPanelHeight: CGFloat?
     private var recordingStartedAt: Date?
     private(set) var pendingStartOnReady = false
     var hasModalSession: Bool { pendingStartOnReady || STTRouter.shared.isModalOwner }
@@ -938,13 +939,15 @@ final class DictationController: ObservableObject {
     /// "Copy original" on the card — copies the raw STT text (before rules
     /// and before the polish pass), leaving the card open so the polished
     /// version can still be copied too.
-    func copyOriginalTranscript() {
-        guard !originalTranscript.isEmpty else { return }
+    @discardableResult
+    func copyOriginalTranscript() -> Bool {
+        guard !originalTranscript.isEmpty else { return false }
         let pb = NSPasteboard.general
         pb.clearContents()
-        pb.setString(originalTranscript, forType: .string)
+        guard pb.setString(originalTranscript, forType: .string) else { return false }
         NSLog("[Jarvis][Dictate] Copied ORIGINAL to clipboard (\(originalTranscript.count) chars)")
         StatsRecorder.shared.recordCopy(chars: originalTranscript.count)
+        return true
     }
 
     /// Runs ⌘Z in the frontmost app — a paste is the target app's editable
@@ -971,7 +974,7 @@ final class DictationController: ObservableObject {
         // so clipboard managers record the transcript as a single new entry.
         let pb = NSPasteboard.general
         pb.clearContents()
-        pb.setString(transcript, forType: .string)
+        guard pb.setString(transcript, forType: .string) else { return }
         NSLog("[Jarvis][STT] Copied to clipboard (\(transcript.count) chars)")
 
         copied = true
@@ -1048,6 +1051,7 @@ final class DictationController: ObservableObject {
         positionPanelForCurrentState()
         panel?.orderFrontRegardless()
         panelVisible = true
+        panelHost?.refresh()
     }
 
     private func createPanel() {
@@ -1075,40 +1079,20 @@ final class DictationController: ObservableObject {
         p.contentView?.wantsLayer = true
         p.contentView?.layer?.backgroundColor = NSColor.clear.cgColor
 
-        let host = NSHostingView(rootView: DictationHUDView())
-        host.wantsLayer = true
-        host.layer?.backgroundColor = NSColor.clear.cgColor
-        host.layer?.masksToBounds = false
+        let host = DesktopRecordingSurface(model: self) { [weak self] height in
+            guard let self, self.panelVisible else { return }
+            self.measuredPanelHeight = min(320, max(80, height))
+            self.resizePanelForCurrentState()
+            self.positionPanelForCurrentState()
+        }
         p.contentView = host
-
         panelHost = host
         panel = p
     }
 
     private func panelSizeForCurrentState() -> CGSize {
-        // Reload states (model Loading/Unloading after an idle-unload) reuse
-        // the Preparing card — DictationHUDView renders Preparing for any
-        // non-Ready model phase while Recording hasn't started.
-        if shortcutPreparing { return CGSize(width: 300, height: 120) }
-        if (phase == .Idle || phase == .Ready), modelPhase == .Loading || modelPhase == .Unloading {
-            return CGSize(width: 300, height: 120)
-        }
-        switch phase {
-        case .Recording:
-            return DictationHUDLayout.recordingSize
-        case .Processing:
-            return DictationHUDLayout.processingSize
-        case .TranscriptReady:
-            return DictationHUDLayout.transcriptSize(transcript: transcript, original: originalTranscript,
-                showsOriginal: copyOriginalEnabled && !originalTranscript.isEmpty, notice: insertNotice)
-        case .Error:
-            return CGSize(width: DictationErrorView.cardWidth,
-                          height: max(120, DictationErrorView.messageHeight(errorMessage) + 80))
-        case .Preparing:
-            return CGSize(width: 300, height: 120)
-        default:
-            return CGSize(width: 240, height: 44)
-        }
+        let width = min(440, (NSScreen.main?.visibleFrame.width ?? 460) - 20)
+        return CGSize(width: width, height: measuredPanelHeight ?? 136)
     }
 
     private func resizePanelForCurrentState() {
@@ -1141,28 +1125,13 @@ final class DictationController: ObservableObject {
             )
         }
 
-        switch phase {
-        case .TranscriptReady:
-            // Float above the anchor, horizontally aligned to it — but never
-            // off-screen: if the pill is near the top, put the transcript
-            // BELOW the pill instead. Clamp X too so the wider 300pt card
-            // never runs off the right edge.
-            let anchor = recordingAnchor ?? NSPoint(x: visible.midX - panel.frame.width / 2, y: visible.minY + 24)
-            let aboveY = anchor.y + panel.frame.height + 24
-            let fitsAbove = aboveY + panel.frame.height <= visible.maxY
-            let y = fitsAbove ? aboveY : anchor.y - panel.frame.height - 24
-            let x = min(max(anchor.x, visible.minX), max(visible.minX, visible.maxX - panel.frame.width))
-            panel.setFrameOrigin(NSPoint(x: x, y: min(max(y, visible.minY), max(visible.minY, visible.maxY - panel.frame.height))))
-        default:
-            panel.setFrameOrigin(recordingAnchor ?? .zero)
-        }
+        panel.setFrameOrigin(recordingAnchor ?? .zero)
     }
 
     private func hidePanel() {
         panelVisible = false
         panel?.orderOut(nil)
-        // Reuse the hosting graph. Destroying it on every shortcut/close
-        // churns SwiftUI's hover tracking during AppKit event dispatch.
+        // Keep the page warm for the next global shortcut.
     }
 
     /// Called from Rust callbacks when phase changes while panel may exist.
@@ -1174,6 +1143,7 @@ final class DictationController: ObservableObject {
             }
             positionPanelForCurrentState()
             panel?.orderFrontRegardless()
+            panelHost?.refresh()
         }
     }
 }

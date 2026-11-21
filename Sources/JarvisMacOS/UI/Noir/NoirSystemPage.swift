@@ -3,6 +3,7 @@ import AppKit
 
 struct NoirSystemPage: View {
     @ObservedObject var appState: AppState
+    var focusedGroup: GeneralSettingsGroup? = nil
     @ObservedObject private var recovery = DisplayRecovery.shared
     @StateObject private var launchAtLogin = LaunchAtLoginController()
     @EnvironmentObject private var toasts: ToastCenter
@@ -20,7 +21,7 @@ struct NoirSystemPage: View {
                 ? AnyLayout(HStackLayout(alignment: .top, spacing: 26))
                 : AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
             columns {
-                everyday.frame(maxWidth: .infinity, alignment: .topLeading)
+                if focusedGroup == nil { everyday.frame(maxWidth: .infinity, alignment: .topLeading) }
                 moreSettings.frame(maxWidth: .infinity, alignment: .topLeading)
             }
         }
@@ -71,26 +72,34 @@ struct NoirSystemPage: View {
             NoirSectionHeading(title: "More settings", minHeight: 30)
             NoirCard {
                 VStack(spacing: 0) {
-                    settingsGroup(.display, title: "Display & sound", sub: "Brightness, volume, and display recovery.", icon: "display") {
-                        displaySettings
-                        NoirSoundSection()
-                        NoirSectionHeading(title: "Display safety")
-                        recoverySettings
+                    if focusedGroup == nil || focusedGroup == .display {
+                        settingsGroup(.display, title: "Display & sound", sub: "Brightness, volume, and display recovery.", icon: "display") {
+                            displaySettings
+                            NoirSoundSection()
+                            NoirSectionHeading(title: "Display safety")
+                            recoverySettings
+                        }
+                        if focusedGroup == nil { NoirDivider() }
                     }
-                    NoirDivider()
-                    settingsGroup(.projects, title: "Files & projects", sub: "Project roots, aliases, and search.", icon: "folder") {
-                        NoirProjectPreferences()
-                        NoirFileSearchPreferences()
+                    if focusedGroup == nil || focusedGroup == .projects {
+                        settingsGroup(.projects, title: "Files & projects", sub: "Project roots, aliases, and search.", icon: "folder") {
+                            NoirProjectPreferences()
+                            NoirFileSearchPreferences()
+                        }
+                        if focusedGroup == nil { NoirDivider() }
                     }
-                    NoirDivider()
-                    settingsGroup(.services, title: "Local services", sub: "Ollama, native helper, and storage.", icon: "server.rack") {
-                        ObsidianCoreServices(appState: appState)
+                    if focusedGroup == nil || focusedGroup == .services {
+                        settingsGroup(.services, title: "Local services", sub: "Ollama, native helper, and storage.", icon: "server.rack") {
+                            ObsidianCoreServices(appState: appState)
+                        }
+                        if focusedGroup == nil { NoirDivider() }
                     }
-                    NoirDivider()
-                    settingsGroup(.advanced, title: "Advanced & safeguards", sub: "Command limits, review, and diagnostics.", icon: "lock") {
-                        NoirSectionHeading(title: "Command safeguards")
-                        safeguardsSettings
-                        CommandFeedbackView(initialCommand: appState.lastCommandForReview, requestID: appState.lastCommandTraceID)
+                    if focusedGroup == nil || focusedGroup == .advanced {
+                        settingsGroup(.advanced, title: "Advanced & safeguards", sub: "Command limits, review, and diagnostics.", icon: "lock") {
+                            NoirSectionHeading(title: "Command safeguards")
+                            safeguardsSettings
+                            CommandFeedbackView(initialCommand: appState.lastCommandForReview, requestID: appState.lastCommandTraceID)
+                        }
                     }
                 }
             }
@@ -111,11 +120,11 @@ struct NoirSystemPage: View {
                     }
                     Spacer(minLength: 6)
                     Image(systemName: "chevron.right").obsidianFont(size: 10).foregroundStyle(NoirPalette.muted)
-                        .rotationEffect(.degrees(appState.expandedSettingsGroup == group ? 90 : 0))
+                        .rotationEffect(.degrees(focusedGroup == group || appState.expandedSettingsGroup == group ? 90 : 0))
                 }.padding(18).frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
             }.buttonStyle(.plain).accessibilityLabel(title)
-                .accessibilityValue(appState.expandedSettingsGroup == group ? "Expanded" : "Collapsed")
-            if appState.expandedSettingsGroup == group {
+                .accessibilityValue(focusedGroup == group || appState.expandedSettingsGroup == group ? "Expanded" : "Collapsed")
+            if focusedGroup == group || appState.expandedSettingsGroup == group {
                 VStack(alignment: .leading, spacing: 0) { content() }.padding(.horizontal, 18).padding(.bottom, 18)
             }
         }
