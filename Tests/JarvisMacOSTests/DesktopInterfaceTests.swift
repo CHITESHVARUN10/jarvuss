@@ -1,4 +1,5 @@
 import AppKit
+import SwiftUI
 import WebKit
 import XCTest
 @testable import JarvisMacOS
@@ -26,17 +27,20 @@ final class DesktopInterfaceTests: XCTestCase {
             document.getElementById('orbStyleSelect').value = 'halo';
             currentOrb = 'halo';
             syncOrb();
+            const recordingBars = document.querySelectorAll('#inlinePreviewHud .hud-bar').length;
             document.getElementById('previewHudPhase').value = 'result';
             document.getElementById('previewHudPhase').dispatchEvent(new Event('change'));
             return {
                 files: search.files.length,
                 orb: document.getElementById('orbPreview').dataset.style,
+                recordingBars,
                 hud: document.querySelector('#inlinePreviewHud .hud-label').textContent,
                 width: document.querySelector('.app-shell').clientWidth
             };
             """, arguments: [:], in: nil, contentWorld: .page) as? [String: Any]
         XCTAssertEqual(result?["files"] as? Int, 0)
         XCTAssertEqual(result?["orb"] as? String, "halo")
+        XCTAssertEqual(result?["recordingBars"] as? Int, 64)
         XCTAssertEqual(result?["hud"] as? String, "Dictation ready")
         XCTAssertEqual(result?["width"] as? Int, 1240)
 
@@ -66,14 +70,14 @@ final class DesktopInterfaceTests: XCTestCase {
     }
 
     @MainActor
-    func testGlobalHUDUsesSharedRecordingAndResultMarkup() async throws {
+    func testCommandHUDUsesSharedRecordingAndResultMarkup() async throws {
         let web = DesktopWebView(document: "panel", transparent: true)
         web.frame = NSRect(x: 0, y: 0, width: 440, height: 220)
         web.handle = { _, _ in nil }
         try await waitForDesktop(web)
         let result = try await web.callAsyncJavaScript("""
             const state = {
-                mode: 'dictation', phase: 'recording', text: '<b>Typed</b>', clock: '0:08',
+                mode: 'command', phase: 'recording', text: '<b>Typed</b>', clock: '0:08',
                 level: 0.55, notice: 'Audio stays on this Mac', original: 'typed',
                 copied: false, inserted: false, needsAccess: false
             };
@@ -85,9 +89,53 @@ final class DesktopInterfaceTests: XCTestCase {
             return {bars, title, text: result.textContent, count: result.childElementCount};
             """, arguments: [:], in: nil, contentWorld: .page) as? [String: Any]
         XCTAssertEqual(result?["bars"] as? Int, 30)
-        XCTAssertEqual(result?["title"] as? String, "Dictation recording")
+        XCTAssertEqual(result?["title"] as? String, "Command recording")
         XCTAssertEqual(result?["text"] as? String, "<b>Typed</b>")
         XCTAssertEqual(result?["count"] as? Int, 0)
+    }
+
+    @MainActor
+    func testDictationUsesNativePanelAndCleansRepeatedWordsBeforeDisplayingResult() throws {
+        let app = NSApplication.shared
+        let existingWindows = Set(app.windows.map(ObjectIdentifier.init))
+        let suite = "jarvis-hud-test-" + UUID().uuidString
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defaults.set(false, forKey: "jarvis.dictation.insertAtCursor")
+        var phase: AppPhase = .Ready
+        let controller = DictationController(defaults: defaults, capture: DictationCapture(
+            phase: { phase },
+            start: { phase = .Recording; return true },
+            stop: { phase = .Processing },
+            cancel: { phase = .Ready }
+        ), releaseTransientMic: {})
+        var window: NSWindow?
+        defer {
+            controller.dismissTranscript()
+            window?.contentView = nil
+            defaults.removePersistentDomain(forName: suite)
+        }
+
+        controller.toggleDictation()
+        window = app.windows.first { $0 is NSPanel && !existingWindows.contains(ObjectIdentifier($0)) }
+        let panel = try XCTUnwrap(window)
+        let host = try XCTUnwrap(panel.contentView as? NSHostingView<DictationHUDView>)
+        XCTAssertEqual(panel.frame.size, DictationHUDLayout.recordingSize)
+        controller.livePreviewEnabled = true
+        controller.partialTranscript = "Check the API"
+        XCTAssertEqual(panel.frame.size, DictationHUDLayout.recordingSize(showingPreview: true))
+
+        controller.toggleDictation()
+        XCTAssertEqual(panel.frame.size, DictationHUDLayout.processingSize)
+        let raw = "Check the " + String(repeating: "API. ", count: 23)
+        controller.receiveDictationTranscript(raw, speechSeconds: 2)
+        XCTAssertTrue(panel.contentView === host)
+        XCTAssertEqual(panel.frame.width, DictationHUDLayout.transcriptWidth)
+        XCTAssertEqual(controller.transcript, "Check the API.")
+        XCTAssertEqual(controller.originalTranscript, raw)
+
+        controller.dismissTranscript()
+        controller.showShortcutPreparation(.action)
+        XCTAssertTrue(panel.contentView is DesktopRecordingSurface)
     }
 
     @MainActor

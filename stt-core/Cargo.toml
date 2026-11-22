@@ -41,6 +41,10 @@ codegen-units = 1
 strip = "symbols"
 panic = "abort"
 
+[profile.release.build-override]
+# Keep the exported entry points of host procedural macros on macOS.
+strip = "none"
+
 [profile.dev]
 opt-level = 0
 debug = true

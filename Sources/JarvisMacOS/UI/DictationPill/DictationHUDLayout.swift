@@ -9,6 +9,10 @@ enum DictationHUDLayout {
     static let inset: CGFloat = 18
     static let maximumTextHeight: CGFloat = 220
 
+    static func recordingSize(showingPreview: Bool) -> CGSize {
+        CGSize(width: recordingSize.width, height: recordingSize.height + (showingPreview ? 42 : 0))
+    }
+
     static func textHeight(transcript: String, original: String, showsOriginal: Bool) -> CGFloat {
         // Reserve both versions so switching Original does not move the window.
         let height = measuredHeight(transcript, fontSize: 14, lineSpacing: 6)

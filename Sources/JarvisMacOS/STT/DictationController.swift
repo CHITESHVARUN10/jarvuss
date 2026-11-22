@@ -43,7 +43,14 @@ final class DictationController: ObservableObject {
     @Published var phase: AppPhase = .Idle
     @Published var modelPhase: ModelPhase = .NotInstalled
     @Published var transcript: String = ""
-    @Published var partialTranscript: String = ""
+    @Published var partialTranscript: String = "" {
+        didSet {
+            if mode == .dictate && phase == .Recording && livePreviewEnabled
+                && partialTranscript.isEmpty != oldValue.isEmpty {
+                showPanelIfNeeded()
+            }
+        }
+    }
     @Published var errorMessage: String = ""
     @Published var downloadProgress: Float = 0.0
     @Published var downloadSpeed: String = ""
@@ -158,7 +165,6 @@ final class DictationController: ObservableObject {
 
     private var panel: NSPanel?
     private var panelVisible = false
-    private var panelHost: DesktopRecordingSurface?
     private var measuredPanelHeight: CGFloat?
     private var recordingStartedAt: Date?
     private(set) var pendingStartOnReady = false
@@ -345,7 +351,11 @@ final class DictationController: ObservableObject {
         }
         if pendingStartOnReady {
             if pendingStartMode == .dictate { dismissTranscript() }
-            else { pendingStartMode = .dictate; self.mode = .dictate }
+            else {
+                pendingStartMode = .dictate
+                mode = .dictate
+                showPanelIfNeeded()
+            }
             return
         }
         NSLog("[Jarvis][STT] toggleDictation — phase: \(phase), model: \(modelPhase), owner: \(STTRouter.shared.owner)")
@@ -421,7 +431,11 @@ final class DictationController: ObservableObject {
         }
         if pendingStartOnReady {
             if pendingStartMode == .action { dismissTranscript() }
-            else { pendingStartMode = .action; self.mode = .action }
+            else {
+                pendingStartMode = .action
+                mode = .action
+                showPanelIfNeeded()
+            }
             return
         }
         NSLog("[Jarvis][STT] toggleAction — phase: \(phase), model: \(modelPhase), owner: \(STTRouter.shared.owner)")
@@ -1040,6 +1054,7 @@ final class DictationController: ObservableObject {
         if panel == nil {
             createPanel()
         }
+        updatePanelContent()
         // setFrame only when the size actually changed: every setFrame on a
         // borderless NSPanel hosting SwiftUI re-runs the constraint solver,
         // and resize-while-content-resizes is what threw NSGenericException
@@ -1051,7 +1066,7 @@ final class DictationController: ObservableObject {
         positionPanelForCurrentState()
         panel?.orderFrontRegardless()
         panelVisible = true
-        panelHost?.refresh()
+        (panel?.contentView as? DesktopRecordingSurface)?.refresh()
     }
 
     private func createPanel() {
@@ -1076,23 +1091,52 @@ final class DictationController: ObservableObject {
         p.isMovable = false
         p.isMovableByWindowBackground = false
 
-        p.contentView?.wantsLayer = true
-        p.contentView?.layer?.backgroundColor = NSColor.clear.cgColor
+        panel = p
+    }
 
-        let host = DesktopRecordingSurface(model: self) { [weak self] height in
-            guard let self, self.panelVisible else { return }
+    private func updatePanelContent() {
+        guard let panel else { return }
+        if mode == .dictate {
+            guard !(panel.contentView is NSHostingView<DictationHUDView>) else { return }
+            let host = NSHostingView(rootView: DictationHUDView(model: self))
+            host.sizingOptions = []
+            host.wantsLayer = true
+            host.layer?.backgroundColor = NSColor.clear.cgColor
+            host.layer?.masksToBounds = false
+            panel.contentView = host
+            return
+        }
+        guard !(panel.contentView is DesktopRecordingSurface) else { return }
+        measuredPanelHeight = nil
+        panel.contentView = DesktopRecordingSurface(model: self) { [weak self] height in
+            guard let self, self.panelVisible, self.mode == .action else { return }
             self.measuredPanelHeight = min(320, max(80, height))
             self.resizePanelForCurrentState()
             self.positionPanelForCurrentState()
         }
-        p.contentView = host
-        panelHost = host
-        panel = p
     }
 
     private func panelSizeForCurrentState() -> CGSize {
-        let width = min(440, (NSScreen.main?.visibleFrame.width ?? 460) - 20)
-        return CGSize(width: width, height: measuredPanelHeight ?? 136)
+        if mode == .action {
+            let width = min(440, (NSScreen.main?.visibleFrame.width ?? 460) - 20)
+            return CGSize(width: width, height: measuredPanelHeight ?? 136)
+        }
+        if shortcutPreparing || ((phase == .Idle || phase == .Ready) && (modelPhase == .Loading || modelPhase == .Unloading)) {
+            return CGSize(width: 300, height: 120)
+        }
+        switch phase {
+        case .Recording:
+            return DictationHUDLayout.recordingSize(showingPreview: livePreviewEnabled && !partialTranscript.isEmpty)
+        case .Processing: return DictationHUDLayout.processingSize
+        case .TranscriptReady:
+            return DictationHUDLayout.transcriptSize(transcript: transcript, original: originalTranscript,
+                showsOriginal: copyOriginalEnabled && !originalTranscript.isEmpty, notice: insertNotice)
+        case .Error:
+            return CGSize(width: DictationErrorView.cardWidth,
+                          height: max(120, DictationErrorView.messageHeight(errorMessage) + 80))
+        case .Preparing: return CGSize(width: 300, height: 120)
+        default: return CGSize(width: 240, height: 44)
+        }
     }
 
     private func resizePanelForCurrentState() {
@@ -1101,7 +1145,7 @@ final class DictationController: ObservableObject {
         guard panel.frame.size != size else { return }
         let frame = NSRect(origin: panel.frame.origin, size: size)
         panel.setFrame(frame, display: true, animate: false)
-        panelHost?.frame = NSRect(origin: .zero, size: size)
+        panel.contentView?.frame = NSRect(origin: .zero, size: size)
     }
 
     private func positionPanelForCurrentState() {
@@ -1120,30 +1164,26 @@ final class DictationController: ObservableObject {
         // Anchor: computed once (bottom-center), sticky for the whole run.
         if recordingAnchor == nil {
             recordingAnchor = NSPoint(
-                x: visible.midX - panel.frame.width / 2,
+                x: visible.midX,
                 y: visible.minY + 24
             )
         }
 
-        panel.setFrameOrigin(recordingAnchor ?? .zero)
+        guard let anchor = recordingAnchor else { return }
+        let resultOffset = mode == .dictate && phase == .TranscriptReady ? DictationHUDLayout.recordingSize.height + 24 : 0
+        let x = min(max(anchor.x - panel.frame.width / 2, visible.minX), max(visible.minX, visible.maxX - panel.frame.width))
+        let y = min(max(anchor.y + resultOffset, visible.minY), max(visible.minY, visible.maxY - panel.frame.height))
+        panel.setFrameOrigin(NSPoint(x: x, y: y))
     }
 
     private func hidePanel() {
         panelVisible = false
         panel?.orderOut(nil)
-        // Keep the page warm for the next global shortcut.
+        recordingAnchor = nil
     }
 
     /// Called from Rust callbacks when phase changes while panel may exist.
     func showPanelIfNeeded() {
-        if panelVisible, panel != nil {
-            // Same crash guard as showPanel: never setFrame redundantly.
-            if let panel, panel.frame.size != panelSizeForCurrentState() {
-                resizePanelForCurrentState()
-            }
-            positionPanelForCurrentState()
-            panel?.orderFrontRegardless()
-            panelHost?.refresh()
-        }
+        if panelVisible { showPanel() }
     }
 }

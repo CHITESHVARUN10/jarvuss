@@ -6,7 +6,7 @@ import AppKit
 /// Dictation HUD content, hosted in a borderless NSPanel by DictationController.
 /// Noir language: graphite card, lavender hairline, flat controls.
 struct DictationHUDView: View {
-    @ObservedObject private var model = DictationController.shared
+    @ObservedObject var model: DictationController
 
     private var isAction: Bool { model.mode == .action }
 
@@ -112,7 +112,10 @@ struct DictationRecordingPillView: View {
     var recordedSeconds: Double = 0
     var limitMinutes: Int = 5
 
+    private var showsPreview: Bool { livePreviewEnabled && !livePreview.isEmpty }
+
     var body: some View {
+        let size = DictationHUDLayout.recordingSize(showingPreview: showsPreview)
         DictationCard {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 7) {
@@ -131,6 +134,15 @@ struct DictationRecordingPillView: View {
                 .frame(height: 18)
 
                 NoirWaveform(level: audioLevel, active: !isStarting)
+
+                if showsPreview {
+                    Text(livePreview)
+                        .font(.system(size: 12))
+                        .foregroundStyle(DictationCardPalette.text)
+                        .lineLimit(2)
+                        .truncationMode(.head)
+                        .frame(height: 32, alignment: .leading)
+                }
 
                 HStack(spacing: 8) {
                     HStack(spacing: 5) {
@@ -157,7 +169,7 @@ struct DictationRecordingPillView: View {
                 }
             }
         }
-        .frame(width: DictationHUDLayout.recordingSize.width, height: DictationHUDLayout.recordingSize.height)
+        .frame(width: size.width, height: size.height)
     }
 }
 
@@ -482,5 +494,5 @@ enum DictationCardPalette {
     static var accent: Color { NoirPalette.accent }
     static var ok: Color { NoirPalette.green }
     static let card      = Color(hex: 0x26262D)
-    static var edge: Color { NoirPalette.accent.opacity(0.29) }
+    static var edge: Color { NoirPalette.accent.opacity(0.29 * AppAppearance.shared.borderContrast) }
 }

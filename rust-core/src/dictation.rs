@@ -788,6 +788,21 @@ mod tests {
     }
 
     #[test]
+    fn decoder_repetition_keeps_one_copy_and_preserves_surrounding_text() {
+        let run = "API. API, API ".repeat(7) + "API API.";
+        assert_eq!(
+            formatted(&format!("check the {run} then send the results")),
+            "Check the API. Then send the results."
+        );
+        assert_eq!(
+            formatted(&format!("check the {} today", "API key ".repeat(23))),
+            "Check the API key today."
+        );
+        assert_eq!(formatted("Yes. Yes. We should check the API today."), "Yes. Yes. We should check the API today.");
+        assert_eq!(formatted("The API talks to a separate API."), "The API talks to a separate API.");
+    }
+
+    #[test]
     fn fillers_keep_verbs() {
         assert_eq!(formatted("I like it"), "I like it.");
         assert_eq!(formatted("um so we should uh go then"), "So we should go then.");

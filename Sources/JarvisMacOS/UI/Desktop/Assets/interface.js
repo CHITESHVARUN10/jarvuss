@@ -399,7 +399,10 @@
   function renderInlinePreviewHud() {
     const mode = document.getElementById('previewHudMode').value;
     const phase = document.getElementById('previewHudPhase').value;
-    document.getElementById('inlinePreviewHud').innerHTML = buildHudHtml(mode, phase, previewState.original, '0:08');
+    const preview = byId('inlinePreviewHud');
+    preview.dataset.kind = mode;
+    preview.dataset.phase = phase;
+    preview.innerHTML = buildHudHtml(mode, phase, previewState.original, '0:08');
   }
   document.getElementById('previewHudMode').addEventListener('change', () => { previewState.original = false; renderInlinePreviewHud(); });
   document.getElementById('previewHudPhase').addEventListener('change', () => { previewState.original = false; renderInlinePreviewHud(); });

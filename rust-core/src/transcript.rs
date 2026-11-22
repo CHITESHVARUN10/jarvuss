@@ -106,12 +106,13 @@ pub fn collapse_repeated_words(text: String) -> String {
 }
 #[uniffi::export]
 pub fn collapse_repeated_phrases(text: String, max_phrase_words: i64, min_repeats: i64) -> String {
-    if min_repeats < 1 {
+    if min_repeats < 1 || max_phrase_words < 1 {
         return text;
     }
     let tokens = words(&text);
     let minimum = min_repeats as usize;
-    if tokens.len() / 2 < minimum {
+    let minimum_word_run = minimum.max(4);
+    if tokens.len() / 2 < minimum && tokens.len() < minimum_word_run {
         return text;
     }
     let core: Vec<String> = tokens
@@ -129,10 +130,32 @@ pub fn collapse_repeated_phrases(text: String, max_phrase_words: i64, min_repeat
     let mut output: Vec<String> = vec![];
     let mut index = 0;
     while index < tokens.len() {
+        // A decoder can attach different punctuation to each copy of a word.
+        // Require a longer run than for phrases so short emphatic repeats stay.
+        let punctuation = [',', '.', '!', '?', ';', ':'];
+        let first_word = tokens[index].trim_end_matches(punctuation);
+        if !first_word.is_empty()
+            && core.get(index + minimum_word_run - 1) == Some(&core[index])
+        {
+            let first_key = first_word.to_lowercase();
+            let run = tokens[index..]
+                .iter()
+                .take_while(|token| equal(&token.trim_end_matches(punctuation).to_lowercase(), &first_key))
+                .count();
+            if run >= minimum_word_run {
+                let last = &tokens[index + run - 1];
+                let suffix = &last[last.trim_end_matches(punctuation).len()..];
+                output.push(format!("{first_word}{suffix}"));
+                index += run;
+                continue;
+            }
+        }
         let mut collapsed = false;
         let maximum = (max_phrase_words.max(0) as usize).min((tokens.len() - index) / minimum);
         if maximum >= 2 {
-            for length in (2..=maximum).rev() {
+            // Use the shortest repeating unit. A longer match can itself
+            // contain several copies and strand the remaining repetitions.
+            for length in 2..=maximum {
                 let matches = |other: usize| -> bool {
                     (0..length).all(|offset| {
                         !core[index + offset].is_empty()
