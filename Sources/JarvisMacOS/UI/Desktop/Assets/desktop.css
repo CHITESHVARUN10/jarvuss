@@ -7,21 +7,23 @@ body { background: var(--bg-window); }
 .app-shell .titlebar-left { padding-left: 0; }
 .empty-session-msg { margin: auto; color: var(--text-tertiary); font-size: calc(12.5px * var(--font-scale)); }
 .file-status { padding: 8px 18px; }
-.settings-actions, .hud-result-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.settings-actions { display: flex; gap: 6px; flex-wrap: wrap; }
 .row-clickable { width: 100%; text-align: left; appearance: none; border: 0; background: transparent; font: inherit; }
 .routine-action-row { min-width: 0; }
 .routine-action-row .act-target { min-width: 65px; }
 
 body.panel-surface { background: transparent; }
-.panel-surface .hud-card, .panel-surface .quick-answer { position: relative; top: auto; right: auto; width: 100%; margin: 0; }
-.panel-surface :is(.hud-card,.quick-answer) { backdrop-filter: none; box-shadow: none; }
-.panel-surface .hud-transcript { max-height: 190px; overflow: auto; }
-.panel-surface .hud-bars .hud-bar { animation-play-state: paused; }
-.panel-surface .hud-bars[style] .hud-bar {
-  height: calc(2px + var(--bar-size) * var(--level));
+.panel-surface .quick-answer {
+  position: relative;
+  top: auto;
+  right: auto;
+  width: 100%;
+  margin: 0;
+  backdrop-filter: none;
+  box-shadow: none;
 }
 
-#inlinePreviewHud[data-kind="dictation"] {
+#inlinePreviewHud {
   width: min(400px, 100%);
   padding: 17px;
   gap: 10px;
@@ -30,25 +32,25 @@ body.panel-surface { background: transparent; }
   box-shadow: 0 14px 28px #0008;
 }
 #inlinePreviewHud[data-kind="dictation"][data-phase="result"] { width: min(460px, 100%); gap: 18px; }
-#inlinePreviewHud[data-kind="dictation"] :is(.hud-label, .row-meta, .kbd) { font-size: 10px; }
-#inlinePreviewHud[data-kind="dictation"]:not([data-phase="result"]) .hud-label {
+#inlinePreviewHud :is(.hud-label, .row-meta, .kbd) { font-size: 10px; }
+#inlinePreviewHud:not([data-phase="result"]) .hud-label {
   color: var(--accent);
   text-transform: uppercase;
   letter-spacing: .5px;
 }
-#inlinePreviewHud[data-kind="dictation"] .hud-head { min-height: 18px; }
-#inlinePreviewHud[data-kind="dictation"] .hud-icon { width: 11px; height: 11px; }
-#inlinePreviewHud[data-kind="dictation"] .hud-bars { height: 42px; gap: 2px; }
-#inlinePreviewHud[data-kind="dictation"] .hud-bar { flex: 0 1 2px; }
-#inlinePreviewHud[data-kind="dictation"] .hud-transcript { font-size: 14px; line-height: 20px; }
-#inlinePreviewHud[data-kind="dictation"] .hud-foot { padding-top: 0; border-top: 0; }
-#inlinePreviewHud[data-kind="dictation"][data-phase="result"] .hud-foot {
+#inlinePreviewHud .hud-head { min-height: 18px; }
+#inlinePreviewHud .hud-icon { width: 11px; height: 11px; }
+#inlinePreviewHud .hud-bars { height: 42px; gap: 2px; }
+#inlinePreviewHud .hud-bar { flex: 0 1 2px; }
+#inlinePreviewHud .hud-transcript { font-size: 14px; line-height: 20px; }
+#inlinePreviewHud .hud-foot { padding-top: 0; border-top: 0; }
+#inlinePreviewHud[data-phase="result"] .hud-foot {
   padding-top: 12px;
   border-top: 1px solid var(--border);
 }
-#inlinePreviewHud[data-kind="dictation"] .row-desc { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; }
-#inlinePreviewHud[data-kind="dictation"] .row-desc .hud-icon { color: inherit; width: 9px; height: 9px; }
-#inlinePreviewHud[data-kind="dictation"] .btn-sm { height: 32px; font-size: 11px; }
+#inlinePreviewHud .row-desc { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; }
+#inlinePreviewHud .row-desc .hud-icon { color: inherit; width: 9px; height: 9px; }
+#inlinePreviewHud .btn-sm { height: 32px; font-size: 11px; }
 .hud-preview-spinner { width: 12px; height: 12px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; }
 
 body.standalone-search { background: var(--bg-window); }

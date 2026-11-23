@@ -45,7 +45,7 @@ final class DictationController: ObservableObject {
     @Published var transcript: String = ""
     @Published var partialTranscript: String = "" {
         didSet {
-            if mode == .dictate && phase == .Recording && livePreviewEnabled
+            if phase == .Recording && livePreviewEnabled
                 && partialTranscript.isEmpty != oldValue.isEmpty {
                 showPanelIfNeeded()
             }
@@ -165,7 +165,6 @@ final class DictationController: ObservableObject {
 
     private var panel: NSPanel?
     private var panelVisible = false
-    private var measuredPanelHeight: CGFloat?
     private var recordingStartedAt: Date?
     private(set) var pendingStartOnReady = false
     var hasModalSession: Bool { pendingStartOnReady || STTRouter.shared.isModalOwner }
@@ -1054,7 +1053,6 @@ final class DictationController: ObservableObject {
         if panel == nil {
             createPanel()
         }
-        updatePanelContent()
         // setFrame only when the size actually changed: every setFrame on a
         // borderless NSPanel hosting SwiftUI re-runs the constraint solver,
         // and resize-while-content-resizes is what threw NSGenericException
@@ -1066,7 +1064,6 @@ final class DictationController: ObservableObject {
         positionPanelForCurrentState()
         panel?.orderFrontRegardless()
         panelVisible = true
-        (panel?.contentView as? DesktopRecordingSurface)?.refresh()
     }
 
     private func createPanel() {
@@ -1091,36 +1088,16 @@ final class DictationController: ObservableObject {
         p.isMovable = false
         p.isMovableByWindowBackground = false
 
+        let host = NSHostingView(rootView: DictationHUDView(model: self))
+        host.sizingOptions = []
+        host.wantsLayer = true
+        host.layer?.backgroundColor = NSColor.clear.cgColor
+        host.layer?.masksToBounds = false
+        p.contentView = host
         panel = p
     }
 
-    private func updatePanelContent() {
-        guard let panel else { return }
-        if mode == .dictate {
-            guard !(panel.contentView is NSHostingView<DictationHUDView>) else { return }
-            let host = NSHostingView(rootView: DictationHUDView(model: self))
-            host.sizingOptions = []
-            host.wantsLayer = true
-            host.layer?.backgroundColor = NSColor.clear.cgColor
-            host.layer?.masksToBounds = false
-            panel.contentView = host
-            return
-        }
-        guard !(panel.contentView is DesktopRecordingSurface) else { return }
-        measuredPanelHeight = nil
-        panel.contentView = DesktopRecordingSurface(model: self) { [weak self] height in
-            guard let self, self.panelVisible, self.mode == .action else { return }
-            self.measuredPanelHeight = min(320, max(80, height))
-            self.resizePanelForCurrentState()
-            self.positionPanelForCurrentState()
-        }
-    }
-
     private func panelSizeForCurrentState() -> CGSize {
-        if mode == .action {
-            let width = min(440, (NSScreen.main?.visibleFrame.width ?? 460) - 20)
-            return CGSize(width: width, height: measuredPanelHeight ?? 136)
-        }
         if shortcutPreparing || ((phase == .Idle || phase == .Ready) && (modelPhase == .Loading || modelPhase == .Unloading)) {
             return CGSize(width: 300, height: 120)
         }
@@ -1129,6 +1106,7 @@ final class DictationController: ObservableObject {
             return DictationHUDLayout.recordingSize(showingPreview: livePreviewEnabled && !partialTranscript.isEmpty)
         case .Processing: return DictationHUDLayout.processingSize
         case .TranscriptReady:
+            if mode == .action { return DictationHUDLayout.processingSize }
             return DictationHUDLayout.transcriptSize(transcript: transcript, original: originalTranscript,
                 showsOriginal: copyOriginalEnabled && !originalTranscript.isEmpty, notice: insertNotice)
         case .Error:

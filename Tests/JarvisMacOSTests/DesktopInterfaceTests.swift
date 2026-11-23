@@ -30,18 +30,26 @@ final class DesktopInterfaceTests: XCTestCase {
             const recordingBars = document.querySelectorAll('#inlinePreviewHud .hud-bar').length;
             document.getElementById('previewHudPhase').value = 'result';
             document.getElementById('previewHudPhase').dispatchEvent(new Event('change'));
+            const dictationTitle = document.querySelector('#inlinePreviewHud .hud-label').textContent;
+            document.getElementById('previewHudPhase').value = 'recording';
+            document.getElementById('previewHudMode').value = 'command';
+            document.getElementById('previewHudMode').dispatchEvent(new Event('change'));
             return {
                 files: search.files.length,
                 orb: document.getElementById('orbPreview').dataset.style,
                 recordingBars,
-                hud: document.querySelector('#inlinePreviewHud .hud-label').textContent,
+                dictationTitle,
+                commandTitle: document.querySelector('#inlinePreviewHud .hud-label').textContent,
+                commandBars: document.querySelectorAll('#inlinePreviewHud .hud-bar').length,
                 width: document.querySelector('.app-shell').clientWidth
             };
             """, arguments: [:], in: nil, contentWorld: .page) as? [String: Any]
         XCTAssertEqual(result?["files"] as? Int, 0)
         XCTAssertEqual(result?["orb"] as? String, "halo")
         XCTAssertEqual(result?["recordingBars"] as? Int, 64)
-        XCTAssertEqual(result?["hud"] as? String, "Dictation ready")
+        XCTAssertEqual(result?["dictationTitle"] as? String, "Dictation ready")
+        XCTAssertEqual(result?["commandTitle"] as? String, "Command · listening")
+        XCTAssertEqual(result?["commandBars"] as? Int, 64)
         XCTAssertEqual(result?["width"] as? Int, 1240)
 
         web.frame.size = CGSize(width: 480, height: 540)
@@ -70,28 +78,24 @@ final class DesktopInterfaceTests: XCTestCase {
     }
 
     @MainActor
-    func testCommandHUDUsesSharedRecordingAndResultMarkup() async throws {
+    func testFloatingQuickAnswerStillRendersPlainTextAndCanClose() async throws {
         let web = DesktopWebView(document: "panel", transparent: true)
         web.frame = NSRect(x: 0, y: 0, width: 440, height: 220)
-        web.handle = { _, _ in nil }
+        let close = expectation(description: "Quick answer closes")
+        web.handle = { action, _ in
+            if action == "close" { close.fulfill() }
+            return nil
+        }
         try await waitForDesktop(web)
         let result = try await web.callAsyncJavaScript("""
-            const state = {
-                mode: 'command', phase: 'recording', text: '<b>Typed</b>', clock: '0:08',
-                level: 0.55, notice: 'Audio stays on this Mac', original: 'typed',
-                copied: false, inserted: false, needsAccess: false
-            };
-            window.jarvisUI.hud(state);
-            const bars = document.querySelectorAll('.hud-bar').length;
-            const title = document.querySelector('.hud-label').textContent;
-            window.jarvisUI.hud({...state, phase:'result'});
-            const result = document.querySelector('.hud-transcript');
-            return {bars, title, text: result.textContent, count: result.childElementCount};
+            window.jarvisUI.answer({title:'Quick Answer', text:'<b>Typed</b>', meta:'Local clock'});
+            const result = document.querySelector('.quick-answer-val');
+            document.querySelector('[data-hud="close"]').click();
+            return {text: result.textContent, count: result.childElementCount};
             """, arguments: [:], in: nil, contentWorld: .page) as? [String: Any]
-        XCTAssertEqual(result?["bars"] as? Int, 30)
-        XCTAssertEqual(result?["title"] as? String, "Command recording")
         XCTAssertEqual(result?["text"] as? String, "<b>Typed</b>")
         XCTAssertEqual(result?["count"] as? Int, 0)
+        await fulfillment(of: [close], timeout: 1)
     }
 
     @MainActor
@@ -134,8 +138,22 @@ final class DesktopInterfaceTests: XCTestCase {
         XCTAssertEqual(controller.originalTranscript, raw)
 
         controller.dismissTranscript()
-        controller.showShortcutPreparation(.action)
-        XCTAssertTrue(panel.contentView is DesktopRecordingSurface)
+        controller.toggleAction()
+        XCTAssertEqual(controller.mode, .action)
+        XCTAssertTrue(panel.contentView === host)
+        XCTAssertEqual(panel.frame.size, DictationHUDLayout.recordingSize)
+        controller.partialTranscript = "Find the API key"
+        XCTAssertEqual(panel.frame.size, DictationHUDLayout.recordingSize(showingPreview: true))
+        controller.toggleAction()
+        XCTAssertEqual(panel.frame.size, DictationHUDLayout.processingSize)
+        controller.phase = .TranscriptReady
+        controller.showPanelIfNeeded()
+        XCTAssertEqual(panel.frame.size, DictationHUDLayout.processingSize)
+        controller.receiveActionTranscript("Find the API key") {
+            XCTAssertFalse(panel.isVisible)
+            XCTAssertEqual(STTRouter.shared.owner, .action)
+        }
+        XCTAssertEqual(STTRouter.shared.owner, .none)
     }
 
     @MainActor

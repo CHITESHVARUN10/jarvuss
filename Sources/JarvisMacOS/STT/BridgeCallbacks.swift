@@ -52,7 +52,7 @@ func on_state_changed(phase: AppPhase, model: ModelPhase, session_id: UInt64) {
             controller.showPanel()
         }
 
-        if phase == .TranscriptReady {
+        if phase == .TranscriptReady && STTRouter.shared.owner == .pill {
             // `receiveDictationTranscript` may have already replaced the raw
             // text with formatted text (rules pass runs synchronously) — the
             // mirror must not re-clobber it with raw on the state callback.
@@ -122,10 +122,7 @@ func on_partial_transcript(text: RustString, session_id: UInt64) {
         // Live partials route by owner: pill → preview bubble,
         // command → main-window LIVE TRANSCRIPT card (new).
         if let pillText = STTRouter.shared.routePartial(t) {
-            let controller = DictationController.shared
-            controller.partialTranscript = pillText
-            // Panel may need to grow to fit the preview bubble above the pill
-            controller.showPanelIfNeeded()
+            DictationController.shared.partialTranscript = pillText
         }
     }
 }

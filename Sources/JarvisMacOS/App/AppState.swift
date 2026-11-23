@@ -806,13 +806,14 @@ final class AppState: ObservableObject {
 
     func handleActionPillCommand(_ raw: String) {
         if recoverDisplayIfRequested(raw) { return }
-        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
+        let spokenWords = raw.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        guard !spokenWords.isEmpty else {
             appendLog("[Action] dropped: empty transcript.")
             return
         }
-        guard let command = CommandValidator.validate(trimmed) else {
-            appendLog("[Action] Invalid command skipped: '\(trimmed)'")
+        let cleaned = TranscriptSanitizer.collapseRepeatedPhrases(spokenWords)
+        guard let command = CommandValidator.validate(cleaned) else {
+            appendLog("[Action] Invalid command skipped: '\(cleaned)'")
             return
         }
         appendLog("[Action] Received: '\(command)' (verify: \(actionPillRequiresVerify ? "on" : "off"))")

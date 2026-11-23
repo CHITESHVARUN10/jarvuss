@@ -402,7 +402,7 @@
     const preview = byId('inlinePreviewHud');
     preview.dataset.kind = mode;
     preview.dataset.phase = phase;
-    preview.innerHTML = buildHudHtml(mode, phase, previewState.original, '0:08');
+    preview.innerHTML = buildHudPreview(mode, phase, previewState.original);
   }
   document.getElementById('previewHudMode').addEventListener('change', () => { previewState.original = false; renderInlinePreviewHud(); });
   document.getElementById('previewHudPhase').addEventListener('change', () => { previewState.original = false; renderInlinePreviewHud(); });

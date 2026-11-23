@@ -24,11 +24,15 @@ struct DictationHUDView: View {
                     isAction: isAction,
                     isStarting: model.captureStarting,
                     recordedSeconds: model.recordedSeconds,
-                    limitMinutes: model.activeRecordingLimitMinutes
+                    limitMinutes: model.activeRecordingLimitMinutes,
+                    onFinish: isAction ? model.toggleAction : model.toggleDictation
                 )
 
             case .Processing:
                 DictationTranscribingPillView(isAction: isAction)
+
+            case .TranscriptReady where isAction:
+                DictationTranscribingPillView(isAction: true)
 
             case .TranscriptReady:
                 DictationTranscriptOverlayView(
@@ -68,12 +72,9 @@ struct DictationHUDView: View {
                     DictationReloadingView()
                         .frame(width: 300)
                 } else {
-                    DictationReadyView()
+                    DictationReadyView(isAction: isAction)
                         .frame(width: 240)
                 }
-
-            default:
-                EmptyView()
             }
             }
         }
@@ -111,6 +112,7 @@ struct DictationRecordingPillView: View {
     var isStarting = false
     var recordedSeconds: Double = 0
     var limitMinutes: Int = 5
+    let onFinish: () -> Void
 
     private var showsPreview: Bool { livePreviewEnabled && !livePreview.isEmpty }
 
@@ -157,13 +159,7 @@ struct DictationRecordingPillView: View {
                         .font(.system(size: 10, design: .monospaced))
                         .foregroundStyle(DictationCardPalette.muted)
                         .accessibilityLabel("Press the shortcut again to finish")
-                    Button(isStarting ? "Cancel" : "Finish") {
-                        if isAction {
-                            DictationController.shared.toggleAction()
-                        } else {
-                            DictationController.shared.toggleDictation()
-                        }
-                    }
+                    Button(isStarting ? "Cancel" : "Finish", action: onFinish)
                     .buttonStyle(DictationControlStyle())
                     .help(isAction ? "Finish command (⌘⇧A)" : "Finish dictation (⌘⇧D)")
                 }
@@ -355,13 +351,15 @@ struct NoirWaveform: View {
 // MARK: - Ready / reloading / error / download
 
 struct DictationReadyView: View {
+    var isAction = false
+
     var body: some View {
         HStack(spacing: 10) {
             Circle()
                 .fill(DictationCardPalette.ok)
                 .frame(width: 7, height: 7)
                 .padding(.leading, 16)
-            Text(DictationController.shared.mode == .action ? "Ready — say a command" : "Ready — speak")
+            Text(isAction ? "Ready — say a command" : "Ready — speak")
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(DictationCardPalette.secondary)
             Spacer(minLength: 8)

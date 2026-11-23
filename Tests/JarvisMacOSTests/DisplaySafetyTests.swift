@@ -155,6 +155,9 @@ final class DisplayRecoveryEntryTests: XCTestCase {
         app.handleActionPillCommand("Restore my display!")
         XCTAssertEqual(recoveries, 1)
         XCTAssertFalse(app.commandQueue.isExecuting)
+        app.handleActionPillCommand(String(repeating: "restore my display ", count: 4))
+        XCTAssertEqual(recoveries, 1, "Cleaning a transcript must not expand the exact recovery exception")
+        XCTAssertEqual(app.voiceVerificationStatus, "No command audio available")
         app.handleTranscript("Jarvis restore my display", isFinal: false)
         XCTAssertEqual(recoveries, 1, "A partial transcript must not execute")
         app.handleTranscript("Jarvis restore my display", isFinal: true)
@@ -169,6 +172,26 @@ final class DisplayRecoveryEntryTests: XCTestCase {
         for _ in 0..<5 { await Task.yield() }
         XCTAssertEqual(recoveries, 3)
         XCTAssertEqual(app.voiceVerificationStatus, "No command audio available", "Compound commands must still require recorded verification audio")
+    }
+
+    func testActionCollapsesRecognitionLoopsBeforeValidationAndVerification() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let app = AppState(logger: Logger(logURL: folder.appendingPathComponent("commands.log")),
+                           dbManager: DBManager(configuration: [:]), intentLog: IntentRouterLog(enabled: false),
+                           activateServices: false)
+        let previousVerification = app.actionPillRequiresVerify
+        app.actionPillRequiresVerify = true
+        defer { app.actionPillRequiresVerify = previousVerification }
+
+        app.handleActionPillCommand("Search for " + String(repeating: "API. ", count: 23))
+        XCTAssertTrue(app.logs.contains { $0.contains("[Action] Received: 'Search for API.'") })
+        XCTAssertEqual(app.voiceVerificationStatus, "No command audio available")
+        XCTAssertFalse(app.commandQueue.isExecuting)
+
+        app.handleActionPillCommand("Find my notes about the API and the old API")
+        XCTAssertTrue(app.logs.contains { $0.contains("[Action] Received: 'Find my notes about the API and the old API'") })
     }
 
     func testDictationOfTheSafeWordRemainsTextAndNeverRoutesAsACommand() {
